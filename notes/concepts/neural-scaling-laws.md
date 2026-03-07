@@ -26,7 +26,7 @@ $$f(r) \propto r^{-s}, \qquad s \approx 1$$
 
 The most common word appears roughly twice as often as the second most common, three times as often as the third, and so on. This is a power law in rank.
 
-**Pareto distributions** describe wealth, city populations, earthquake magnitudes (Gutenberg-Richter law), and internet traffic. They arise whenever a multiplicative or preferential-attachment process is at work — systems where "the rich get richer."
+**Pareto distributions** describe wealth, city populations, earthquake magnitudes (Gutenberg-Richter law), and internet traffic. They arise whenever a multiplicative or preferential-attachment process is at work — systems where "the rich get richer." Formally, the Pareto distribution has survival function $P(X > x) = (x_m/x)^k$ for $x \geq x_m$, $k > 0$, where $x_m > 0$ is the minimum value and $k$ is the shape (tail) exponent.
 
 **Self-organized criticality** (Bak, Tang, Wiesenfeld 1987) provides a physics-grounded explanation: complex systems with many interacting components often evolve toward critical states at which power-law correlations emerge naturally, without fine-tuning.
 
@@ -79,7 +79,7 @@ $$\frac{A}{N^\alpha}$$
 
 This term captures the **model capacity bottleneck**. Even with infinite data, a finite model cannot represent the true distribution exactly — it lacks the representational capacity to memorize all relevant statistical regularities. Larger $N$ reduces this term; the exponent $\alpha > 0$ governs how quickly capacity constraints relax as we scale.
 
-Empirically, $\alpha \approx 0.076$ for autoregressive transformers on text (Kaplan et al. 2020). This is a small exponent, meaning you need to scale $N$ by a factor of $10^{1/\alpha} \approx 10^{13}$ to reduce this term by a factor of 10 — scaling is powerful but not magic.
+Empirically, $\alpha \approx 0.076$ for autoregressive transformers on text (Kaplan et al. 2020). This is a small exponent, meaning you need to scale $N$ by a factor of $10^{1/\alpha} \approx 10^{13}$ to reduce this term by a factor of 10 — scaling is powerful but not magic. Explicitly: if $L(N) \propto N^{-0.076}$, then requiring $L(N')/L(N) = 1/10$ gives $(N'/N)^{0.076} = 10$, so $N'/N = 10^{1/0.076} \approx 10^{13.2}$.
 
 #### The Data-Limited Term $B / D^\beta$
 
@@ -100,13 +100,15 @@ The justification is that each term represents an **independent source of excess
 
 When both sources of error are small (which is the relevant regime when $N$ and $D$ are large), the total excess loss is approximately the sum of the two independent contributions. This is the standard bias-variance-like decomposition from statistical learning theory, adapted to the power-law regime.
 
+More precisely, in the large-$N$, large-$D$ regime where $A/N^\alpha \ll E$ and $B/D^\beta \ll E$, cross-coupling between the capacity and data terms is negligible, and the decomposition holds as a first-order approximation. More formally, if the per-parameter and per-token contributions to excess loss are statistically independent — in the sense that gradient updates from parameter scaling and data scaling affect orthogonal directions in function space — then the joint excess loss decomposes additively.
+
 **Why power laws specifically?** Power-law decay is the simplest **scale-free** functional form. A function $f(x) = Cx^{-\gamma}$ satisfies:
 
 $$f(\lambda x) = \lambda^{-\gamma} f(x)$$
 
 for all $\lambda > 0$ — it has no characteristic scale. Scale-free behavior is the expected outcome when no single length scale dominates the problem. In the context of neural networks, this can be motivated by the observation that the loss surface and the relevant statistical regularities in natural language span many scales simultaneously (from character-level patterns to long-range discourse structure), so no single scale should set the decay rate.
 
-Alternatively, power laws arise naturally as the limit of a sum of exponentials with a distribution of decay rates: if the model learns features at many different "difficulty levels," each contributing an exponentially decaying correction, and if these difficulty levels are distributed as a power law (consistent with Zipf's law for language), then the aggregate improvement from adding more capacity follows a power law.
+Alternatively, power laws arise naturally as the limit of a sum of exponentials with a distribution of decay rates: if the model learns features at many different "difficulty levels," each contributing an exponentially decaying correction, and if these difficulty levels are distributed as a power law (consistent with Zipf's law for language), then the aggregate improvement from adding more capacity follows a power law. Formally, if $f(x) = \int_0^\infty e^{-\lambda x} \rho(\lambda)\,d\lambda$ and $\rho(\lambda) \sim C_0 \lambda^{\gamma-1}$ as $\lambda \to 0^+$, then by the Tauberian theorem, $f(x) \sim C_0 \Gamma(\gamma)\, x^{-\gamma}$ as $x \to \infty$. Power-law scaling emerges from the distribution of time scales in the system, not from any single mechanism.
 
 ### The Compute Approximation $C \approx 6ND$
 
