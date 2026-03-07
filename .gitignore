@@ -1,0 +1,12 @@
+# Obsidian config — ignored by default
+.obsidian/
+
+# Optionally uncomment to sync specific settings across devices:
+# !.obsidian/app.json
+# !.obsidian/appearance.json
+# !.obsidian/hotkeys.json
+# !.obsidian/plugins/
+
+# OS files
+.DS_Store
+Thumbs.db
