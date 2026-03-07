@@ -241,4 +241,128 @@ $$N^* \propto C^{0.73}, \qquad D^* \propto C^{0.27}$$
 
 This conclusion would later be contested by Hoffmann et al. (2022), who argued that Kaplan et al.'s fitting procedure — particularly the use of single-epoch data runs to estimate $\beta$ — systematically underestimated the data exponent. The Chinchilla result, with $\alpha \approx \beta$, implies equal scaling of parameters and tokens per compute doubling, overturning the "scale models faster" prescription.
 
-<!-- TODO: sections 4-6 -->
+---
+
+## 4. Chinchilla (2022): The IsoFLOP Revolution
+
+Hoffmann et al. (2022) — colloquially "Chinchilla" — overturned the Kaplan prescription for compute-optimal training. The central finding: **given a fixed compute budget, parameters and tokens should scale equally.** The practical corollary: most large models at the time of publication (including GPT-3, Gopher, and MT-NLG) were significantly undertrained. This section develops the methodology and the mathematics behind that conclusion.
+
+### 4.1 The IsoFLOP Methodology
+
+Chinchilla's key innovation is experimental design. Rather than varying $N$ while fixing $D$ (as Kaplan did to measure $L(N)$) or vice versa, they **fix the total compute $C$ and sweep $N$ and $D$ jointly along the constraint curve $6ND = C$.**
+
+The procedure is:
+
+1. Choose a set of compute budgets $\{C_1, C_2, \ldots\}$ spanning several orders of magnitude.
+2. For each $C_i$, train many models at different $(N, D)$ pairs satisfying $6ND = C_i$. These are **IsoFLOP curves** — each curve holds compute constant and trades parameters for tokens.
+3. Each run uses all $D$ tokens in a single pass (no multi-epoch training), so the comparison is clean: every model on the curve $6ND = C_i$ uses exactly $C_i$ FLOPs.
+4. Record the final loss for each run and find $(N^*, D^*)$ that minimizes it on each IsoFLOP curve.
+5. Fit the relationship between $C_i$ and $(N^*_i, D^*_i)$ across curves.
+
+**Why this eliminates undertrained-model bias.** Kaplan's univariate $L(N)$ experiments train to convergence on a fixed dataset; their univariate $L(D)$ experiments train for exactly one epoch with a fixed model size. Neither condition corresponds to the regime of a real large-scale training run, where both $N$ and $D$ are chosen simultaneously under a compute budget. Specifically:
+
+- When Kaplan trains to convergence to measure $L(N)$, larger models require more data to converge — but $D$ is held fixed, so large models never see enough data. The loss attributable to model size is inflated by data starvation, causing $\alpha_N$ to be underestimated.
+- When Kaplan trains for one epoch to measure $L(D)$, small models are used to keep compute manageable. The data exponent is measured in a regime where model capacity is the bottleneck, not data, distorting $\beta$.
+
+By contrast, Chinchilla's IsoFLOP curves compare every model on a **compute-equal footing**: a 7B-parameter model trained on $\sim$143B tokens competes directly against a 70B model trained on $\sim$14B tokens, both using the same total FLOPs. The optimal point emerges naturally from the loss surface rather than from extrapolation of univariate fits.
+
+### 4.2 Analytical Derivation via Lagrangian Optimization
+
+The formal setup is to minimize $L(N, D) = E + A/N^\alpha + B/D^\beta$ subject to the compute constraint $6ND = C$. This is a constrained optimization problem with one equality constraint, handled by the method of Lagrange multipliers.
+
+**Forming the Lagrangian.**
+
+$$\mathcal{L}(N, D, \lambda) = E + \frac{A}{N^\alpha} + \frac{B}{D^\beta} + \lambda(6ND - C)$$
+
+The term $\lambda(6ND - C)$ enforces the constraint at the optimum: at any critical point, $6ND - C = 0$ automatically.
+
+**First-order conditions.** Differentiate with respect to $N$ and set to zero:
+
+$$\frac{\partial \mathcal{L}}{\partial N} = -\frac{\alpha A}{N^{\alpha+1}} + 6\lambda D = 0 \implies \lambda = \frac{\alpha A}{6 D N^{\alpha+1}}$$
+
+Differentiate with respect to $D$ and set to zero:
+
+$$\frac{\partial \mathcal{L}}{\partial D} = -\frac{\beta B}{D^{\beta+1}} + 6\lambda N = 0 \implies \lambda = \frac{\beta B}{6 N D^{\beta+1}}$$
+
+**Eliminating $\lambda$.** Set the two expressions for $\lambda$ equal:
+
+$$\frac{\alpha A}{6 D N^{\alpha+1}} = \frac{\beta B}{6 N D^{\beta+1}}$$
+
+Multiply both sides by $6 D N^{\alpha+1} \cdot N D^{\beta+1}$:
+
+$$\alpha A \cdot N D^{\beta+1} = \beta B \cdot D N^{\alpha+1}$$
+
+Cancel one factor of $N$ from the right and one factor of $D$ from the left:
+
+$$\alpha A \cdot D^{\beta} = \beta B \cdot N^{\alpha}$$
+
+This is the **optimality condition**: at the compute-optimal point, the marginal loss reduction from adding one more parameter exactly equals the marginal loss reduction from seeing one more token (appropriately weighted by their respective constants).
+
+Rearranging:
+
+$$\frac{D^\beta}{N^\alpha} = \frac{\beta B}{\alpha A} \qquad \text{(constant, independent of } C\text{)}$$
+
+**Solving for the scaling exponents.** From the optimality condition, express $D$ as a function of $N$:
+
+$$D^\beta = \frac{\beta B}{\alpha A} \cdot N^\alpha \implies D = \left(\frac{\beta B}{\alpha A}\right)^{1/\beta} N^{\alpha/\beta}$$
+
+Substitute into the compute constraint $6ND = C$:
+
+$$6N \cdot \left(\frac{\beta B}{\alpha A}\right)^{1/\beta} \cdot N^{\alpha/\beta} = C$$
+
+$$6 \left(\frac{\beta B}{\alpha A}\right)^{1/\beta} \cdot N^{1 + \alpha/\beta} = C$$
+
+$$N^{(\alpha + \beta)/\beta} \propto C$$
+
+Solve for $N^*$:
+
+$$\boxed{N^* \propto C^{\,\beta/(\alpha+\beta)}}$$
+
+And since $D^* = C / (6N^*)$:
+
+$$\boxed{D^* \propto C^{\,\alpha/(\alpha+\beta)}}$$
+
+This is structurally identical to the result derived in Section 3.2 from the Kaplan approach — the functional form $N^* \propto C^{\beta/(\alpha+\beta)}$ is a consequence of the model $L = E + A/N^\alpha + B/D^\beta$ and the constraint $6ND = C$, not of any particular fitting procedure. **The difference lies entirely in the estimated values of $\alpha$ and $\beta$.**
+
+Chinchilla's Approach 2 (fitting the parametric loss model directly to IsoFLOP curve data) yields:
+
+$$\alpha \approx 0.34, \quad \beta \approx 0.28 \quad \text{(Hoffmann et al. 2022, Table A3)}$$
+
+With these values:
+
+$$\frac{\beta}{\alpha + \beta} = \frac{0.28}{0.34 + 0.28} = \frac{0.28}{0.62} \approx 0.45, \qquad \frac{\alpha}{\alpha + \beta} \approx 0.55$$
+
+More saliently, when $\alpha \approx \beta$ (as all three of Chinchilla's fitting approaches roughly agree):
+
+$$N^* \propto C^{1/2}, \qquad D^* \propto C^{1/2}$$
+
+**Both parameters and tokens should scale as $\sqrt{C}$.** This is the central quantitative claim: equal scaling in parameters and data per compute doubling, in stark contrast to Kaplan's $N^* \propto C^{0.73}$, $D^* \propto C^{0.27}$.
+
+### 4.3 The 20 Tokens Per Parameter Rule
+
+The optimality condition $\alpha A \cdot D^\beta = \beta B \cdot N^\alpha$ is a relationship between $D^*$ and $N^*$ that holds at every compute budget. Using Chinchilla's fitted constants from Approach 2 ($A \approx 406.4$, $B \approx 410.7$, $\alpha \approx 0.34$, $\beta \approx 0.28$), one can evaluate the ratio $D^*/N^*$ numerically at any given scale. Across the compute budgets considered (roughly $10^{19}$ to $10^{24}$ FLOPs), this ratio is approximately constant and close to 20:
+
+$$D^* \approx 20 \cdot N^*$$
+
+This is the **"20 tokens per parameter" rule**. It is not exact — the precise ratio varies weakly with $C$ because $\alpha \neq \beta$ exactly — but it is a robust approximation within the regimes studied.
+
+**Implications for prior models.** At the time of Chinchilla's publication:
+
+- GPT-3: $N = 175\text{B}$ parameters, $D = 300\text{B}$ tokens $\Rightarrow$ $D/N \approx 1.7$ tokens per parameter
+- Gopher: $N = 280\text{B}$ parameters, $D = 300\text{B}$ tokens $\Rightarrow$ $D/N \approx 1.1$ tokens per parameter
+
+Both models used roughly 10–20$\times$ fewer tokens than the compute-optimal prescription. The Chinchilla model itself — 70B parameters trained on 1.4T tokens — achieved lower loss than Gopher (280B parameters, $4\times$ larger) at the same compute budget, directly validating the prescription. The name "Chinchilla" refers to this 70B model.
+
+### 4.4 Why Kaplan's Exponents Were Biased
+
+The discrepancy between Kaplan's $N^* \propto C^{0.73}$ and Chinchilla's $N^* \propto C^{0.5}$ traces directly to the bias introduced by Kaplan's univariate fitting procedure.
+
+**The data-saturation bias in $\hat{\alpha}_N$.** Kaplan's estimate of $\alpha_N \approx 0.076$ comes from training models to convergence on a fixed (large but finite) dataset. As $N$ grows with $D$ fixed, eventually the model has seen the training set many times — it has effectively memorized the data and further increases in $N$ yield diminishing returns. Formally, if $D$ is fixed and $N \to \infty$, then $L \to E + B/D^\beta$: the model-size term vanishes but the data-limited floor remains. The measured marginal benefit of adding parameters flattens as the model approaches the data-limited regime, causing $\hat{\alpha}_N$ to underestimate the true capacity exponent.
+
+In the language of statistical estimation: Kaplan's $L(N)$ curve is not measured in the compute-optimal regime — it is measured in the **data-saturated regime**, where $B/D^\beta \gg A/N^\alpha$ for the largest models. The slope of $\log L$ vs. $\log N$ in this regime reflects the approach to a data-limited floor, not the intrinsic capacity scaling. The result is an artificially small $\hat{\alpha}_N$.
+
+**The consequence for optimal allocation.** In the formula $N^* \propto C^{\beta/(\alpha+\beta)}$, underestimating $\alpha$ (relative to the true value) makes the exponent $\beta/(\alpha + \beta)$ appear larger than it truly is, biasing the conclusion toward **scaling $N$ faster than warranted**. Kaplan's prescription to scale parameters 2.7$\times$ faster than data per compute doubling is thus an artifact of measurement in the wrong regime.
+
+**Chinchilla's correction.** By holding compute fixed and sweeping the IsoFLOP curve, Chinchilla always trains in the compute-optimal regime: as $C$ increases, both $N$ and $D$ increase together. The model is never data-saturated at the scale being measured, so the estimated $\hat{\alpha}$ reflects genuine capacity scaling rather than a data floor artifact. The resulting $\alpha \approx 0.34$ — more than $4\times$ larger than Kaplan's $0.076$ — gives the balanced scaling result $N^* \propto C^{1/2}$.
+
+<!-- TODO: sections 5-6 -->
