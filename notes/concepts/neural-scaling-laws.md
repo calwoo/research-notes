@@ -231,7 +231,9 @@ $$\frac{\beta}{\alpha + \beta} = \frac{0.095}{0.076 + 0.095} = \frac{0.095}{0.17
 
 $$\frac{\alpha}{\alpha + \beta} = \frac{0.076}{0.171} \approx 0.444$$
 
-Kaplan et al. round these to approximately $0.73$ and $0.27$ in their paper (the discrepancy arises from a more careful fit that accounts for the full three-term loss including $E$, rather than the two-term approximation above). Using the rounded values:
+**Note:** The two-term substitution above yields exponents $0.556$ and $0.444$. The values $N^* \propto C^{0.73}$ and $D^* \propto C^{0.27}$ are the exponents Kaplan et al. report from numerical fits to the full three-term model — they are taken from the paper, not derived from the algebra above. The discrepancy arises because dropping $E$ in the two-term approximation overstates the marginal value of data (since $D$ must also compensate for $E$), shifting the optimal allocation toward parameters.
+
+Using the paper's reported values:
 
 $$N^* \propto C^{0.73}, \qquad D^* \propto C^{0.27}$$
 
