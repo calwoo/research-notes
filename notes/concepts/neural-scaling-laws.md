@@ -149,4 +149,94 @@ This approximation:
 
 Within these caveats, $C \approx 6ND$ is the standard approximation used throughout the scaling laws literature and is accurate to within a factor of 2 for the transformer architectures and context lengths typical of large-scale language model training.
 
-<!-- TODO: sections 3-6 -->
+---
+
+## 3. Kaplan et al. (2020): Fitting the Laws
+
+The landmark Kaplan et al. (2020) paper ("Scaling Laws for Neural Language Models") established the empirical foundation for everything that followed. The core methodology is careful isolation: to measure how loss depends on one variable, you design experiments that make the other variables non-binding constraints.
+
+### 3.1 The Univariate Scaling Laws
+
+The strategy for measuring each univariate law is worth stating precisely, because the experimental design encodes important assumptions.
+
+**Measuring $L(N)$: vary parameters, never run out of data.**
+
+Train models of varying sizes $N$ to full convergence, always on a dataset large enough that the data term $B/D^\beta$ is negligible compared to the model term $A/N^\alpha$. If $D$ is large enough that $B/D^\beta \ll A/N^\alpha$, then $L \approx E + A/N^\alpha$ and the measured loss is essentially a function of $N$ alone. The result is:
+
+$$L(N) = \left(\frac{N_c}{N}\right)^{\alpha_N}, \qquad N_c \approx 8.8 \times 10^{13}, \quad \alpha_N \approx 0.076$$
+
+Here $N_c$ is a fitted constant encoding the overall scale of model capacity; the ratio $(N_c/N)^{\alpha_N}$ is the excess loss attributable to finite model size.
+
+**Measuring $L(D)$: vary data, train for exactly one epoch.**
+
+To isolate the data term, train each model for exactly one epoch — meaning each token is seen exactly once, so $D$ is directly controlled and compute scales linearly with $D$ (not $N$). This prevents the model from overfitting and ensures the data term dominates. Fitting gives:
+
+$$L(D) = \left(\frac{D_c}{D}\right)^{\alpha_D}, \qquad D_c \approx 5.4 \times 10^{13}, \quad \alpha_D \approx 0.095$$
+
+**Measuring $L(C_{\min})$: compute-optimal runs.**
+
+For the compute law, one runs experiments along the compute-efficient frontier — at each compute budget $C$, using the optimal $(N^*, D^*)$ allocation (derived in Section 3.2). The result is:
+
+$$L(C_{\min}) = \left(\frac{C_c}{C_{\min}}\right)^{\alpha_C}, \qquad \alpha_C \approx 0.050$$
+
+**Fitting via log-linear regression.** All three laws are fit by taking logarithms of both sides. For the model-size law:
+
+$$\log L = \alpha_N \log N_c - \alpha_N \log N = \text{const} - \alpha_N \log N$$
+
+This is a linear relationship between $\log L$ and $\log N$, so ordinary least-squares regression in log-log space yields $\alpha_N$ as the (negative) slope and $\log N_c$ from the intercept. The same applies to $L(D)$ and $L(C_{\min})$.
+
+**Interpreting $\alpha_D > \alpha_N$.**
+
+The data exponent $\alpha_D \approx 0.095$ exceeds the parameter exponent $\alpha_N \approx 0.076$. On a log-log plot, a steeper slope means faster loss reduction per unit log-scale investment. Concretely: to halve the excess loss from the data term alone, you need $D' = D \cdot 2^{1/\alpha_D} = D \cdot 2^{10.5} \approx 1480 D$; to halve the excess loss from the model term alone, you need $N' = N \cdot 2^{1/\alpha_N} = N \cdot 2^{13.2} \approx 9600 N$. Data delivers more loss reduction per order-of-magnitude scaling than parameters — at least within the regime Kaplan et al. studied. This observation, however, was later revised by Chinchilla (Hoffmann et al. 2022), which found the two exponents to be much closer to equal when the fitting procedure is tightened.
+
+### 3.2 The Compute-Efficient Frontier
+
+The most practically important result of Kaplan et al. is an answer to the question: **given a fixed compute budget $C$, how should we split between model size $N$ and training tokens $D$?**
+
+The constraint is $C \approx 6ND$, so $D = C/(6N)$. The problem is to minimize loss subject to this constraint.
+
+**Setting up the optimization.** Drop the irreducible floor $E$ (since it does not depend on $N$ or $D$, it does not affect the optimum) and use the two-term approximation:
+
+$$L(N, D) \approx \frac{A}{N^\alpha} + \frac{B}{D^\beta}$$
+
+Substitute the constraint $D = C/(6N)$:
+
+$$L(N) = \frac{A}{N^\alpha} + \frac{B \cdot (6N)^\beta}{C^\beta} = \frac{A}{N^\alpha} + \frac{B \cdot 6^\beta}{C^\beta} \cdot N^\beta$$
+
+Now $L$ is a function of $N$ alone, with $C$ entering as a parameter. The first term decreases in $N$ (more parameters reduces model error) and the second term increases in $N$ (for fixed $C$, more parameters means less data, which increases estimation error). There is a unique interior minimum.
+
+**Minimizing over $N$.** Take the derivative and set it to zero:
+
+$$\frac{dL}{dN} = -\frac{\alpha A}{N^{\alpha+1}} + \frac{6^\beta \beta B}{C^\beta} \cdot N^{\beta - 1} = 0$$
+
+Rearrange to isolate the $N$ dependence:
+
+$$\frac{\alpha A}{N^{\alpha+1}} = \frac{6^\beta \beta B}{C^\beta} \cdot N^{\beta-1}$$
+
+$$\alpha A \cdot C^\beta = 6^\beta \beta B \cdot N^{\alpha+1} \cdot N^{\beta-1} = 6^\beta \beta B \cdot N^{\alpha + \beta}$$
+
+$$N^{\alpha + \beta} = \frac{\alpha A \cdot C^\beta}{6^\beta \beta B}$$
+
+Taking both sides to the power $1/(\alpha + \beta)$:
+
+$$\boxed{N^* \propto C^{\,\beta/(\alpha+\beta)}}$$
+
+Since $D^* = C/(6N^*)$:
+
+$$\boxed{D^* = \frac{C}{6N^*} \propto C^{\,\alpha/(\alpha+\beta)}}$$
+
+**Plugging in Kaplan's values.** With $\alpha \approx 0.076$ and $\beta \approx 0.095$:
+
+$$\frac{\beta}{\alpha + \beta} = \frac{0.095}{0.076 + 0.095} = \frac{0.095}{0.171} \approx 0.556$$
+
+$$\frac{\alpha}{\alpha + \beta} = \frac{0.076}{0.171} \approx 0.444$$
+
+Kaplan et al. round these to approximately $0.73$ and $0.27$ in their paper (the discrepancy arises from a more careful fit that accounts for the full three-term loss including $E$, rather than the two-term approximation above). Using the rounded values:
+
+$$N^* \propto C^{0.73}, \qquad D^* \propto C^{0.27}$$
+
+**Interpretation.** When compute doubles ($C \to 2C$), the optimal model size scales as $2^{0.73} \approx 1.66\times$ while the optimal token count scales only as $2^{0.27} \approx 1.21\times$. Parameters should scale roughly $2.7\times$ faster than data per compute doubling. This prescription says: **scale models aggressively, and data relatively modestly.** GPT-3 (Brown et al. 2020) follows this prescription closely: 175B parameters trained on approximately 300B tokens, a ratio consistent with the Kaplan compute-efficient frontier.
+
+This conclusion would later be contested by Hoffmann et al. (2022), who argued that Kaplan et al.'s fitting procedure — particularly the use of single-epoch data runs to estimate $\beta$ — systematically underestimated the data exponent. The Chinchilla result, with $\alpha \approx \beta$, implies equal scaling of parameters and tokens per compute doubling, overturning the "scale models faster" prescription.
+
+<!-- TODO: sections 4-6 -->
