@@ -22,7 +22,9 @@
    - [5.2 Approach 2 — Parametric Global Fit](#52-approach-2--parametric-global-fit)
    - [5.3 Approach 3 — Per-Model-Size Estimation](#53-approach-3--per-model-size-estimation)
    - [5.4 Cross-Validation of Approaches](#54-cross-validation-of-approaches)
-6. [References](#references)
+   - [5.5 Alternative Estimators](#55-alternative-estimators)
+6. [Scope and Limitations](#6-scope-and-limitations)
+7. [References](#references)
 
 ---
 
@@ -135,6 +137,26 @@ $$f(\lambda x) = \lambda^{-\gamma} f(x)$$
 for all $\lambda > 0$ — it has no characteristic scale. Scale-free behavior is the expected outcome when no single length scale dominates the problem. In the context of neural networks, this can be motivated by the observation that the loss surface and the relevant statistical regularities in natural language span many scales simultaneously (from character-level patterns to long-range discourse structure), so no single scale should set the decay rate.
 
 Alternatively, power laws arise naturally as the limit of a sum of exponentials with a distribution of decay rates: if the model learns features at many different "difficulty levels," each contributing an exponentially decaying correction, and if these difficulty levels are distributed as a power law (consistent with Zipf's law for language), then the aggregate improvement from adding more capacity follows a power law. Formally, if $f(x) = \int_0^\infty e^{-\lambda x} \rho(\lambda)\,d\lambda$ and $\rho(\lambda) \sim C_0 \lambda^{\gamma-1}$ as $\lambda \to 0^+$, then by the Tauberian theorem, $f(x) \sim C_0 \Gamma(\gamma)\, x^{-\gamma}$ as $x \to \infty$. Power-law scaling emerges from the distribution of time scales in the system, not from any single mechanism.
+
+#### The Three-Regime Structure
+
+The power-law model $L = E + A/N^\alpha + B/D^\beta$ is an approximation that is accurate only in a middle regime. Training loss across scale exhibits three qualitatively distinct regions:
+
+1. **Random-guessing plateau** — at very small $N$ or $D$, the model is near chance performance. Loss is roughly constant and high. The power-law terms have not yet engaged.
+2. **Power-law region** — the regime where $L = E + A/N^\alpha + B/D^\beta$ is accurate. Loss decreases smoothly as a power law in scale. This is the regime studied by Kaplan and Chinchilla.
+3. **Convergence plateau** — at very large $N$ or $D$, loss approaches $E$ asymptotically. The power-law terms are negligible and the model is effectively at the Bayes floor.
+
+The simple decomposition model is not designed to capture transitions between these regimes. This matters for extrapolation: fitting the model in the power-law region and extrapolating into the convergence plateau will overestimate the benefit of further scaling. More complex functional forms (see Section 5.5) are needed to model the full curve.
+
+#### The Intrinsic Dimension of the Data Manifold
+
+The scaling exponents $\alpha$ and $\beta$ are not universal constants — they depend on the structure of the data distribution. Sharma and Kaplan (2020) and Bahri et al. (2021) showed that the scaling exponent is inversely proportional to the intrinsic dimension $d$ of the data manifold:
+
+$$\alpha \propto \frac{1}{d}$$
+
+The intuition: if the data lies on a low-dimensional manifold (e.g., natural images, which have strong local structure), then adding model capacity quickly captures the dominant directions of variation, and loss decreases fast (small $d$, large $\alpha$). If the data manifold is high-dimensional (e.g., diverse text spanning many domains), each additional unit of capacity captures only a small slice of the variation, and loss decreases slowly (large $d$, small $\alpha$).
+
+This provides theoretical grounding for why $\alpha \approx 0.076$ is small for language: natural language is extremely high-dimensional, with structure ranging from phonetics to long-range discourse. It also predicts that scaling exponents should differ across modalities — a prediction confirmed empirically (vision transformers, acoustic models, and RL agents all exhibit different exponents).
 
 ### The Compute Approximation $C \approx 6ND$
 
@@ -442,6 +464,52 @@ All three approaches agree on the key qualitative finding: **$\alpha \approx \be
 
 The agreement across methods — despite their substantially different statistical assumptions and data requirements — strengthens confidence in the equal-scaling conclusion even if the exact constants are uncertain. The qualitative result (equal $N$ and $D$ scaling) is robust; the quantitative constant (20) should be treated as an order-of-magnitude estimate.
 
+### 5.5 Alternative Estimators
+
+The simple parametric model $L = E + A/N^\alpha + B/D^\beta$ works well in the power-law region but breaks down near the regime boundaries (Section 2). Two alternative estimators have been proposed to handle transitions:
+
+**M4 estimator** (Alabdulmohsin et al. 2022): fits a transformed version of the loss that saturates correctly at both ends:
+
+$$\frac{L - E}{I - L}^{\,\alpha} = \frac{A}{N^a} + \frac{B}{D^b}$$
+
+where $I$ is the random-guessing loss (the upper plateau). The ratio $(L-E)/(I-L)$ maps the loss into $(0, \infty)$, compressing the lower plateau and expanding the power-law region, making the power-law fit more robust across regimes.
+
+**BNSL estimator** (Caballero et al. 2022 — "Broken Neural Scaling Laws"): models the loss as a product of sigmoid-like transitions:
+
+$$L(D) = E + b \cdot D^{-c_0} \prod_{i} \left(1 + \left(\frac{D}{d_i}\right)^{1/f_i}\right)^{-c_i f_i}$$
+
+Each factor in the product captures one transition (e.g., the onset of power-law scaling, or the approach to the Bayes floor). This is more expressive but has many more parameters and is harder to fit reliably.
+
+Both estimators are strictly more general than the Kaplan/Chinchilla model — they reduce to the simple power law in the middle regime. The practical tradeoff: the simple model is sufficient for compute-optimal analysis (which operates in the power-law region by design), while the richer models are needed for predicting behavior at extreme scales or for detecting trend breaks.
+
+---
+
+## 6. Scope and Limitations
+
+The scaling law framework described in this note is powerful but not universal. Several important caveats apply.
+
+### Upstream vs. Downstream Performance
+
+Scaling laws for pre-training loss (upstream) do not straightforwardly transfer to task-specific (downstream) performance. Pre-training loss decreases smoothly as a power law, but downstream metrics (e.g., few-shot accuracy on specific benchmarks) can exhibit **sharp transitions** — sudden jumps in capability at particular scales — that are not predictable from the smooth upstream curve. Tay et al. (2022) showed that downstream performance depends critically on task choice, architecture, and hyperparameters, not just compute.
+
+This means compute-optimal training (minimizing pre-training loss) is not necessarily optimal for downstream deployment. The Chinchilla prescription optimizes upstream loss; whether it also optimizes downstream capability is an empirical question that varies by task.
+
+### Non-Power-Law Scaling
+
+Sorscher et al. (2022) showed that for some tasks, loss scales **exponentially** with dataset size rather than as a power law:
+
+$$L(D) \sim e^{-\gamma D}$$
+
+This occurs when the data distribution is well-structured and the model can effectively interpolate — for example, in settings with a small effective vocabulary of patterns. Exponential scaling is much more favorable than power-law scaling, but it means the standard Kaplan/Chinchilla framework does not apply. Identifying which regime applies requires empirical probing at multiple scales.
+
+### Trend Breaks and Extrapolation Risk
+
+Caballero et al. (2022) demonstrated that **trend breaks** — abrupt deviations from the fitted power law — can occur at scales not anticipated from smaller-scale observations. A scaling curve that appears cleanly power-law over three orders of magnitude may break at the fourth. This limits the reliability of extrapolation, particularly for predicting whether a much larger model will follow the projected loss curve.
+
+### Modality and Architecture Dependence
+
+Scaling exponents vary substantially across domains. Vision transformers (Zhai et al. 2022), acoustic models (Droppo and Elibol 2021), reinforcement learning agents (Neumann and Gros 2022), and recommendation systems (Ardalani et al. 2022) all exhibit power-law scaling, but with different exponents. There is no single universal $(\alpha, \beta)$ pair. The intrinsic dimension argument (Section 2) provides a theoretical explanation for this variation, but predicting exponents from first principles remains an open problem.
+
 ---
 
 ## References
@@ -452,3 +520,6 @@ The agreement across methods — despite their substantially different statistic
 | Hoffmann et al. (2022), "Training Compute-Optimal Large Language Models" (Chinchilla) | Revises Kaplan via IsoFLOP analysis; introduces three fitting approaches; shows equal $N$ and $D$ scaling is optimal; establishes the 20-tokens-per-parameter rule | https://arxiv.org/abs/2203.15556 |
 | Henighan et al. (2020), "Scaling Laws for Autoregressive Generative Modeling" | Extends power-law scaling beyond language to images, video, and mathematical problems; shows universality of the scaling law framework | https://arxiv.org/abs/2010.14701 |
 | Bahri et al. (2021), "Explaining Neural Scaling Laws" | Provides a theoretical derivation of power-law scaling from statistical mechanics; connects neural scaling to solvable models with broken power-law structure in the data | https://arxiv.org/abs/2102.06701 |
+| Villalobos (2023), "Scaling Laws Literature Review" (Epoch AI) | Broad survey of scaling law results across modalities; discusses alternative estimators (M4, BNSL), non-power-law regimes, trend breaks, and the limits of upstream-to-downstream transfer | https://epoch.ai/blog/scaling-laws-literature-review |
+| Caballero et al. (2022), "Broken Neural Scaling Laws" | Introduces the BNSL functional form to model transitions between scaling regimes; demonstrates that trend breaks cannot be reliably predicted from smaller-scale observations | https://arxiv.org/abs/2210.14891 |
+| Sorscher et al. (2022), "Beyond neural scaling laws: beating power law scaling via data pruning" | Shows that with structured data pruning, loss can scale exponentially rather than as a power law, offering a route beyond the power-law frontier | https://arxiv.org/abs/2206.14486 |
