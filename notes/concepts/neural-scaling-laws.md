@@ -1,5 +1,31 @@
 # Neural Scaling Laws
 
+## Table of Contents
+
+1. [Motivation](#1-motivation)
+   - [The Empirical Observation](#the-empirical-observation)
+   - [Power Laws Are Not Unique to Neural Networks](#power-laws-are-not-unique-to-neural-networks)
+   - [Why This Matters Practically](#why-this-matters-practically)
+2. [Mathematical Setup](#2-mathematical-setup)
+   - [The Loss Decomposition Model](#the-loss-decomposition-model)
+   - [The Compute Approximation C ≈ 6ND](#the-compute-approximation-c--6nd)
+3. [Kaplan et al. (2020): Fitting the Laws](#3-kaplan-et-al-2020-fitting-the-laws)
+   - [3.1 The Univariate Scaling Laws](#31-the-univariate-scaling-laws)
+   - [3.2 The Compute-Efficient Frontier](#32-the-compute-efficient-frontier)
+4. [Chinchilla (2022): The IsoFLOP Revolution](#4-chinchilla-2022-the-isoflop-revolution)
+   - [4.1 The IsoFLOP Methodology](#41-the-isoflop-methodology)
+   - [4.2 Analytical Derivation via Lagrangian Optimization](#42-analytical-derivation-via-lagrangian-optimization)
+   - [4.3 The 20 Tokens Per Parameter Rule](#43-the-20-tokens-per-parameter-rule)
+   - [4.4 Why Kaplan's Exponents Were Biased](#44-why-kaplans-exponents-were-biased)
+5. [Fitting Methodology](#5-fitting-methodology)
+   - [5.1 Approach 1 — IsoFLOP Minimum Fitting](#51-approach-1--isoflop-minimum-fitting)
+   - [5.2 Approach 2 — Parametric Global Fit](#52-approach-2--parametric-global-fit)
+   - [5.3 Approach 3 — Per-Model-Size Estimation](#53-approach-3--per-model-size-estimation)
+   - [5.4 Cross-Validation of Approaches](#54-cross-validation-of-approaches)
+6. [References](#references)
+
+---
+
 ## 1. Motivation
 
 One of the most striking empirical findings in modern deep learning is deceptively simple: if you train language models of varying sizes on varying amounts of data and plot the resulting loss on a log-log scale, you get a straight line. Not approximately straight — straight enough to extrapolate across many orders of magnitude with quantitative accuracy. This is power-law behavior, and it is the central empirical fact that scaling laws are built to explain.
