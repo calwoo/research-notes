@@ -189,4 +189,99 @@ For $\tau_T \approx 1.37$: $S(f) \sim f^{-1.63}$, which is close to but not exac
 
 **Caveat.** The $1/f$ label is used loosely. More precisely, BTW predicts $S(f) \sim f^{-\beta}$ with $\beta = 3 - \tau_T \in (1, 2)$ depending on the model. Furthermore, $1/f$ noise is not unique to SOC: any superposition of relaxation processes (Lorentzians) with a power-law distribution of relaxation times $P(\tau) \sim \tau^{-1}$ produces $S(f) \sim f^{-1}$ without any SOC dynamics. The presence of $1/f$ noise is consistent with SOC but does not establish it.
 
-<!-- TODO: sections 3-6 -->
+## Why Self-Organized Criticality?
+
+### 3.1 The Attractor Argument
+
+Argue that the critical state is the unique stationary state. Consider the average height $\langle z \rangle$:
+
+- **Subcritical regime** ($\langle z \rangle \ll z_c$): most sites are far from threshold. Avalanches are small — a grain addition typically causes 0 or 1 topplings. The output flux (grains leaving at the boundary) is much less than the input flux (one grain per step). Therefore $\langle z \rangle$ increases monotonically. The subcritical state is not stationary — it drifts upward.
+
+- **Supercritical regime** ($\langle z \rangle \gtrsim z_c$): many sites are near threshold. Grain additions trigger large avalanches that reach the boundary and dissipate many grains. The output flux exceeds the input flux. Therefore $\langle z \rangle$ decreases. The supercritical state is also not stationary.
+
+- **Critical state** ($\langle z \rangle = \langle z \rangle_c$): the unique average height at which input flux equals output flux in the stationary sense. This is a balance point that the dynamics drives the system toward from both sides — a dynamical attractor. No external control is needed to reach or maintain it.
+
+The slow drive ($h \to 0$) and open boundaries (dissipation) are both essential: without slow drive, the system cannot evolve; without dissipation at the boundary, grains accumulate without limit and there is no attractor.
+
+### 3.2 Connection to Absorbing State Phase Transitions
+
+A more formal perspective (Dickman, Muñoz, Vespignani, Zapperi 2000): interpret the activity (number of active/unstable sites) as an order parameter. In the limit $h \to 0$, $\epsilon \to 0$ (where $h$ is the drive rate and $\epsilon$ is the per-toppling dissipation rate):
+
+- For $h > 0$ fixed and $\epsilon > 0$: the system is always in the **active phase** — eventually all configurations are visited, including highly active ones.
+- For $h = 0$, $\epsilon > 0$: the system falls into an **absorbing state** (no unstable sites, no driving). This is the absorbing phase.
+- The boundary between these phases — the **absorbing state phase transition** — is where SOC lives.
+
+Formally, SOC corresponds to the **self-tuning** of the system to this phase boundary via the feedback between drive and dissipation. The SOC critical point is in the universality class of the Manna model (for stochastic sandpiles) or a separate class for the deterministic BTW model. This connection to absorbing state criticality provides a field-theoretic framework for computing SOC exponents — though the calculations are technically difficult and exponents are generally known only numerically.
+
+---
+
+## The Abelian Sandpile (Dhar 1990)
+
+### 4.1 Setup on a General Graph
+
+Let $G = (V \cup \{s\}, E)$ be a finite connected undirected graph with vertex set $V$ (non-sink vertices) and a distinguished sink vertex $s$. The toppling matrix $\Delta$ is the $|V| \times |V|$ matrix:
+$$\Delta_{ij} = \begin{cases} \deg(i) & i = j \\ -1 & \{i,j\} \in E,\ i \neq j \\ 0 & \text{otherwise} \end{cases}$$
+where $\deg(i)$ counts all edges from $i$, including edges to $s$. This is the graph Laplacian restricted to non-sink vertices — equivalently, the full Laplacian with the sink row and column deleted.
+
+The height variable $z_i \in \mathbb{Z}_{\geq 0}$ at each $i \in V$. Site $i$ is **stable** if $z_i < \deg(i)$ and **unstable** if $z_i \geq \deg(i)$. The toppling rule at site $i$:
+$$z_i \to z_i - \deg(i), \qquad z_j \to z_j + 1 \quad \forall \{i,j\} \in E, j \neq s$$
+Grains sent to $s$ are lost (dissipation). In matrix form: a toppling at $i$ changes the height vector by $-\Delta_{i\cdot}$ (subtract the $i$-th row of $\Delta$).
+
+### 4.2 The Abelian Property
+
+**Theorem (Dhar 1990).** Let $\eta$ be a configuration (possibly unstable). If there exists a finite legal toppling sequence — a sequence of topplings of unstable sites — that stabilizes $\eta$, then:
+1. Every legal toppling sequence from $\eta$ also stabilizes $\eta$.
+2. All stabilizing sequences produce the same final stable configuration $\eta'$.
+3. Each site $i \in V$ topples the same number of times $n_i$ in every stabilizing sequence.
+
+**Proof.**
+
+Let $\mathbf{n}^\alpha \in \mathbb{Z}_{\geq 0}^{|V|}$ denote the toppling vector for sequence $\alpha$ (number of times each site topples). After sequence $\alpha$:
+$$\eta'_i = \eta_i - \sum_j \Delta_{ij} n_j^\alpha = \eta_i - (\Delta \mathbf{n}^\alpha)_i$$
+or in vector form $\eta' = \eta - \Delta \mathbf{n}^\alpha$.
+
+If $\alpha$ and $\beta$ both stabilize $\eta$:
+$$\eta - \Delta \mathbf{n}^\alpha = \eta - \Delta \mathbf{n}^\beta \implies \Delta(\mathbf{n}^\alpha - \mathbf{n}^\beta) = \mathbf{0}$$
+
+**Key claim:** $\Delta$ is positive definite on $\mathbb{R}^{|V|}$, hence $\ker(\Delta) = \{\mathbf{0}\}$.
+
+*Proof of positive definiteness:* $\Delta$ is the graph Laplacian restricted to $V$, with the sink providing a "ground." For any $\mathbf{x} \in \mathbb{R}^{|V|}$:
+$$\mathbf{x}^\top \Delta \mathbf{x} = \sum_{\{i,j\} \in E, i,j \in V} (x_i - x_j)^2 + \sum_{i \in V,\ \{i,s\} \in E} x_i^2 \geq 0$$
+Since $G$ is connected and $s$ is adjacent to at least one vertex in $V$, the quadratic form is strictly positive for $\mathbf{x} \neq \mathbf{0}$.
+
+Therefore $\mathbf{n}^\alpha = \mathbf{n}^\beta$, and hence $\eta'^\alpha = \eta'^\beta$. $\square$
+
+The abelian property is why the sandpile is analytically tractable: the stabilization map $\eta \mapsto \eta'$ and the toppling numbers $\mathbf{n}(\eta)$ are well-defined functions, independent of implementation order.
+
+### 4.3 The Toppling Lemma
+
+**Lemma.** Let $\eta$ be a configuration that can be stabilized. If $n_i(\eta) \geq 1$ (site $i$ topples at least once in the stabilization of $\eta$), then $n_i(\eta + \mathbf{e}_j) \geq n_i(\eta)$ for any grain addition $\mathbf{e}_j$ (adding a grain at site $j$).
+
+More simply: **adding grains can only increase the number of topplings, never decrease it.**
+
+**Proof sketch:** Adding a grain at $j$ can only make $\eta + \mathbf{e}_j$ "more unstable" than $\eta$. Any toppling sequence that stabilizes $\eta$ is also legal for $\eta + \mathbf{e}_j$ (the extra grain at $j$ never makes a previously legal toppling illegal). By the abelian property, the toppling numbers $\mathbf{n}(\eta + \mathbf{e}_j) \geq \mathbf{n}(\eta)$ componentwise. $\square$
+
+This monotonicity is essential for proving properties of the stationary distribution.
+
+### 4.4 Recurrent Configurations and the Sandpile Group
+
+A stable configuration $\eta$ is **recurrent** if it appears with positive probability in the unique stationary distribution of the Markov chain (add grain at random site, stabilize, repeat). A configuration is **transient** if it is visited at most finitely often (probability zero in stationarity).
+
+**Dhar's burning algorithm** (criterion for recurrence): $\eta$ is recurrent if and only if the following process terminates with all vertices burned:
+1. Initialize: mark the sink $s$ as "burned."
+2. Iterate: if an unburned vertex $i$ has $z_i \geq$ (number of unburned neighbors of $i$), mark $i$ as burned.
+3. Repeat until no more vertices can be burned.
+4. $\eta$ is recurrent iff all vertices in $V$ are eventually burned.
+
+Intuitively: a recurrent configuration is one "dense enough" that every site could topple at least once if grains arrived from burned (stabilized) neighbors — it cannot be "blocked" by any cluster of sites.
+
+**The sandpile group.** The set $\mathcal{R}$ of recurrent configurations forms an **abelian group** under the operation:
+$$\eta_1 \oplus \eta_2 = \text{Stab}(\eta_1 + \eta_2)$$
+(add the configurations componentwise, then stabilize). This group is:
+- **Abelian**: by the abelian property, $\eta_1 \oplus \eta_2 = \eta_2 \oplus \eta_1$
+- **Finite**: $|\mathcal{R}| = \det(\Delta)$ (a remarkable identity proved by Dhar)
+- **Cyclic structure**: for the $L \times L$ grid, $\det(\Delta)$ grows as $e^{c L^2}$ where $c = \frac{4G}{\pi}$ and $G$ is Catalan's constant
+
+The sandpile group is one of the rare examples of a non-trivial algebraic structure arising from a dynamical system, and its study connects to algebraic combinatorics, chip-firing games, and tropical geometry.
+
+<!-- TODO: sections 5-6 -->
