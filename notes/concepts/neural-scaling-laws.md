@@ -365,4 +365,64 @@ In the language of statistical estimation: Kaplan's $L(N)$ curve is not measured
 
 **Chinchilla's correction.** By holding compute fixed and sweeping the IsoFLOP curve, Chinchilla always trains in the compute-optimal regime: as $C$ increases, both $N$ and $D$ increase together. The model is never data-saturated at the scale being measured, so the estimated $\hat{\alpha}$ reflects genuine capacity scaling rather than a data floor artifact. The resulting $\alpha \approx 0.34$ — more than $4\times$ larger than Kaplan's $0.076$ — gives the balanced scaling result $N^* \propto C^{1/2}$.
 
-<!-- TODO: sections 5-6 -->
+## 5. Fitting Methodology
+
+The five parameters $(E, A, B, \alpha, \beta)$ in $L(N, D) = E + A/N^\alpha + B/D^\beta$ cannot be read off directly from data — they must be estimated by fitting the model to a collection of training runs. Chinchilla cross-validates three distinct approaches, each with different assumptions and statistical properties.
+
+### 5.1 Approach 1 — IsoFLOP Minimum Fitting
+
+For each compute budget $C_i$, run models at several $(N, D)$ points along the IsoFLOP curve $6ND = C_i$. Fit a parabola to $\log L$ vs. $\log N$ to find the minimizing $N^*(C_i)$. Then fit:
+
+$$\log N^*(C_i) = a \log C_i + b$$
+
+via ordinary least squares (OLS). The slope $a$ gives $\beta/(\alpha+\beta)$.
+
+This approach estimates the scaling exponents only (not $A$, $B$, $E$), and is the most robust because it does not require a global model fit. The parabolic approximation to the loss surface near the minimum is justified by the local smoothness of $L(N)$ under the IsoFLOP constraint, and the OLS step requires only that the optimal $N^*$ follows a power law in $C$ — a consequence of the model that can be checked for self-consistency.
+
+### 5.2 Approach 2 — Parametric Global Fit
+
+Minimize the sum of squared residuals over all runs simultaneously:
+
+$$\min_{E, A, B, \alpha, \beta} \sum_{\text{runs}} \left( L_{\text{obs}} - E - \frac{A}{N^\alpha} - \frac{B}{D^\beta} \right)^2$$
+
+Practical notes:
+
+- **Fit in log-space to enforce positivity:** reparametrize $E = \exp(e)$, $A = \exp(a)$, $B = \exp(b)$ — this also makes the loss surface more symmetric and reduces the condition number of the Hessian, improving convergence.
+- **Use L-BFGS** (a quasi-Newton method) to optimize — gradient descent would be too slow for a 5-parameter nonlinear fit, and L-BFGS exploits curvature information to converge in far fewer iterations.
+- **Initialization:** use Approach 1's slope estimate to warm-start $\alpha$ and $\beta$; initialize $E$ slightly below the minimum observed loss to avoid the optimizer placing $E$ above the data.
+- **Multiple restarts** are recommended to avoid local minima in the $(\alpha, \beta, E)$ subspace, where the loss surface can be non-convex.
+
+This approach yields all five parameters and is used to compute the headline result $D^* \approx 20 N^*$.
+
+### 5.3 Approach 3 — Per-Model-Size Estimation
+
+For each fixed $N_i$, collect runs with varying $D$ and fit:
+
+$$L(D; N_i) = E_{N_i} + \frac{B_{N_i}}{D^{\beta}}$$
+
+via OLS in log-space to obtain estimates $\hat{E}_{N_i}$ and $\hat{\beta}_{N_i}$.
+
+Then treat $\hat{E}_{N_i}$ as the effective irreducible loss at model size $N_i$ and fit:
+
+$$\hat{E}_{N_i} = E + \frac{A}{N_i^\alpha}$$
+
+as a function of $N_i$ to recover $E$, $A$, and $\alpha$.
+
+This two-stage approach is more stable than the global fit — each stage is a lower-dimensional regression — but less data-efficient: it requires many $D$ values per $N$ level to accurately estimate $\hat{E}_{N_i}$, whereas Approach 2 can pool information across all $(N, D)$ pairs simultaneously.
+
+### 5.4 Cross-Validation of Approaches
+
+All three approaches agree on the key qualitative finding: **$\alpha \approx \beta$** (both in the range $0.28$–$0.50$ across approaches), implying $N^* \propto D^* \propto C^{1/2}$. The specific fitted constants differ across approaches, giving $D^*/N^*$ ratios ranging from approximately 5 to 30, with the headline "20 tokens per parameter" coming from Approach 2.
+
+The agreement across methods — despite their substantially different statistical assumptions and data requirements — strengthens confidence in the equal-scaling conclusion even if the exact constants are uncertain. The qualitative result (equal $N$ and $D$ scaling) is robust; the quantitative constant (20) should be treated as an order-of-magnitude estimate.
+
+---
+
+## References
+
+| Reference Name | Brief Summary | Link to Reference |
+|---|---|---|
+| Kaplan et al. (2020), "Scaling Laws for Neural Language Models" | Establishes power-law scaling of LM loss with $N$, $D$, $C$; introduces the loss decomposition model; derives compute-efficient frontier favoring parameter-heavy scaling | https://arxiv.org/abs/2001.08361 |
+| Hoffmann et al. (2022), "Training Compute-Optimal Large Language Models" (Chinchilla) | Revises Kaplan via IsoFLOP analysis; introduces three fitting approaches; shows equal $N$ and $D$ scaling is optimal; establishes the 20-tokens-per-parameter rule | https://arxiv.org/abs/2203.15556 |
+| Henighan et al. (2020), "Scaling Laws for Autoregressive Generative Modeling" | Extends power-law scaling beyond language to images, video, and mathematical problems; shows universality of the scaling law framework | https://arxiv.org/abs/2010.14701 |
+| Bahri et al. (2021), "Explaining Neural Scaling Laws" | Provides a theoretical derivation of power-law scaling from statistical mechanics; connects neural scaling to solvable models with broken power-law structure in the data | https://arxiv.org/abs/2102.06701 |
