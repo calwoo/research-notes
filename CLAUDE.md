@@ -41,6 +41,7 @@ docs/             ← documentation for new functionality
 
 ## Notes Format
 
+- Each note must begin with a table of contents listing all top-level sections and their subsections, immediately after the title.
 - When researching a topic, always include a references table at the end of the note with columns: "Reference Name", "Brief Summary", "Link to Reference".
 
 ## Workflow
