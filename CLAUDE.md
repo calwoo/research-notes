@@ -10,31 +10,34 @@ This is a personal knowledge repository for agent-created notes, walkthroughs, a
 
 ## Directory Structure
 
-The repository uses three parallel directory trees, each with the same subdirectory types:
+The repository uses a category-first layout. Each topic gets its own subdirectory containing all three related files:
 
 ```
-notes/
-  papers/         ← summaries/analyses of specific papers
-  concepts/       ← explanations of ML/math concepts
-  walkthroughs/   ← step-by-step derivations or implementations
-exercises/
-  papers/
-  concepts/
-  walkthroughs/
-solutions/
-  papers/
-  concepts/
-  walkthroughs/
-plans/            ← implementation plans before execution
-docs/             ← documentation for new functionality
+concepts/       ← explanations of ML/math concepts
+  <topic>/
+    note.md         ← the research note/summary
+    exercises.md    ← problem set
+    solutions.md    ← full answer key
+papers/         ← summaries/analyses of specific papers
+  <topic>/
+    note.md
+    exercises.md
+    solutions.md
+walkthroughs/   ← step-by-step derivations or implementations
+  <topic>/
+    note.md
+    exercises.md
+    solutions.md
+docs/           ← documentation and design docs
+  plans/        ← implementation plans before execution
 ```
 
-**Naming convention:** topic slugs are shared across all three trees. For a topic `attention-transformer`:
-- `notes/papers/attention-transformer.md` — the note/summary
-- `exercises/papers/attention-transformer.md` — problem set
-- `solutions/papers/attention-transformer.md` — full answer key
+**Naming convention:** The topic slug is the folder name. For a topic `attention-transformer` under `concepts`:
+- `concepts/attention-transformer/note.md` — the research note
+- `concepts/attention-transformer/exercises.md` — problem set
+- `concepts/attention-transformer/solutions.md` — full answer key
 
-**Exercise file structure** (every exercise file must follow this order):
+**Exercise file structure** (every `exercises.md` must follow this order):
 1. **Derivation problems** — mathematical proofs and re-derivations
 2. **Conceptual questions** — intuition and reasoning questions
 3. **Implementation sketches** — pseudocode or math-level algorithm sketches
