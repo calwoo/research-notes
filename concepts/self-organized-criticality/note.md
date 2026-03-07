@@ -284,4 +284,79 @@ $$\eta_1 \oplus \eta_2 = \text{Stab}(\eta_1 + \eta_2)$$
 
 The sandpile group is one of the rare examples of a non-trivial algebraic structure arising from a dynamical system, and its study connects to algebraic combinatorics, chip-firing games, and tropical geometry.
 
-<!-- TODO: sections 5-6 -->
+## Scaling Theory and Exponents
+
+### 5.1 Finite-Size Scaling
+
+For a system of linear size $L$, the avalanche size distribution is not a pure power law — it is cut off at large $s$ by the system size. The **finite-size scaling ansatz** is:
+
+$$P(s, L) = s^{-\tau_s}\, g\!\left(\frac{s}{L^D}\right)$$
+
+where:
+- $\tau_s > 1$ is the **size exponent**
+- $D > 0$ is the **avalanche fractal dimension** — the exponent relating the typical maximum avalanche size to system size: $s_{\max} \sim L^D$
+- $g : (0,\infty) \to (0,\infty)$ is a **universal scaling function** satisfying $g(u) \approx \text{const}$ for $u \ll 1$ and $g(u) \to 0$ rapidly (faster than any power) for $u \gg 1$
+
+In the $L \to \infty$ limit, the cutoff moves to infinity and $P(s) \sim s^{-\tau_s}$ for all $s$ — a pure power law. For finite $L$, the distribution follows the power law for $s \ll L^D$ and is exponentially suppressed for $s \gg L^D$.
+
+The same ansatz applies to the duration and area distributions:
+$$P(T, L) = T^{-\tau_T} \tilde{g}\!\left(\frac{T}{L^z}\right), \qquad P(a, L) = a^{-\tau_a} \hat{g}\!\left(\frac{a}{L^{d_f}}\right)$$
+where $z$ is the **dynamical exponent** and $d_f$ is the spatial fractal dimension of avalanche footprints.
+
+### 5.2 Scaling Relations
+
+The exponents are not all independent — they are related by scaling laws derived from the internal consistency of the finite-size scaling ansatz.
+
+**Relation 1** — from $s \sim T^{\sigma}$ (size scales as duration to a power):
+$$\tau_T = 1 + \sigma(\tau_s - 1), \qquad \sigma = D/z$$
+
+**Relation 2** — from $a \sim s^{d_f/D}$ (area scales as a power of size):
+$$\tau_a = 1 + \frac{D}{d_f}(\tau_s - 1)$$
+
+**Relation 3** — from conservation: in the BTW sandpile, each toppling conserves grains in the interior. The total number of grains dissipated equals the avalanche size reaching the boundary. For $d$-dimensional systems, conservation implies:
+$$D = d + 2 - \tau_s \cdot d \quad \text{(heuristic)}$$
+This is an approximate relation; the exact form depends on the universality class.
+
+These relations mean that, in principle, only two independent exponents characterize an SOC universality class (analogous to two independent exponents in equilibrium critical phenomena).
+
+### 5.3 Known Values for 2D BTW
+
+Numerically established values for the $2$-dimensional BTW sandpile on $\mathbb{Z}^2$ (exact analytic values remain open):
+
+| Exponent | Symbol | Numerical value |
+|---|---|---|
+| Size exponent | $\tau_s$ | $1.20 \pm 0.01$ |
+| Duration exponent | $\tau_T$ | $1.37 \pm 0.02$ |
+| Area exponent | $\tau_a$ | $1.14 \pm 0.01$ |
+| Avalanche dimension | $D$ | $2.75 \pm 0.05$ |
+| Dynamical exponent | $z$ | $1.57 \pm 0.05$ |
+| Spatial fractal dimension | $d_f$ | $\approx 2$ (space-filling) |
+
+Important caveats:
+- The 2D BTW sandpile is believed to have **logarithmic corrections** to pure power-law scaling, arising from its exact abelian structure. These corrections make numerical estimation of exponents particularly difficult.
+- Some exact results are known on special graphs (complete graph, trees) where the abelian structure can be exploited fully, but the 2D square lattice remains analytically open.
+- There is ongoing debate in the literature about the exact values of exponents and whether the 2D BTW sandpile is truly critical in the thermodynamic limit or exhibits only quasi-critical behavior.
+
+### 5.4 Universality
+
+Different SOC models belong to different universality classes, characterized by different sets of exponents:
+
+- **BTW (deterministic)**: topplings are deterministic — a site always sends exactly one grain to each neighbor. This determinism may produce logarithmic corrections and place BTW in a distinct class.
+- **Manna model (stochastic)**: when site $i$ topples, it sends 2 grains to randomly chosen neighbors. This stochasticity places the Manna model in the "Manna universality class" — believed to be the generic class for stochastic sandpiles, with $\tau_s^{\text{Manna}} \approx 1.28$ in 2D.
+- **Conserved vs. non-conserved**: the BTW sandpile is locally conserved (grains only lost at boundary). Non-conserved models (e.g., Olami-Feder-Christensen earthquake model) generally exhibit different scaling.
+
+The universality class is determined by symmetries of the toppling rule (deterministic vs. stochastic, conserved vs. non-conserved, spatial dimension), not merely by the qualitative presence of power-law avalanche statistics.
+
+---
+
+## References
+
+| Reference Name | Brief Summary | Link to Reference |
+|---|---|---|
+| Bak, Tang, Wiesenfeld (1987), "Self-organized criticality: An explanation of the 1/f noise" | Original paper introducing the BTW sandpile and the SOC concept; establishes power-law avalanche statistics and the 1/f noise connection | https://doi.org/10.1103/PhysRevLett.59.381 |
+| Dhar (1990), "Self-organized critical state of sandpile automaton models" | Introduces the Abelian sandpile on general graphs; proves the abelian property, toppling lemma, and |R| = det(Δ); foundational mathematical treatment | https://doi.org/10.1103/PhysRevLett.64.1613 |
+| Bak (1996), "How Nature Works: The Science of Self-Organized Criticality" | Accessible book-length introduction to SOC by one of its creators; covers motivation, natural examples, and conceptual framework with minimal formalism | https://link.springer.com/book/10.1007/978-1-4757-5426-1 |
+| Jensen (1998), "Self-Organized Criticality: Emergent Complex Behavior in Physical and Biological Systems" | Graduate-level textbook covering BTW, Abelian sandpile, scaling theory, and applications; the standard first mathematical reference | https://doi.org/10.1017/CBO9780511622717 |
+| Dickman, Muñoz, Vespignani, Zapperi (2000), "Paths to self-organized criticality" | Reviews the connection between SOC and absorbing state phase transitions; clarifies the role of drive rate and dissipation in self-tuning to criticality | https://doi.org/10.1590/S0103-97332000000100030 |
+| Pruessner (2012), "Self-Organised Criticality: Theory, Models and Characterisation" | Comprehensive modern reference; covers field-theoretic approaches, numerical methods, and many SOC models; the most complete mathematical treatment available | https://doi.org/10.1017/CBO9780511977671 |
+| Christensen and Moloney (2005), "Complexity and Criticality" | Textbook with detailed BTW and Abelian sandpile chapters; worked examples and problem sets; well-suited for self-study | https://doi.org/10.1142/p365 |
