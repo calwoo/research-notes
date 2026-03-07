@@ -8,7 +8,7 @@
    - [Why This Matters Practically](#why-this-matters-practically)
 2. [Mathematical Setup](#2-mathematical-setup)
    - [The Loss Decomposition Model](#the-loss-decomposition-model)
-   - [The Compute Approximation C ≈ 6ND](#the-compute-approximation-c--6nd)
+   - [The Compute Approximation C ≈ 6ND](#the-compute-approximation-c-approx-6nd)
 3. [Kaplan et al. (2020): Fitting the Laws](#3-kaplan-et-al-2020-fitting-the-laws)
    - [3.1 The Univariate Scaling Laws](#31-the-univariate-scaling-laws)
    - [3.2 The Compute-Efficient Frontier](#32-the-compute-efficient-frontier)
