@@ -46,11 +46,11 @@ A sparse conditional computation architecture that routes each input to a learne
 
 ### The Parameter-Efficiency Argument
 
-The fundamental tension in deep learning is this: more parameters yield better model quality, but more parameters require more compute per forward pass. For dense networks, these two quantities are coupled — doubling parameter count roughly doubles both memory footprint and floating-point operations. Mixture of Experts breaks this coupling by making parameter activation conditional on the input.
+The fundamental tension in deep learning is this: more parameters yield better model quality, but more parameters require more compute per forward pass. For dense networks, these two quantities are coupled — doubling parameter count roughly doubles both memory footprint and floating-point operations. *Mixture of Experts* breaks this coupling by making parameter activation conditional on the input.
 
 Concretely, suppose a dense feed-forward network has $P$ parameters and costs $F$ FLOPs per token. A Mixture-of-Experts model might have $n \cdot P$ total parameters — one full set per expert — but activate only $k$ experts per token, incurring only $k \cdot F$ FLOPs. For $k \ll n$, the model stores $n$ times more knowledge but computes at a fraction of the cost of a dense model with the same parameter count.
 
-This is the parameter-efficiency argument: for a fixed inference compute budget, MoE models can achieve better quality than dense models because they can access vastly more parameters without paying the full FLOP cost.
+**This is the parameter-efficiency argument: for a fixed inference compute budget, MoE models can achieve better quality than dense models because they can access vastly more parameters without paying the full FLOP cost.**
 
 ![MoE layer architecture: input token passes through router, which dispatches to one of several expert FFNs, outputs are combined](figures/grootendorst2024-moe-layer-architecture.png)
 *Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. The MoE layer embedded inside a Transformer block: a router examines each input token and dispatches it to a selected subset of expert FFNs; only those experts perform computation, and their outputs are aggregated to produce the layer's output.*
@@ -60,15 +60,15 @@ This is the parameter-efficiency argument: for a fixed inference compute budget,
 
 ### Conditional Computation as a Principle
 
-The broader principle underlying MoE is **conditional computation**: the idea that not every part of a network should be activated for every input. Bengio et al. (2013) articulated this formally as a research agenda: the computational graph of a neural network need not be fully traversed for each example; different inputs should trigger different subgraphs. MoE instantiates this principle at the layer level, where the "subgraph" is a single expert's feed-forward network.
+The broader principle underlying MoE is *conditional computation*: the idea that not every part of a network should be activated for every input. Bengio et al. (2013) articulated this formally as a research agenda: the computational graph of a neural network need not be fully traversed for each example; different inputs should trigger different subgraphs. MoE instantiates this principle at the layer level, where the "subgraph" is a single expert's feed-forward network.
 
-The key challenge is that conditional computation introduces a discrete routing decision — which experts to activate — and discrete decisions are not differentiable, breaking standard gradient-based training. The history of MoE is largely the history of working around this non-differentiability.
+The key challenge is that conditional computation introduces a discrete *routing* decision — which experts to activate — and discrete decisions are not differentiable, breaking standard gradient-based training. The history of MoE is largely the history of working around this non-differentiability.
 
 ### Historical Lineage
 
-The origins of MoE lie in classical statistical mixture models. The model-theoretic precedent is a mixture distribution $p(y \mid x) = \sum_i \pi_i(x) \, p_i(y \mid x)$, where $\pi_i(x)$ are input-dependent mixture weights. Jacobs et al. (1991) instantiated this as a supervised learning system, naming it "Adaptive Mixtures of Local Experts." In their formulation, a gating network computes weights over a small set of expert networks, each network specializing on a region of the input space.
+The origins of MoE lie in classical statistical mixture models. The model-theoretic precedent is a mixture distribution $p(y \mid x) = \sum_i \pi_i(x) \, p_i(y \mid x)$, where $\pi_i(x)$ are input-dependent mixture weights. Jacobs et al. (1991) instantiated this as a supervised learning system, naming it "Adaptive Mixtures of Local Experts." In their formulation, a *gating network* computes weights over a small set of *expert* networks, each network specializing on a region of the input space.
 
-This original MoE was soft — all experts are evaluated for every input, and outputs are a weighted sum. The key insight of Shazeer et al. (2017) was to make this hard and sparse: select only the top-$k$ experts by gate weight, set the rest to zero, and scale the system to thousands of experts within an LSTM language model. This required solving the load balancing problem — ensuring that routing does not trivially collapse to always selecting the same expert — which became the central research problem for all subsequent MoE work.
+This original MoE was soft — all experts are evaluated for every input, and outputs are a weighted sum. The key insight of Shazeer et al. (2017) was to make this hard and sparse: select only the top-$k$ experts by gate weight, set the rest to zero, and scale the system to thousands of experts within an LSTM language model. This required solving the *load balancing* problem — ensuring that routing does not trivially collapse to always selecting the same expert — which became the central research problem for all subsequent MoE work.
 
 GShard (Lepikhin et al., 2021) integrated sparse MoE into Transformers and demonstrated scaling to 600B parameters across hundreds of TPU devices. Switch Transformers (Fedus et al., 2021) pushed to top-1 routing and trillion parameters. Expert-Choice routing (Zhou et al., 2022) inverted the selection direction. Mixtral (Jiang et al., 2024) demonstrated that carefully designed sparse MoE LLMs are competitive with or superior to dense models many times their active parameter count.
 
@@ -106,7 +106,7 @@ $$g_i(x) = \frac{\exp(z_i(x))}{\sum_{j \in \mathcal{T}(x)} \exp(z_j(x))}, \quad 
 
 This concentrates the gate mass onto a selected subset, while the experts in $\mathcal{T}(x)$ form a proper probability simplex.
 
-The top-$k$ selection is not differentiable: the set $\mathcal{T}(x)$ is a discrete function of $z(x)$, so gradients cannot flow through the selection boundary. In practice, training works by treating the selected set as given (stop-gradient on the selection) and backpropagating through the softmax weights and through the selected experts' outputs. This is a valid but heuristic approximation to the true gradient.
+The top-$k$ selection is not differentiable: the set $\mathcal{T}(x)$ is a discrete function of $z(x)$, so gradients cannot flow through the selection boundary. In practice, training works by treating the selected set as given (stop-gradient on the selection) and backpropagating through the softmax weights and through the selected experts' outputs. *This is a valid but heuristic approximation to the true gradient.*
 
 ![Hard top-k gating flow: input X through router weight matrix W produces logits H(x), KeepTopK masks non-selected experts to -inf, Softmax produces sparse gate G(x), selected expert output E(x) is scaled by gate weight to produce output y](figures/grootendorst2024-hard-topk-gating-flow.png)
 *Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. The hard top-k gating computation: input $x$ is projected through the router weight matrix $W$ to produce logits $H(x)$; KeepTopK sets all but the top-$k$ entries to $-\infty$; Softmax over the surviving logits yields the sparse gate $G(x)$; only the selected expert's output $E(x)$ is computed and scaled by the gate weight to produce the final output $y$.*
@@ -121,7 +121,7 @@ Unlike standard ensembles, however, MoE is trained jointly — gate and experts 
 
 ## 3. Sparsely-Gated MoE: Shazeer 2017
 
-Shazeer et al. (2017) operationalized the top-$k$ MoE idea at scale within an LSTM language model, demonstrating models with up to 137B parameters. The key technical contributions are noisy top-$k$ gating and the first systematic treatment of the load imbalance problem.
+Shazeer et al. (2017) operationalized the top-$k$ MoE idea at scale within an LSTM language model, demonstrating models with up to 137B parameters. The key technical contributions are *noisy top-k gating* and the first systematic treatment of the load imbalance problem.
 
 ### Noisy Top-k Gating
 
@@ -173,7 +173,7 @@ Note that $g_i(x) = 0$ for experts not in $\mathcal{T}(x)$, so this sums only ov
 
 The importance vector $\operatorname{Importance}(\mathcal{B}) \in \mathbb{R}^E$ measures the total "soft attention" each expert receives. If all experts are equally important, this vector is constant.
 
-**Definition (Importance Loss).** The importance loss is the squared coefficient of variation (CV) of the importance vector:
+**Definition (Importance Loss).** The importance loss is the squared *coefficient of variation* (CV) of the importance vector:
 
 $$\mathcal{L}_{\text{imp}} = \operatorname{CV}\!\left(\operatorname{Importance}(\mathcal{B})\right)^2 = \left(\frac{\sigma(\operatorname{Importance}(\mathcal{B}))}{\mu(\operatorname{Importance}(\mathcal{B}))}\right)^2$$
 
@@ -183,7 +183,7 @@ This loss is differentiable with respect to the gate values $g_i(x)$, and hence 
 
 ### Load Loss
 
-The importance loss encourages balanced gate probabilities but does not directly constrain the number of tokens routed to each expert (which determines the actual computational load). The **load loss** addresses this.
+The *importance loss* encourages balanced gate probabilities but does not directly constrain the number of tokens routed to each expert (which determines the actual computational load). The *load loss* addresses this.
 
 **Definition (Smooth Load Estimate).** For expert $i$, define its smooth load on batch $\mathcal{B}$ as:
 
@@ -207,7 +207,7 @@ with $\lambda$ a small positive constant (e.g., $10^{-2}$). The total training l
 
 ### Capacity Factor and Token Dropping
 
-Even with auxiliary losses, routing in a distributed system requires hard limits on how many tokens each expert processes per batch (otherwise one expert could receive the entire batch). Shazeer et al. and subsequent work introduce the **capacity factor** to formalize this.
+Even with auxiliary losses, routing in a distributed system requires hard limits on how many tokens each expert processes per batch (otherwise one expert could receive the entire batch). Shazeer et al. and subsequent work introduce the *capacity factor* to formalize this.
 
 **Definition (Expert Capacity).** Given a batch of $T$ tokens, $E$ experts, and top-$k$ gating, the total number of expert-token pairs is $kT$. A balanced assignment would give $kT/E$ tokens to each expert. The expert capacity is:
 
@@ -220,7 +220,7 @@ A capacity factor of $\phi = 1$ means the expert handles exactly its fair share,
 ![Expert capacity enforcement: FFNN 1 has reached capacity (3 tokens), so overflow tokens are redirected to FFNN 4 instead](figures/grootendorst2024-expert-capacity.png)
 *Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. Expert capacity in practice: when FFNN 1 has already processed its capacity (here, 3 tokens), any additional tokens that the router would send to it are instead redirected to the next preferred expert (FFNN 4). Tokens with no available expert slot are dropped.*
 
-**Remark (Token Dropping as a Regularizer).** Token dropping is not merely an engineering constraint. It can be interpreted as a training-time regularizer: tokens whose first-choice expert is at capacity must rely on their second or subsequent choices, which forces those tokens to be processable by multiple experts and prevents over-specialization of the routing.
+**Remark (Token Dropping as a Regularizer).** *Token dropping* is not merely an engineering constraint. It can be interpreted as a training-time regularizer: tokens whose first-choice expert is at capacity must rely on their second or subsequent choices, which forces those tokens to be processable by multiple experts and prevents over-specialization of the routing.
 
 ---
 
@@ -259,7 +259,7 @@ $$\mathcal{L}_{\text{aux}} = \alpha \cdot E \cdot \sum_{i=1}^{E} f_i \cdot P_i$$
 
 ### Scaling Behavior
 
-Switch Transformers achieve up to 7x pre-training speed improvements over dense T5 baselines at equivalent FLOP budgets, and 4x speedups over T5-XXL when scaling to trillion parameters. The key finding is that the gains are available even in lower-precision (bfloat16) training, which was previously thought to be unstable for sparse models. This demonstrated that the engineering barriers to trillion-parameter sparse training were surmountable.
+**Switch Transformers achieve up to 7x pre-training speed improvements over dense T5 baselines at equivalent FLOP budgets, and 4x speedups over T5-XXL when scaling to trillion parameters.** The key finding is that the gains are available even in lower-precision (bfloat16) training, which was previously thought to be unstable for sparse models. This demonstrated that the engineering barriers to trillion-parameter sparse training were surmountable.
 
 ![Switch Transformer scaling: negative log perplexity vs number of experts, showing consistent improvement as expert count grows from 2 to 2048](figures/fedus2021-fig1-scaling-properties.png)
 *Figure 1 (Fedus et al., 2021): Scaling properties of the Switch Transformer. Negative log perplexity improves consistently as the number of experts grows from 2 to 2048 under a fixed per-token FLOP budget, demonstrating that increasing total parameter count via more experts yields reliable quality gains without additional inference cost.*
@@ -270,9 +270,9 @@ Switch Transformers achieve up to 7x pre-training speed improvements over dense 
 
 ### Inverting the Routing Decision
 
-All routing strategies discussed so far are **token-choice**: each token independently selects the top-$k$ experts to process it. This creates an inherent load imbalance: multiple tokens may simultaneously select the same expert, causing overflow, while other experts sit idle. Auxiliary losses and capacity factors mitigate this but do not eliminate it.
+All routing strategies discussed so far are *token-choice routing*: each token independently selects the top-$k$ experts to process it. This creates an inherent load imbalance: multiple tokens may simultaneously select the same expert, causing overflow, while other experts sit idle. Auxiliary losses and capacity factors mitigate this but do not eliminate it.
 
-Zhou et al. (2022) propose **expert-choice routing**, which inverts the selection: instead of tokens choosing experts, each expert chooses its top-$m$ tokens from the batch.
+Zhou et al. (2022) propose *expert-choice routing*, which inverts the selection: instead of tokens choosing experts, each expert chooses its top-$m$ tokens from the batch.
 
 ### Formal Specification
 
@@ -298,7 +298,7 @@ The capacity factor $\phi$ controls the relationship between $m$ and token count
 
 *Proof.* Each expert independently selects $|\mathcal{B}_i| = m$ tokens via the top-$m$ operation. Since each $\mathcal{B}_i$ is defined as the top-$m$ elements from a set of $T$ scores, $|\mathcal{B}_i| = m$ exactly for all $i \in [E]$. Total expert activations are exactly $m \cdot E$. Load is balanced by the selection mechanism itself, requiring no auxiliary loss for this purpose. $\square$
 
-This is the defining advantage of expert-choice: perfect load balance is a structural property, not a trained-in incentive. In practice this means no auxiliary loss for load balancing is required, and no tokens are dropped due to capacity overflow.
+This is the defining advantage of expert-choice: perfect load balance is a structural property, not a trained-in incentive. **In practice this means no auxiliary loss for load balancing is required, and no tokens are dropped due to capacity overflow.**
 
 The tradeoff is that tokens may receive attention from zero or more than $k$ experts, violating the uniform "each token sees exactly $k$ experts" invariant of token-choice routing. Tokens that are "difficult" (high-entropy routing scores) may attract many experts, while easy tokens may be processed by none. This variable expert coverage can be seen as an emergent form of adaptive computation.
 
@@ -337,7 +337,7 @@ where the gate $g$ is a standard softmax router and $f_i$ is the $i$-th FFN expe
 
 The proper comparison between a dense model and an MoE model is under a fixed inference compute budget, measured in FLOPs per token. Mixtral's 12.9B active parameters imply a per-token FLOP count comparable to a 13B dense model. The relevant comparison is therefore: how does Mixtral 8x7B perform relative to a 13B dense model (same active compute) and a 70B dense model (same total parameter count)?
 
-The results reported by Jiang et al. show Mixtral outperforms Llama 2 70B (a dense model with 5x more active parameters) on most benchmarks, while using only 2 of 8 experts per token. This concretely demonstrates the parameter-efficiency argument: access to 8 specialist FFN networks, even when only 2 are activated, provides substantially better quality than a single FFN with the same compute cost.
+**The results reported by Jiang et al. show Mixtral outperforms Llama 2 70B (a dense model with 5x more active parameters) on most benchmarks, while using only 2 of 8 experts per token.** This concretely demonstrates the parameter-efficiency argument: access to 8 specialist FFN networks, even when only 2 are activated, provides substantially better quality than a single FFN with the same compute cost.
 
 ![Mixtral 8x7B parameter breakdown: 46.7B total parameters, 12.9B active parameters per token, compared to dense model equivalents](figures/grootendorst2024-mixtral-parameter-comparison.png)
 *Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. Parameter breakdown for Mixtral 8x7B: the model holds 46.7B total parameters across 8 experts per layer, but activates only 12.9B parameters per token (2 of 8 experts). This decouples total parameter count from per-token compute, enabling FLOP-matched comparison against a ~13B dense model while benefiting from 46.7B worth of stored knowledge.*
@@ -360,7 +360,7 @@ A rough characterization (heuristic): if a dense model achieves loss $L$ after $
 
 **Definition (Expert Collapse).** Expert collapse occurs when the router $g(x)$ assigns near-zero probability to some subset of experts across all or most inputs in the training data. Collapsed experts receive negligible gradient updates, fail to specialize, and effectively remove themselves from the model's functional capacity.
 
-Expert collapse is a consequence of the positive feedback loop in joint training. Consider two experts $A$ and $B$, with $A$ marginally better initialized. Tokens routed to $A$ yield lower loss, providing stronger gradient signal to $A$'s parameters. $A$ improves; the router, observing lower loss from $A$, increases $g_A(x)$. This diverts more tokens from $B$, whose parameters stagnate, and the gap widens. This is a form of training-time symmetry breaking that is detrimental when it proceeds to completion (one or few experts receiving all tokens).
+*Expert collapse* is a consequence of the positive feedback loop in joint training. Consider two experts $A$ and $B$, with $A$ marginally better initialized. Tokens routed to $A$ yield lower loss, providing stronger gradient signal to $A$'s parameters. $A$ improves; the router, observing lower loss from $A$, increases $g_A(x)$. This diverts more tokens from $B$, whose parameters stagnate, and the gap widens. This is a form of training-time symmetry breaking that is detrimental when it proceeds to completion (one or few experts receiving all tokens).
 
 Expert collapse is distinct from **expert specialization**: in a healthy MoE, different experts specialize on different input types, and routing is non-uniform but not catastrophically concentrated. The challenge is allowing beneficial specialization while preventing complete collapse.
 
@@ -372,7 +372,7 @@ Expert collapse is distinct from **expert specialization**: in a healthy MoE, di
 
 ### Router Z-Loss
 
-The **router z-loss** (Zoph et al., 2022; ST-MoE) addresses training instability arising from large routing logits, which is a precursor to and companion of expert collapse.
+The *router z-loss* (Zoph et al., 2022; ST-MoE) addresses training instability arising from large routing logits, which is a precursor to and companion of expert collapse.
 
 **Motivation.** When routing logits $z_i(x)$ become large in magnitude, the softmax distribution becomes very sharp (peaked), effectively implementing hard routing. Sharp routing amplifies small perturbations — tiny changes in input $x$ can flip which expert is selected, causing discontinuous loss landscapes and gradient instability. Large logits also cause numerical issues in bfloat16 training.
 
@@ -406,7 +406,7 @@ An alternative or complementary approach to z-loss is entropy regularization on 
 
 $$H(g(x)) = -\sum_{i=1}^{E} g_i(x) \log g_i(x)$$
 
-Adding a term $-\beta \cdot \mathbb{E}_x[H(g(x))]$ to the loss (i.e., subtracting entropy from the objective, which is equivalent to penalizing low entropy) encourages the router to distribute probability mass more uniformly. This directly counteracts collapse but can conflict with the model's incentive to specialize: a uniform routing distribution means every expert receives equal probability mass, which may not reflect genuine input-dependent variation.
+Adding a term $-\beta \cdot \mathbb{E}_x[H(g(x))]$ to the loss (i.e., subtracting entropy from the objective, which is equivalent to penalizing low entropy) encourages the router to distribute probability mass more uniformly. *This directly counteracts collapse but can conflict with the model's incentive to specialize: a uniform routing distribution means every expert receives equal probability mass, which may not reflect genuine input-dependent variation.*
 
 In practice, entropy regularization is used more often in the soft-MoE and multi-task MoE literature than in the sparse-top-$k$ LLM context, where auxiliary losses and z-loss tend to be preferred.
 
