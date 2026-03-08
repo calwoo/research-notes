@@ -2,6 +2,19 @@
 
 Yi, Yang, Hong, Cheng, Heldt, Kumthekar, Zhao, Wei, Chi. RecSys 2019. Google.
 
+## TL;DR
+
+| Dimension | Prior State | This Paper |
+|-----------|-------------|------------|
+| **Training objective** | Batch softmax treats in-batch items as uniform negatives; implicitly minimizes loss under frequency-reweighted partition function $\sum_j q_j e^{s_j}$ | Corrects to target full softmax partition function $\sum_j e^{s_j}$ via logQ correction: subtract $\log \hat{p}_j$ from each item logit before softmax |
+| **Bias source** | Never identified; practitioners observed that popular items are over-penalized but attributed it to data imbalance | Formally derived: uncorrected batch softmax is an unbiased estimator of the wrong objective; bias scales with variance of $\log q_j$ across items |
+| **Frequency estimation** | Requires precomputed per-item frequency table over fixed vocabulary | Online streaming estimator via exponential moving average on inter-arrival times; handles non-stationary distributions and new items without recomputation |
+| **Architecture** | Two-tower inner product model (unchanged) | Two-tower inner product model (unchanged) — correction is training-only, zero inference cost |
+| **Deployment** | ANN index on raw item embeddings | ANN index on corrected-training item embeddings — same serving infrastructure |
+| **Empirical gains** | — | +8% Recall@1 on Wikipedia link prediction; statistically significant live metric gains on YouTube retrieval |
+
+---
+
 ## Table of Contents
 
 1. [Motivation and Problem Setting](#1-motivation-and-problem-setting)
