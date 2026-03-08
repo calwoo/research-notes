@@ -24,7 +24,13 @@
    - [5.4 Cross-Validation of Approaches](#54-cross-validation-of-approaches)
    - [5.5 Alternative Estimators](#55-alternative-estimators)
 6. [Scope and Limitations](#6-scope-and-limitations)
+   - [Upstream vs. Downstream Performance](#upstream-vs-downstream-performance)
+   - [Non-Power-Law Scaling](#non-power-law-scaling)
+   - [Trend Breaks and Extrapolation Risk](#trend-breaks-and-extrapolation-risk)
+   - [Modality and Architecture Dependence](#modality-and-architecture-dependence)
+   - [Scaling for Recommendation Systems and Ranking Models](#scaling-for-recommendation-systems-and-ranking-models)
 7. [References](#references)
+   - [Further Reading: Scaling for Recommendation Systems and Ranking](#further-reading-scaling-for-recommendation-systems-and-ranking)
 
 ---
 
@@ -528,6 +534,46 @@ Vision transformers (Zhai et al. 2022), acoustic models (Droppo and Elibol 2021)
 
 Hestness et al. also established that architecture improvements — replacing LSTMs with better recurrent architectures, adding depth, tuning hyperparameters — consistently shift the loss curve downward (reducing the multiplicative constant $\alpha_0$) without changing $\beta_g$. The exponent is a property of the task, not the model. This implies a ceiling on what architectural innovation alone can achieve: better architecture buys a one-time constant factor, not a change in the rate at which more data or more parameters help.
 
+### Scaling for Recommendation Systems and Ranking Models
+
+Recommendation and ranking systems present a distinct scaling regime from language models, shaped by several structural differences: inputs are sparse categorical features (user and item IDs) rather than dense token embeddings; daily interaction volumes are several orders of magnitude larger than the token corpora used for LLM training; and the downstream metric (CTR, NDCG, Recall@K) is bounded and nonlinear in loss, complicating direct comparison of scaling curves.
+
+**Traditional DLRMs scale weakly.** Ardalani et al. (2022) studied DLRM-style models for click-through rate (CTR) prediction and found that model quality scales as a power law with a constant floor — the same functional form as the Kaplan decomposition:
+
+$$L(N) \approx c + \frac{A}{N^\alpha}$$
+
+But the effective scaling exponent for model size is small, and the dominant bottleneck is **data**: data scaling is the most viable path to improvement for this architecture class. The model-size term saturates quickly — beyond a moderate parameter count, DLRMs cannot usefully absorb additional capacity without more data. This is qualitatively different from transformers, where model size scaling (at fixed data) yields consistent gains.
+
+**Generative recommenders unlock transformer-style scaling.** Zhai et al. (2024) reformulated recommendation as a sequential transduction problem using the HSTU (Hierarchical Sequential Transduction Units) architecture and showed that model quality scales as a **power law in training compute** across three orders of magnitude — directly analogous to the $L(C) \sim C^{-\alpha_C}$ behavior observed in language models. A trillion-parameter HSTU deployed in production achieved 12.4% metric improvements in live A/B testing. The key architectural changes enabling this:
+
+- **SiLU replaces Softmax** in attention scoring: Softmax bounds maximum attention scores, limiting the model's ability to concentrate attention as sequences lengthen. SiLU removes this ceiling and is essential for scaling.
+- **Relative temporal bias replaces positional encoding**: recommendation sequences carry timestamps, and relative time differences are more informative than absolute positions. Without temporal bias, scaling stalls.
+- **Explicit feature interaction**: a pointwise transformation layer coupling user and item features is required; removing it causes ~7% degradation in HR@10.
+
+**Scaling dimensions in recommendation: depth, width, and sequence length.** Guo et al. (2024) systematically studied scaling across model depth $L$ (transformer blocks), embedding dimension $D$, and sequence length $T$ for HSTU. A key structural finding analogous to the Chinchilla compute-optimal trade-off: **the product $L \times D$ is approximately constant at the optimum** for a fixed parameter budget. Scaling the model vertically (more layers) versus horizontally (wider embeddings) involves a trade-off, and the optimal balance is determined by the dataset size. Larger datasets require larger models, but oversized models on small datasets degrade performance — the same model-data alignment principle as Chinchilla, now applied to the depth-width-data triangle.
+
+**Log-linear vs. power-law scaling.** Yan et al. (2025, WSDM 2026) trained the Large User Model (LUM) — a generative model pre-trained on 4 billion interactions, then fine-tuned discriminatively — and reported:
+
+$$\text{Recall@10}(P) \approx 0.0068 \cdot \log P + 0.1741, \qquad P \in [19\text{M},\ 7\text{B}]$$
+
+$$\text{Recall@10}(L) \approx 0.0147 \cdot \log L + 0.2326, \qquad L \in [256,\ 8192]$$
+
+where $P$ is the number of parameters and $L$ is the sequence length. Note that these are log-linear relationships in the **metric** (Recall@10), not power-law relationships in **loss**. These are compatible: if cross-entropy loss scales as $\ell \sim P^{-\alpha}$ and Recall@10 is a saturating function of $-\ell$, then Recall@10 $\sim 1 - e^{-\ell^{-1}} \approx \beta \log P + \text{const}$ in the regime where $\ell$ is small. The log-linear metric curve is thus consistent with an underlying power-law loss curve in the regime where the metric is still far from saturation. However, log-linear metric extrapolation saturates at 1 and cannot continue indefinitely; the loss formulation is the correct substrate for long-range extrapolation.
+
+The LUM paradigm — generative pre-training to capture joint $p(x, y)$, then discriminative fine-tuning to estimate $p(y|x)$ — is presented as the key to unlocking scaling. Traditional discriminative models trained end-to-end on $p(y|x)$ exhibit weak scaling because conditional distributions are simpler and offer less structure for the model to exploit at scale. This mirrors the observation that self-supervised pre-training (a generative objective) produces representations that scale better than purely supervised objectives in vision and NLP.
+
+**Summary: differences from language model scaling.**
+
+| Dimension | LLMs | Generative Recommenders |
+|-----------|------|------------------------|
+| Input representation | Dense token embeddings | Sparse categorical + temporal features |
+| Data volume | Trillions of tokens (months) | Trillions of interactions (days) |
+| Scaling variable | $N$, $D$, $C$ simultaneously | $L$, $D$, $T$ with $L \times D$ trade-off |
+| Scaling metric | Cross-entropy loss (power law) | NDCG/Recall (log-linear in regime) |
+| Traditional baseline | N/A — transformers from the start | DLRMs with weak scaling |
+| Key enabling change | Scale itself | Generative objective + temporal features |
+| Compute-optimal prescription | $N^* \propto D^* \propto C^{1/2}$ (Chinchilla) | $L^* \times D^* \approx \text{const}$ (Guo et al.) |
+
 ---
 
 ## References
@@ -542,3 +588,12 @@ Hestness et al. also established that architecture improvements — replacing LS
 | Caballero et al. (2022), "Broken Neural Scaling Laws" | Introduces the BNSL functional form to model transitions between scaling regimes; demonstrates that trend breaks cannot be reliably predicted from smaller-scale observations | https://arxiv.org/abs/2210.14891 |
 | Sorscher et al. (2022), "Beyond neural scaling laws: beating power law scaling via data pruning" | Shows that with structured data pruning, loss can scale exponentially rather than as a power law, offering a route beyond the power-law frontier | https://arxiv.org/abs/2206.14486 |
 | Hestness et al. (2017), "Deep Learning Scaling is Predictable, Empirically" | Establishes cross-domain power-law scaling of generalization error with training set size across MT, language modeling, image classification, and speech recognition; identifies the three learning curve regimes; shows architecture improvements shift the curve but not the exponent | https://arxiv.org/abs/1712.00409 |
+
+### Further Reading: Scaling for Recommendation Systems and Ranking
+
+| Reference Name | Brief Summary | Link to Reference |
+|---|---|---|
+| Ardalani et al. (2022), "Understanding Scaling Laws for Recommendation Models" | Empirical scaling study of DLRM-style CTR models; finds power-law-plus-constant scaling in model size, data, and compute; concludes data scaling is the dominant lever for this architecture class | https://arxiv.org/abs/2208.08489 |
+| Zhai et al. (2024), "Actions Speak Louder than Words: Trillion-Parameter Sequential Transducers for Generative Recommendations" (ICML 2024) | Introduces HSTU; demonstrates power-law scaling in training compute across three orders of magnitude for generative recommendation; deploys a trillion-parameter model with 12.4% live metric gains; identifies SiLU attention and temporal bias as prerequisites for scaling | https://arxiv.org/abs/2402.17152 |
+| Guo et al. (2024), "Scaling New Frontiers: Insights into Large Recommendation Models" | Systematic study of scaling across depth, embedding dimension, and sequence length for HSTU; establishes the $L \times D = \text{const}$ optimality condition; shows temporal information dominates positional encoding and model-data alignment governs scaling efficiency | https://arxiv.org/abs/2412.00714 |
+| Yan et al. (2025), "Unlocking Scaling Law in Industrial Recommendation Systems with a Three-step Paradigm based Large User Model" (WSDM 2026) | Proposes the LUM paradigm (generative pre-training then discriminative fine-tuning); reports log-linear Recall@10 scaling with model size (19M–7B) and sequence length (256–8192); validates with 2.9% CTR and 1.2% revenue gains in production at Taobao | https://arxiv.org/abs/2502.08309 |
