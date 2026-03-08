@@ -84,6 +84,6 @@ Before writing solutions.md:
 - Every problem in exercises.md has a preamble (italic text immediately after the heading)
 - Every problem has a `> **Prerequisites:**` blockquote
 - Every problem has a corresponding solution in solutions.md
-- Every sub-part in exercises.md has a **Key insight** + **Sketch** in solutions.md
+- Every problem in exercises.md has a **Key insight** + **Sketch** solution in solutions.md
 - Notation in solutions matches notation in note.md
 - No heading contains LaTeX or em-dashes
