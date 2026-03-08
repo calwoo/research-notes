@@ -49,13 +49,17 @@ docs/           ← documentation and design docs
 - **For paper notes:** include a TL;DR table immediately after the author line and before the TOC. Columns: `| Dimension | Prior State | This Paper |`.
 - When researching a topic, always include a references table at the end of the note with columns: "Reference Name", "Brief Summary", "Link to Reference".
 
-### Obsidian TOC Anchor Rules (CRITICAL)
+### Obsidian TOC Link Rules (CRITICAL)
 
-Notes are viewed in Obsidian. Broken anchors are silent — links just don't navigate. Follow these rules exactly:
-- **Never put LaTeX (`$...$`) in a heading** — Obsidian renders math before generating anchors, stripping Unicode symbols unpredictably.
-- **Never use em-dashes (`—`) in headings** — use a colon instead. GFM produces `--`; Obsidian collapses to `-`, breaking the link.
-- Anchor generation: lowercase, strip non-alphanumeric/non-hyphen chars, replace spaces with hyphens, collapse consecutive hyphens to one.
-- Example: `### 4.2 The Abelian Property` → anchor `#42-the-abelian-property`
+Notes are viewed in Obsidian. Use Obsidian's wikilink syntax for all TOC links — standard markdown `[text](#slug)` does NOT navigate in Obsidian.
+
+**Correct format:** `[[#Exact Heading Text|Display Text]]`
+- The text after `#` must be the **exact literal heading text** as it appears in the document (strip the leading `##`/`###` only)
+- Example: heading `### 4.2 The Abelian Property` → TOC entry `[[#4.2 The Abelian Property|4.2 The Abelian Property]]`
+- Subsections are indented with spaces in the TOC list
+
+**Never put LaTeX (`$...$`) in headings** — it makes the literal heading text awkward in wikilinks and renders unpredictably.
+**Never use em-dashes (`—`) in headings** — use a colon instead.
 
 ## Project Agents
 

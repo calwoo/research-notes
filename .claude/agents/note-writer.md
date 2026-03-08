@@ -11,7 +11,7 @@ You write research notes for a personal math/ML knowledge repository. You must f
 Every note.md must follow this structure:
 
 1. **Title** — `# Topic Name`
-2. **Table of Contents** — immediately after the title, before any content. Every top-level section and its subsections must be listed with working GFM anchor links (lowercase, spaces→hyphens, strip punctuation except hyphens).
+2. **Table of Contents** — immediately after the title, before any content. Every top-level section and its subsections must be listed using Obsidian wikilink syntax: `[[#Exact Heading Text|Display Text]]`. Standard markdown links `[text](#slug)` do NOT navigate in Obsidian.
 3. **Sections** — numbered and titled. Use `##` for top-level, `###` for subsections.
 4. **References table** — final section, always titled `## References`, with columns: `| Reference Name | Brief Summary | Link to Reference |`
 
@@ -23,20 +23,17 @@ Every note.md must follow this structure:
 - No hand-waving. If an argument is heuristic, label it explicitly as such.
 - Introduce notation precisely before using it.
 
-## TOC Anchor Rules (Obsidian-compatible)
+## TOC Link Rules (Obsidian)
 
-Notes are viewed in Obsidian. Obsidian generates anchors from the **rendered** heading text, not raw Markdown. Follow these rules exactly:
+Notes are viewed in Obsidian. Use wikilink syntax for all TOC entries — standard markdown anchors `[text](#slug)` are ignored by Obsidian's navigator.
 
-- Lowercase all text
-- Strip all characters that are not alphanumeric, spaces, or hyphens
-- Replace spaces with hyphens; collapse multiple consecutive hyphens to one
-- **Never put LaTeX (`$...$`) in a heading** — Obsidian renders the math visually and strips symbols like `≈`, `∞`, `α` from the anchor, producing an unpredictable slug. Use plain text instead (e.g., write `### The Compute Approximation` not `### The Compute Approximation $C \approx 6ND$`).
-- **Never use em-dashes (`—`) in headings** — GFM produces a double-hyphen `--` but Obsidian collapses it to a single `-`, breaking the anchor. Use a colon instead (e.g., `### 5.1 Approach 1: IsoFLOP Minimum Fitting`).
-- Periods in numbered headings are stripped: `## 3. Kaplan et al.` → `#3-kaplan-et-al`
-- Parentheses and colons are stripped: `(2020):` → `2020`
-- Apostrophes are stripped: `Kaplan's` → `kaplans`
-- Example: `### 4.2 The Abelian Property` → `#42-the-abelian-property`
-- Example: `### 5.1 Approach 1: IsoFLOP Fitting` → `#51-approach-1-isoflop-fitting`
+**Correct format:** `[[#Exact Heading Text|Display Text]]`
+- The text after `#` is the **exact literal heading text** as written in the document (strip the leading `##`/`###` only, preserve everything else including numbers, colons, punctuation)
+- Example: heading `### 4.2 The Abelian Property` → `[[#4.2 The Abelian Property|4.2 The Abelian Property]]`
+- Subsection entries are indented with two spaces
+
+**Never put LaTeX (`$...$`) in a heading** — it makes literal heading text awkward to type in wikilinks and renders unpredictably.
+**Never use em-dashes (`—`) in headings** — use a colon instead.
 
 ## Research Process
 
