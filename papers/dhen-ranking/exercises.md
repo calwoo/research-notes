@@ -63,7 +63,7 @@ and interpret this as "sum pooling then squared norm minus self-norms," which is
 
 (b) Show that no degree-$(\ell+2)$ term can appear in $x_\ell$: the inductive step multiplies degree-$\ell$ terms by $x_0$ (degree 1), giving degree $\ell+1$ at most. Conclude that a DCN with $L$ cross layers captures feature interactions of degree at most $L+1$, establishing the tight upper bound.
 
-(c) Extend the degree argument to depth $L$ and $k$ modules per DHEN layer. For a $N$-layer DHEN where each layer contains one DCN module with $L$ cross layers, show that the maximum interaction degree reachable by the DCN path through all $N$ layers grows as $(L+1)^N$. Contrast this with a plain depth-$NL$ DCN (single module), which achieves degree $NL + 1$. Conclude that hierarchical stacking yields super-linear growth in achievable degree versus simply deepening a single module.
+(c) In a stack of $N$ DHEN layers, each layer's DCN module takes the previous layer's output $X_n$ both as its input and as its cross-layer anchor $x_0^{(n)}$. Prove by induction on $N$ that the maximum polynomial degree of the final output satisfies the recurrence $D_{N+1} = D_N \cdot (L+1)$ when each layer applies $L$ cross operations with the updated anchor, giving $D_N = (L+1)^N$. Explain precisely why this multiplicative recurrence holds across layers (where the anchor changes) but NOT within a single DCN module (where $x_0$ is fixed and degree grows additively as $D_0 + \ell$ after $\ell$ operations).
 
 ---
 
@@ -147,9 +147,9 @@ $$\prod_{n=0}^{N-1}(I + J_n) = \sum_{S \subseteq [N]} \prod_{n \in S} J_n$$
 
 (a) For a plain non-residual $N$-layer stack $X_{n+1} = F_n(X_n)$, the gradient is $\frac{\partial \mathcal{L}}{\partial X_0} = \prod_{n=0}^{N-1} J_n$. Suppose all singular values of each $J_n$ are bounded above by $\sigma < 1$ (contractive maps). Show that $\left\|\frac{\partial \mathcal{L}}{\partial X_0}\right\|_F \leq \sigma^N \left\|\frac{\partial \mathcal{L}}{\partial X_N}\right\|_F$, so the gradient vanishes geometrically as $N \to \infty$.
 
-(b) For the residual stack with the same contractive assumption $\|J_n\|_\text{op} \leq \sigma < 1$, show that the $S = \emptyset$ term alone gives $\left\|\frac{\partial \mathcal{L}}{\partial X_0}\right\|_F \geq \left\|\frac{\partial \mathcal{L}}{\partial X_N}\right\|_F$, establishing a lower bound of 1 on the gradient ratio. This is the vanishing gradient theorem for deep residual networks.
+(b) The $S = \emptyset$ term in the expansion contributes exactly $\partial\mathcal{L}/\partial X_N$ to $\partial\mathcal{L}/\partial X_0$. Argue that this term is non-zero whenever $\partial\mathcal{L}/\partial X_N \neq 0$, and hence the gradient $\partial\mathcal{L}/\partial X_0$ cannot identically vanish even when all $J_n$ are contractive — the identity path provides a non-vanishing additive contribution. (Note: this does NOT imply $\|\partial\mathcal{L}/\partial X_0\|_F \geq \|\partial\mathcal{L}/\partial X_N\|_F$ in general, since other terms may cancel.)
 
-(c) Empirically, DHEN achieves positive NE gains at $N = 8$ layers (Table 2 in the paper). Under the contractive assumption, a plain 8-layer stack would attenuate gradients by factor $\sigma^8$. For $\sigma = 0.9$, compute $\sigma^8$ and compare it to the residual lower bound of 1. Argue that without residual shortcuts, training an 8-layer DHEN would require significantly larger learning rates or careful initialization.
+(c) Empirically, DHEN achieves positive NE gains at $N = 8$ layers (Table 2 in the paper). Under the contractive assumption, a plain 8-layer stack would attenuate gradients by factor $\sigma^8$. For $\sigma = 0.9$, compute $\sigma^8$ and contrast it with the residual case, where the identity path keeps a non-vanishing additive contribution to the gradient regardless of depth. Argue that without residual shortcuts, training an 8-layer DHEN would require significantly larger learning rates or careful initialization.
 
 ---
 

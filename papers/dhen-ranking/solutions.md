@@ -55,7 +55,14 @@
 
 (b) For degree $\ell+2$ to appear in $x_{\ell+1}$, we would need $\deg(x_0) \cdot \deg(x_\ell^\top w_\ell) \geq \ell + 2$, i.e., $1 \cdot \ell \geq \ell+1$, which is false. So the upper bound $\ell+1$ is tight.
 
-(c) In an $N$-layer DHEN, the DCN path at layer $n$ takes a degree-$D_n$ input and outputs degree $D_n (L+1)$ (each of its $L$ cross layers multiplies the degree by one more factor of the input). So $D_{n+1} = D_n \cdot (L+1)$, giving $D_N = (L+1)^N$. A plain depth-$NL$ DCN achieves degree $NL + 1$. Since $(L+1)^N \gg NL + 1$ for $N, L \geq 2$, hierarchical stacking yields super-linear degree growth.
+(c) Within a single DCN module (fixed anchor $x_0$), each cross layer adds 1 to the degree — additive growth. Across DHEN layers, the anchor updates to the previous output, turning additive growth into multiplicative: degree $L+1$ output from layer $n$ becomes the degree-$(L+1)$ anchor for layer $n+1$, whose $L$ cross ops give degree $(L+1)+(L+1)\cdot L = (L+1)^2$.
+
+Sketch ($\leq$8 lines):
+Within module: $x_0$ fixed, $x_{\ell+1} = x_0(x_\ell^\top w) + x_\ell$. Degree of $x_0\cdot(x_\ell^\top w) = 1 + \deg(x_\ell) = 1+\ell+1 = \ell+2$. Wait — base: $\deg(x_1) = 2 = 1+1$; inductive: $\deg(x_{\ell+1}) = \ell+1$. So after $L$ layers with degree-1 anchor: $\deg(x_L) = L+1$ (additive, not multiplicative).
+Across DHEN layers: $X_n$ has degree $D_n$; used as new anchor $x_0^{(n+1)}$.
+First cross op: $x_0^{(n+1)}\cdot(X_n^\top w)$ has degree $D_n + D_n = 2D_n$.
+After $L$ cross ops with degree-$D_n$ anchor and degree-$D_n$ input: $\deg = D_n\cdot(1+L) = D_n\cdot(L+1)$.
+Induction: $D_1 = L+1$, $D_{N+1} = D_N\cdot(L+1)$, so $D_N = (L+1)^N$. A plain depth-$NL$ DCN achieves degree $NL+1$. Since $(L+1)^N \gg NL+1$ for $N, L \geq 2$, hierarchical stacking yields super-linear degree growth. $\checkmark$
 
 ---
 
@@ -117,13 +124,13 @@
 
 ### Problem 7: Vanishing Gradient Bound for Residual vs. Plain Stacks
 
-**Key insight:** For contractive maps ($\|J_n\|_\text{op} < 1$), the plain stack gradient decays as $\sigma^N \to 0$, while the residual stack's $S = \emptyset$ term gives a norm-1 lower bound, making the gradient ratio at least 1 regardless of depth.
+**Key insight:** For contractive maps ($\|J_n\|_\text{op} < 1$), the plain stack gradient decays as $\sigma^N \to 0$. The $S=\emptyset$ term (identity path) always contributes exactly $\partial\mathcal{L}/\partial X_N$ to the upstream gradient — residual connections prevent complete gradient vanishing by ensuring a non-zero additive contribution, even if other terms cancel.
 
 **Sketch:**
 
 (a) $\|\prod_{n=0}^{N-1} J_n\|_F \leq \prod_n \|J_n\|_\text{op} \leq \sigma^N$. So $\|\frac{\partial \mathcal{L}}{\partial X_0}\|_F \leq \sigma^N \|\frac{\partial \mathcal{L}}{\partial X_N}\|_F \to 0$ as $N \to \infty$.
 
-(b) The $S = \emptyset$ term in the residual expansion is $I$, contributing a term of Frobenius norm $\|\frac{\partial \mathcal{L}}{\partial X_N}\|_F$ to $\|\frac{\partial \mathcal{L}}{\partial X_0}\|_F$. By the triangle inequality applied to the sum: $\|\frac{\partial \mathcal{L}}{\partial X_0}\|_F \geq \|\frac{\partial \mathcal{L}}{\partial X_N}\|_F - \|\text{other terms}\|_F$. More precisely, the identity path alone gives $\|\frac{\partial \mathcal{L}}{\partial X_0}\|_F \geq \|\frac{\partial \mathcal{L}}{\partial X_N}\|_F$ only as an upper bound on the $S = \emptyset$ contribution; the key point is this term never vanishes.
+(b) The $S = \emptyset$ term in the residual expansion is $I$, so it contributes exactly $\frac{\partial \mathcal{L}}{\partial X_N}$ to $\frac{\partial \mathcal{L}}{\partial X_0}$. Whenever $\frac{\partial \mathcal{L}}{\partial X_N} \neq 0$, this additive contribution is non-zero, so $\frac{\partial \mathcal{L}}{\partial X_0}$ cannot identically vanish even when all $J_n$ are contractive. Note: the other terms in the sum (with $S \neq \emptyset$) can partially cancel this contribution, so this does NOT establish $\|\frac{\partial \mathcal{L}}{\partial X_0}\|_F \geq \|\frac{\partial \mathcal{L}}{\partial X_N}\|_F$ in general — the correct claim is weaker: the identity path prevents complete gradient vanishing.
 
 (c) $\sigma^8 = 0.9^8 \approx 0.43$. So a plain 8-layer stack attenuates gradients to 43% of their original magnitude; 22-layer stacks give $0.9^{22} \approx 0.098$ (10% attenuation). With residual shortcuts the gradient from the identity path remains at 100%, explaining why DHEN can train stably at $N = 8$ and the paper's HSDP experiments push to $N = 22+$.
 
