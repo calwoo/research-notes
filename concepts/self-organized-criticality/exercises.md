@@ -2,232 +2,430 @@
 
 ## Table of Contents
 
-1. [Derivation Problems](#derivation-problems)
-   - [Problem 1: Abelian Property for a Two-Site System](#problem-1-abelian-property-for-a-two-site-system)
-   - [Problem 2: Toppling Lemma via Monotonicity](#problem-2-toppling-lemma-via-monotonicity)
-   - [Problem 3: Positive Definiteness and Invertibility of Δ](#problem-3-positive-definiteness-and-invertibility-of-delta)
-   - [Problem 4: Mean Avalanche Size from Finite-Size Scaling](#problem-4-mean-avalanche-size-from-finite-size-scaling)
-   - [Problem 5: Spectral Exponent from Avalanche Duration Distribution](#problem-5-spectral-exponent-from-avalanche-duration-distribution)
-2. [Conceptual Questions](#conceptual-questions)
-   - [Problem 6: SOC vs. Tuned Criticality](#problem-6-soc-vs-tuned-criticality)
-   - [Problem 7: The Attractor Argument and Its Prerequisites](#problem-7-the-attractor-argument-and-its-prerequisites)
-   - [Problem 8: Interpreting the Finite-Size Scaling Function](#problem-8-interpreting-the-finite-size-scaling-function)
-   - [Problem 9: Universality Classes and Model Symmetries](#problem-9-universality-classes-and-model-symmetries)
-   - [Problem 10: Empirical Power Laws and the SOC Attribution Problem](#problem-10-empirical-power-laws-and-the-soc-attribution-problem)
-3. [Implementation Sketches](#implementation-sketches)
-   - [Problem 11: BTW Sandpile Simulation](#problem-11-btw-sandpile-simulation)
-   - [Problem 12: Dhar's Burning Algorithm](#problem-12-dhars-burning-algorithm)
-   - [Problem 13: Scaling Exponent Estimation via Data Collapse](#problem-13-scaling-exponent-estimation-via-data-collapse)
+- [[#Mathematical Development|Mathematical Development]]
+  - [[#Problem 1 Abelian Property for a Two-Site System|Problem 1: Abelian Property for a Two-Site System]]
+  - [[#Problem 2 Toppling Lemma via Monotonicity|Problem 2: Toppling Lemma via Monotonicity]]
+  - [[#Problem 3 Positive Definiteness and Invertibility of the Toppling Matrix|Problem 3: Positive Definiteness and Invertibility of the Toppling Matrix]]
+  - [[#Problem 4 Mean Avalanche Size from Finite-Size Scaling|Problem 4: Mean Avalanche Size from Finite-Size Scaling]]
+  - [[#Problem 5 Spectral Exponent from Avalanche Duration Distribution|Problem 5: Spectral Exponent from Avalanche Duration Distribution]]
+  - [[#Problem 6 SOC vs. Tuned Criticality|Problem 6: SOC vs. Tuned Criticality]]
+  - [[#Problem 7 The Attractor Argument and Its Prerequisites|Problem 7: The Attractor Argument and Its Prerequisites]]
+  - [[#Problem 8 Interpreting the Finite-Size Scaling Function|Problem 8: Interpreting the Finite-Size Scaling Function]]
+  - [[#Problem 9 Universality Classes and Model Symmetries|Problem 9: Universality Classes and Model Symmetries]]
+  - [[#Problem 10 Empirical Power Laws and the SOC Attribution Problem|Problem 10: Empirical Power Laws and the SOC Attribution Problem]]
+  - [[#Problem 11 Recurrent vs. Transient Configurations and det of Delta|Problem 11: Recurrent vs. Transient Configurations and det of Delta]]
+  - [[#Problem 12 The Sandpile Group is Abelian|Problem 12: The Sandpile Group is Abelian]]
+  - [[#Problem 13 Green's Function Symmetry|Problem 13: Green's Function Symmetry]]
+  - [[#Problem 14 Power-Law Tail Conditions and Moment Existence|Problem 14: Power-Law Tail Conditions and Moment Existence]]
+  - [[#Problem 15 Upper Critical Dimension via Dimensional Analysis|Problem 15: Upper Critical Dimension via Dimensional Analysis]]
+  - [[#Problem 16 Fractal Dimension of the Avalanche Boundary|Problem 16: Fractal Dimension of the Avalanche Boundary]]
+  - [[#Problem 17 Eigenvalue Bounds on the Spectral Gap of Delta|Problem 17: Eigenvalue Bounds on the Spectral Gap of Delta]]
+  - [[#Problem 18 Gutenberg-Richter Law as a Power-Law Derivation|Problem 18: Gutenberg-Richter Law as a Power-Law Derivation]]
+- [[#Algorithmic Applications|Algorithmic Applications]]
+  - [[#Problem 19 BTW Sandpile Simulation|Problem 19: BTW Sandpile Simulation]]
+  - [[#Problem 20 Dhar's Burning Algorithm|Problem 20: Dhar's Burning Algorithm]]
+  - [[#Problem 21 Scaling Exponent Estimation via Data Collapse|Problem 21: Scaling Exponent Estimation via Data Collapse]]
+  - [[#Problem 22 Sandpile Group Enumeration on Small Graphs|Problem 22: Sandpile Group Enumeration on Small Graphs]]
+  - [[#Problem 23 Branching Process Simulation for Mean-Field SOC|Problem 23: Branching Process Simulation for Mean-Field SOC]]
 
 ---
 
-## Derivation Problems
+## Mathematical Development
 
 ### Problem 1: Abelian Property for a Two-Site System
 
-Consider an Abelian sandpile on the simplest non-trivial graph: two non-sink vertices $\{1, 2\}$ connected by a single edge, with both vertices also connected to a sink $s$. Suppose vertex 1 has degree 2 (one edge to vertex 2, one edge to $s$) and vertex 2 has degree 2 (one edge to vertex 1, one edge to $s$). The toppling threshold at each vertex equals its degree.
+*This problem establishes the Abelian property concretely on the smallest non-trivial sandpile graph, verifying that the order of toppling is immaterial and that the toppling vector is uniquely determined by the initial configuration and the toppling matrix.*
 
-**(a)** Write down the $2 \times 2$ toppling matrix $\Delta$ for this graph.
+> **Prerequisites:** cf. note [[note#4.2 The Abelian Property|§4.2 — The Abelian Property]]
 
-**(b)** Suppose the initial configuration is $\eta = (2, 2)$ (both sites have height 2, hence both are unstable since $z_c = \deg(i) = 2$). Exhibit two distinct legal toppling sequences — one starting by toppling site 1, one starting by toppling site 2 — and show that both sequences:
-  - Terminate in a stable configuration (all $z_i < \deg(i)$)
-  - Produce the same final configuration $\eta'$
-  - Result in the same toppling vector $\mathbf{n} = (n_1, n_2)$
+Consider an Abelian sandpile on the graph with two non-sink vertices $\{1, 2\}$ connected by a single edge, with both vertices also connected to a sink $s$. Vertex 1 has degree 2 (one edge to vertex 2, one edge to $s$) and vertex 2 has degree 2 (one edge to vertex 1, one edge to $s$).
 
-**(c)** Using the identity $\eta' = \eta - \Delta \mathbf{n}$, verify your result algebraically. Confirm that $\det(\Delta) \neq 0$ for this graph and explain why this implies $\mathbf{n}$ is unique.
+(a) Write down the $2 \times 2$ toppling matrix $\Delta$ for this graph.
+
+(b) Suppose the initial configuration is $\eta = (2, 2)$ (both sites unstable since $z_c = \deg(i) = 2$). Exhibit two distinct legal toppling sequences — one starting by toppling site 1, one starting by toppling site 2 — and show that both sequences terminate in the same stable configuration $\eta'$ with the same toppling vector $\mathbf{n} = (n_1, n_2)$.
+
+(c) Using the identity $\eta' = \eta - \Delta \mathbf{n}$, verify your result algebraically. Confirm that $\det(\Delta) \neq 0$ and explain why this implies $\mathbf{n}$ is unique.
 
 ---
 
 ### Problem 2: Toppling Lemma via Monotonicity
 
-Let $G = (V \cup \{s\}, E)$ be the sandpile graph as in Section 4. Let $\eta$ be a configuration that stabilizes to $\eta' = \text{Stab}(\eta)$ with toppling vector $\mathbf{n}(\eta)$.
+*The toppling lemma is the key monotonicity property that underlies the Abelian sandpile's tractability. This problem derives the lemma carefully and examines its limits.*
 
-**(a)** Let $\sigma^{(0)} = \eta$ and define the sequence of toppling steps. Consider a fixed legal toppling sequence $S = (i_1, i_2, \ldots, i_N)$ that stabilizes $\eta$. Show that the same sequence $S$ is also legal for the configuration $\eta + \mathbf{e}_j$ (adding one grain at site $j$). Here, "legal" means that each site is toppled only when it is unstable.
+> **Prerequisites:** cf. note [[note#4.3 The Toppling Lemma|§4.3 — The Toppling Lemma]]; requires Problem 1
 
-**(b)** Argue from (a) that $n_i(\eta + \mathbf{e}_j) \geq n_i(\eta)$ for all $i \in V$. Be precise about which property of the Abelian sandpile you use.
+Let $G = (V \cup \{s\}, E)$ be the sandpile graph. Let $\eta$ be a configuration that stabilizes to $\text{Stab}(\eta)$ with toppling vector $\mathbf{n}(\eta)$.
 
-**(c)** Suppose instead you remove a grain: consider $\eta - \mathbf{e}_j$ (assuming $\eta_j \geq 1$). Does the analogous statement $n_i(\eta - \mathbf{e}_j) \leq n_i(\eta)$ hold? Give a brief argument or counterexample.
+(a) Let $S = (i_1, i_2, \ldots, i_N)$ be a fixed legal toppling sequence that stabilizes $\eta$. Show that $S$ is also a legal toppling sequence for the configuration $\eta + \mathbf{e}_j$ (one extra grain at site $j$). Here "legal" means each site is toppled only when unstable.
 
-**(d)** Using the toppling lemma, show that the map $j \mapsto n_i(\eta + \mathbf{e}_j)$ is well-defined for all $j \in V$ and $i \in V$, and that the Green's function $G_{ij} = n_i(\eta + \mathbf{e}_j) - n_i(\eta)$ is independent of the base configuration $\eta$ (at least for $\eta$ in the recurrent class). [Hint: use linearity properties of the toppling matrix.]
+(b) Argue from (a) that $n_i(\eta + \mathbf{e}_j) \geq n_i(\eta)$ for all $i \in V$. State explicitly which property of the Abelian sandpile you invoke.
+
+(c) Suppose instead you remove a grain: consider $\eta - \mathbf{e}_j$ (with $\eta_j \geq 1$). Does the analogous statement $n_i(\eta - \mathbf{e}_j) \leq n_i(\eta)$ hold? Give a brief argument or counterexample.
+
+(d) Using the toppling lemma, argue that the Green's function $G_{ij} = n_i(\eta + \mathbf{e}_j) - n_i(\eta)$ is well-defined and independent of the base configuration $\eta$ within the recurrent class. [Hint: use the fact that toppling numbers satisfy $\mathbf{n} = \Delta^{-1}(\eta - \eta')$ and linearity of $\Delta^{-1}$.]
 
 ---
 
-### Problem 3: Positive Definiteness and Invertibility of $\Delta$
+### Problem 3: Positive Definiteness and Invertibility of the Toppling Matrix
 
-Let $G = (V \cup \{s\}, E)$ be a finite connected undirected graph with at least one edge between $V$ and the sink $s$. Let $\Delta$ be the $|V| \times |V|$ toppling matrix (restricted graph Laplacian).
+*This problem establishes the foundational linear-algebraic fact behind the Abelian property: $\Delta$ is positive definite, so $\ker(\Delta) = \{\mathbf{0}\}$, giving uniqueness of stabilization.*
 
-**(a)** For any $\mathbf{x} \in \mathbb{R}^{|V|}$, expand $\mathbf{x}^\top \Delta \mathbf{x}$ as a sum over edges. Show that the quadratic form decomposes as:
+> **Prerequisites:** cf. note [[note#4.1 Setup on a General Graph|§4.1 — Setup on a General Graph]]
+
+Let $G = (V \cup \{s\}, E)$ be a finite connected undirected graph with at least one edge between $V$ and the sink $s$.
+
+(a) For any $\mathbf{x} \in \mathbb{R}^{|V|}$, show that the quadratic form decomposes as:
 $$\mathbf{x}^\top \Delta \mathbf{x} = \sum_{\{i,j\} \in E,\ i,j \in V} (x_i - x_j)^2 + \sum_{\substack{i \in V \\ \{i,s\} \in E}} x_i^2$$
 
-**(b)** Show that $\mathbf{x}^\top \Delta \mathbf{x} = 0$ implies $\mathbf{x} = \mathbf{0}$. Use the fact that $G$ is connected and that at least one vertex in $V$ is adjacent to $s$.
+(b) Show that $\mathbf{x}^\top \Delta \mathbf{x} = 0$ implies $\mathbf{x} = \mathbf{0}$, using connectivity of $G$ and the existence of at least one edge to $s$.
 
-**(c)** Conclude that $\Delta$ is positive definite, hence invertible. What does the invertibility of $\Delta$ imply for the uniqueness of stabilization? Relate this back to the Abelian property.
+(c) Conclude that $\Delta$ is positive definite and hence invertible. Explain what invertibility implies for uniqueness of the toppling vector $\mathbf{n}$ — and hence for the uniqueness of the final stable configuration after any sequence of topplings.
 
-**(d)** The standard (unrestricted) graph Laplacian $L$ on $V \cup \{s\}$ is positive semidefinite, not positive definite (it has a zero eigenvalue for each connected component). Explain precisely why grounding the graph at the sink $s$ — i.e., deleting the row and column of $L$ corresponding to $s$ — promotes the matrix from semidefinite to definite.
+(d) The unrestricted graph Laplacian $L$ on $V \cup \{s\}$ is only positive semidefinite, with a zero eigenvector (the all-ones vector). Explain precisely why deleting the row and column corresponding to $s$ removes the zero eigenvalue and promotes $\Delta$ to positive definiteness.
 
 ---
 
 ### Problem 4: Mean Avalanche Size from Finite-Size Scaling
 
-Assume the finite-size scaling ansatz for the avalanche size distribution:
-$$P(s, L) = s^{-\tau_s}\, g\!\left(\frac{s}{L^D}\right)$$
-where $g(u) \to g_0 > 0$ as $u \to 0^+$ and $g(u) \to 0$ rapidly for $u \to \infty$. Assume the normalization $\int_0^\infty P(s,L)\,ds = 1$ is satisfied (absorb any proportionality constant into $g_0$).
+*This problem extracts quantitative predictions from the finite-size scaling ansatz by computing moments of the avalanche size distribution. The divergence of the mean with $L$ is the precise statement that there is no characteristic scale.*
 
-**(a)** Show that the mean avalanche size satisfies:
-$$\langle s \rangle_L \sim L^{D(2 - \tau_s)}, \quad \tau_s < 2$$
-by evaluating $\langle s \rangle_L = \int_1^\infty s\, P(s,L)\, ds$ using the substitution $u = s/L^D$.
+> **Prerequisites:** cf. note [[note#5.1 Finite-Size Scaling|§5.1 — Finite-Size Scaling]]
 
-**(b)** For the 2D BTW sandpile, $\tau_s \approx 1.20$ and $D \approx 2.75$. Compute the predicted exponent $D(2-\tau_s)$ and interpret: how does the mean avalanche size grow with system size?
+Assume the finite-size scaling ansatz $P(s, L) = s^{-\tau_s} g(s/L^D)$, where $g(u) \to g_0 > 0$ for $u \to 0^+$ and $g(u) \to 0$ rapidly for $u \to \infty$.
 
-**(c)** Repeat for the variance $\langle s^2 \rangle_L - \langle s \rangle_L^2$. Show that for $\tau_s < 2$, the variance also diverges as $L \to \infty$, and find the exponent. This divergence reflects the absence of a characteristic avalanche size — the defining feature of criticality.
+(a) Show that the mean avalanche size satisfies $\langle s \rangle_L \sim L^{D(2-\tau_s)}$ for $\tau_s < 2$, by evaluating $\langle s \rangle_L = \int_1^\infty s\, P(s,L)\, ds$ with the substitution $u = s/L^D$.
 
-**(d)** Derive the condition on $\tau_s$ for which $\langle s \rangle_L$ is finite as $L \to \infty$. Compare to the condition for a power-law distribution $P(s) \sim s^{-\tau_s}$ on $(1,\infty)$ to have a finite mean.
+(b) For the 2D BTW sandpile ($\tau_s \approx 1.20$, $D \approx 2.75$), compute the exponent $D(2 - \tau_s)$ and interpret its physical meaning.
+
+(c) Show that for $\tau_s < 2$ the variance $\text{Var}(s)_L = \langle s^2 \rangle_L - \langle s \rangle_L^2$ also diverges as $L \to \infty$, and find its scaling exponent.
+
+(d) Derive the condition on $\tau_s$ under which $\langle s \rangle_L$ remains finite as $L \to \infty$, and explain why that condition is equivalent to the power law $P(s) \sim s^{-\tau_s}$ on $(1, \infty)$ having a finite mean.
 
 ---
 
 ### Problem 5: Spectral Exponent from Avalanche Duration Distribution
 
-Model the output signal $\phi(t)$ from an SOC system as a superposition of rectangular pulses, one per grain addition. The $k$-th avalanche produces a pulse of height $h_0$ and duration $T_k$, where $T_k$ is drawn i.i.d. from $P(T) \sim T^{-\tau_T}$ for $1 \leq \tau_T < 3$.
+*This problem derives the 1/f noise connection rigorously from the rectangular-pulse model of avalanches, pinning down exactly which value of the duration exponent gives true pink noise.*
 
-**(a)** Compute the Fourier transform of a single rectangular pulse $\phi_T(t) = h_0 \cdot \mathbf{1}[0 \leq t \leq T]$:
-$$\hat{\phi}_T(f) = \int_{-\infty}^\infty \phi_T(t)\, e^{-2\pi i f t}\, dt$$
-Show that $|\hat{\phi}_T(f)|^2 \approx h_0^2 T^2$ for $f \ll 1/T$ and $|\hat{\phi}_T(f)|^2 \ll h_0^2 T^2$ for $f \gg 1/T$.
+> **Prerequisites:** cf. note [[note#2.4 The 1/f Noise Connection|§2.4 — The 1/f Noise Connection]]
 
-**(b)** The aggregate power spectral density is:
-$$S(f) \approx \int_1^{\infty} P(T)\, |\hat{\phi}_T(f)|^2\, dT$$
-Split the integral at $T^* = 1/f$ and show that the dominant contribution comes from $T > 1/f$:
-$$S(f) \sim \int_{1/f}^{\infty} T^{-\tau_T} \cdot h_0^2 T^2\, dT$$
+Model the output signal from an SOC system as a superposition of rectangular pulses; the $k$-th avalanche contributes a pulse of height $h_0$ and duration $T_k$ drawn i.i.d. from $P(T) \sim T^{-\tau_T}$ for $1 \leq \tau_T < 3$.
 
-**(c)** Evaluate the integral in (b) (assuming $\tau_T < 3$ so it converges) and show:
-$$S(f) \sim f^{-(3 - \tau_T)}$$
+(a) Compute the Fourier transform $\hat{\phi}_T(f)$ of a single rectangular pulse $\phi_T(t) = h_0 \cdot \mathbf{1}[0 \leq t \leq T]$. Show that $|\hat{\phi}_T(f)|^2 \approx h_0^2 T^2$ for $fT \ll 1$ and $|\hat{\phi}_T(f)|^2 \ll h_0^2 T^2$ for $fT \gg 1$.
 
-**(d)** For what value of $\tau_T$ does this give exact $1/f$ noise ($\beta = 1$)? This is the mean-field value of the duration exponent; compare to the 2D BTW value $\tau_T \approx 1.37$ and compute the predicted spectral exponent.
+(b) Writing $S(f) \approx \int_1^\infty P(T)\, |\hat{\phi}_T(f)|^2\, dT$, split the integral at $T^* = 1/f$ and show that the dominant contribution for small $f$ comes from $T > 1/f$, giving:
+$$S(f) \sim \int_{1/f}^\infty T^{-\tau_T} \cdot T^2\, dT$$
 
-**(e)** Identify one assumption in this derivation that may fail in practice for real SOC systems, and explain how it could affect the predicted $\beta$.
+(c) Evaluate the integral in (b) for $\tau_T < 3$ and show $S(f) \sim f^{-(3-\tau_T)}$.
+
+(d) For what value of $\tau_T$ does this give exact $1/f$ noise ($\beta = 1$)? Compare this to the 2D BTW value $\tau_T \approx 1.37$ and compute the predicted spectral exponent.
+
+(e) Identify one assumption in this derivation that may fail for real SOC systems and explain how it could shift $\beta$.
 
 ---
 
-## Conceptual Questions
-
 ### Problem 6: SOC vs. Tuned Criticality
 
-**(a)** In an Ising ferromagnet on a finite lattice, the correlation length $\xi \sim |T - T_c|^{-\nu}$ diverges only at $T = T_c$. Explain precisely what "fine-tuning" means here: what external agent controls $T$, and what happens if $T$ deviates slightly from $T_c$?
+*This problem sharpens the conceptual distinction between self-organized and externally-tuned criticality by casting both in the language of control parameters and fixed points.*
 
-**(b)** In the BTW sandpile, identify the quantity that plays the role of the "control parameter" (analogous to $T$ in the Ising model). Explain how this quantity is determined by the dynamics rather than by an external agent. What prevents it from drifting away from the critical value?
+> **Prerequisites:** cf. note [[note#Ordinary Criticality vs. SOC|§1 — Ordinary Criticality vs. SOC]]; cf. note [[note#3.1 The Attractor Argument|§3.1 — The Attractor Argument]]
 
-**(c)** Some authors argue that SOC is not fundamentally different from tuned criticality — that the "self-tuning" is just a consequence of the feedback loop implemented by the drive/dissipation mechanism, which could in principle be replicated by an external controller. Evaluate this argument: does it undermine the conceptual novelty of SOC? Does the mechanism of tuning (internal feedback vs. external control) matter physically?
+(a) In an Ising ferromagnet, $\xi \sim |T - T_c|^{-\nu}$ diverges only at $T = T_c$. Define precisely what "fine-tuning" means: what agent fixes $T$, and what is the qualitative effect of a perturbation $T \to T_c + \delta T$ on the correlation length and on the avalanche-size distribution?
 
-**(d)** Give one example of a system that exhibits power-law statistics but is definitely not at a second-order phase transition. Explain why power-law statistics alone are insufficient evidence for SOC.
+(b) In the BTW sandpile, identify the quantity that plays the role of the control parameter analogous to $T$. Derive a schematic differential equation for this quantity that shows it is a stable fixed point of the dynamics, not an externally imposed value.
+
+(c) Some authors argue that SOC self-tuning is merely an internal feedback loop equivalent in principle to an external controller. Evaluate this argument: does the mechanism of tuning (internal vs. external) have observable physical consequences, or is it a distinction without a difference?
+
+(d) Provide one concrete example of a system with a heavy-tailed or power-law distribution that is definitively not at a second-order phase transition. Derive or cite the mechanism responsible for the heavy tail, and explain why it cannot be attributed to SOC.
 
 ---
 
 ### Problem 7: The Attractor Argument and Its Prerequisites
 
-**(a)** The attractor argument (Section 3.1) claims that the subcritical state is not stationary because the output flux is less than the input flux. Make this precise: define "output flux" and "input flux" formally, and write a differential equation for $\frac{d\langle z \rangle}{dt}$ in terms of these fluxes.
+*The attractor argument explains why the BTW dynamics self-tunes to criticality, but it relies on precise conditions. This problem makes those conditions explicit and examines what breaks when they fail.*
 
-**(b)** The argument requires both slow drive ($h \to 0$) and open boundaries (dissipation). Show by example or reasoning what goes wrong in each of the following degenerate limits:
-  - (i) Periodic boundary conditions (no sink): the model with $h > 0$ constant
-  - (ii) No drive ($h = 0$), open boundaries, starting from a random initial configuration
+> **Prerequisites:** cf. note [[note#3.1 The Attractor Argument|§3.1 — The Attractor Argument]]; cf. note [[note#2.2 Time-Scale Separation|§2.2 — Time-Scale Separation]]
 
-**(c)** The attractor argument describes the dynamics of $\langle z \rangle$, but criticality is a statement about fluctuations (power-law distributions), not just the mean. Explain why having $\langle z \rangle = \langle z \rangle_c$ does not by itself guarantee critical fluctuations, and what additional structure (e.g., the Abelian property) is needed to establish that the stationary measure has power-law tails.
+(a) Define the input flux $J_\text{in}$ and output flux $J_\text{out}$ formally in the BTW model, and write a differential equation for $d\langle z \rangle / dt$ in terms of these fluxes. Use this to show that $\langle z \rangle_c$ is a stable fixed point.
+
+(b) Show by reasoning what happens in each degenerate limit: (i) periodic boundary conditions with $h > 0$; (ii) no drive ($h = 0$), open boundaries, starting from a random stable configuration.
+
+(c) The attractor argument controls only $\langle z \rangle$, not the full distribution. Explain why $\langle z \rangle = \langle z \rangle_c$ does not alone imply power-law fluctuations, and what additional structure — specifically the Abelian property and Dhar's recurrence characterization — is required to conclude that the stationary measure has power-law tails.
 
 ---
 
 ### Problem 8: Interpreting the Finite-Size Scaling Function
 
-The finite-size scaling ansatz $P(s, L) = s^{-\tau_s} g(s/L^D)$ encodes both the critical behavior and finite-size corrections in the single scaling function $g$.
+*The scaling function $g$ encodes all finite-size corrections to pure criticality. This problem develops geometric and statistical intuition for what $g$ looks like and how data collapse extracts the exponents.*
 
-**(a)** Sketch (qualitatively) the function $g : (0,\infty) \to (0,\infty)$ consistent with: $g(u) \to g_0 > 0$ for $u \to 0$, and $g(u) \to 0$ rapidly for $u \to \infty$. Describe two physically reasonable functional forms for the decay of $g(u)$ at large $u$ (e.g., exponential, Gaussian) and explain which would be more consistent with an exponential cutoff at $s \sim L^D$.
+> **Prerequisites:** cf. note [[note#5.1 Finite-Size Scaling|§5.1 — Finite-Size Scaling]]; cf. note [[note#5.2 Scaling Relations|§5.2 — Scaling Relations]]
 
-**(b)** Fix a system size $L$ and plot $\log P(s, L)$ vs. $\log s$ schematically. Identify: (i) the power-law regime, (ii) the crossover scale $s^* \sim L^D$, and (iii) the cutoff regime. How does the plot change as $L \to \infty$?
+(a) Sketch $g : (0,\infty) \to (0,\infty)$ consistent with $g(u) \to g_0 > 0$ as $u \to 0^+$ and rapid decay for $u \to \infty$. Describe two physically plausible functional forms for the decay (e.g., exponential, Gaussian) and explain which is more consistent with a sharp cutoff at $s \sim L^D$.
 
-**(c)** Explain the data collapse technique: if you measure $P(s, L)$ for several system sizes $L_1 < L_2 < L_3$, how do you extract $\tau_s$ and $D$ from the data? What would a successful collapse of the rescaled plots $s^{\tau_s} P(s,L)$ vs. $s/L^D$ look like?
+(b) For fixed $L$, sketch $\log P(s, L)$ vs. $\log s$ and identify: (i) the power-law regime; (ii) the crossover scale $s^* \sim L^D$; (iii) the cutoff regime. Describe qualitatively how the plot evolves as $L \to \infty$.
 
-**(d)** The ansatz assumes a single relevant length scale $L$. In a real SOC system, are there other length scales that might complicate the collapse? Give one example.
+(c) Explain data collapse: given empirical histograms $\hat{P}(s, L_k)$ for sizes $L_1 < L_2 < L_3$, describe the procedure for extracting $\tau_s$ and $D$ by collapsing the rescaled curves $s^{\tau_s} \hat{P}(s, L_k)$ plotted against $s/L_k^D$.
+
+(d) The ansatz assumes a single relevant length scale $L$. Identify one additional length scale present in a realistic SOC system that could spoil the collapse, and explain how it would manifest in the data.
 
 ---
 
 ### Problem 9: Universality Classes and Model Symmetries
 
-The BTW sandpile (deterministic toppling) and the Manna model (stochastic toppling) both exhibit power-law avalanche statistics but belong to different universality classes.
+*Universality class membership — not qualitative SOC phenomenology — is the sharp physical distinction between models. This problem develops the classification criteria and their consequences for exponents.*
 
-**(a)** State precisely the toppling rule of the Manna model and identify the symmetry broken relative to the BTW model. Why does this change in symmetry lead to different critical exponents?
+> **Prerequisites:** cf. note [[note#5.4 Universality|§5.4 — Universality]]
 
-**(b)** In equilibrium critical phenomena, universality classes are determined by spatial dimension $d$, order-parameter symmetry, and range of interactions. Identify the three analogous determinants for SOC universality classes. For each, give an example of two models that differ in that determinant and have different exponents.
+(a) State the Manna model toppling rule precisely and identify the symmetry it breaks relative to BTW. Argue why breaking this symmetry changes the universality class and hence the numerical values of the critical exponents.
 
-**(c)** The BTW sandpile is believed to have logarithmic corrections to power-law scaling in $d = 2$. Explain conceptually why logarithmic corrections arise at the upper critical dimension $d_c$ of a phase transition, and speculate on why the 2D BTW sandpile might be at or near its upper critical dimension.
+(b) In equilibrium critical phenomena, universality classes are labeled by $(d, \text{order-parameter symmetry}, \text{interaction range})$. Identify three analogous determinants for SOC universality classes and, for each, give a pair of models that differ in that determinant and exhibit different exponents.
 
-**(d)** The Gutenberg-Richter law for earthquakes gives $\tau_E \approx 5/3$. The BTW sandpile gives $\tau_s \approx 1.20$ in 2D and $\tau_s = 3/2$ in mean field. Are these consistent with the earthquake data? What would need to be true about the earthquake fault system for the BTW mean-field exponent to apply?
+(c) Logarithmic corrections to scaling are a hallmark of a system at or above its upper critical dimension $d_c$. Explain conceptually why these corrections appear at $d_c$, and argue from the known mean-field exponent $\tau_s^\text{MF} = 3/2$ and the 2D BTW value $\tau_s \approx 1.20$ that the 2D BTW sandpile may be anomalous (or at its upper critical dimension).
+
+(d) The Gutenberg-Richter law gives $\tau_E \approx 5/3$ for seismic energy. Check whether this is consistent with any known SOC universality class (BTW 2D, BTW mean-field, Manna 2D). State what geometric or physical assumption on earthquake fault systems would be required for the mean-field exponent to apply.
 
 ---
 
 ### Problem 10: Empirical Power Laws and the SOC Attribution Problem
 
-**(a)** List three mechanisms (other than SOC) that can generate power-law or heavy-tailed distributions in natural systems. For each, give a specific example and identify what distinguishes it from SOC.
+*Observing a power law is necessary but not sufficient for SOC. This problem develops statistical tools for distinguishing SOC from competing mechanisms.*
 
-**(b)** Neural avalanches in cortical tissue show $P(s) \sim s^{-3/2}$, consistent with a mean-field branching process at criticality. Describe two additional measurements (beyond the power-law exponent) that would strengthen or weaken the case for SOC in neural tissue.
+> **Prerequisites:** cf. note [[note#Natural Examples and Connection to Scaling Laws|§1 — Natural Examples and Connection to Scaling Laws]]
 
-**(c)** The Bak-Sneppen model of biological evolution produces power laws in extinction cascade sizes. Identify the slow drive and the dissipation mechanism in this model (by analogy to the BTW sandpile). What plays the role of "grains" and "toppling"?
+(a) List three mechanisms other than SOC that generate power-law or heavy-tailed distributions. For each, name a specific natural example and state what distinguishes the mechanism from SOC at the level of the underlying dynamics.
 
-**(d)** Power laws are often fit to empirical data using log-log linear regression. Explain two statistical pitfalls of this approach. What is the standard alternative (hint: maximum likelihood on the power-law family), and what does the Kolmogorov-Smirnov test measure in this context?
+(b) Neural avalanches in cortical tissue show $P(s) \sim s^{-3/2}$, consistent with a mean-field branching process at criticality. Describe two additional measurements beyond the power-law exponent that would strengthen or weaken the SOC hypothesis for neural tissue.
 
----
+(c) In the Bak-Sneppen model, identify the slow drive and dissipation mechanism by analogy with the BTW sandpile. What plays the roles of "grains," "height," and "toppling"?
 
-## Implementation Sketches
-
-### Problem 11: BTW Sandpile Simulation
-
-Sketch a complete algorithm for simulating the BTW sandpile on an $L \times L$ grid and measuring the avalanche size distribution.
-
-**(a)** **Data structure.** Represent the height field as a 2D integer array $z[i][j]$ for $0 \leq i,j < L$. The boundary condition is open: sites with $i \in \{0, L-1\}$ or $j \in \{0, L-1\}$ have fewer than 4 neighbors; grains sent off-grid are discarded. Write pseudocode for a function `topple(z, i, j)` that performs one toppling at site $(i,j)$ and returns the number of grains dissipated.
-
-**(b)** **Relaxation loop.** Write pseudocode for `relax(z)` that repeatedly topples any unstable site until the configuration is stable. Discuss two implementation strategies:
-  - Naive scan: iterate over all sites in each pass, topple any unstable one, repeat until no unstable site remains. What is the worst-case time complexity per avalanche in terms of $L$ and avalanche size $s$?
-  - Queue-based: maintain a queue of currently unstable sites; after each toppling, enqueue any newly destabilized neighbors. Why is this more efficient?
-
-**(c)** **Main simulation loop.** Write pseudocode for the full simulation:
-  1. Initialize $z$ to the all-zeros configuration (or random stable configuration).
-  2. Repeat $N_{\text{burn}}$ times: add a grain at a random site, relax. (Burn-in to reach stationarity.)
-  3. Repeat $N_{\text{measure}}$ times: add a grain at a random site, relax while recording $s$ (total topplings). Store $s$ in a list.
-
-**(d)** **Estimating the power-law exponent.** Given a list of avalanche sizes $\{s_k\}$, outline an algorithm to estimate $\tau_s$ using the maximum likelihood estimator for a discrete power law with lower cutoff $s_{\min}$:
-$$\hat{\tau}_s = 1 + n \left[ \sum_{k=1}^n \ln \frac{s_k}{s_{\min} - 1/2} \right]^{-1}$$
-where $n$ is the number of samples with $s_k \geq s_{\min}$. Explain the role of $s_{\min}$ and how one would choose it.
+(d) Power laws are often fit by log-log linear regression. Identify two statistical pitfalls of this approach. State the maximum likelihood estimator for the discrete power-law exponent and explain the role of the lower cutoff $s_\text{min}$ in the estimator.
 
 ---
 
-### Problem 12: Dhar's Burning Algorithm
+### Problem 11: Recurrent vs. Transient Configurations and det of Delta
 
-Sketch an algorithm implementing Dhar's burning algorithm to test whether a given stable configuration $\eta$ on an $L \times L$ grid (with a single sink at a corner, say) is recurrent.
+*This problem proves the remarkable identity $|\mathcal{R}| = \det(\Delta)$, which connects the combinatorics of recurrent sandpile configurations to a purely algebraic quantity.*
 
-**(a)** **Setup.** Represent the configuration as a 2D array $z[i][j]$ with $0 \leq z[i][j] \leq 3$, and a boolean array `burned[i][j]` initialized to `False`. The sink is a virtual vertex adjacent to all boundary sites; initialize it as burned.
+> **Prerequisites:** cf. note [[note#4.4 Recurrent Configurations and the Sandpile Group|§4.4 — Recurrent Configurations and the Sandpile Group]]; requires Problem 3
 
-**(b)** **Burning rule.** A site $(i,j)$ can be burned if it has at least as many grains as it has unburned non-sink neighbors. Formally: site $(i,j)$ is burnable if
-$$z[i][j] \geq |\{(i',j') \in \mathcal{N}(i,j) : \text{burned}[i'][j'] = \texttt{False}\}|$$
-Write pseudocode for a single pass that burns all currently burnable unburned sites.
+(a) Define recurrent and transient configurations precisely in terms of the stationary distribution of the Markov chain. Show that the set of transient configurations $\mathcal{T}$ is visited at most finitely often with probability 1.
 
-**(c)** **Main loop.** Write pseudocode for the full algorithm using a queue:
-  1. Initialize the queue with all boundary sites (which are adjacent to the sink and may be immediately burnable).
-  2. Process each site in the queue: if burnable and unburned, mark as burned, then add its unburned neighbors to the queue for rechecking.
-  3. After the queue empties, check whether all sites are burned.
-  Return `True` iff all sites are burned.
+(b) The matrix-tree theorem states that for a connected graph $G$ with Laplacian $L$, $\det(\Delta) = $ (number of spanning trees of $G$ rooted at $s$). State this theorem and verify it for the two-site graph from Problem 1 by explicitly counting spanning trees.
 
-**(d)** **Complexity.** What is the time complexity of this algorithm in terms of $|V| = L^2$? Compare to the naive algorithm that reruns the full pass until no new site is burned.
+(c) Dhar's result asserts $|\mathcal{R}| = \det(\Delta)$. Sketch the bijection between recurrent configurations and spanning trees of $G$ rooted at $s$ (you may describe the bijection in words using the burning algorithm, without full proof).
 
-**(e)** **Application.** Explain how you would use this algorithm to: (i) verify that the stationary distribution of the BTW simulation from Problem 11 is supported only on recurrent configurations, and (ii) count the number of recurrent configurations for small $L$ and compare to $\det(\Delta)$.
+(d) For the $L \times L$ grid graph with a corner sink, $\det(\Delta)$ grows as $e^{c L^2}$ where $c = 4G/\pi$ and $G$ is Catalan's constant $\approx 0.9159$. Compute $|\mathcal{R}|$ for $L = 2$ (a $2 \times 2$ grid with a corner sink) by explicitly enumerating all recurrent configurations using Dhar's burning algorithm.
 
 ---
 
-### Problem 13: Scaling Exponent Estimation via Data Collapse
+### Problem 12: The Sandpile Group is Abelian
 
-Sketch an algorithm to estimate the exponents $(\tau_s, D)$ of the finite-size scaling ansatz $P(s,L) = s^{-\tau_s} g(s/L^D)$ from simulation data.
+*The set of recurrent configurations under componentwise addition followed by stabilization forms an abelian group — one of the rare algebraic structures arising from a purely dynamical system.*
 
-**(a)** **Data collection.** Assume you have run $K$ system sizes $L_1 < L_2 < \cdots < L_K$ and for each size $L_k$ have collected $N_k$ avalanche sizes. Describe how to construct empirical histograms $\hat{P}(s, L_k)$ in log-spaced bins. Why use log-spaced rather than linearly-spaced bins?
+> **Prerequisites:** cf. note [[note#4.4 Recurrent Configurations and the Sandpile Group|§4.4 — Recurrent Configurations and the Sandpile Group]]; cf. note [[note#4.2 The Abelian Property|§4.2 — The Abelian Property]]
 
-**(b)** **Data collapse.** The rescaled quantity $Q(s, L) = s^{\tau_s} P(s, L)$ should, under the ansatz, collapse to a universal function of $u = s/L^D$:
-$$Q(s, L) = g(s/L^D)$$
-Sketch a grid-search algorithm over $(\tau_s, D)$ that minimizes a measure of collapse quality — for example, the mean squared deviation between $Q(s, L_k)$ and the mean curve $\bar{g}(u)$ computed from all sizes. What grid resolution is needed to detect exponent differences of $\pm 0.05$?
+Define $\mathcal{R}$ as the set of recurrent stable configurations and $\eta_1 \oplus \eta_2 = \text{Stab}(\eta_1 + \eta_2)$ for $\eta_1, \eta_2 \in \mathcal{R}$.
 
-**(c)** **Collapse quality metric.** Propose a specific functional form for the collapse quality $\mathcal{Q}(\tau_s, D)$ in terms of the empirical data and the estimated mean curve $\bar{g}$. Discuss one advantage and one disadvantage of using least-squares vs. maximum likelihood as the objective.
+(a) Prove that $\oplus$ is commutative: $\eta_1 \oplus \eta_2 = \eta_2 \oplus \eta_1$. Identify exactly where the Abelian property of the sandpile (Section 4.2) is used.
 
-**(d)** **Finite-size corrections.** The ansatz $P(s,L) = s^{-\tau_s} g(s/L^D)$ is exact only in the scaling limit. For small $L$, corrections of the form $P(s,L) = s^{-\tau_s}[g(s/L^D) + L^{-\omega} h(s/L^D) + \cdots]$ may be present ($\omega > 0$ is the correction-to-scaling exponent). How would you detect the presence of such corrections from your data, and how would they bias the estimate of $\tau_s$ and $D$ from the uncorrected collapse?
+(b) Prove that $\oplus$ is associative: $(\eta_1 \oplus \eta_2) \oplus \eta_3 = \eta_1 \oplus (\eta_2 \oplus \eta_3)$. [Hint: use the fact that stabilization can be decomposed into independent toppling sequences.]
+
+(c) Prove closure: if $\eta_1, \eta_2 \in \mathcal{R}$, then $\eta_1 \oplus \eta_2 \in \mathcal{R}$. [Hint: adding a recurrent configuration to any configuration and stabilizing produces a recurrent configuration — argue this from the definition of recurrence.]
+
+(d) Identify the identity element of $(\mathcal{R}, \oplus)$. Describe it for the $2 \times 2$ grid example: what stable configuration $e$ satisfies $\eta \oplus e = \eta$ for all $\eta \in \mathcal{R}$?
+
+---
+
+### Problem 13: Green's Function Symmetry
+
+*The Green's function $G_{ij}$ measures how many times site $i$ topples when a grain is added at $j$. Proving its symmetry $G_{ij} = G_{ji}$ reveals a deep reciprocity in the sandpile dynamics.*
+
+> **Prerequisites:** cf. note [[note#4.2 The Abelian Property|§4.2 — The Abelian Property]]; cf. note [[note#4.3 The Toppling Lemma|§4.3 — The Toppling Lemma]]; requires Problem 2
+
+For a recurrent configuration $\eta$, define the Green's function $G_{ij} = n_i(\eta + \mathbf{e}_j) - n_i(\eta)$, where $n_i(\cdot)$ denotes the number of topplings at site $i$ during stabilization.
+
+(a) Using the toppling relation $\eta' = \eta - \Delta \mathbf{n}$ and the fact that the final configuration after adding $\mathbf{e}_j$ and stabilizing equals $\eta$ (for recurrent configurations, adding a grain and stabilizing returns to the same configuration up to a group action), show that $\mathbf{n}(\eta + \mathbf{e}_j) = \Delta^{-1} \mathbf{e}_j + \mathbf{n}(\eta)$ in the appropriate sense.
+
+(b) Conclude that $G_{ij} = (\Delta^{-1})_{ij}$.
+
+(c) Since $\Delta$ is a real symmetric matrix (verify this from its definition), $\Delta^{-1}$ is also symmetric. Conclude $G_{ij} = G_{ji}$.
+
+(d) Interpret the symmetry $G_{ij} = G_{ji}$ physically: what does it mean that adding a grain at $j$ causes $i$ to topple exactly as many times as adding a grain at $i$ causes $j$ to topple?
+
+---
+
+### Problem 14: Power-Law Tail Conditions and Moment Existence
+
+*This problem derives the precise conditions on the exponent $\tau$ under which a power-law distribution has finite moments, connecting the abstract mathematics to the physical requirement that SOC produces divergent fluctuations.*
+
+> **Prerequisites:** cf. note [[note#The Three Empirical Hallmarks|§1 — The Three Empirical Hallmarks]]; cf. note [[note#5.1 Finite-Size Scaling|§5.1 — Finite-Size Scaling]]
+
+Let $P(s) = C s^{-\tau}$ for $s \geq s_0 > 0$ be a normalized power-law distribution.
+
+(a) Find the normalization constant $C$ as a function of $\tau$ and $s_0$. For what values of $\tau$ is the distribution normalizable on $[s_0, \infty)$?
+
+(b) Compute $\langle s \rangle = \int_{s_0}^\infty s\, P(s)\, ds$ and determine the condition on $\tau$ for which the mean is finite.
+
+(c) Compute $\langle s^k \rangle$ for integer $k \geq 1$ and determine for each $k$ the threshold $\tau_k^*$ below which the $k$-th moment diverges.
+
+(d) In the context of SOC, the avalanche size exponent $\tau_s \approx 1.20 < 2$ for the 2D BTW sandpile in infinite volume. Show that this implies the mean avalanche size is infinite in the thermodynamic limit, and explain why this is precisely the statement that "there is no characteristic scale."
+
+---
+
+### Problem 15: Upper Critical Dimension via Dimensional Analysis
+
+*This problem derives $d_c = 4$ for the BTW sandpile from a mean-field (branching process) argument, mirroring the derivation of $d_c = 4$ for directed percolation.*
+
+> **Prerequisites:** cf. note [[note#2.3 Avalanche Observables|§2.3 — Avalanche Observables]]; cf. note [[note#5.4 Universality|§5.4 — Universality]]
+
+A mean-field theory of avalanche dynamics models each toppling site as a branching process: a site that topples sends grains to $k$ neighbors independently, each with probability $p$ of causing a topple. The process is critical when the mean number of offspring per toppling equals 1.
+
+(a) In the mean-field branching process at criticality, show that $P(s) \sim s^{-3/2}$ (the mean-field exponent $\tau_s^\text{MF} = 3/2$). [Hint: use the generating function for the total progeny of a critical Galton-Watson process.]
+
+(b) In $d$ spatial dimensions, the characteristic linear size of an avalanche of size $s$ scales as $r \sim s^{1/d}$ (if avalanches are compact). The mean-field approximation neglects return visits and spatial correlations. The correction to mean-field becomes relevant when the probability that two branches of an avalanche revisit the same site is of order 1. Show that this condition is equivalent to $s \cdot r^{-d} \sim 1$, i.e., $s \sim r^d$.
+
+(c) A random walk of $s$ steps in $d$ dimensions returns to the origin with probability $O(s^{1-d/2})$ for $d > 2$. Use this to estimate the probability that a critical avalanche of size $s$ has a self-intersection, and hence determine the upper critical dimension $d_c$ above which the mean-field theory is exact.
+
+(d) State the predicted mean-field exponents ($\tau_s = 3/2$, $\tau_T = 2$, $D = 4$, $z = 2$) and verify they are consistent with the scaling relations in Section 5.2 of the note.
+
+---
+
+### Problem 16: Fractal Dimension of the Avalanche Boundary
+
+*The fractal dimension of the avalanche footprint is not an independent quantity — it is determined by the other scaling exponents. This problem derives that relationship.*
+
+> **Prerequisites:** cf. note [[note#5.2 Scaling Relations|§5.2 — Scaling Relations]]; cf. note [[note#2.3 Avalanche Observables|§2.3 — Avalanche Observables]]
+
+(a) Recall the definitions: $a$ is the number of distinct sites that topple at least once (area), $s$ is the total topplings, $D$ is the avalanche fractal dimension relating $s_\text{max} \sim L^D$, and $d_f$ is the spatial fractal dimension of the avalanche footprint (area $a \sim r^{d_f}$ where $r$ is the linear extent).
+
+(b) Using the scaling relation $a \sim s^{d_f/D}$ and the finite-size scaling forms for $P(s,L)$ and $P(a,L)$, derive the relation:
+$$\tau_a = 1 + \frac{D}{d_f}(\tau_s - 1)$$
+
+(c) For the 2D BTW sandpile, the note states $d_f \approx 2$ (space-filling footprints). Verify that the tabulated exponents ($\tau_s \approx 1.20$, $D \approx 2.75$, $\tau_a \approx 1.14$) satisfy the relation in (b) to within stated uncertainties.
+
+(d) If an SOC model in 3D had compact avalanches ($d_f = 3$) and $D = 3$, what would the scaling relation predict for $\tau_a$ in terms of $\tau_s$? Interpret this result.
+
+---
+
+### Problem 17: Eigenvalue Bounds on the Spectral Gap of Delta
+
+*The spectral gap of $\Delta$ controls the mixing time of the sandpile Markov chain and the decay of correlations between successive avalanches. This problem derives elementary bounds on the gap.*
+
+> **Prerequisites:** cf. note [[note#4.1 Setup on a General Graph|§4.1 — Setup on a General Graph]]; requires Problem 3
+
+Let $\lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_{|V|}$ be the eigenvalues of $\Delta$.
+
+(a) By the variational characterization (Courant-Fischer), show that $\lambda_1 = \min_{\mathbf{x} \neq 0} \frac{\mathbf{x}^\top \Delta \mathbf{x}}{\|\mathbf{x}\|^2}$. Use this to show $\lambda_1 > 0$ (which you already know from Problem 3), and give a lower bound in terms of graph properties (e.g., the minimum number of edges from $V$ to $s$).
+
+(b) Show that $\lambda_{|V|} \leq 2 \Delta_\text{max}$ where $\Delta_\text{max} = \max_{i \in V} \deg(i)$, using the fact that $\Delta$ is diagonally dominant.
+
+(c) For the $L \times L$ grid with a corner sink, argue (without exact computation) that $\lambda_1 = O(L^{-2})$ as $L \to \infty$. [Hint: construct a test vector $\mathbf{x}$ that is slowly varying and achieves small Rayleigh quotient.]
+
+(d) The mixing time of the sandpile Markov chain is related to $1/\lambda_1$ (the inverse spectral gap). What does $\lambda_1 = O(L^{-2})$ imply for how long the chain must run before observing stationary-regime statistics? Relate this to the burn-in period required in simulation.
+
+---
+
+### Problem 18: Gutenberg-Richter Law as a Power-Law Derivation
+
+*This problem works through the full derivation connecting the Gutenberg-Richter magnitude-frequency relation to a power law for seismic energy, pinning down the exponent $\tau_E$.*
+
+> **Prerequisites:** cf. note [[note#Natural Examples and Connection to Scaling Laws|§1 — Natural Examples and Connection to Scaling Laws]]
+
+The Gutenberg-Richter law states $\log_{10} N(\geq M) = a - bM$ with $b \approx 1$, where $N(\geq M)$ is the number of earthquakes with moment magnitude at least $M$.
+
+(a) Recall the moment magnitude scale: $M = \frac{2}{3}\log_{10} E - \text{const}$ where $E$ is seismic energy. Invert this to express $E$ as a function of $M$.
+
+(b) Substitute into the Gutenberg-Richter law to show that the cumulative distribution of seismic energy satisfies $N(\geq E) \sim E^{-\beta}$ for some $\beta$ that you should express in terms of $b$.
+
+(c) Differentiate to obtain the probability density $P(E) \sim E^{-\tau_E}$ and compute $\tau_E$ in terms of $b$. For $b = 1$, evaluate $\tau_E$ numerically.
+
+(d) Compare $\tau_E$ to the BTW mean-field value $\tau_s = 3/2$ and to the 2D BTW value $\tau_s \approx 1.20$. Discuss what dimension or universality class of SOC model could produce the observed earthquake exponent.
+
+---
+
+## Algorithmic Applications
+
+### Problem 19: BTW Sandpile Simulation
+
+*This problem sketches a complete simulation of the BTW sandpile including the queue-based relaxation and the MLE power-law exponent estimator.*
+
+> **Prerequisites:** cf. note [[note#2.1 Formal Definition|§2.1 — Formal Definition]]; cf. note [[note#2.3 Avalanche Observables|§2.3 — Avalanche Observables]]
+
+(a) **Inputs and data structures:** Represent the height field as a 2D integer array `z[i][j]` for $0 \leq i, j < L$ with open boundaries. Write pseudocode for `topple(z, i, j)` that performs one toppling at $(i,j)$, distributes grains to valid neighbors, discards off-grid grains, and returns the number of grains dissipated.
+
+(b) **Relaxation loop:** Write pseudocode for `relax(z)` using a queue of unstable sites. After each toppling, newly unstabilized neighbors are enqueued. Return the total topplings $s$ and the set of toppled sites. Compare the time complexity of this queue-based approach to the naive full-scan approach.
+
+(c) **Main simulation loop:** Write pseudocode for the full simulation:
+1. Initialize `z` to all zeros.
+2. Burn in $N_\text{burn}$ steps: add a grain at a uniformly random site, call `relax`.
+3. Measure $N_\text{measure}$ steps: add a grain, call `relax`, record $s$.
+
+(d) **MLE exponent estimator:** Given samples $\{s_k\}$ with $s_k \geq s_\text{min}$, write pseudocode to compute:
+$$\hat\tau_s = 1 + n\left[\sum_{k=1}^n \ln \frac{s_k}{s_\text{min} - 1/2}\right]^{-1}$$
+Explain the role of $s_\text{min}$ and outline a criterion for selecting it (e.g., minimizing the Kolmogorov-Smirnov statistic over candidate values).
+
+---
+
+### Problem 20: Dhar's Burning Algorithm
+
+*This problem sketches a queue-based implementation of Dhar's burning algorithm, which decides recurrence in $O(|V|)$ time, and connects the algorithm to enumeration of the sandpile group.*
+
+> **Prerequisites:** cf. note [[note#4.4 Recurrent Configurations and the Sandpile Group|§4.4 — Recurrent Configurations and the Sandpile Group]]
+
+(a) **Inputs and data structures:** Represent the configuration as `z[i][j]` with $0 \leq z[i][j] \leq 3$, a boolean array `burned[i][j]` initialized to `False`, and an integer array `unburned_neighbors[i][j]` counting currently unburned non-sink neighbors. Initialize the sink as burned and adjust `unburned_neighbors` accordingly.
+
+(b) **Burning rule:** A site $(i,j)$ is burnable if $z[i][j] \geq \text{unburned\_neighbors}[i][j]$. Write pseudocode for `process(i, j)` that: marks $(i,j)$ burned, decrements `unburned_neighbors` of all unburned neighbors of $(i,j)$, and enqueues any neighbor that becomes burnable.
+
+(c) **Main loop:** Write pseudocode using a queue initialized with all boundary sites adjacent to the sink. Process each site; after the queue empties, return `True` iff all sites are burned.
+
+(d) **Complexity:** State the time complexity of the queue-based algorithm in terms of $|V|$ and compare to the naive repeated-pass algorithm.
+
+(e) **Application:** Describe how to use this algorithm to: (i) verify empirically that the BTW simulation of Problem 19 visits only recurrent configurations in stationarity; (ii) enumerate all recurrent configurations for small $L$ and verify the count equals $\det(\Delta)$.
+
+---
+
+### Problem 21: Scaling Exponent Estimation via Data Collapse
+
+*This problem sketches the grid-search data collapse algorithm for jointly estimating $(\tau_s, D)$ from multi-size simulation data.*
+
+> **Prerequisites:** cf. note [[note#5.1 Finite-Size Scaling|§5.1 — Finite-Size Scaling]]; requires Problem 19
+
+(a) **Data collection:** Assume simulations at $K$ system sizes $L_1 < \cdots < L_K$, each yielding $N_k$ avalanche size samples. Describe how to construct empirical histograms $\hat{P}(s, L_k)$ in log-spaced bins and explain why log-spacing is preferred over linear spacing.
+
+(b) **Collapse objective:** The rescaled data $Q(u_k, L_k) = (s_k)^{\tau_s} \hat{P}(s_k, L_k)$ should collapse to a universal curve $g(u)$ with $u = s/L^D$. Write pseudocode for a grid search over $(\tau_s, D)$ that minimizes the mean squared deviation of $Q$ values at equal $u$ across different sizes.
+
+(c) **Collapse quality metric:** Define a specific functional form for the collapse quality $\mathcal{Q}(\tau_s, D)$. Discuss one advantage and one disadvantage of least-squares vs. maximum likelihood as the objective for collapse quality.
+
+(d) **Finite-size corrections:** If corrections of the form $L^{-\omega} h(s/L^D)$ are present, describe how they would manifest as systematic residuals in the collapse and how you would detect them from the size dependence of the residuals.
+
+---
+
+### Problem 22: Sandpile Group Enumeration on Small Graphs
+
+*This problem sketches an algorithm to enumerate all elements of the sandpile group $(\mathcal{R}, \oplus)$ for small graphs and verify the identity $|\mathcal{R}| = \det(\Delta)$.*
+
+> **Prerequisites:** cf. note [[note#4.4 Recurrent Configurations and the Sandpile Group|§4.4 — Recurrent Configurations and the Sandpile Group]]; requires Problems 11 and 12
+
+(a) **Inputs and data structures:** For a graph $G = (V \cup \{s\}, E)$ with $|V|$ small (say $\leq 9$), represent each configuration as a tuple of integers. Describe a data structure for storing the set of all recurrent configurations $\mathcal{R}$ and the group multiplication table.
+
+(b) **Enumeration:** Write pseudocode to enumerate all stable configurations $\{0,\ldots,\deg(i)-1\}^{|V|}$, apply Dhar's burning test from Problem 20 to each, and collect those that pass into $\mathcal{R}$.
+
+(c) **Group table construction:** Write pseudocode to compute the full Cayley table of $(\mathcal{R}, \oplus)$: for each pair $(\eta_1, \eta_2) \in \mathcal{R}^2$, compute $\eta_1 \oplus \eta_2$ by componentwise addition followed by relaxation (using `relax` from Problem 19). Verify commutativity by checking symmetry of the table.
+
+(d) **Verification:** Compute $\det(\Delta)$ for the $2 \times 2$ grid with a corner sink and verify $|\mathcal{R}| = \det(\Delta)$. Identify the identity element and one non-trivial element and its inverse.
+
+---
+
+### Problem 23: Branching Process Simulation for Mean-Field SOC
+
+*The mean-field limit of SOC is equivalent to a critical branching process. This problem sketches a simulation that generates mean-field avalanche statistics and verifies $\tau_s^\text{MF} = 3/2$.*
+
+> **Prerequisites:** cf. note [[note#2.3 Avalanche Observables|§2.3 — Avalanche Observables]]; requires Problem 15
+
+(a) **Inputs and data structures:** A critical Galton-Watson process has offspring distribution $\{p_k\}$ with mean $\mu = \sum_k k\, p_k = 1$. Represent the population at each generation as an integer. Choose a specific offspring distribution (e.g., Poisson with $\lambda = 1$, or Bernoulli where each particle produces 0 or 2 offspring each with probability $1/2$) and justify that it is critical.
+
+(b) **Simulation loop:** Write pseudocode to simulate a single avalanche (branching process run until extinction or indefinite growth). The avalanche size $s$ is the total number of individuals across all generations. Run until extinction or until $s$ exceeds a cutoff $s_\text{max}$.
+
+(c) **Main loop and measurement:** Write pseudocode to generate $N$ avalanches (conditioned on finite total size), collect sizes $\{s_k\}$, and estimate $\hat\tau_s$ using the MLE from Problem 19(d). What cutoff $s_\text{max}$ and how many samples $N$ would be needed to distinguish $\tau_s = 3/2$ from $\tau_s = 1.20$ with high confidence?
+
+(d) **Comparison:** Describe how you would use the simulated mean-field data as a reference to test whether BTW simulation data at large $L$ converges to mean-field behavior (as expected for $d \geq 4$) or departs from it (as observed for $d = 2$).
