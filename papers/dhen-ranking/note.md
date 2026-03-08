@@ -46,14 +46,14 @@ Buyun Zhang, Liang Luo, Xi Liu, Jay Li, Zeliang Chen, Weilin Zhang, Xiaohan Wei,
 
 ## 1. Motivation and Background
 
-Click-through rate (CTR) prediction is the core inference task in online advertising: given a user context and an ad candidate, estimate $p(\text{click} \mid \text{user}, \text{ad})$. The revenue implications are enormous; the US digital ad market reached \$284.3B in 2021.
+*Click-through rate* (CTR) prediction is the core inference task in online advertising: given a user context and an ad candidate, estimate $p(\text{click} \mid \text{user}, \text{ad})$. The revenue implications are enormous; the US digital ad market reached \$284.3B in 2021.
 
 ### 1.1 Limitations of Prior Ranking Architectures
 
 The evolution of ranking models follows a rough trajectory:
 
 1. **Linear models** (logistic regression): $p = \sigma(\mathbf{w}^\top \mathbf{x})$. Cannot capture non-linear feature interactions.
-2. **Factorization Machines (FM)**: Model second-order interactions via latent embeddings, $\hat{y} = w_0 + \sum_i w_i x_i + \sum_{i<j} \langle \mathbf{v}_i, \mathbf{v}_j \rangle x_i x_j$. Shallow; limited expressivity.
+2. ***Factorization Machines* (FM)**: Model second-order interactions via latent embeddings, $\hat{y} = w_0 + \sum_i w_i x_i + \sum_{i<j} \langle \mathbf{v}_i, \mathbf{v}_j \rangle x_i x_j$. Shallow; limited expressivity.
 3. **Deep FM / Wide & Deep / DCN / xDeepFM / AutoInt**: Stack a deep neural network alongside or on top of an explicit interaction module to capture high-order interactions. These all share a common structural limitation: each model is built around a *single type* of interaction module, homogeneously stacked.
 
 The paper identifies three concrete limitations of the homogeneous-stacking paradigm:
@@ -66,7 +66,7 @@ The paper identifies three concrete limitations of the homogeneous-stacking para
 
 The paper's central hypothesis is:
 
-> Different interaction modules — even those designed to capture the same order of interaction — encode *non-overlapping* information about the feature space.
+> Different interaction modules — even those designed to capture the same order of interaction — encode *non-overlapping information* about the feature space.
 
 This motivates an ensemble of *heterogeneous* modules within each layer. Rather than depth alone yielding richer interactions, the combination of diverse module outputs yields complementary signal. The hierarchical stacking of such ensemble layers then compounds the benefit across orders.
 
@@ -74,7 +74,7 @@ This motivates an ensemble of *heterogeneous* modules within each layer. Rather 
 
 ## 2. Architecture Overview
 
-DHEN follows the same high-level template as modern vision and NLP architectures (ResNet, Transformer, MetaFormer): a deep stacking structure where a repeating block processes inputs recursively. The novelty is that each block is not a single interaction module, but an ensemble of heterogeneous interaction modules.
+DHEN follows the same high-level template as modern vision and NLP architectures (ResNet, Transformer, MetaFormer): a deep stacking structure where a repeating block processes inputs recursively. The novelty is that each block is not a single interaction module, but a *hierarchical ensemble* of heterogeneous interaction modules.
 
 The full DHEN pipeline is:
 
@@ -84,8 +84,8 @@ $$\text{raw features} \;\longrightarrow\; \text{Feature Processing Layer} \;\lon
 
 CTR inputs contain two feature types:
 
-- **Sparse (categorical) features**: mapped via embedding lookup tables. Each categorical term is assigned a trainable $d$-dimensional vector.
-- **Dense (numerical) features**: processed by a stack of MLP layers to produce a $d$-dimensional vector.
+- ***Sparse* (categorical) features**: mapped via *embedding lookup* tables. Each categorical term is assigned a trainable $d$-dimensional vector.
+- ***Dense* (numerical) features**: processed by a stack of MLP layers to produce a $d$-dimensional vector.
 
 After concatenation, the output of the feature processing layer is:
 
@@ -106,12 +106,12 @@ where:
 
 $$\operatorname{ShortCut}(X_n) = \begin{cases} X_n & \text{if } \operatorname{len}(X_n) = \operatorname{len}(Y) \\ W_n X_n & \text{if } \operatorname{len}(X_n) \neq \operatorname{len}(Y) \end{cases} \tag{2}$$
 
-- $\text{Norm}(\cdot)$ is Layer Normalization.
+- $\text{Norm}(\cdot)$ is *layer normalization*.
 - $\operatorname{Ensemble}_{i=1}^{k}$ denotes an aggregation function over $k$ interaction module outputs; options include concatenation, sum, or weighted sum.
 - $W_n \in \mathbb{R}^{\operatorname{len}(X_n) \times \operatorname{len}(Y)}$ is a learned linear projection applied only when dimension mismatch occurs.
 - The output $Y$ becomes the input $X_{n+1}$ to the next layer.
 
-The shortcut plays a dual role: it acts as a residual connection (stabilizing gradient flow across depth) and as a dimension-matching projection.
+The shortcut plays a dual role: it acts as a *residual shortcut* (stabilizing gradient flow across depth) and as a dimension-matching projection.
 
 ![Figure 1 from Zhang et al. (2022): general hierarchical ensemble building block in DHEN](figures/dhen2022-fig1-hierarchical-ensemble-building-block.jpg)
 *Figure 1 (Zhang et al., 2022): A general DHEN hierarchical ensemble building block. Multiple heterogeneous interaction modules run in parallel on the same input $X_n$; their outputs are aggregated (ensemble), added to a residual shortcut from $X_n$, and normalized to produce the next layer's input $X_{n+1}$.*
@@ -132,7 +132,7 @@ The internal DLRM interaction step computes all inner products $\langle x_i, x_j
 
 ### 3.2 Self-Attention
 
-Self-attention, the core of Transformer encoders, was introduced to CTR tasks in AutoInt and InterHAt. For DHEN, the module applies a standard Transformer encoder layer:
+*Self-attention*, the core of Transformer encoders, was introduced to CTR tasks in AutoInt and InterHAt. For DHEN, the module applies a standard Transformer encoder layer:
 
 $$u = W \cdot \operatorname{TransformerEncoderLayer}(X_n) \tag{4}$$
 
@@ -146,13 +146,13 @@ with $Q = X_n W^Q$, $K = X_n W^K$, $V = X_n W^V$. This captures *feature-wise* i
 
 ### 3.3 Deep Cross Net
 
-Deep Cross Net (DCN, Wang et al. 2017) introduces a cross network that efficiently learns bounded-degree feature interactions. In DHEN's formulation:
+Deep Cross Net (DCN, Wang et al. 2017) introduces a *cross network* that efficiently learns bounded-degree feature interactions. In DHEN's formulation:
 
 $$u = W \cdot (X_n X_n^\top) + b \tag{7}$$
 
 where $W$ and $b$ are learned weight and bias matrices. This can be understood as a bilinear transformation over the outer product $X_n X_n^\top \in \mathbb{R}^{m \times m}$, which encodes all pairwise embedding interactions. The paper notes that the skip connection from the original DCN paper is omitted since DHEN already provides skip connections via the $\operatorname{ShortCut}$ mechanism at the layer level.
 
-The key distinction from self-attention is that DCN operates at the *bit level* (individual scalar dimensions within embedding vectors), whereas self-attention operates at the *feature level* (entire embedding vectors as units).
+The key distinction from self-attention is that DCN operates at the *bit-level interaction* level (individual scalar dimensions within embedding vectors), whereas self-attention operates at the *feature-level interaction* level (entire embedding vectors as units).
 
 ### 3.4 Linear
 
@@ -196,7 +196,7 @@ The critical insight of DHEN is that stacking $N$ hierarchical ensemble layers p
 
 $$I_1(I_1(X_0)), \quad I_1(I_2(X_0)), \quad I_2(I_1(X_0)), \quad I_2(I_2(X_0))$$
 
-(all mixed together via the ensemble). Thus DHEN is capable of capturing interactions of the form "interaction type $A$ applied to the output of interaction type $B$," which is qualitatively different from what any homogeneous stack can produce. With $k$ module types and $N$ layers, the number of distinct interaction compositions grows as $k^N$, giving DHEN combinatorial expressive power over the space of module sequences.
+(all mixed together via the ensemble). Thus DHEN is capable of capturing interactions of the form "interaction type $A$ applied to the output of interaction type $B$," which is qualitatively different from what any homogeneous stack can produce. **With $k$ module types and $N$ layers, the number of distinct interaction compositions grows as $k^N$, giving DHEN *combinatorial expressivity* over the space of module sequences.**
 
 Formally, the full DHEN forward pass (for a $N$-layer model) can be written as:
 
@@ -239,12 +239,12 @@ DHEN's deeper, multi-layer structure increases parameter count, activation memor
 
 ### 6.1 Distributed Training Strategy
 
-The deployment unit is a **supernode** (pod) of 16 hosts, each with 8 A100 GPUs connected via NVLink (600 GB/s intra-host). Hosts within a pod communicate at up to 200 GB/s (RoCEv2, shared across 8 GPUs). A single pod thus contains 128 A100 GPUs, 5 TB HBM, and 40 PF/s BF16 compute.
+The deployment unit is a **supernode** (pod) of 16 hosts, each with 8 A100 GPUs connected via *NVLink* (600 GB/s intra-host). Hosts within a pod communicate at up to 200 GB/s (RoCEv2, shared across 8 GPUs). A single pod thus contains 128 A100 GPUs, 5 TB HBM, and 40 PF/s BF16 compute.
 
 The hybrid training paradigm:
 
-1. **Sparse embedding tables** are distributed across the pod using model parallelism. Oversized tables are column-sharded, and shards are load-balanced via the LPT (Longest Processing Time First) algorithm using an empirical cost function that captures both compute and communication overhead.
-2. **Dense DHEN layers** are replicated on each GPU and trained with data parallelism (DP). The choice of DP for dense layers reflects that activation sizes can far exceed weight sizes, so it is cheaper to synchronize weights (allreduce) than to send activations across the network.
+1. **Sparse embedding tables** are distributed across the pod using *model parallel* sharding. Oversized tables are column-sharded, and shards are load-balanced via the LPT (Longest Processing Time First) algorithm using an empirical cost function that captures both compute and communication overhead.
+2. **Dense DHEN layers** are replicated on each GPU and trained with *data parallel* (DP) training. The choice of DP for dense layers reflects that activation sizes can far exceed weight sizes, so it is cheaper to synchronize weights (*allreduce*) than to send activations across the network.
 3. Each training batch thus follows: DP forward (dense) → model-parallel embedding lookup → DP forward/backward (dense DHEN layers) → allreduce gradients for dense weights.
 
 ![Figure 4 from Zhang et al. (2022): DHEN distributed training strategy with 4 GPUs shown](figures/dhen2022-fig4-dhen-training.png)
@@ -252,13 +252,13 @@ The hybrid training paradigm:
 
 ### 6.2 Fully Sharded Data Parallel
 
-Standard DP imposes a ceiling on model size equal to per-GPU HBM capacity. To go beyond, the authors use **Fully Sharded Data Parallel (FSDP)** (FairScale / DeepSpeed ZeRO). FSDP shards model weights across all GPUs, materializing each layer's weights via `allgather` on the forward/backward critical path, then immediately discarding them. Additional memory techniques: activation checkpointing (recompute activations in backward), CPU offloading (parameters/gradients stored in CPU RAM, fetched to GPU just before use).
+Standard DP imposes a ceiling on model size equal to per-GPU HBM capacity. To go beyond, the authors use ***fully sharded data parallel* (FSDP)** (FairScale / DeepSpeed ZeRO). FSDP shards model weights across all GPUs, materializing each layer's weights via *allgather* on the forward/backward critical path, then immediately discarding them. Additional memory techniques: activation checkpointing (recompute activations in backward), CPU offloading (parameters/gradients stored in CPU RAM, fetched to GPU just before use).
 
-However, at production scale (hundreds of GPUs), naive FSDP is inefficient because the `allgather` on the critical path must span all GPUs in the cluster. Each shard becomes very small, making it impossible to saturate network bandwidth; the resulting latency dominates.
+*However, at production scale (hundreds of GPUs), naive FSDP is inefficient because the `allgather` on the critical path must span all GPUs in the cluster. Each shard becomes very small, making it impossible to saturate network bandwidth; the resulting latency dominates.*
 
 ### 6.3 Hybrid Sharded Data Parallel
 
-The paper proposes **Hybrid Sharded Data Parallel (HSDP)**, co-designed with DHEN's architecture and the ZionEX cluster topology. HSDP exploits the 24x bandwidth asymmetry between NVLink (600 GB/s) and RoCEv2 (25 GB/s):
+The paper proposes ***hybrid sharded data parallel* (HSDP)**, co-designed with DHEN's architecture and the ZionEX cluster topology. HSDP exploits the 24x bandwidth asymmetry between NVLink (600 GB/s) and RoCEv2 (25 GB/s):
 
 1. **Intra-host sharding**: HSDP shards the entire dense model across GPUs *within* a single host. All `allgather` and `reducescatter` operations during the forward and backward passes operate exclusively over NVLink at full bandwidth.
 2. **Cross-host gradient synchronization**: After the intra-host `reducescatter` completes in the backward pass, HSDP registers a backward hook to launch asynchronous `allreduce` operations across hosts (one per GPU-local-ID group). Each `allreduce` averages gradients for the local shard across all hosts with the same intra-host position.
@@ -266,9 +266,9 @@ The paper proposes **Hybrid Sharded Data Parallel (HSDP)**, co-designed with DHE
 
 HSDP tradeoffs vs. FSDP:
 - **Benefit**: `allgather` latency on the critical path is reduced dramatically (NVLink vs. RoCE); communication collectives scale with number of hosts, not number of GPUs globally.
-- **Cost**: Supports models up to $8\times$ (GPUs per host) the size of pure DP, not arbitrarily large; adds 1.125x communication overhead in bytes due to the additional `allreduce`, though this is hidden by pipelining.
+- **Cost**: *Supports models up to $8\times$ (GPUs per host) the size of pure DP, not arbitrarily large; adds 1.125x communication overhead in bytes due to the additional `allreduce`, though this is hidden by pipelining.*
 
-In practice, small-to-medium DHENs use HSDP; very large DHENs fall back to FSDP.
+*In practice, small-to-medium DHENs use HSDP; very large DHENs fall back to FSDP.*
 
 ![Figure 5 from Zhang et al. (2022): FSDP vs HSDP comparison with 2 hosts and 2 GPUs each](figures/dhen2022-fig5-fsdp-vs-hsdp.png)
 *Figure 5 (Zhang et al., 2022): FSDP (top) vs. HSDP (bottom) shown for 2 hosts with 2 GPUs each. In FSDP, allgather must span all GPUs cluster-wide over slow RoCEv2. In HSDP, allgather is confined to NVLink-connected GPUs within a single host; cross-host gradient averaging is done asynchronously via allreduce over RoCEv2, overlapped with backward computation.*
@@ -286,7 +286,7 @@ In practice, small-to-medium DHENs use HSDP; very large DHENs fall back to FSDP.
 
 ### 7.1 Setup
 
-All experiments use a proprietary large-scale industrial CTR dataset (not publicly released). Features include hundreds of sparse (categorical) features and thousands of dense (numerical) features. The metric throughout is **Normalized Entropy (NE)** loss, defined as the binary cross-entropy normalized by the entropy of the empirical click rate:
+All experiments use a proprietary large-scale industrial CTR dataset (not publicly released). Features include hundreds of sparse (categorical) features and thousands of dense (numerical) features. The metric throughout is ***normalized entropy* (NE)** loss, defined as the binary cross-entropy normalized by the entropy of the empirical click rate:
 
 $$\text{NE} = \frac{-\frac{1}{n}\sum_{i=1}^{n} [y_i \log \hat{p}_i + (1-y_i)\log(1-\hat{p}_i)]}{-(p \log p + (1-p)\log(1-p))}$$
 
@@ -326,7 +326,7 @@ Table 2 (paper) compares DHEN stacks of varying depth $N \in \{1, 2, 4, 8\}$ aga
 | DHEN | 4 | -0.071% | -0.197% | -0.255% |
 | DHEN | 8 | -0.068% | -0.208% | -0.273% |
 
-All DHEN configurations outperform the baseline. Deeper models achieve larger NE improvement, and crucially, the gap *widens with more training data* — suggesting that DHEN's ability to capture higher-order interactions and module correlations requires more samples to manifest, but yields durable gains. The 8-layer DHEN achieves **-0.273% NE** at 25B examples; with more data, this likely reaches the reported **-0.27%** figure.
+All DHEN configurations outperform the baseline. Deeper models achieve larger NE improvement, and crucially, the gap *widens with more training data* — suggesting that DHEN's ability to capture higher-order interactions and module correlations requires more samples to manifest, but yields durable gains. **The 8-layer DHEN achieves -0.273% NE at 25B examples, reaching the reported -0.27% NE improvement over AdvancedDLRM with additional data.**
 
 ### 7.4 Scaling Efficiency vs. Mixture of Experts
 
@@ -348,7 +348,7 @@ At matched or lower FLOP budgets, DHEN consistently outperforms MoE. MoE scales 
 
 On a 256-GPU cluster, experiments with an 8-layer DHEN using DP yield 1.08x end-to-end speedup from: FP16 embedding + AMP + quantized BF16 allreduce + quantized AllToAll. The remaining bottleneck is optimizer cost and AllToAll latency not fully overlapped with dense layer compute.
 
-For depth beyond 22 layers, DP fails (OOM). HSDP supports larger models than DP and achieves **up to 1.2x throughput over FSDP** for the same model size. FSDP supports arbitrary depth but with high `allgather` latency on the critical path across all cluster GPUs; HSDP restricts `allgather` to NVLink within a single host, eliminating the RoCEv2 bottleneck.
+*For depth beyond 22 layers, DP fails (OOM).* **HSDP supports larger models than DP and achieves up to 1.2x throughput over FSDP for the same model size.** FSDP supports arbitrary depth but with high `allgather` latency on the critical path across all cluster GPUs; HSDP restricts `allgather` to NVLink within a single host, eliminating the RoCEv2 bottleneck.
 
 ![Figure 6 from Zhang et al. (2022): HSDP supports larger model sizes than DP and higher throughput than FSDP](figures/dhen2022-fig6-dhen-speedup.png)
 *Figure 6 (Zhang et al., 2022): Training throughput comparison across DP, FSDP, and HSDP at varying DHEN layer counts on a 256-GPU cluster. DP succeeds only up to 22 layers (OOM beyond); HSDP consistently achieves up to 1.2x the throughput of FSDP by replacing cluster-wide allgather with fast intra-host NVLink allgather.*
