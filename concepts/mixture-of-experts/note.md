@@ -38,7 +38,13 @@ A sparse conditional computation architecture that routes each input to a learne
    - [[#Router Z-Loss|Router Z-Loss]]
    - [[#Entropy Regularization|Entropy Regularization]]
    - [[#Initialization|Initialization]]
-9. [[#References|References]]
+9. [[#9. Multi-Task Learning with MMoE|Multi-Task Learning with MMoE]]
+   - [[#Multi-Task Problem Setup|Multi-Task Problem Setup]]
+   - [[#Architecture Family|Architecture Family]]
+   - [[#The MMoE Layer|The MMoE Layer]]
+   - [[#Task-Relationship Modulation|Task-Relationship Modulation]]
+   - [[#Gradient Flow and Trainability|Gradient Flow and Trainability]]
+10. [[#References|References]]
 
 ---
 
@@ -422,6 +428,88 @@ Router initialization matters because routing decisions in the first few steps o
 
 ---
 
+## 9. Multi-Task Learning with MMoE
+
+The routing architectures in Sections 3–7 share a single objective: efficiency in a single-task setting. Ma et al. (2018) applied the MoE principle to a different problem — *multi-task multi-label (MTML) learning* — where the goal is not compute-efficiency but knowledge transfer and task-relationship modeling across heterogeneous objectives.
+
+### Multi-Task Problem Setup
+
+Consider $K$ tasks, each associated with a loss function $\mathcal{L}_k$ over inputs $x \in \mathbb{R}^d$ and labels $y^k$. The standard *multi-task learning* (MTL) objective is:
+
+$$\mathcal{L}_{\text{MTL}} = \sum_{k=1}^{K} \lambda_k \, \mathcal{L}_k, \qquad \lambda_k > 0$$
+
+where the $\lambda_k$ are task weights. The central challenge is *task interference*: gradients from different tasks may conflict, causing the shared representation to satisfy one task at the cost of another. This tension is most severe when task labels are weakly correlated or structurally different (e.g., engagement vs. satisfaction in a recommendation system).
+
+**Definition (Task Correlation).** For two tasks $k, k'$ with label distributions $Y^k, Y^{k'}$ on a shared input distribution, define their *Pearson correlation* as:
+
+$$\rho_{k,k'} = \frac{\operatorname{Cov}(Y^k, Y^{k'})}{\sigma(Y^k) \, \sigma(Y^{k'})}$$
+
+Ma et al. use $\rho_{k,k'}$ as an experimental control variable: datasets are constructed or modified so that $\rho$ varies from near $1$ (highly related tasks) to near $0$ or negative (weakly related or conflicting tasks).
+
+### Architecture Family
+
+Ma et al. compare three architectures that all share parameters across tasks:
+
+**Shared-Bottom (SB).** The classical *hard parameter sharing* baseline. A single shared encoder $h : \mathbb{R}^d \to \mathbb{R}^m$ (e.g., a stack of dense layers) produces a common representation, and each task applies a private *tower network* $t^k : \mathbb{R}^m \to \mathbb{R}$ on top:
+
+$$\hat{y}^k = t^k(h(x))$$
+
+All $K$ tasks train through $h$ simultaneously, making $h$ susceptible to conflicting gradient updates. When tasks are strongly correlated, the shared representation generalizes well; when they are weakly correlated, no single $h(x)$ satisfies all tasks optimally.
+
+**One-gate Mixture-of-Experts (OMoE).** A soft-gated MoE layer replaces $h$, with $E$ expert sub-networks $f_1, \ldots, f_E : \mathbb{R}^d \to \mathbb{R}^m$ and a single gating network shared across all tasks:
+
+$$f(x) = \sum_{i=1}^{E} g_i(x) \cdot f_i(x), \qquad g(x) = \operatorname{softmax}(W_g^\top x), \quad W_g \in \mathbb{R}^{d \times E}$$
+
+Each task then applies its own tower: $\hat{y}^k = t^k(f(x))$. OMoE increases representational capacity via the experts, but all tasks share the *same* expert mixture — the single gate $g(x)$ cannot route tasks differently.
+
+### The MMoE Layer
+
+**Definition (Multi-gate Mixture-of-Experts).** In *MMoE* (Ma et al., 2018), each task $k$ receives its own gating network $g^k$, while the experts $\{f_i\}$ are shared across all tasks:
+
+$$f^k(x) = \sum_{i=1}^{E} g^k_i(x) \cdot f_i(x), \qquad g^k(x) = \operatorname{softmax}\!\left(W_{g^k}^\top x\right), \quad W_{g^k} \in \mathbb{R}^{d \times E}$$
+
+The final output for task $k$ is:
+
+$$\hat{y}^k = t^k\!\left(f^k(x)\right)$$
+
+where $t^k$ is task $k$'s tower network. The MMoE model has $K$ gating networks (one per task) and $E$ shared expert networks. Compared to Shared-Bottom with a single encoder, MMoE introduces $K \cdot d \cdot E$ additional parameters for the gates and replaces one shared dense layer with $E$ expert layers — a modest parameter overhead in exchange for task-specific mixture weights.
+
+**Parameter comparison.** Let $E$ experts each have $P$ parameters. The gating networks add $K \cdot d \cdot E$ parameters (small for large experts). The key contrast:
+
+| Architecture | Expert parameters | Gate parameters | Task can modulate mixture? |
+|---|---|---|---|
+| Shared-Bottom | $P$ (one encoder) | none | No |
+| OMoE | $E \cdot P$ | $d \cdot E$ | No (shared gate) |
+| MMoE | $E \cdot P$ | $K \cdot d \cdot E$ | Yes (per-task gate) |
+
+### Task-Relationship Modulation
+
+The key claim of MMoE is that when tasks are weakly correlated, the per-task gates $g^k(x)$ learn to activate *different subsets of experts* for different tasks, effectively decomposing the multi-task problem into task-specific subproblems.
+
+Formally, define the *gate divergence* between tasks $k$ and $k'$ as the expected $L_1$ distance between their routing distributions:
+
+$$\Delta(k, k') = \mathbb{E}_x\!\left[\left\|g^k(x) - g^{k'}(x)\right\|_1\right]$$
+
+*In the OMoE baseline, $\Delta(k, k') = 0$ by construction.* In MMoE, $\Delta(k, k')$ is a learned quantity: when tasks have conflicting gradient signals, the optimizer is free to reduce interference by pushing the gates to utilize different experts. Ma et al. confirm empirically that lower inter-task correlation $\rho_{k,k'}$ correlates with higher learned $\Delta(k, k')$, providing evidence that MMoE implicitly learns a soft task-specific expert allocation.
+
+**Remark (Specialization vs. Sharing).** Unlike sparse top-$k$ routing, MMoE uses soft gating (all experts receive non-zero weight). Expert specialization is therefore emergent from gradient dynamics rather than enforced by routing architecture. An expert $f_i$ specializes for task $k$ to the extent that $g^k_i(x) \gg g^{k'}_i(x)$ for $k' \neq k$.
+
+### Gradient Flow and Trainability
+
+The gradient of the total MTL loss with respect to expert $f_i$'s parameters $\theta_i$ decomposes by task:
+
+$$\frac{\partial \mathcal{L}_{\text{MTL}}}{\partial \theta_i} = \sum_{k=1}^{K} \lambda_k \, g^k_i(x) \cdot \frac{\partial \mathcal{L}_k}{\partial f^k(x)} \cdot \frac{\partial f_i(x)}{\partial \theta_i}$$
+
+The gate weight $g^k_i(x)$ appears as a *task-specific gradient scaling factor* for expert $i$: if task $k$ routes little mass to expert $i$ (i.e., $g^k_i(x) \approx 0$), then task $k$ contributes negligibly to $\theta_i$'s update. This is the sense in which per-task gates modulate inter-task interference: expert $i$ is insulated from tasks that have learned to route around it.
+
+**Trainability.** Ma et al. conduct an experiment measuring *trainability* — the fraction of random initializations and data permutations under which training converges to a good solution — across the three architectures. **MMoE exhibits higher trainability than both Shared-Bottom and OMoE, particularly under high data noise and high initialization variance.** The interpretation is that per-task gating provides more gradient pathways: if one path produces a conflicting gradient, another expert can absorb the conflicting signal, preventing the optimizer from getting stuck in a saddle caused by task interference.
+
+*Concretely, in the synthetic experiments, Shared-Bottom's trainability drops sharply as task correlation decreases below $\rho \approx 0.5$, while MMoE maintains high trainability down to $\rho \approx 0$.* OMoE falls in between — the MoE structure helps but the shared gate cannot decouple task interference at the routing level.
+
+**Real-world deployment.** Ma et al. apply MMoE to a large-scale recommendation system at Google, where tasks correspond to *engagement* (implicit feedback, e.g., watch time) and *satisfaction* (explicit feedback, e.g., user rating). These objectives are structurally different: engagement is dense and noisy, satisfaction is sparse and deliberate. MMoE outperforms both Shared-Bottom and OMoE baselines on held-out metrics, with particularly strong gains on the satisfaction task — the harder, sparser objective that benefits most from being shielded from engagement's gradient.
+
+---
+
 ## References
 
 | Reference Name | Brief Summary | Link to Reference |
@@ -435,4 +523,5 @@ Router initialization matters because routing decisions in the first few steps o
 | Jiang et al. (2024) — Mixtral of Experts | Presents Mixtral 8x7B, a top-2 sparse MoE LLM with 46.7B total / 12.9B active parameters; outperforms Llama 2 70B on most benchmarks with 5x fewer active parameters. | [arXiv:2401.04088](https://arxiv.org/abs/2401.04088) |
 | Mu and Lin (2025) — A Comprehensive Survey of MoE | Broad survey of MoE algorithms, theory, and applications spanning continual learning, meta-learning, multi-task learning, reinforcement learning, vision, and NLP. | [arXiv:2503.07137](https://arxiv.org/abs/2503.07137) |
 | Bengio et al. (2013) — Estimating or Propagating Gradients Through Stochastic Neurons | Formalizes conditional computation as a research agenda; discusses gradient estimation through discrete stochastic decisions. | [arXiv:1305.2982](https://arxiv.org/abs/1305.2982) |
+| Ma et al. (2018) — Modeling Task Relationships in Multi-task Learning with MMoE | Introduces Multi-gate Mixture-of-Experts (MMoE) for MTML: shared experts with per-task gating networks; demonstrates superior performance and trainability when tasks are weakly correlated; deployed in Google recommendation systems. | [ACM KDD 2018](https://dl.acm.org/doi/10.1145/3219819.3220007) |
 | Grootendorst 2024 (Visual Guide to MoE) | Illustrated walkthrough of MoE routing, load balancing, and expert specialization | https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts |
