@@ -69,6 +69,10 @@ Specialized subagents are defined in `.claude/agents/`. Available agents:
 - `image-extractor` — fetches figures from arXiv HTML (`ar5iv.org/html/{id}`) and embeds them
 - `reference-finder` — finds high-quality references for a topic via web search
 
+## Communication Preferences
+
+**ALWAYS use the `AskUserQuestion` tool when asking the user anything** — whether clarifying intent, choosing between approaches, or gathering requirements. Never ask questions as plain text. Every question must use the interactive multiple-choice interface. This is a hard requirement with no exceptions.
+
 ## Workflow
 
 - Commit notes with descriptive messages explaining what was added or changed.
