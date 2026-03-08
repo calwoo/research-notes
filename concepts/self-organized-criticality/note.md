@@ -32,27 +32,27 @@
 
 ### Ordinary Criticality vs. SOC
 
-In equilibrium statistical mechanics, a critical point — for instance the Ising model at temperature $T = T_c$ — requires fine-tuning a control parameter to a special value. The free energy landscape has a non-analytic point precisely at the critical temperature, and generically, the system is off-critical. Away from $T_c$, the correlation length $\xi$ is finite:
+In equilibrium statistical mechanics, a critical point — for instance the Ising model at temperature $T = T_c$ — requires fine-tuning a *control parameter* to a special value. The free energy landscape has a non-analytic point precisely at the critical temperature, and generically, the system is off-critical. Away from $T_c$, the correlation length $\xi$ is finite:
 
 $$\xi \sim |T - T_c|^{-\nu}$$
 
 and fluctuations are characterized by an intrinsic length scale $\xi$. The divergence of $\xi$ at $T_c$ is what produces scale-free behavior (power-law correlations, critical opalescence, etc.), but this behavior is a set of measure zero in parameter space.
 
-**Self-organized criticality (SOC)**, introduced by Bak, Tang, and Wiesenfeld (1987), asserts that a broad class of complex systems — those with many slowly-driven, weakly-dissipative components — can spontaneously evolve to a critical state exhibiting scale-free behavior without any external fine-tuning of parameters.
+***Self-organized criticality* (SOC)**, introduced by Bak, Tang, and Wiesenfeld (1987), asserts that a broad class of complex systems — those with many slowly-driven, weakly-dissipative components — can spontaneously evolve to a critical state exhibiting scale-free behavior without any external fine-tuning of parameters.
 
-The "self-organized" aspect is the key conceptual departure: the dynamics itself tunes the system to the critical point. The critical state is an **attractor** of the dynamics, not a fine-tuned boundary condition imposed by an external agent. The control parameter (analogous to $T$) is not fixed externally but is instead an emergent property of the stationary state reached by the dynamics under slow drive and weak dissipation.
+**The "self-organized" aspect is the key conceptual departure: the dynamics itself tunes the system to the critical point.** The critical state is an *attractor* of the dynamics, not a fine-tuned boundary condition imposed by an external agent. The control parameter (analogous to $T$) is not fixed externally but is instead an emergent property of the stationary state reached by the dynamics under slow drive and weak dissipation.
 
 ### The Three Empirical Hallmarks
 
 A system exhibiting SOC is characterized by three signatures, all of which reflect the absence of a characteristic scale:
 
-1. **Power-law event-size distributions**: the probability of an event (avalanche, earthquake, neural cascade) of size $s$ satisfies
+1. **Power-law event-size distributions**: the probability of an event (*avalanche*, earthquake, neural cascade) of size $s$ satisfies
 
    $$P(s) \sim s^{-\tau}, \quad s \to \infty$$
 
-   with no exponential cutoff. Compare to an exponential distribution $P(s) \sim e^{-s/s_0}$, which has a characteristic scale $s_0$ and arises generically away from criticality. The power law implies that large events are not exponentially rare — they are merely power-law suppressed.
+   with no exponential cutoff. Compare to an exponential distribution $P(s) \sim e^{-s/s_0}$, which has a characteristic scale $s_0$ and arises generically away from criticality. The *power law* implies that large events are not exponentially rare — they are merely power-law suppressed.
 
-2. **$1/f$ noise**: the power spectral density of the system's output signal $\phi(t)$ satisfies
+2. **$1/f$ noise**: the *power spectral density* of the system's output signal $\phi(t)$ satisfies
 
    $$S(f) = |\hat{\phi}(f)|^2 \sim f^{-\beta}, \quad \beta \approx 1$$
 
@@ -82,7 +82,7 @@ $$P(E) \sim E^{-\tau_E}, \quad \tau_E = 1 + \frac{2b}{3} \approx \frac{5}{3}$$
 
 **Neural avalanches.** Beggs and Plenz (2003) recorded local field potentials in cortical slices and observed that spontaneous bursts of neural activity (neural avalanches) have power-law size distributions with exponent $\tau \approx 3/2$, consistent with a mean-field branching process at criticality. This suggests that neural networks may operate near an SOC critical point, potentially to maximize dynamic range and information transmission.
 
-**Caveat.** The causal attribution of empirical power laws to SOC is debated. Many mechanisms can produce heavy-tailed or power-law distributions without SOC: preferential attachment (Barabasi-Albert), multiplicative noise, mixtures of exponentials, and simple self-similar geometry. The presence of a power law is necessary but not sufficient for SOC.
+**Caveat.** *The causal attribution of empirical power laws to SOC is debated. Many mechanisms can produce heavy-tailed or power-law distributions without SOC: preferential attachment (Barabasi-Albert), multiplicative noise, mixtures of exponentials, and simple self-similar geometry. The presence of a power law is necessary but not sufficient for SOC.*
 
 **Connection to neural scaling laws.** Bahri et al. (2021) provided a statistical mechanics derivation of neural network scaling laws (of the form $L(N) \sim N^{-\alpha}$ for loss $L$ as a function of model size $N$), arguing that the scaling exponent $\alpha$ is inversely proportional to the intrinsic dimension $d$ of the data manifold:
 
@@ -94,7 +94,7 @@ This mirrors how SOC exponents depend on the geometry of the underlying system �
 
 ## The BTW Sandpile Model
 
-The Bak-Tang-Wiesenfeld (BTW) sandpile, introduced in Bak et al. (1987), is the canonical model of SOC. We give a precise mathematical definition.
+The *Bak-Tang-Wiesenfeld (BTW) sandpile model*, introduced in Bak et al. (1987), is the canonical model of SOC. We give a precise mathematical definition.
 
 ### 2.1 Formal Definition
 
@@ -104,15 +104,15 @@ The Bak-Tang-Wiesenfeld (BTW) sandpile, introduced in Bak et al. (1987), is the 
 
 **Threshold.** The critical threshold is $z_c = 4$ (the degree of an interior site on $\mathbb{Z}^2$).
 
-**Toppling rule.** A site $i$ is **unstable** if $z_i \geq z_c = 4$. When an unstable site $i$ topples:
+**Toppling rule.** A site $i$ is ***unstable*** if $z_i \geq z_c = 4$. When an unstable site $i$ topples:
 
 $$z_i \to z_i - 4, \qquad z_j \to z_j + 1 \quad \forall j \in \mathcal{N}(i)$$
 
 where $\mathcal{N}(i)$ is the set of nearest neighbors of $i$ in $\Lambda$ (with $|\mathcal{N}(i)| \leq 4$). If $i \in \partial\Lambda$, it has $|\mathcal{N}(i)| < 4$ neighbors; the $4 - |\mathcal{N}(i)|$ "missing" grains are lost to the boundary. This loss constitutes the **dissipation mechanism** — the only way grains leave the system.
 
-**Stable configurations.** A configuration $z$ is **stable** if $z_i < 4$ for all $i \in \Lambda$. The set of stable configurations is $\mathcal{S} = \{0,1,2,3\}^{|\Lambda|}$.
+**Stable configurations.** A configuration $z$ is ***stable*** if $z_i < 4$ for all $i \in \Lambda$. The set of stable configurations is $\mathcal{S} = \{0,1,2,3\}^{|\Lambda|}$.
 
-**Relaxation operator.** Given any configuration $z \in \Omega$, the relaxation $\mathcal{R}(z)$ is the unique stable configuration reached by repeatedly toppling any unstable site. (Uniqueness is guaranteed by the Abelian property; see Section 4.2.)
+**Relaxation operator.** Given any configuration $z \in \Omega$, the relaxation $\mathcal{R}(z)$ is the unique stable configuration reached by repeatedly toppling any unstable site. (Uniqueness is guaranteed by the *Abelian property*; see Section 4.2.)
 
 ### 2.2 Time-Scale Separation
 
@@ -135,7 +135,7 @@ The relaxation (avalanche) runs to completion before the next grain is added.
 2. The system is always in a stable configuration between additions.
 3. The avalanche statistics are not contaminated by overlap between successive perturbations.
 
-This separation is not merely a technical convenience — it is physically essential. If $h$ is too large (the "fast-drive" limit), avalanches overlap and the critical behavior is destroyed.
+This separation is not merely a technical convenience — it is physically essential. *If $h$ is too large (the "fast-drive" limit), avalanches overlap and the critical behavior is destroyed.*
 
 **Stationary distribution.** Under this dynamics, the system reaches a unique stationary distribution $\mu^*$ over stable configurations. The SOC phenomenology (power-law avalanche statistics) is a property of this stationary distribution. Computing $\mu^*$ exactly is the content of Dhar's abelian sandpile theory (Section 4).
 
@@ -157,7 +157,7 @@ $$a = |\{i \in \Lambda : n_i \geq 1\}|$$
 
 Note the inequalities $a \leq s$ (since multiple topplings at a single site count once in $a$ but multiple times in $s$) and $T \leq s$ (since each step involves at least one toppling).
 
-**Empirical distributions in the stationary regime.** For large $L$, the distributions of $s$, $T$, and $a$ in the stationary state follow power laws with exponential cutoffs imposed by the finite system size:
+**Empirical distributions in the stationary regime.** **For large $L$, the distributions of $s$, $T$, and $a$ in the stationary state follow power laws with exponential cutoffs imposed by the finite system size:**
 
 $$P(s) \sim s^{-\tau_s} \, g_s(s / L^{D_s}), \qquad \tau_s \approx 1.20, \quad D_s \approx 2.75$$
 
@@ -171,7 +171,7 @@ where $g_s, g_T, g_a$ are scaling functions that decay rapidly for argument $\gg
 
 ### 2.4 The 1/f Noise Connection
 
-Consider the time series $\{\phi(t)\}_{t \geq 1}$ where $\phi(t)$ is the number of grains dissipated through the boundary during the avalanche triggered at time $t$. Bak, Tang, and Wiesenfeld argued that this signal exhibits $1/f$ noise.
+Consider the time series $\{\phi(t)\}_{t \geq 1}$ where $\phi(t)$ is the number of grains dissipated through the boundary during the avalanche triggered at time $t$. Bak, Tang, and Wiesenfeld argued that this signal exhibits *1/f noise*.
 
 **Heuristic argument.** Model each avalanche as a rectangular pulse of height $h_0$ and duration $T$. The Fourier transform of a single pulse of duration $T$ has power concentrated at frequencies $f \lesssim 1/T$:
 
@@ -187,7 +187,7 @@ $$\boxed{S(f) \sim f^{-(3-\tau_T)}}$$
 
 For $\tau_T \approx 1.37$: $S(f) \sim f^{-1.63}$, which is close to but not exactly $1/f$. The exact $\beta = 1$ (pink noise) would require $\tau_T = 2$, which is the mean-field value.
 
-**Caveat.** The $1/f$ label is used loosely. More precisely, BTW predicts $S(f) \sim f^{-\beta}$ with $\beta = 3 - \tau_T \in (1, 2)$ depending on the model. Furthermore, $1/f$ noise is not unique to SOC: any superposition of relaxation processes (Lorentzians) with a power-law distribution of relaxation times $P(\tau) \sim \tau^{-1}$ produces $S(f) \sim f^{-1}$ without any SOC dynamics. The presence of $1/f$ noise is consistent with SOC but does not establish it.
+**Caveat.** *The $1/f$ label is used loosely. More precisely, BTW predicts $S(f) \sim f^{-\beta}$ with $\beta = 3 - \tau_T \in (1, 2)$ depending on the model. Furthermore, $1/f$ noise is not unique to SOC: any superposition of relaxation processes (Lorentzians) with a power-law distribution of relaxation times $P(\tau) \sim \tau^{-1}$ produces $S(f) \sim f^{-1}$ without any SOC dynamics. The presence of $1/f$ noise is consistent with SOC but does not establish it.*
 
 ## Why Self-Organized Criticality?
 
@@ -199,19 +199,19 @@ Argue that the critical state is the unique stationary state. Consider the avera
 
 - **Supercritical regime** ($\langle z \rangle \gtrsim z_c$): many sites are near threshold. Grain additions trigger large avalanches that reach the boundary and dissipate many grains. The output flux exceeds the input flux. Therefore $\langle z \rangle$ decreases. The supercritical state is also not stationary.
 
-- **Critical state** ($\langle z \rangle = \langle z \rangle_c$): the unique average height at which input flux equals output flux in the stationary sense. This is a balance point that the dynamics drives the system toward from both sides — a dynamical attractor. No external control is needed to reach or maintain it.
+- **Critical state** ($\langle z \rangle = \langle z \rangle_c$): the unique average height at which input flux equals output flux in the stationary sense. This is a balance point that the dynamics drives the system toward from both sides — a dynamical attractor. **No external control is needed to reach or maintain it.**
 
 The slow drive ($h \to 0$) and open boundaries (dissipation) are both essential: without slow drive, the system cannot evolve; without dissipation at the boundary, grains accumulate without limit and there is no attractor.
 
 ### 3.2 Connection to Absorbing State Phase Transitions
 
-A more formal perspective (Dickman, Muñoz, Vespignani, Zapperi 2000): interpret the activity (number of active/unstable sites) as an order parameter. In the limit $h \to 0$, $\epsilon \to 0$ (where $h$ is the drive rate and $\epsilon$ is the per-toppling dissipation rate):
+A more formal perspective (Dickman, Muñoz, Vespignani, Zapperi 2000): interpret the activity (number of active/unstable sites) as an *order parameter*. In the limit $h \to 0$, $\epsilon \to 0$ (where $h$ is the drive rate and $\epsilon$ is the per-toppling dissipation rate):
 
 - For $h > 0$ fixed and $\epsilon > 0$: the system is always in the **active phase** — eventually all configurations are visited, including highly active ones.
 - For $h = 0$, $\epsilon > 0$: the system falls into an **absorbing state** (no unstable sites, no driving). This is the absorbing phase.
 - The boundary between these phases — the **absorbing state phase transition** — is where SOC lives.
 
-Formally, SOC corresponds to the **self-tuning** of the system to this phase boundary via the feedback between drive and dissipation. The SOC critical point is in the universality class of the Manna model (for stochastic sandpiles) or a separate class for the deterministic BTW model. This connection to absorbing state criticality provides a field-theoretic framework for computing SOC exponents — though the calculations are technically difficult and exponents are generally known only numerically.
+Formally, SOC corresponds to the **self-tuning** of the system to this phase boundary via the feedback between drive and dissipation. The SOC critical point is in the *universality class* of the Manna model (for stochastic sandpiles) or a separate class for the deterministic BTW model. This connection to absorbing state criticality provides a field-theoretic framework for computing SOC exponents — though the calculations are technically difficult and exponents are generally known only numerically.
 
 ---
 
@@ -223,7 +223,7 @@ Let $G = (V \cup \{s\}, E)$ be a finite connected undirected graph with vertex s
 $$\Delta_{ij} = \begin{cases} \deg(i) & i = j \\ -1 & \{i,j\} \in E,\ i \neq j \\ 0 & \text{otherwise} \end{cases}$$
 where $\deg(i)$ counts all edges from $i$, including edges to $s$. This is the graph Laplacian restricted to non-sink vertices — equivalently, the full Laplacian with the sink row and column deleted.
 
-The height variable $z_i \in \mathbb{Z}_{\geq 0}$ at each $i \in V$. Site $i$ is **stable** if $z_i < \deg(i)$ and **unstable** if $z_i \geq \deg(i)$. The toppling rule at site $i$:
+The height variable $z_i \in \mathbb{Z}_{\geq 0}$ at each $i \in V$. Site $i$ is **stable** if $z_i < \deg(i)$ and **unstable** if $z_i \geq \deg(i)$. The *toppling rule* at site $i$:
 $$z_i \to z_i - \deg(i), \qquad z_j \to z_j + 1 \quad \forall \{i,j\} \in E, j \neq s$$
 Grains sent to $s$ are lost (dissipation). In matrix form: a toppling at $i$ changes the height vector by $-\Delta_{i\cdot}$ (subtract the $i$-th row of $\Delta$).
 
@@ -265,9 +265,9 @@ This monotonicity is essential for proving properties of the stationary distribu
 
 ### 4.4 Recurrent Configurations and the Sandpile Group
 
-A stable configuration $\eta$ is **recurrent** if it appears with positive probability in the unique stationary distribution of the Markov chain (add grain at random site, stabilize, repeat). A configuration is **transient** if it is visited at most finitely often (probability zero in stationarity).
+A stable configuration $\eta$ is ***recurrent*** if it appears with positive probability in the unique stationary distribution of the Markov chain (add grain at random site, stabilize, repeat). A configuration is ***transient*** if it is visited at most finitely often (probability zero in stationarity).
 
-**Dhar's burning algorithm** (criterion for recurrence): $\eta$ is recurrent if and only if the following process terminates with all vertices burned:
+***Dhar's burning algorithm*** (criterion for recurrence): $\eta$ is recurrent if and only if the following process terminates with all vertices burned:
 1. Initialize: mark the sink $s$ as "burned."
 2. Iterate: if an unburned vertex $i$ has $z_i \geq$ (number of unburned neighbors of $i$), mark $i$ as burned.
 3. Repeat until no more vertices can be burned.
@@ -288,7 +288,7 @@ The sandpile group is one of the rare examples of a non-trivial algebraic struct
 
 ### 5.1 Finite-Size Scaling
 
-For a system of linear size $L$, the avalanche size distribution is not a pure power law — it is cut off at large $s$ by the system size. The **finite-size scaling ansatz** is:
+For a system of linear size $L$, the avalanche size distribution is not a pure power law — it is cut off at large $s$ by the system size. The ***finite-size scaling* ansatz** is:
 
 $$P(s, L) = s^{-\tau_s}\, g\!\left(\frac{s}{L^D}\right)$$
 
@@ -317,7 +317,7 @@ $$\tau_a = 1 + \frac{D}{d_f}(\tau_s - 1)$$
 $$D = d + 2 - \tau_s \cdot d \quad \text{(heuristic)}$$
 This is an approximate relation; the exact form depends on the universality class.
 
-These relations mean that, in principle, only two independent exponents characterize an SOC universality class (analogous to two independent exponents in equilibrium critical phenomena).
+**These relations mean that, in principle, only two independent exponents characterize an SOC universality class (analogous to two independent exponents in equilibrium critical phenomena).**
 
 ### 5.3 Known Values for 2D BTW
 
