@@ -51,20 +51,20 @@ Yi, Yang, Hong, Cheng, Heldt, Kumthekar, Zhao, Wei, Chi. RecSys 2019. Google.
 
 Industrial recommendation systems connecting billions of users to corpora of tens of millions of items cannot score every candidate at query time — the latency would be prohibitive. The standard solution is a two-phase cascade:
 
-1. **Retrieval (nomination)**: a lightweight model retrieves $O(10^2)$ candidates from $O(10^7)$ items using approximate nearest neighbor search on learned embeddings. Speed dominates — the model must be indexable into a static embedding index.
-2. **Ranking**: a fully-featured neural network re-ranks the retrieved candidates using richer features and multiple objectives (clicks, watch time, etc.). Latency allows more computation but only over the small candidate set.
+1. **Retrieval (nomination)**: a lightweight *retrieval model* retrieves $O(10^2)$ candidates from $O(10^7)$ items using *approximate nearest neighbor* search on learned embeddings. Speed dominates — the model must be indexable into a static *embedding index*.
+2. **Ranking**: a fully-featured *ranking model* re-ranks the retrieved candidates using richer features and multiple objectives (clicks, watch time, etc.). Latency allows more computation but only over the small candidate set.
 
 This paper addresses the retrieval stage. The key architectural constraint is that the scoring function at retrieval time must decompose as an inner product of independently computed query and item vectors:
 
 $$s(x, y) = \langle u(x, \theta), v(y, \theta) \rangle$$
 
-This decomposition is what enables the item embeddings to be precomputed and indexed offline, supporting sub-linear MIPS (maximum inner product search) at inference time. Any scoring function that couples $x$ and $y$ in a non-decomposable way — such as concatenating them before a feedforward network — cannot be indexed and is thus incompatible with large-corpus retrieval.
+This decomposition is what enables the item embeddings to be precomputed and indexed offline, supporting sub-linear MIPS (*maximum inner product search*) at inference time. Any scoring function that couples $x$ and $y$ in a non-decomposable way — such as concatenating them before a feedforward network — cannot be indexed and is thus incompatible with large-corpus retrieval.
 
 ### Challenges at Industrial Scale
 
 Three challenges make this setting qualitatively harder than small-scale retrieval:
 
-1. **Power-law item distribution**: a small fraction of popular items accounts for most user interactions. Training data is extremely sparse for long-tail items. Naive in-batch negative sampling over-represents popular items as negatives, introducing a systematic bias toward penalizing popular items — precisely the opposite of what a well-calibrated ranking should do.
+1. **Power-law item distribution**: a small fraction of popular items accounts for most user interactions. Training data is extremely sparse for long-tail items. Naive *in-batch negatives* sampling over-represents popular items as negatives, introducing a systematic bias toward penalizing popular items — precisely the opposite of what a well-calibrated ranking should do.
 
 2. **Vocabulary shift**: the item corpus changes daily (new videos uploaded, old videos removed). Unlike language modeling where the vocabulary is fixed, item frequencies and identities are non-stationary. Any algorithm that requires a fixed item vocabulary or a static frequency table is inappropriate for this setting.
 
@@ -111,17 +111,17 @@ $$\mathcal{L}_T(\theta) = -\frac{1}{T} \sum_{i=1}^{T} r_i \cdot \log P(y_i \mid 
 
 When $r_i = 1$ for all $i$ this reduces to standard cross-entropy. The reward weighting allows the model to upweight high-quality positive interactions (e.g., a fully watched video) and downweight low-quality ones (e.g., a click with immediate abandonment).
 
-The full softmax over $M = O(10^7)$ items is computationally intractable for each gradient step. The partition function $\sum_{j=1}^M e^{s(x, y_j)}$ requires computing $v(y_j, \theta)$ for all $M$ items per step — infeasible.
+The full softmax over $M = O(10^7)$ items is computationally intractable for each gradient step. The *partition function* $\sum_{j=1}^M e^{s(x, y_j)}$ requires computing $v(y_j, \theta)$ for all $M$ items per step — infeasible.
 
 ### Batch Softmax and the Sampling Bias Problem
 
-The standard scalable approximation is **in-batch softmax**: treat the $B-1$ other items in the current mini-batch as negatives for each query. Given a batch $\{(x_i, y_i, r_i)\}_{i=1}^B$:
+The standard scalable approximation is *batch softmax*: treat the $B-1$ other items in the current mini-batch as negatives for each query. Given a batch $\{(x_i, y_i, r_i)\}_{i=1}^B$:
 
 $$P_B(y_i \mid x_i;\, \theta) = \frac{e^{s(x_i, y_i)}}{\sum_{j=1}^{B} e^{s(x_i, y_j)}}$$
 
-**The bias.** In-batch items are drawn from the training distribution, which is typically power-law skewed: popular items appear in far more training pairs $(x, y)$ and therefore in far more batches. Item $j$'s probability of appearing as a negative in a batch of size $B$ is approximately $p_j \approx B \cdot q_j$, where $q_j \propto \text{item frequency}$.
+**The bias.** In-batch items are drawn from the training distribution, which is typically *power-law distribution* skewed: popular items appear in far more training pairs $(x, y)$ and therefore in far more batches. Item $j$'s probability of appearing as a negative in a batch of size $B$ is approximately $p_j \approx B \cdot q_j$, where $q_j \propto \text{item frequency}$.
 
-This means popular items are systematically over-represented as negatives. The batch softmax effectively trains with the wrong negative distribution — it approximates full softmax with negative sampling distribution $\propto q_j$ rather than uniform. This introduces a bias: the model is penalized heavily for assigning high scores to popular items, even when those scores are appropriate, because popular items almost always appear as negatives.
+This means popular items are systematically over-represented as negatives. The batch softmax effectively trains with the wrong negative distribution — it approximates full softmax with negative sampling distribution $\propto q_j$ rather than uniform. **This introduces a bias: the model is penalized heavily for assigning high scores to popular items, even when those scores are appropriate, because popular items almost always appear as negatives.**
 
 ---
 
@@ -129,7 +129,7 @@ This means popular items are systematically over-represented as negatives. The b
 
 ### The LogQ Correction
 
-The correction is inspired by the logQ correction for sampled softmax (Bengio and Sénécal 2008). If items are sampled as negatives with probability $p_j$, the corrected logit subtracts the log sampling probability:
+The correction is inspired by the *logQ correction* for sampled softmax (Bengio and Sénécal 2008). If items are sampled as negatives with probability $p_j$, the corrected logit subtracts the log sampling probability:
 
 $$s^c(x_i, y_j) = s(x_i, y_j) - \log p_j$$
 
@@ -137,7 +137,7 @@ $$s^c(x_i, y_j) = s(x_i, y_j) - \log p_j$$
 
 $$\sum_{j=1}^M e^{s(x,y_j)} \approx \frac{1}{K} \sum_{j \in S} \frac{e^{s(x,y_j)}}{p_j} = \frac{1}{K} \sum_{j \in S} e^{s(x,y_j) - \log p_j} = \frac{1}{K} \sum_{j \in S} e^{s^c(x,y_j)}$$
 
-where $S$ is the set of sampled negatives and the approximation is an importance-weighted Monte Carlo estimate. The log-correction is thus a form of importance reweighting that debiases the partition function estimate.
+where $S$ is the set of sampled negatives and the approximation is an *importance-weighted* Monte Carlo estimate. The log-correction is thus a form of *importance sampling* reweighting that debiases the partition function estimate.
 
 A popular item with $p_j$ close to 1 receives a large negative correction $-\log p_j \approx 0$ (little correction needed, already expected to appear). A rare item with small $p_j$ receives a large negative correction $-\log p_j \gg 0$, boosting its logit to compensate for being under-sampled. This restores calibration: after correction, the effective score reflects intrinsic relevance, not sampling artifacts.
 
@@ -178,7 +178,7 @@ The key insight: instead of estimating the marginal frequency $q_j$ directly, es
 
 Maintain two hash arrays $A$ and $B$ of size $H$ and a hash function $h : \mathcal{Y} \to [H]$:
 - $A[h(y)]$: the global step at which item $y$ was last seen
-- $B[h(y)]$: the running exponential moving average of inter-arrival times $\delta_y$
+- $B[h(y)]$: the running *exponential moving average* of *inter-arrival time*s $\delta_y$
 
 At global step $t$, when item $y$ appears in a batch:
 
@@ -211,11 +211,11 @@ Subtracting $\delta$ gives (7). An ideal initialization $\delta_0 = \delta/(1-\a
 
 $$\mathbb{E}\left[(\delta_t - \mathbb{E}[\delta_t])^2\right] \leq (1-\alpha)^{2t}(\delta_0 - \delta)^2 + \alpha \cdot \mathbb{E}\left[(\Delta_1 - \delta)^2\right] \tag{8}$$
 
-The first term decays geometrically (effect of initialization error). The second term is a constant floor of order $\alpha \cdot \text{Var}(\Delta)$, which decreases with smaller $\alpha$. The variance-adaptability tradeoff: $\alpha$ must be large enough to track distribution shift but small enough to keep estimation variance low. In practice $\alpha = 0.01$ is used.
+The first term decays geometrically (effect of initialization error). The second term is a constant floor of order $\alpha \cdot \text{Var}(\Delta)$, which decreases with smaller $\alpha$. *The variance-adaptability tradeoff: $\alpha$ must be large enough to track distribution shift but small enough to keep estimation variance low.* In practice $\alpha = 0.01$ is used.
 
 ### Algorithm 3: Multiple Hashings
 
-Hash collisions in Algorithm 2 cause $B[h(y)]$ to track the union of items sharing the same bucket, under-estimating $\delta$ and over-estimating frequency. Multiple hashings mitigate this via a count-min-sketch-style approach:
+*Hash collisions* in Algorithm 2 cause $B[h(y)]$ to track the union of items sharing the same bucket, under-estimating $\delta$ and over-estimating frequency. Multiple hashings mitigate this via a count-min-sketch-style approach:
 
 Maintain $m$ independent pairs $(A_i, B_i)$ with independent hash functions $\{h_i\}_{i=1}^m$. Each array is updated as in Algorithm 2. At inference:
 
@@ -231,7 +231,7 @@ Total parameter budget is held fixed (arrays of size $H/m$ each with $m$ hash fu
 
 ### Model Architecture
 
-The YouTube retrieval model follows the two-tower structure of Figure 2. Embedding sharing is a key architectural decision: the same video ID embedding table is used for seed video features, candidate video features, and past watch history features. This three-way sharing serves two purposes: (1) parameter efficiency — a single table covers all uses of video IDs; (2) improved generalization — the model learns a single consistent representation of each video across all contexts in which it appears.
+The YouTube retrieval model follows the *two-tower model* structure of Figure 2. Embedding sharing is a key architectural decision: the same video ID embedding table is used for seed video features, candidate video features, and past watch history features. This three-way sharing serves two purposes: (1) parameter efficiency — a single table covers all uses of video IDs; (2) improved generalization — the model learns a single consistent representation of each video across all contexts in which it appears.
 
 **Query (left) tower** receives:
 - Seed video features: video ID, channel ID, categorical metadata (sparse IDs → embeddings)
@@ -247,10 +247,10 @@ Both towers are three-layer feedforward networks with hidden dimensions $[1024, 
 
 ### Sequential Training
 
-Training data is organized by day. The trainer processes days sequentially from oldest to most recent. Once caught up to the latest day, it waits for the next day's data. This sequential structure has two benefits:
+*Sequential training* organizes training data by day. The trainer processes days sequentially from oldest to most recent. Once caught up to the latest day, it waits for the next day's data. This sequential structure has two benefits:
 
 1. The model continuously adapts to distribution shift (new videos, changing user preferences, seasonal trends).
-2. The streaming frequency estimator in Algorithm 2 naturally integrates into this framework — the moving average adapts online as the data distribution shifts day by day.
+2. The *streaming frequency estimation* in Algorithm 2 naturally integrates into this framework — the moving average adapts online as the data distribution shifts day by day.
 
 ### Indexing and Serving
 
@@ -291,7 +291,7 @@ Three methods:
 | plain-sfx ($\tau = 0.07$) | 0.0643 | 0.2423 | 0.3746 | 0.5991 |
 | correct-sfx ($\tau = 0.07$) | **0.1065** | **0.3079** | **0.4664** | **0.7234** |
 
-The corrected softmax improves over uncorrected by $65\%$ in Recall@10. Temperature must be tuned carefully — the optimal $\tau$ for plain-sfx and correct-sfx differ, and the ranking of methods is consistent across temperatures.
+The corrected softmax improves over uncorrected by $65\%$ in Recall@10. *Temperature must be tuned carefully — the optimal $\tau$ for plain-sfx and correct-sfx differ, and the ranking of methods is consistent across temperatures.*
 
 ### YouTube Offline and Live Experiments
 
