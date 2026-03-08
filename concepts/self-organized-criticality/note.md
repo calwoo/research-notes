@@ -2,29 +2,29 @@
 
 ## Table of Contents
 
-1. [What Is Self-Organized Criticality?](#what-is-self-organized-criticality)
-   - [Ordinary Criticality vs. SOC](#ordinary-criticality-vs-soc)
-   - [The Three Empirical Hallmarks](#the-three-empirical-hallmarks)
-   - [Natural Examples and Connection to Scaling Laws](#natural-examples-and-connection-to-scaling-laws)
-2. [The BTW Sandpile Model](#the-btw-sandpile-model)
-   - [2.1 Formal Definition](#21-formal-definition)
-   - [2.2 Time-Scale Separation](#22-time-scale-separation)
-   - [2.3 Avalanche Observables](#23-avalanche-observables)
-   - [2.4 The 1/f Noise Connection](#24-the-1f-noise-connection)
-3. [Why Self-Organized Criticality?](#why-self-organized-criticality)
-   - [3.1 The Attractor Argument](#31-the-attractor-argument)
-   - [3.2 Connection to Absorbing State Phase Transitions](#32-connection-to-absorbing-state-phase-transitions)
-4. [The Abelian Sandpile (Dhar 1990)](#the-abelian-sandpile-dhar-1990)
-   - [4.1 Setup on a General Graph](#41-setup-on-a-general-graph)
-   - [4.2 The Abelian Property](#42-the-abelian-property)
-   - [4.3 The Toppling Lemma](#43-the-toppling-lemma)
-   - [4.4 Recurrent Configurations and the Sandpile Group](#44-recurrent-configurations-and-the-sandpile-group)
-5. [Scaling Theory and Exponents](#scaling-theory-and-exponents)
-   - [5.1 Finite-Size Scaling](#51-finite-size-scaling)
-   - [5.2 Scaling Relations](#52-scaling-relations)
-   - [5.3 Known Values for 2D BTW](#53-known-values-for-2d-btw)
-   - [5.4 Universality](#54-universality)
-6. [References](#references)
+1. [[#What Is Self-Organized Criticality?|What Is Self-Organized Criticality?]]
+   - [[#Ordinary Criticality vs. SOC|Ordinary Criticality vs. SOC]]
+   - [[#The Three Empirical Hallmarks|The Three Empirical Hallmarks]]
+   - [[#Natural Examples and Connection to Scaling Laws|Natural Examples and Connection to Scaling Laws]]
+2. [[#The BTW Sandpile Model|The BTW Sandpile Model]]
+   - [[#2.1 Formal Definition|2.1 Formal Definition]]
+   - [[#2.2 Time-Scale Separation|2.2 Time-Scale Separation]]
+   - [[#2.3 Avalanche Observables|2.3 Avalanche Observables]]
+   - [[#2.4 The 1/f Noise Connection|2.4 The 1/f Noise Connection]]
+3. [[#Why Self-Organized Criticality?|Why Self-Organized Criticality?]]
+   - [[#3.1 The Attractor Argument|3.1 The Attractor Argument]]
+   - [[#3.2 Connection to Absorbing State Phase Transitions|3.2 Connection to Absorbing State Phase Transitions]]
+4. [[#The Abelian Sandpile (Dhar 1990)|The Abelian Sandpile (Dhar 1990)]]
+   - [[#4.1 Setup on a General Graph|4.1 Setup on a General Graph]]
+   - [[#4.2 The Abelian Property|4.2 The Abelian Property]]
+   - [[#4.3 The Toppling Lemma|4.3 The Toppling Lemma]]
+   - [[#4.4 Recurrent Configurations and the Sandpile Group|4.4 Recurrent Configurations and the Sandpile Group]]
+5. [[#Scaling Theory and Exponents|Scaling Theory and Exponents]]
+   - [[#5.1 Finite-Size Scaling|5.1 Finite-Size Scaling]]
+   - [[#5.2 Scaling Relations|5.2 Scaling Relations]]
+   - [[#5.3 Known Values for 2D BTW|5.3 Known Values for 2D BTW]]
+   - [[#5.4 Universality|5.4 Universality]]
+6. [[#References|References]]
 
 ---
 

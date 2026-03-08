@@ -4,41 +4,41 @@ A sparse conditional computation architecture that routes each input to a learne
 
 ## Table of Contents
 
-1. [Motivation and Background](#1-motivation-and-background)
-   - [The Parameter-Efficiency Argument](#the-parameter-efficiency-argument)
-   - [Conditional Computation as a Principle](#conditional-computation-as-a-principle)
-   - [Historical Lineage](#historical-lineage)
-2. [The MoE Layer: Formal Definition](#2-the-moe-layer-formal-definition)
-   - [Notation](#notation)
-   - [Soft Gating](#soft-gating)
-   - [Hard Top-k Gating](#hard-top-k-gating)
-   - [Relation to Ensemble Methods](#relation-to-ensemble-methods)
-3. [Sparsely-Gated MoE: Shazeer 2017](#3-sparsely-gated-moe-shazeer-2017)
-   - [Noisy Top-k Gating](#noisy-top-k-gating)
-   - [The Load Imbalance Problem](#the-load-imbalance-problem)
-4. [Load Balancing](#4-load-balancing)
-   - [Importance Loss](#importance-loss)
-   - [Load Loss](#load-loss)
-   - [Capacity Factor and Token Dropping](#capacity-factor-and-token-dropping)
-5. [Switch Transformer: Fedus 2021](#5-switch-transformer-fedus-2021)
-   - [Top-1 Routing](#top-1-routing)
-   - [Simplified Auxiliary Loss](#simplified-auxiliary-loss)
-   - [Scaling Behavior](#scaling-behavior)
-6. [Expert-Choice Routing](#6-expert-choice-routing)
-   - [Inverting the Routing Decision](#inverting-the-routing-decision)
-   - [Formal Specification](#formal-specification)
-   - [Guaranteed Load Balance](#guaranteed-load-balance)
-   - [Connection to Bipartite Matching](#connection-to-bipartite-matching)
-7. [Mixtral and Modern Dense-Sparse Tradeoffs](#7-mixtral-and-modern-dense-sparse-tradeoffs)
-   - [Mixtral 8x7B Architecture](#mixtral-8x7b-architecture)
-   - [FLOP-Matched Comparisons](#flop-matched-comparisons)
-   - [Scaling Laws for MoE](#scaling-laws-for-moe)
-8. [Training Dynamics and Collapse](#8-training-dynamics-and-collapse)
-   - [Expert Collapse](#expert-collapse)
-   - [Router Z-Loss](#router-z-loss)
-   - [Entropy Regularization](#entropy-regularization)
-   - [Initialization](#initialization)
-9. [References](#references)
+1. [[#1. Motivation and Background|Motivation and Background]]
+   - [[#The Parameter-Efficiency Argument|The Parameter-Efficiency Argument]]
+   - [[#Conditional Computation as a Principle|Conditional Computation as a Principle]]
+   - [[#Historical Lineage|Historical Lineage]]
+2. [[#2. The MoE Layer: Formal Definition|The MoE Layer: Formal Definition]]
+   - [[#Notation|Notation]]
+   - [[#Soft Gating|Soft Gating]]
+   - [[#Hard Top-k Gating|Hard Top-k Gating]]
+   - [[#Relation to Ensemble Methods|Relation to Ensemble Methods]]
+3. [[#3. Sparsely-Gated MoE: Shazeer 2017|Sparsely-Gated MoE: Shazeer 2017]]
+   - [[#Noisy Top-k Gating|Noisy Top-k Gating]]
+   - [[#The Load Imbalance Problem|The Load Imbalance Problem]]
+4. [[#4. Load Balancing|Load Balancing]]
+   - [[#Importance Loss|Importance Loss]]
+   - [[#Load Loss|Load Loss]]
+   - [[#Capacity Factor and Token Dropping|Capacity Factor and Token Dropping]]
+5. [[#5. Switch Transformer: Fedus 2021|Switch Transformer: Fedus 2021]]
+   - [[#Top-1 Routing|Top-1 Routing]]
+   - [[#Simplified Auxiliary Loss|Simplified Auxiliary Loss]]
+   - [[#Scaling Behavior|Scaling Behavior]]
+6. [[#6. Expert-Choice Routing|Expert-Choice Routing]]
+   - [[#Inverting the Routing Decision|Inverting the Routing Decision]]
+   - [[#Formal Specification|Formal Specification]]
+   - [[#Guaranteed Load Balance|Guaranteed Load Balance]]
+   - [[#Connection to Bipartite Matching|Connection to Bipartite Matching]]
+7. [[#7. Mixtral and Modern Dense-Sparse Tradeoffs|Mixtral and Modern Dense-Sparse Tradeoffs]]
+   - [[#Mixtral 8x7B Architecture|Mixtral 8x7B Architecture]]
+   - [[#FLOP-Matched Comparisons|FLOP-Matched Comparisons]]
+   - [[#Scaling Laws for MoE|Scaling Laws for MoE]]
+8. [[#8. Training Dynamics and Collapse|Training Dynamics and Collapse]]
+   - [[#Expert Collapse|Expert Collapse]]
+   - [[#Router Z-Loss|Router Z-Loss]]
+   - [[#Entropy Regularization|Entropy Regularization]]
+   - [[#Initialization|Initialization]]
+9. [[#References|References]]
 
 ---
 

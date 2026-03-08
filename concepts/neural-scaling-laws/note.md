@@ -2,35 +2,35 @@
 
 ## Table of Contents
 
-1. [Motivation](#1-motivation)
-   - [The Empirical Observation](#the-empirical-observation)
-   - [Power Laws Are Not Unique to Neural Networks](#power-laws-are-not-unique-to-neural-networks)
-   - [Why This Matters Practically](#why-this-matters-practically)
-2. [Mathematical Setup](#2-mathematical-setup)
-   - [The Loss Decomposition Model](#the-loss-decomposition-model)
-   - [The Compute Approximation](#the-compute-approximation)
-3. [Kaplan et al. (2020): Fitting the Laws](#3-kaplan-et-al-2020-fitting-the-laws)
-   - [3.1 The Univariate Scaling Laws](#31-the-univariate-scaling-laws)
-   - [3.2 The Compute-Efficient Frontier](#32-the-compute-efficient-frontier)
-4. [Chinchilla (2022): The IsoFLOP Revolution](#4-chinchilla-2022-the-isoflop-revolution)
-   - [4.1 The IsoFLOP Methodology](#41-the-isoflop-methodology)
-   - [4.2 Analytical Derivation via Lagrangian Optimization](#42-analytical-derivation-via-lagrangian-optimization)
-   - [4.3 The 20 Tokens Per Parameter Rule](#43-the-20-tokens-per-parameter-rule)
-   - [4.4 Why Kaplan's Exponents Were Biased](#44-why-kaplans-exponents-were-biased)
-5. [Fitting Methodology](#5-fitting-methodology)
-   - [5.1 Approach 1: IsoFLOP Minimum Fitting](#51-approach-1-isoflop-minimum-fitting)
-   - [5.2 Approach 2: Parametric Global Fit](#52-approach-2-parametric-global-fit)
-   - [5.3 Approach 3: Per-Model-Size Estimation](#53-approach-3-per-model-size-estimation)
-   - [5.4 Cross-Validation of Approaches](#54-cross-validation-of-approaches)
-   - [5.5 Alternative Estimators](#55-alternative-estimators)
-6. [Scope and Limitations](#6-scope-and-limitations)
-   - [Upstream vs. Downstream Performance](#upstream-vs-downstream-performance)
-   - [Non-Power-Law Scaling](#non-power-law-scaling)
-   - [Trend Breaks and Extrapolation Risk](#trend-breaks-and-extrapolation-risk)
-   - [Modality and Architecture Dependence](#modality-and-architecture-dependence)
-   - [Scaling for Recommendation Systems and Ranking Models](#scaling-for-recommendation-systems-and-ranking-models)
-7. [References](#references)
-   - [Further Reading: Scaling for Recommendation Systems and Ranking](#further-reading-scaling-for-recommendation-systems-and-ranking)
+1. [[#1. Motivation|Motivation]]
+   - [[#The Empirical Observation|The Empirical Observation]]
+   - [[#Power Laws Are Not Unique to Neural Networks|Power Laws Are Not Unique to Neural Networks]]
+   - [[#Why This Matters Practically|Why This Matters Practically]]
+2. [[#2. Mathematical Setup|Mathematical Setup]]
+   - [[#The Loss Decomposition Model|The Loss Decomposition Model]]
+   - [[#The Compute Approximation|The Compute Approximation]]
+3. [[#3. Kaplan et al. (2020): Fitting the Laws|Kaplan et al. (2020): Fitting the Laws]]
+   - [[#3.1 The Univariate Scaling Laws|3.1 The Univariate Scaling Laws]]
+   - [[#3.2 The Compute-Efficient Frontier|3.2 The Compute-Efficient Frontier]]
+4. [[#4. Chinchilla (2022): The IsoFLOP Revolution|Chinchilla (2022): The IsoFLOP Revolution]]
+   - [[#4.1 The IsoFLOP Methodology|4.1 The IsoFLOP Methodology]]
+   - [[#4.2 Analytical Derivation via Lagrangian Optimization|4.2 Analytical Derivation via Lagrangian Optimization]]
+   - [[#4.3 The 20 Tokens Per Parameter Rule|4.3 The 20 Tokens Per Parameter Rule]]
+   - [[#4.4 Why Kaplan's Exponents Were Biased|4.4 Why Kaplan's Exponents Were Biased]]
+5. [[#5. Fitting Methodology|Fitting Methodology]]
+   - [[#5.1 Approach 1: IsoFLOP Minimum Fitting|5.1 Approach 1: IsoFLOP Minimum Fitting]]
+   - [[#5.2 Approach 2: Parametric Global Fit|5.2 Approach 2: Parametric Global Fit]]
+   - [[#5.3 Approach 3: Per-Model-Size Estimation|5.3 Approach 3: Per-Model-Size Estimation]]
+   - [[#5.4 Cross-Validation of Approaches|5.4 Cross-Validation of Approaches]]
+   - [[#5.5 Alternative Estimators|5.5 Alternative Estimators]]
+6. [[#6. Scope and Limitations|Scope and Limitations]]
+   - [[#Upstream vs. Downstream Performance|Upstream vs. Downstream Performance]]
+   - [[#Non-Power-Law Scaling|Non-Power-Law Scaling]]
+   - [[#Trend Breaks and Extrapolation Risk|Trend Breaks and Extrapolation Risk]]
+   - [[#Modality and Architecture Dependence|Modality and Architecture Dependence]]
+   - [[#Scaling for Recommendation Systems and Ranking Models|Scaling for Recommendation Systems and Ranking Models]]
+7. [[#References|References]]
+   - [[#Further Reading: Scaling for Recommendation Systems and Ranking|Further Reading: Scaling for Recommendation Systems and Ranking]]
 
 ---
 

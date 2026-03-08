@@ -17,31 +17,31 @@ Yi, Yang, Hong, Cheng, Heldt, Kumthekar, Zhao, Wei, Chi. RecSys 2019. Google.
 
 ## Table of Contents
 
-1. [Motivation and Problem Setting](#1-motivation-and-problem-setting)
-   - [The Two-Phase Retrieval-Ranking Architecture](#the-two-phase-retrieval-ranking-architecture)
-   - [Challenges at Industrial Scale](#challenges-at-industrial-scale)
-2. [The Two-Tower Model](#2-the-two-tower-model)
-   - [Formal Setup](#formal-setup)
-   - [Full Softmax Objective](#full-softmax-objective)
-   - [Batch Softmax and the Sampling Bias Problem](#batch-softmax-and-the-sampling-bias-problem)
-3. [Sampling Bias Correction](#3-sampling-bias-correction)
-   - [The LogQ Correction](#the-logq-correction)
-   - [Corrected Batch Loss](#corrected-batch-loss)
-   - [Connection to Importance Sampling](#connection-to-importance-sampling)
-4. [Streaming Frequency Estimation](#4-streaming-frequency-estimation)
-   - [Problem Formulation](#problem-formulation)
-   - [Algorithm 2: Single Hash Estimation](#algorithm-2-single-hash-estimation)
-   - [Proposition 4.1: Bias and Variance Analysis](#proposition-41-bias-and-variance-analysis)
-   - [Algorithm 3: Multiple Hashings](#algorithm-3-multiple-hashings)
-5. [YouTube Neural Retrieval System](#5-youtube-neural-retrieval-system)
-   - [Model Architecture](#model-architecture)
-   - [Sequential Training](#sequential-training)
-   - [Indexing and Serving](#indexing-and-serving)
-6. [Experiments](#6-experiments)
-   - [Frequency Estimation Simulation](#frequency-estimation-simulation)
-   - [Wikipedia Link Prediction](#wikipedia-link-prediction)
-   - [YouTube Offline and Live Experiments](#youtube-offline-and-live-experiments)
-7. [References](#references)
+1. [[#1. Motivation and Problem Setting|Motivation and Problem Setting]]
+   - [[#The Two-Phase Retrieval-Ranking Architecture|The Two-Phase Retrieval-Ranking Architecture]]
+   - [[#Challenges at Industrial Scale|Challenges at Industrial Scale]]
+2. [[#2. The Two-Tower Model|The Two-Tower Model]]
+   - [[#Formal Setup|Formal Setup]]
+   - [[#Full Softmax Objective|Full Softmax Objective]]
+   - [[#Batch Softmax and the Sampling Bias Problem|Batch Softmax and the Sampling Bias Problem]]
+3. [[#3. Sampling Bias Correction|Sampling Bias Correction]]
+   - [[#The LogQ Correction|The LogQ Correction]]
+   - [[#Corrected Batch Loss|Corrected Batch Loss]]
+   - [[#Connection to Importance Sampling|Connection to Importance Sampling]]
+4. [[#4. Streaming Frequency Estimation|Streaming Frequency Estimation]]
+   - [[#Problem Formulation|Problem Formulation]]
+   - [[#Algorithm 2: Single Hash Estimation|Algorithm 2: Single Hash Estimation]]
+   - [[#Proposition 4.1: Bias and Variance Analysis|Proposition 4.1: Bias and Variance Analysis]]
+   - [[#Algorithm 3: Multiple Hashings|Algorithm 3: Multiple Hashings]]
+5. [[#5. YouTube Neural Retrieval System|YouTube Neural Retrieval System]]
+   - [[#Model Architecture|Model Architecture]]
+   - [[#Sequential Training|Sequential Training]]
+   - [[#Indexing and Serving|Indexing and Serving]]
+6. [[#6. Experiments|Experiments]]
+   - [[#Frequency Estimation Simulation|Frequency Estimation Simulation]]
+   - [[#Wikipedia Link Prediction|Wikipedia Link Prediction]]
+   - [[#YouTube Offline and Live Experiments|YouTube Offline and Live Experiments]]
+7. [[#References|References]]
 
 ---
 
