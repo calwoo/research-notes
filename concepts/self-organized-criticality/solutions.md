@@ -224,15 +224,18 @@
 
 ### Problem 13: Green's Function Symmetry
 
-**Key insight:** The toppling relation $\Delta\mathbf{n} = \eta - \eta'$ directly gives $G_{ij} = (\Delta^{-1})_{ij}$; since $\Delta$ is a real symmetric matrix (the Laplacian), $\Delta^{-1}$ is also symmetric, giving $G_{ij} = G_{ji}$ without any further computation.
+**Key insight:** The Green's function identity $G_{ij} = (\Delta^{-1})_{ij}$ follows from the linearity of the toppling relation $\Delta\mathbf{n} = \eta - \text{Stab}(\eta)$: subtracting the equation for $\eta$ from that for $\eta + \mathbf{e}_j$ and taking expectation over $\mathcal{R}$ eliminates the final-configuration difference.
 
 **Sketch:**
 
-(a) For $\eta\in\mathcal{R}$: after adding $\mathbf{e}_j$ and stabilizing, the change in toppling vector satisfies $\Delta(n_i(\eta+\mathbf{e}_j) - n_i(\eta)) = (\mathbf{e}_j)_i + (\eta - \eta^{(j)\prime})_i$. In the group: $\eta + \mathbf{e}_j \oplus \eta = \eta^{(j)\prime}$, and the correction $\eta - \eta^{(j)\prime}$ lies in the image of $\Delta$; so $\Delta \mathbf{G}_j = \mathbf{e}_j$ modulo this correction.
+(a) Toppling relation: $\Delta\mathbf{n}(\eta) = \eta - \text{Stab}(\eta)$, so $\Delta(\mathbf{n}(\eta+\mathbf{e}_j) - \mathbf{n}(\eta)) = \mathbf{e}_j - (\text{Stab}(\eta+\mathbf{e}_j) - \text{Stab}(\eta))$.
+For $\eta$ uniform on $\mathcal{R}$, $\text{Stab}(\eta+\mathbf{e}_j)$ is also uniform on $\mathcal{R}$ (adding a grain permutes $\mathcal{R}$).
+Hence $\mathbb{E}[\text{Stab}(\eta+\mathbf{e}_j) - \text{Stab}(\eta)] = 0$, giving $\Delta \cdot \mathbb{E}[\mathbf{n}(\eta+\mathbf{e}_j) - \mathbf{n}(\eta)] = \mathbf{e}_j$.
+Therefore $G_{\cdot j} = \Delta^{-1}\mathbf{e}_j$, so $G_{ij} = (\Delta^{-1})_{ij}$.
 
-(b) Linearity of $\Delta^{-1}$: $G_{ij} = (\Delta^{-1}\mathbf{e}_j)_i = (\Delta^{-1})_{ij}$.
+(b) $G_{ij} = (\Delta^{-1})_{ij}$ directly from (a).
 
-(c) $\Delta_{ij} = \Delta_{ji}$ by definition. $(\Delta^{-1})_{ij} = (\Delta^{-1})_{ji}$. Hence $G_{ij} = G_{ji}$.
+(c) Since $\Delta$ is real symmetric, $\Delta^{-1}$ is also symmetric: $G_{ij} = (\Delta^{-1})_{ij} = (\Delta^{-1})_{ji} = G_{ji}$.
 
 (d) Physical reciprocity: adding a grain at $j$ causes $i$ to topple exactly as often as adding a grain at $i$ causes $j$ to topple. This is a discrete Green's reciprocity theorem, analogous to the symmetry $G(\mathbf{x},\mathbf{y}) = G(\mathbf{y},\mathbf{x})$ of the electrostatic Green's function.
 

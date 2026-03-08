@@ -244,7 +244,12 @@ Define $\mathcal{R}$ as the set of recurrent stable configurations and $\eta_1 \
 
 For a recurrent configuration $\eta$, define the Green's function $G_{ij} = n_i(\eta + \mathbf{e}_j) - n_i(\eta)$, where $n_i(\cdot)$ denotes the number of topplings at site $i$ during stabilization.
 
-(a) Using the toppling relation $\eta' = \eta - \Delta \mathbf{n}$ and the fact that the final configuration after adding $\mathbf{e}_j$ and stabilizing equals $\eta$ (for recurrent configurations, adding a grain and stabilizing returns to the same configuration up to a group action), show that $\mathbf{n}(\eta + \mathbf{e}_j) = \Delta^{-1} \mathbf{e}_j + \mathbf{n}(\eta)$ in the appropriate sense.
+(a) The toppling relation states that $\mathbf{n}(\eta)$ satisfies $\Delta \mathbf{n}(\eta) = \eta - \text{Stab}(\eta)$ for any configuration $\eta$. Consider two configurations $\eta$ and $\eta + \mathbf{e}_j$. Applying the toppling relation to each:
+$$\Delta \mathbf{n}(\eta + \mathbf{e}_j) = (\eta + \mathbf{e}_j) - \text{Stab}(\eta + \mathbf{e}_j)$$
+$$\Delta \mathbf{n}(\eta) = \eta - \text{Stab}(\eta)$$
+Subtract and rearrange to get:
+$$\Delta(\mathbf{n}(\eta + \mathbf{e}_j) - \mathbf{n}(\eta)) = \mathbf{e}_j - (\text{Stab}(\eta + \mathbf{e}_j) - \text{Stab}(\eta))$$
+Argue that for recurrent configurations in the stationary regime, on average over $\eta \in \mathcal{R}$ the final configurations $\text{Stab}(\eta + \mathbf{e}_j)$ and $\text{Stab}(\eta)$ are both uniformly distributed on $\mathcal{R}$, so $\mathbb{E}[\text{Stab}(\eta + \mathbf{e}_j) - \text{Stab}(\eta)] = 0$. Hence $\mathbb{E}[\Delta G_{\cdot j}] = \mathbf{e}_j$, giving $G_{\cdot j} = \Delta^{-1} \mathbf{e}_j$ in expectation.
 
 (b) Conclude that $G_{ij} = (\Delta^{-1})_{ij}$.
 
@@ -284,7 +289,7 @@ A mean-field theory of avalanche dynamics models each toppling site as a branchi
 
 (b) In $d$ spatial dimensions, the characteristic linear size of an avalanche of size $s$ scales as $r \sim s^{1/d}$ (if avalanches are compact). The mean-field approximation neglects return visits and spatial correlations. The correction to mean-field becomes relevant when the probability that two branches of an avalanche revisit the same site is of order 1. Show that this condition is equivalent to $s \cdot r^{-d} \sim 1$, i.e., $s \sim r^d$.
 
-(c) A random walk of $s$ steps in $d$ dimensions returns to the origin with probability $O(s^{1-d/2})$ for $d > 2$. Use this to estimate the probability that a critical avalanche of size $s$ has a self-intersection, and hence determine the upper critical dimension $d_c$ above which the mean-field theory is exact.
+(c) Two branches of a critical avalanche of total size $s$ each perform random walks of $O(s)$ steps. The probability that two independent random walkers of length $n$ in $d$ dimensions share at least one site scales as $O(s^2 \cdot n^{-d/2})$ (there are $O(s^2)$ pairs of time steps, and the probability that two walkers are at the same site at a given pair of times is $O(n^{-d/2})$ from the Gaussian Green's function). With $n \sim s$, this gives $O(s^{2-d/2})$. Determine the upper critical dimension $d_c$ above which mean-field theory is exact by setting the expected number of self-intersections to $O(1)$.
 
 (d) State the predicted mean-field exponents ($\tau_s = 3/2$, $\tau_T = 2$, $D = 4$, $z = 2$) and verify they are consistent with the scaling relations in Section 5.2 of the note.
 
