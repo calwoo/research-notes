@@ -34,7 +34,13 @@ One of the most striking empirical findings in modern deep learning is deceptive
 
 ### The Empirical Observation
 
-Let $L$ denote cross-entropy loss (in nats or bits per token) on a held-out test set. Fix everything else — architecture family, optimizer, learning rate schedule — and vary either the number of non-embedding model parameters $N$, the number of training tokens $D$, or the total compute budget $C$. Empirically:
+This observation did not originate with language models. Hestness et al. (2017) established, across machine translation, language modeling, image classification, and speech recognition, that generalization error follows a power law in training set size:
+
+$$\varepsilon(m) \propto \alpha_0 \, m^{\beta_g}$$
+
+with domain-specific exponents $\beta_g$ ranging from $-0.07$ (word language models) to $-0.35$ (image classification, top-5 error). Crucially, they found that model architecture improvements shift the loss curve downward — reducing the constant $\alpha_0$ — but do not alter the power-law exponent $\beta_g$. The slope in log-log space is a property of the task and data distribution, not of the model family. This observation provides an early empirical argument that scaling exponents are universal characteristics of the data manifold, not architectural artifacts.
+
+The Kaplan et al. (2020) and Hoffmann et al. (2022) results then brought this phenomenon into the large-scale language model regime and provided a quantitative framework for compute-optimal training. Let $L$ denote cross-entropy loss (in nats or bits per token) on a held-out test set. Fix everything else — architecture family, optimizer, learning rate schedule — and vary either the number of non-embedding model parameters $N$, the number of training tokens $D$, or the total compute budget $C$. Empirically:
 
 $$L(N) \sim N^{-\alpha_N}, \qquad L(D) \sim D^{-\alpha_D}, \qquad L(C) \sim C^{-\alpha_C}$$
 
@@ -140,7 +146,7 @@ Alternatively, power laws arise naturally as the limit of a sum of exponentials 
 
 #### The Three-Regime Structure
 
-The power-law model $L = E + A/N^\alpha + B/D^\beta$ is an approximation that is accurate only in a middle regime. Training loss across scale exhibits three qualitatively distinct regions:
+The power-law model $L = E + A/N^\alpha + B/D^\beta$ is an approximation that is accurate only in a middle regime. Training loss across scale exhibits three qualitatively distinct regions, first explicitly identified by Hestness et al. (2017):
 
 1. **Random-guessing plateau** — at very small $N$ or $D$, the model is near chance performance. Loss is roughly constant and high. The power-law terms have not yet engaged.
 2. **Power-law region** — the regime where $L = E + A/N^\alpha + B/D^\beta$ is accurate. Loss decreases smoothly as a power law in scale. This is the regime studied by Kaplan and Chinchilla.
@@ -508,7 +514,19 @@ Caballero et al. (2022) demonstrated that **trend breaks** — abrupt deviations
 
 ### Modality and Architecture Dependence
 
-Scaling exponents vary substantially across domains. Vision transformers (Zhai et al. 2022), acoustic models (Droppo and Elibol 2021), reinforcement learning agents (Neumann and Gros 2022), and recommendation systems (Ardalani et al. 2022) all exhibit power-law scaling, but with different exponents. There is no single universal $(\alpha, \beta)$ pair. The intrinsic dimension argument (Section 2) provides a theoretical explanation for this variation, but predicting exponents from first principles remains an open problem.
+Scaling exponents vary substantially across domains. Hestness et al. (2017) measured generalization error exponents $\beta_g$ across four domains with a single epoch of data scaling:
+
+| Domain | Model | $\beta_g$ (data exponent) |
+|--------|-------|--------------------------|
+| Word language modeling | LSTM | $-0.066$ |
+| Character language modeling | RHN | $-0.094$ |
+| Machine translation | LSTM seq2seq | $-0.128$ |
+| Image classification (top-5) | ResNet | $-0.488$ |
+| Speech recognition | Deep Speech 2 | $-0.299$ |
+
+Vision transformers (Zhai et al. 2022), acoustic models (Droppo and Elibol 2021), reinforcement learning agents (Neumann and Gros 2022), and recommendation systems (Ardalani et al. 2022) continue this pattern. There is no single universal $(\alpha, \beta)$ pair. The intrinsic dimension argument (Section 2) provides a theoretical explanation for this variation, but predicting exponents from first principles remains an open problem.
+
+Hestness et al. also established that architecture improvements — replacing LSTMs with better recurrent architectures, adding depth, tuning hyperparameters — consistently shift the loss curve downward (reducing the multiplicative constant $\alpha_0$) without changing $\beta_g$. The exponent is a property of the task, not the model. This implies a ceiling on what architectural innovation alone can achieve: better architecture buys a one-time constant factor, not a change in the rate at which more data or more parameters help.
 
 ---
 
@@ -523,3 +541,4 @@ Scaling exponents vary substantially across domains. Vision transformers (Zhai e
 | Villalobos (2023), "Scaling Laws Literature Review" (Epoch AI) | Broad survey of scaling law results across modalities; discusses alternative estimators (M4, BNSL), non-power-law regimes, trend breaks, and the limits of upstream-to-downstream transfer | https://epoch.ai/blog/scaling-laws-literature-review |
 | Caballero et al. (2022), "Broken Neural Scaling Laws" | Introduces the BNSL functional form to model transitions between scaling regimes; demonstrates that trend breaks cannot be reliably predicted from smaller-scale observations | https://arxiv.org/abs/2210.14891 |
 | Sorscher et al. (2022), "Beyond neural scaling laws: beating power law scaling via data pruning" | Shows that with structured data pruning, loss can scale exponentially rather than as a power law, offering a route beyond the power-law frontier | https://arxiv.org/abs/2206.14486 |
+| Hestness et al. (2017), "Deep Learning Scaling is Predictable, Empirically" | Establishes cross-domain power-law scaling of generalization error with training set size across MT, language modeling, image classification, and speech recognition; identifies the three learning curve regimes; shows architecture improvements shift the curve but not the exponent | https://arxiv.org/abs/1712.00409 |
