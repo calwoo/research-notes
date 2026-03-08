@@ -23,6 +23,20 @@ Every note.md must follow this structure:
 - No hand-waving. If an argument is heuristic, label it explicitly as such.
 - Introduce notation precisely before using it.
 
+## Typographic Style
+
+Apply these consistently in all `note.md` files:
+
+| Element | Style | Example |
+|---------|-------|---------|
+| First use of a technical term in prose | *italics* | the *capacity factor* controls overflow |
+| Formal definition / proposition / remark label | **bold** | `**Definition (Soft MoE Output).**` |
+| Key conclusion — main quantitative takeaway of a derivation | **bold** | `**Both N and D should scale as √C.**` |
+| Counterintuitive result | *italics* with inline signal | *Surprisingly,* linear alone outperforms DCN... |
+| Warning or caveat | *italics* | *This bound only holds for $T \to \infty$.* |
+
+Do NOT italicize terms after their first use. Do NOT bold entire sentences except for genuine key conclusions.
+
 ## TOC Link Rules (Obsidian)
 
 Notes are viewed in Obsidian. Use wikilink syntax for all TOC entries — standard markdown anchors `[text](#slug)` are ignored by Obsidian's navigator.

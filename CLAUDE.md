@@ -49,6 +49,20 @@ docs/           ← documentation and design docs
 - **For paper notes:** include a TL;DR table immediately after the author line and before the TOC. Columns: `| Dimension | Prior State | This Paper |`.
 - When researching a topic, always include a references table at the end of the note with columns: "Reference Name", "Brief Summary", "Link to Reference".
 
+### Typographic Style Rules
+
+Apply these consistently in all `note.md` files:
+
+| Element | Style | Example |
+|---------|-------|---------|
+| First use of a technical term in prose | *italics* | the *capacity factor* controls overflow |
+| Formal definition / proposition / remark label | **bold** | `**Definition (Soft MoE Output).**` |
+| Key conclusion — main quantitative takeaway of a derivation | **bold** | `**Both N and D should scale as √C.**` |
+| Counterintuitive result | *italics* with inline signal | *Surprisingly,* linear alone outperforms DCN... |
+| Warning or caveat | *italics* | *This bound only holds for $T \to \infty$.* |
+
+Do NOT italicize terms after their first use. Do NOT bold entire sentences except for genuine key conclusions.
+
 ### Obsidian TOC Link Rules (CRITICAL)
 
 Notes are viewed in Obsidian. Use Obsidian's wikilink syntax for all TOC links — standard markdown `[text](#slug)` does NOT navigate in Obsidian.
