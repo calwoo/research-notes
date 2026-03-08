@@ -482,6 +482,15 @@ where $t^k$ is task $k$'s tower network. The MMoE model has $K$ gating networks 
 | OMoE | $E \cdot P$ | $d \cdot E$ | No (shared gate) |
 | MMoE | $E \cdot P$ | $K \cdot d \cdot E$ | Yes (per-task gate) |
 
+![Figure 1(a) from Ma et al. (2018): Shared-Bottom architecture with a single shared encoder feeding both task towers](figures/ma2018-fig1a-shared-bottom-architecture.jpg)
+*Figure 1(a) (Ma et al., 2018): Shared-Bottom model. A single shared encoder $h(x)$ produces a common representation consumed by all task-specific tower networks. All tasks train through $h$ simultaneously, making it susceptible to conflicting gradient updates.*
+
+![Figure 1(b) from Ma et al. (2018): One-gate Mixture-of-Experts (OMoE) architecture with shared experts and a single gating network](figures/ma2018-fig1b-omoe-architecture.jpg)
+*Figure 1(b) (Ma et al., 2018): OMoE model. $E$ expert sub-networks are mixed by a single shared gating network. All task towers receive the same expert mixture; per-task routing is impossible.*
+
+![Figure 1(c) from Ma et al. (2018): Multi-gate Mixture-of-Experts (MMoE) architecture with shared experts and per-task gating networks](figures/ma2018-fig1c-mmoe-architecture.jpg)
+*Figure 1(c) (Ma et al., 2018): MMoE model. Each task $k$ has its own gating network $g^k$, enabling task-specific expert mixtures $f^k(x) = \sum_i g^k_i(x) \cdot f_i(x)$. The experts are shared; only the routing weights are task-private.*
+
 ### Task-Relationship Modulation
 
 The key claim of MMoE is that when tasks are weakly correlated, the per-task gates $g^k(x)$ learn to activate *different subsets of experts* for different tasks, effectively decomposing the multi-task problem into task-specific subproblems.
@@ -506,7 +515,13 @@ The gate weight $g^k_i(x)$ appears as a *task-specific gradient scaling factor* 
 
 *Concretely, in the synthetic experiments, Shared-Bottom's trainability drops sharply as task correlation decreases below $\rho \approx 0.5$, while MMoE maintains high trainability down to $\rho \approx 0$.* OMoE falls in between — the MoE structure helps but the shared gate cannot decouple task interference at the routing level.
 
+![Figure 5 from Ma et al. (2018): Histogram of final-loss distributions for MMoE, OMoE, and Shared-Bottom across task correlations 0.5, 0.9, and 1.0](figures/ma2018-fig5-performance-histogram.jpg)
+*Figure 5 (Ma et al., 2018): Performance histograms on synthetic data at three task-correlation levels (0.5, 0.9, 1.0). Each cell shows the distribution of final training losses over 200 independent runs. MMoE (top row) concentrates mass at low loss values across all correlation levels; Shared-Bottom (bottom row) shows a heavy right tail — many runs fail to converge — particularly at correlation 0.5, where task interference is strongest.*
+
 **Real-world deployment.** Ma et al. apply MMoE to a large-scale recommendation system at Google, where tasks correspond to *engagement* (implicit feedback, e.g., watch time) and *satisfaction* (explicit feedback, e.g., user rating). These objectives are structurally different: engagement is dense and noisy, satisfaction is sparse and deliberate. MMoE outperforms both Shared-Bottom and OMoE baselines on held-out metrics, with particularly strong gains on the satisfaction task — the harder, sparser objective that benefits most from being shielded from engagement's gradient.
+
+![Figure 6 from Ma et al. (2018): Softmax gate distribution for Engagement and Satisfaction tasks across four experts in the deployed MMoE model](figures/ma2018-fig6-gate-distribution.jpg)
+*Figure 6 (Ma et al., 2018): Softmax gate weight distribution in the deployed Google recommendation MMoE model. The Engagement task (blue) concentrates routing mass on Expert 0, while the Satisfaction task (red/pink) routes predominantly through Expert 1. This divergence in routing distributions — high $\Delta(\text{engagement}, \text{satisfaction})$ — provides direct evidence that MMoE learns task-specific expert utilization when tasks are structurally dissimilar.*
 
 ---
 
