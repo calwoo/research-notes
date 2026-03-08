@@ -76,6 +76,8 @@ if they understood the key insight. Use displayed math where it clarifies.]
 
 Do NOT write full worked solutions. A sketch consists of: (1) the **Key insight** line and (2) no more than 8 lines showing only the pivotal algebraic moves. Omit routine steps (expanding products, collecting terms, substituting known identities).
 
+*Exception for Algorithmic Applications:* Solution sketches for Section 2 problems may include pseudocode blocks of appropriate length — the 8-line limit does not apply to code blocks. Keep the **Key insight** line concise and use pseudocode only to show the core algorithm structure, not every implementation detail.
+
 ## TOC Requirement
 
 Both exercises.md and solutions.md must begin with a TOC using Obsidian wikilink syntax:
