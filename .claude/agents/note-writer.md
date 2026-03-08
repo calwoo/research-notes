@@ -23,13 +23,20 @@ Every note.md must follow this structure:
 - No hand-waving. If an argument is heuristic, label it explicitly as such.
 - Introduce notation precisely before using it.
 
-## TOC Anchor Rules (GitHub Flavored Markdown)
+## TOC Anchor Rules (Obsidian-compatible)
+
+Notes are viewed in Obsidian. Obsidian generates anchors from the **rendered** heading text, not raw Markdown. Follow these rules exactly:
 
 - Lowercase all text
-- Replace spaces with hyphens
-- Strip all punctuation except hyphens
-- LaTeX commands like `\approx` become `approx`, `\Delta` becomes `delta`
+- Strip all characters that are not alphanumeric, spaces, or hyphens
+- Replace spaces with hyphens; collapse multiple consecutive hyphens to one
+- **Never put LaTeX (`$...$`) in a heading** — Obsidian renders the math visually and strips symbols like `≈`, `∞`, `α` from the anchor, producing an unpredictable slug. Use plain text instead (e.g., write `### The Compute Approximation` not `### The Compute Approximation $C \approx 6ND$`).
+- **Never use em-dashes (`—`) in headings** — GFM produces a double-hyphen `--` but Obsidian collapses it to a single `-`, breaking the anchor. Use a colon instead (e.g., `### 5.1 Approach 1: IsoFLOP Minimum Fitting`).
+- Periods in numbered headings are stripped: `## 3. Kaplan et al.` → `#3-kaplan-et-al`
+- Parentheses and colons are stripped: `(2020):` → `2020`
+- Apostrophes are stripped: `Kaplan's` → `kaplans`
 - Example: `### 4.2 The Abelian Property` → `#42-the-abelian-property`
+- Example: `### 5.1 Approach 1: IsoFLOP Fitting` → `#51-approach-1-isoflop-fitting`
 
 ## Research Process
 

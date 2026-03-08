@@ -8,7 +8,7 @@
    - [Why This Matters Practically](#why-this-matters-practically)
 2. [Mathematical Setup](#2-mathematical-setup)
    - [The Loss Decomposition Model](#the-loss-decomposition-model)
-   - [The Compute Approximation C ≈ 6ND](#the-compute-approximation-c-approx-6nd)
+   - [The Compute Approximation](#the-compute-approximation)
 3. [Kaplan et al. (2020): Fitting the Laws](#3-kaplan-et-al-2020-fitting-the-laws)
    - [3.1 The Univariate Scaling Laws](#31-the-univariate-scaling-laws)
    - [3.2 The Compute-Efficient Frontier](#32-the-compute-efficient-frontier)
@@ -18,9 +18,9 @@
    - [4.3 The 20 Tokens Per Parameter Rule](#43-the-20-tokens-per-parameter-rule)
    - [4.4 Why Kaplan's Exponents Were Biased](#44-why-kaplans-exponents-were-biased)
 5. [Fitting Methodology](#5-fitting-methodology)
-   - [5.1 Approach 1 — IsoFLOP Minimum Fitting](#51-approach-1--isoflop-minimum-fitting)
-   - [5.2 Approach 2 — Parametric Global Fit](#52-approach-2--parametric-global-fit)
-   - [5.3 Approach 3 — Per-Model-Size Estimation](#53-approach-3--per-model-size-estimation)
+   - [5.1 Approach 1: IsoFLOP Minimum Fitting](#51-approach-1-isoflop-minimum-fitting)
+   - [5.2 Approach 2: Parametric Global Fit](#52-approach-2-parametric-global-fit)
+   - [5.3 Approach 3: Per-Model-Size Estimation](#53-approach-3-per-model-size-estimation)
    - [5.4 Cross-Validation of Approaches](#54-cross-validation-of-approaches)
    - [5.5 Alternative Estimators](#55-alternative-estimators)
 6. [Scope and Limitations](#6-scope-and-limitations)
@@ -170,7 +170,7 @@ The intuition: if the data lies on a low-dimensional manifold (e.g., natural ima
 
 This provides theoretical grounding for why $\alpha \approx 0.076$ is small for language: natural language is extremely high-dimensional, with structure ranging from phonetics to long-range discourse. It also predicts that scaling exponents should differ across modalities — a prediction confirmed empirically (vision transformers, acoustic models, and RL agents all exhibit different exponents).
 
-### The Compute Approximation $C \approx 6ND$
+### The Compute Approximation
 
 Training requires not just a model and data, but **compute** — floating-point operations (FLOPs). To reason about the compute-optimal frontier, we need to express $C$ in terms of $N$ and $D$.
 
@@ -429,7 +429,7 @@ In the language of statistical estimation: Kaplan's $L(N)$ curve is not measured
 
 The five parameters $(E, A, B, \alpha, \beta)$ in $L(N, D) = E + A/N^\alpha + B/D^\beta$ cannot be read off directly from data — they must be estimated by fitting the model to a collection of training runs. Chinchilla cross-validates three distinct approaches, each with different assumptions and statistical properties.
 
-### 5.1 Approach 1 — IsoFLOP Minimum Fitting
+### 5.1 Approach 1: IsoFLOP Minimum Fitting
 
 For each compute budget $C_i$, run models at several $(N, D)$ points along the IsoFLOP curve $6ND = C_i$. Fit a parabola to $\log L$ vs. $\log N$ to find the minimizing $N^*(C_i)$. Then fit:
 
@@ -439,7 +439,7 @@ via ordinary least squares (OLS). The slope $a$ gives $\beta/(\alpha+\beta)$.
 
 This approach estimates the scaling exponents only (not $A$, $B$, $E$), and is the most robust because it does not require a global model fit. The parabolic approximation to the loss surface near the minimum is justified by the local smoothness of $L(N)$ under the IsoFLOP constraint, and the OLS step requires only that the optimal $N^*$ follows a power law in $C$ — a consequence of the model that can be checked for self-consistency.
 
-### 5.2 Approach 2 — Parametric Global Fit
+### 5.2 Approach 2: Parametric Global Fit
 
 Minimize the sum of squared residuals over all runs simultaneously:
 
@@ -454,7 +454,7 @@ Practical notes:
 
 This approach yields all five parameters and is used to compute the headline result $D^* \approx 20 N^*$.
 
-### 5.3 Approach 3 — Per-Model-Size Estimation
+### 5.3 Approach 3: Per-Model-Size Estimation
 
 For each fixed $N_i$, collect runs with varying $D$ and fit:
 
