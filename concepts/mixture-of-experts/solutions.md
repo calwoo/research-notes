@@ -38,11 +38,15 @@
 
 **Sketch:**
 
-(a) By chain rule: $\frac{\partial \mathcal{L}}{\partial W_g} = \sum_i \frac{\partial \mathcal{L}}{\partial g_i} \frac{\partial g_i}{\partial W_g}$. With $f_i = W_i x$ and $\frac{\partial \mathcal{L}}{\partial g_i} = \frac{\partial \mathcal{L}}{\partial y} \cdot f_i(x)$, applying the softmax Jacobian gives:
+(a) By chain rule: $\frac{\partial \mathcal{L}}{\partial W_g} = \sum_k \frac{\partial \mathcal{L}}{\partial g_k} \frac{\partial g_k}{\partial W_g}$. The softmax Jacobian gives $\partial g_k / \partial (W_g)_{jk} = g_k(\delta_{kk} - g_k) x_j$, producing after assembly a rank-1 outer product:
 
-$$\frac{\partial \mathcal{L}}{\partial W_g} = x \left(\frac{\partial \mathcal{L}}{\partial y}\right)^\top \sum_i g_i(x)\bigl(f_i(x) - y\bigr) e_i^\top$$
+$$\frac{\partial \mathcal{L}}{\partial W_g} = x \cdot v^\top \in \mathbb{R}^{d \times E}$$
 
-The weight on expert $i$ is $g_i(x)(f_i(x) - y)$, an outer-product form.
+where the $k$-th component of $v$ is:
+
+$$v_k = \frac{\partial \mathcal{L}}{\partial y} \cdot g_k(x)\bigl(f_k(x) - y\bigr) \in \mathbb{R}$$
+
+a scalar, since $\partial\mathcal{L}/\partial y$, $f_k(x)$, and $y$ are all in $\mathbb{R}^d$ and their inner product is a scalar.
 
 (b) Stationary condition: $\sum_i g_i(x)(f_i(x) - y) = 0$ for all $x$. An expert with $f_i(x) = y$ contributes zero residual; its gradient pressure is exactly zero regardless of $g_i(x)$.
 
@@ -70,7 +74,7 @@ The weight on expert $i$ is $g_i(x)(f_i(x) - y)$, an outer-product form.
 
 **Sketch:**
 
-(a) Under uniform weights $g_i = 1/E$, the gradient involves a sum over $E$ terms each contributing variance $\sigma^2/E^2$ (since each expert is weighted $1/E$). Total variance $= E \cdot \sigma^2/E^2 = \sigma^2/E$.
+(a) Under uniform weights $g_i = 1/E$, the gradient involves a sum over $E$ terms each contributing variance $\sigma^2/E^2$ (since each expert is weighted $1/E$). Total variance $= E \cdot \sigma^2/E^2 = \sigma^2/E$. (This treats $y \approx \mu$ as approximately constant, valid for large $E$ where the law of large numbers makes $y$ concentrate around $\mu$. For finite $E$, the exact variance has additional cross-terms from the dependence of $y$ on each $f_i$.)
 
 (b) Under top-$k$ gating, only $k$ experts contribute with weights $\approx 1/k$ each. Total variance $\approx k \cdot \sigma^2/k^2 = \sigma^2/k$. Since $k < E$, this is higher than soft gating.
 
@@ -194,7 +198,7 @@ $$P(\text{Load}_i > C) \approx 1 - \Phi\!\left(\frac{C - \mu}{\sigma}\right) \ap
 
 ### Problem 12: Top-1 Routing and Voronoi Specialization
 
-**Key insight:** The routing regions are convex polyhedral cones because each is a finite intersection of linear half-spaces; the linear router can recover the oracle partition exactly when and only when the oracle's decision boundaries are piecewise-linear.
+**Key insight:** For fixed label $y$, the assignment boundary is affine; linearity of the expected-loss boundary requires $\mathbb{E}[y|x]$ to be linear in $x$ (i.e., the regression function is linear). The linear router can recover the oracle partition exactly when and only when the oracle's decision boundaries are piecewise-linear.
 
 **Sketch:**
 
@@ -202,19 +206,19 @@ $$P(\text{Load}_i > C) \approx 1 - \Phi\!\left(\frac{C - \mu}{\sigma}\right) \ap
 
 (b) The linear router can recover oracle assignment iff there exists $W_g$ such that $(W_g^\top x)_i > (W_g^\top x)_j$ for all $j \neq i$ whenever $i^*(x) = i$. This is possible iff the oracle's regions are linearly separable — each region can be separated from all others by a linear classifier. Impossible for oracle boundaries with non-linear (e.g., curved or non-convex) structure.
 
-(c) For linear experts, the loss-minimizing assignment boundary between experts $i$ and $j$ is $\{x : \|W_i x - y\|^2 = \|W_j x - y\|^2\}$, which simplifies to a linear constraint in $x$ for fixed $y$. All boundaries are linear, confirming the optimal partition is piecewise-linear and the linear router $W_g$ is expressive enough.
+(c) For fixed label $y$: $\|W_i x - y\|^2 - \|W_j x - y\|^2 = (W_i x - W_j x) \cdot (W_i x + W_j x - 2y) = 0$, an affine constraint in $x$ for fixed $y$ — so the fixed-$y$ boundary is an affine hyperplane. Taking expectation: $\mathbb{E}_y[\cdot] = 0$ iff $(W_i - W_j)x \cdot ((W_i + W_j)x - 2\mathbb{E}[y|x]) = 0$. This is linear in $x$ only if $\mathbb{E}[y|x]$ is linear in $x$ (e.g., $y = Wx + \varepsilon$). If $p(y|x)$ is linear-Gaussian, the partition is a true Voronoi tessellation in feature space and the linear router $W_g$ is expressive enough to represent the optimal routing.
 
 ---
 
 ### Problem 13: Expert Collapse as a Fixed-Point Instability
 
-**Key insight:** The uniform fixed point of the quality-routing dynamical system is linearly unstable when $\eta\beta\delta > E/(E-1)$, directly linking collapse to aggressive optimization (large $\eta$, $\beta$) and motivating small initial logit magnitude and learning-rate warmup.
+**Key insight:** The uniform fixed point is always linearly unstable for positive parameters: the symmetry-breaking Jacobian eigenvalue is $1 + \eta\beta\delta(E-1)/E$, which exceeds 1 for any $\eta, \beta, \delta > 0$. The quantity $\eta\beta\delta(E-1)/E$ controls the *rate* of divergence, not the threshold.
 
 **Sketch:**
 
 (a) Fixed-point: $\rho_i^* = 1/E$, $q_i^* = q^*$ with $\eta(1/E)\delta = 0$ at convergence (quality improvement ceases). Dynamic system: $\rho_i^{(t)} = \operatorname{softmax}(\beta q^{(t)})_i$, $q_i^{(t+1)} = q_i^{(t)} + \eta \rho_i^{(t)} \delta$.
 
-(b) Linearize around $q_i = q^* + \epsilon_i$. The Jacobian of the perturbation $\epsilon$ has eigenvalue $\eta\beta\delta/E$ for the symmetry-breaking mode (proportional to $e_i - 1/E$). The fixed point is unstable when $\eta\beta\delta(E-1)/E > 1$, i.e., $\eta\beta\delta > E/(E-1) \approx 1$ for large $E$.
+(b) Linearize around $q^* = \frac{1}{E}\mathbf{1}$: let $q_i = 1/E + \epsilon_i$ with $\sum \epsilon_i = 0$. Softmax linearization: $\rho_i \approx 1/E + \beta(\epsilon_i - \bar{\epsilon})$ (first-order, where $\bar{\epsilon} = 0$ by constraint). Update: $\epsilon_i^{(t+1)} = \epsilon_i + \eta\delta \cdot \beta \epsilon_i (E-1)/E = \epsilon_i(1 + \eta\beta\delta(E-1)/E)$. Eigenvalue $\lambda = 1 + \eta\beta\delta(E-1)/E > 1$ for all positive parameters. **The uniform fixed point is unconditionally unstable.** $\eta\beta\delta(E-1)/E$ is the per-step growth rate, not a threshold.
 
 (c) Large $\beta$ (sharp routing) maps small quality differences to large routing differences. Large $\eta$ (fast learning) amplifies each step. Large $E$ stabilizes: more experts dilute any individual's advantage. Practical implications: initialize $W_g$ with small variance (equivalent to small $\beta$) and use LR warmup (small $\eta$ early), keeping the system subcritical during early training.
 

@@ -122,7 +122,7 @@
 
 > **Prerequisites:** cf. note [[note#Capacity Factor and Token Dropping|§4 — Capacity Factor and Token Dropping]]; requires Problem 6
 
-(a) Using the normal approximation from Problem 6(b), write the drop probability as $P_{\text{drop}}(\phi) = \Phi\!\left(\frac{(\phi - 1)\sqrt{T k/E}}{\sqrt{(k/E)(1 - k/E)}}\right)^c$ for appropriate constants. Simplify and identify the rate parameter governing how fast $P_{\text{drop}}$ falls as $\phi$ increases from 1.
+(a) Using the normal approximation from Problem 6(b), write the drop probability as $P_{\text{drop}}(\phi) = 1 - \Phi\!\left(\frac{(\phi - 1)\sqrt{T k/E}}{\sqrt{(k/E)(1 - k/E)}}\right)$ for appropriate constants, where $\Phi$ is the standard normal CDF. Simplify and identify the rate parameter governing how fast $P_{\text{drop}}$ falls as $\phi$ increases from 1.
 
 (b) Differentiate $P_{\text{drop}}(\phi)$ with respect to $\phi$ at $\phi = 1^+$. Show the sensitivity scales as $\sqrt{Tk/E}$ and interpret: for large batches $T$, a small increase in $\phi$ above 1 produces a large reduction in drop rate. What does this imply for the choice of $\phi$ in practice?
 
@@ -196,7 +196,7 @@
 
 (b) A natural oracle router assigns token $x$ to the expert $i^*$ that minimizes loss: $i^*(x) = \arg\min_i \mathcal{L}(f_i(x), y)$. Derive the condition under which the linear router $W_g$ can perfectly recover this oracle assignment. When is recovery impossible with a linear router?
 
-(c) Suppose the $E$ experts are linear: $f_i(x) = W_i x$. Show that the optimal routing partition (minimizing the expected loss over a dataset) is indeed a linear Voronoi partition in a suitable feature space, confirming that the linear router $W_g$ has sufficient expressive power to represent the optimal routing when experts are linear.
+(c) Suppose both experts are linear: $f_i(x) = W_i x$. Show that for a fixed label $y$, the assignment boundary $\{x : \|W_i x - y\|^2 = \|W_j x - y\|^2\}$ is an affine hyperplane in $x$. Under what additional assumption on the data distribution $p(y|x)$ does the expected-loss assignment boundary $\mathbb{E}_{y \sim p(y|x)}[\|W_i x - y\|^2] = \mathbb{E}_{y \sim p(y|x)}[\|W_j x - y\|^2]$ also reduce to an affine hyperplane? (Hint: consider when $\mathbb{E}[y|x]$ is linear in $x$.)
 
 ---
 
@@ -208,7 +208,7 @@
 
 (a) Model the routing dynamics as follows: at step $t$, expert $i$ has quality $q_i^{(t)}$ (measured by negative loss on tokens it receives). The router assigns fraction $\rho_i^{(t)} = \operatorname{softmax}(\beta q^{(t)})_i$ of tokens to expert $i$, where $\beta > 0$ is a temperature. Expert quality updates as $q_i^{(t+1)} = q_i^{(t)} + \eta \rho_i^{(t)} \delta_i$, where $\delta_i > 0$ is a fixed per-token improvement rate and $\eta$ is the learning rate. Write the fixed-point equations for this system.
 
-(b) Linearize the dynamics around the uniform fixed point $\rho_i = 1/E$, $q_i = q^*$ for all $i$. Derive the Jacobian of the update map and find its eigenvalues. Show that the uniform fixed point is unstable when $\eta \beta \delta / E > 1/(E-1)$ for any perturbation that breaks symmetry.
+(b) Linearize the dynamics around the uniform fixed point $\rho_i = 1/E$, $q_i = q^*$ for all $i$. Derive the Jacobian of the update map and find its eigenvalues. Show that the uniform fixed point $q^* = (1/E, \ldots, 1/E)$ is linearly unstable for any positive $\eta$, $\beta$, $\delta$. Specifically, compute the Jacobian of the map $q \to q + \eta \cdot \rho(q) \cdot \delta$ at $q^*$, find its eigenvalues, and show that the symmetry-breaking modes all have $|\lambda| > 1$. What does the magnitude of $\eta\beta\delta(E-1)/E$ control?
 
 (c) Interpret the instability condition from (b): which factors (large $\beta$, large $\eta$, large $\delta$) drive collapse, and which (large $E$) provide stability through diversification? Connect this to the practical recommendations for router initialization (small initial logit magnitude) and learning rate warmup described in the note.
 
