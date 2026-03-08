@@ -52,6 +52,9 @@ Concretely, suppose a dense feed-forward network has $P$ parameters and costs $F
 
 This is the parameter-efficiency argument: for a fixed inference compute budget, MoE models can achieve better quality than dense models because they can access vastly more parameters without paying the full FLOP cost.
 
+![MoE layer architecture: input token passes through router, which dispatches to one of several expert FFNs, outputs are combined](figures/grootendorst2024-moe-layer-architecture.png)
+*Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. The MoE layer embedded inside a Transformer block: a router examines each input token and dispatches it to a selected subset of expert FFNs; only those experts perform computation, and their outputs are aggregated to produce the layer's output.*
+
 ![Dense decoder block vs sparse MoE decoder block: the single FFNN is replaced by multiple expert FFNNs](figures/grootendorst2024-dense-vs-sparse-decoder.png)
 *Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. A dense Transformer decoder block (left) uses a single FFNN sublayer; a sparse MoE decoder block (right) replaces it with multiple parallel expert FFNNs, only a subset of which are activated per token.*
 
@@ -235,6 +238,9 @@ $$g(x) = \operatorname{softmax}(W_g^\top x), \qquad i^*(x) = \arg\max_i g_i(x)$$
 
 The output of the Switch layer is simply $y = g_{i^*(x)}(x) \cdot f_{i^*(x)}(x)$ — a single expert's output, scaled by the gate weight for that expert.
 
+![Switch Transformer encoder block: each token is independently routed to one of N expert FFN layers by the Switch routing module, replacing the single dense FFN](figures/fedus2021-fig2-switch-encoder-block.png)
+*Figure 2 (Fedus et al., 2021): The Switch Transformer encoder block. The standard dense FFN sublayer is replaced by a sparse Switch FFN layer containing multiple expert FFNs. A lightweight routing module independently assigns each token to exactly one expert (top-1 routing), enabling massive parameter scaling without proportional FLOP increase.*
+
 **The Simplification Argument.** The Fedus et al. argument for top-1 routing is empirical: under FLOP-matched conditions (equal inference compute), top-1 routing with more total experts achieves comparable or better quality than top-2 routing with fewer experts. The communication reduction from top-1 allows training at larger scales, which more than compensates for any quality loss from limiting to one expert per token.
 
 ### Simplified Auxiliary Loss
@@ -254,6 +260,9 @@ $$\mathcal{L}_{\text{aux}} = \alpha \cdot E \cdot \sum_{i=1}^{E} f_i \cdot P_i$$
 ### Scaling Behavior
 
 Switch Transformers achieve up to 7x pre-training speed improvements over dense T5 baselines at equivalent FLOP budgets, and 4x speedups over T5-XXL when scaling to trillion parameters. The key finding is that the gains are available even in lower-precision (bfloat16) training, which was previously thought to be unstable for sparse models. This demonstrated that the engineering barriers to trillion-parameter sparse training were surmountable.
+
+![Switch Transformer scaling: negative log perplexity vs number of experts, showing consistent improvement as expert count grows from 2 to 2048](figures/fedus2021-fig1-scaling-properties.png)
+*Figure 1 (Fedus et al., 2021): Scaling properties of the Switch Transformer. Negative log perplexity improves consistently as the number of experts grows from 2 to 2048 under a fixed per-token FLOP budget, demonstrating that increasing total parameter count via more experts yields reliable quality gains without additional inference cost.*
 
 ---
 
@@ -321,11 +330,17 @@ $$y = \sum_{i \in \mathcal{T}(x)} g_i(x) \cdot f_i(x), \qquad |\mathcal{T}(x)| =
 
 where the gate $g$ is a standard softmax router and $f_i$ is the $i$-th FFN expert (a standard SwiGLU feed-forward network). Notably, Mixtral does not use an auxiliary load balancing loss during training, relying instead on natural balance induced by the training distribution. This is an empirical finding that the routing does not catastrophically collapse in this setting.
 
+![Mixtral MoE layer: each input vector is assigned to 2 of the 8 experts by a router; the layer output is the weighted sum of the two selected experts' outputs](figures/jiang2024-fig1-moe-layer.png)
+*Figure 1 (Jiang et al., 2024): The Mixtral sparse MoE layer. A router scores all 8 expert FFNs for each input token and selects the top-2 by score. The layer output is the weighted sum of the two selected experts' outputs, with weights given by the softmax-normalized gate scores over the selected pair.*
+
 ### FLOP-Matched Comparisons
 
 The proper comparison between a dense model and an MoE model is under a fixed inference compute budget, measured in FLOPs per token. Mixtral's 12.9B active parameters imply a per-token FLOP count comparable to a 13B dense model. The relevant comparison is therefore: how does Mixtral 8x7B perform relative to a 13B dense model (same active compute) and a 70B dense model (same total parameter count)?
 
 The results reported by Jiang et al. show Mixtral outperforms Llama 2 70B (a dense model with 5x more active parameters) on most benchmarks, while using only 2 of 8 experts per token. This concretely demonstrates the parameter-efficiency argument: access to 8 specialist FFN networks, even when only 2 are activated, provides substantially better quality than a single FFN with the same compute cost.
+
+![Mixtral 8x7B parameter breakdown: 46.7B total parameters, 12.9B active parameters per token, compared to dense model equivalents](figures/grootendorst2024-mixtral-parameter-comparison.png)
+*Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. Parameter breakdown for Mixtral 8x7B: the model holds 46.7B total parameters across 8 experts per layer, but activates only 12.9B parameters per token (2 of 8 experts). This decouples total parameter count from per-token compute, enabling FLOP-matched comparison against a ~13B dense model while benefiting from 46.7B worth of stored knowledge.*
 
 The FLOP equivalence argument formalizes as follows. A standard Transformer FFN layer with hidden dimension $d_{ff}$ applied to a token of dimension $d$ costs approximately $2 \cdot 2d \cdot d_{ff}$ FLOPs (two linear projections for SwiGLU). For Mixtral with $E = 8$ experts and $k = 2$, the MoE layer cost is $2 \cdot 2d \cdot d_{ff}$ (same as a single FFN — only 2 experts are computed). The total parameter count in the MoE layer is $8 \cdot 2d \cdot d_{ff}$, four times a single FFN. Parameter count and FLOP count are thus decoupled by a factor of $E/k = 4$.
 
@@ -348,6 +363,12 @@ A rough characterization (heuristic): if a dense model achieves loss $L$ after $
 Expert collapse is a consequence of the positive feedback loop in joint training. Consider two experts $A$ and $B$, with $A$ marginally better initialized. Tokens routed to $A$ yield lower loss, providing stronger gradient signal to $A$'s parameters. $A$ improves; the router, observing lower loss from $A$, increases $g_A(x)$. This diverts more tokens from $B$, whose parameters stagnate, and the gap widens. This is a form of training-time symmetry breaking that is detrimental when it proceeds to completion (one or few experts receiving all tokens).
 
 Expert collapse is distinct from **expert specialization**: in a healthy MoE, different experts specialize on different input types, and routing is non-uniform but not catastrophically concentrated. The challenge is allowing beneficial specialization while preventing complete collapse.
+
+![Expert specialization in ST-MoE: a heat map showing which tokens (e.g., punctuation, verbs, proper nouns) are preferentially routed to each of the 16 experts](figures/grootendorst2024-expert-specialization.png)
+*Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. Expert specialization in the ST-MoE model: different experts develop preferences for semantically or syntactically coherent token types. Some experts specialize on punctuation and delimiters, others on verbs or proper nouns. This emergent specialization is the desired outcome of joint gating-expert training, in contrast to the degenerate case of expert collapse.*
+
+![Mixtral routing sample: text tokens colored by first expert choice, showing expert assignment tracks syntactic rather than semantic or domain structure](figures/jiang2024-fig8-routing-specialization.png)
+*Figure 8 (Jiang et al., 2024): Routing analysis in Mixtral 8x7B. Each token in a text passage is colored according to its first-choice expert. The routing pattern tracks syntactic structure rather than topic or domain — consecutive tokens of the same syntactic role (e.g., verb phrases, punctuation) tend to share an expert, even across different domains. This provides empirical evidence of expert specialization and confirms that Mixtral's routing does not collapse to a single dominant expert.*
 
 ### Router Z-Loss
 
