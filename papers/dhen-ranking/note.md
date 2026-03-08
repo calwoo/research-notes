@@ -93,6 +93,9 @@ $$X^0 = (x^0_1, x^0_2, \ldots, x^0_m) \in \mathbb{R}^{d \times m}$$
 
 where $m$ is the total number of output embedding slots (sparse lookups plus dense MLP outputs) and $d$ is the embedding dimension. This representation $X^0$ is the input to the first DHEN layer.
 
+![Figure 3 from Zhang et al. (2022): feature processing layer architecture](figures/dhen2022-fig3-feature-processing-layer.png)
+*Figure 3 (Zhang et al., 2022): The feature processing layer in DHEN — sparse categorical features go through embedding lookup tables while dense numerical features go through MLP layers; outputs are concatenated to form $X^0 \in \mathbb{R}^{d \times m}$.*
+
 ### 2.2 The DHEN Layer: Formal Definition
 
 Let $X_n \in \mathbb{R}^{d \times m}$ denote the embedding matrix input to the $n$-th DHEN layer (with $X_0 \equiv X^0$). The output of a single DHEN layer is:
@@ -109,6 +112,9 @@ $$\operatorname{ShortCut}(X_n) = \begin{cases} X_n & \text{if } \operatorname{le
 - The output $Y$ becomes the input $X_{n+1}$ to the next layer.
 
 The shortcut plays a dual role: it acts as a residual connection (stabilizing gradient flow across depth) and as a dimension-matching projection.
+
+![Figure 1 from Zhang et al. (2022): general hierarchical ensemble building block in DHEN](figures/dhen2022-fig1-hierarchical-ensemble-building-block.jpg)
+*Figure 1 (Zhang et al., 2022): A general DHEN hierarchical ensemble building block. Multiple heterogeneous interaction modules run in parallel on the same input $X_n$; their outputs are aggregated (ensemble), added to a residual shortcut from $X_n$, and normalized to produce the next layer's input $X_{n+1}$.*
 
 ---
 
@@ -198,6 +204,9 @@ $$X_{n+1} = \text{Norm}\!\left(\operatorname{Ensemble}_{i=1}^{k} \operatorname{I
 
 The final $X_N$ is passed to a prediction head (typically an MLP followed by sigmoid) to produce $\hat{p}(\text{click})$.
 
+![Figure 2 from Zhang et al. (2022): two-layer two-module DHEN and its expanded interaction tree](figures/dhen2022-fig2-two-layer-dhen.jpg)
+*Figure 2 (Zhang et al., 2022): A two-layer, two-module DHEN (left) and its expanded interaction graph (right). The second layer's modules operate on composed outputs of first-layer modules, yielding all four compositions $I_1(I_1(X_0))$, $I_1(I_2(X_0))$, $I_2(I_1(X_0))$, $I_2(I_2(X_0))$ — illustrating how DHEN achieves combinatorial expressivity over interaction compositions.*
+
 ---
 
 ## 5. Relation to Prior Work
@@ -238,6 +247,9 @@ The hybrid training paradigm:
 2. **Dense DHEN layers** are replicated on each GPU and trained with data parallelism (DP). The choice of DP for dense layers reflects that activation sizes can far exceed weight sizes, so it is cheaper to synchronize weights (allreduce) than to send activations across the network.
 3. Each training batch thus follows: DP forward (dense) → model-parallel embedding lookup → DP forward/backward (dense DHEN layers) → allreduce gradients for dense weights.
 
+![Figure 4 from Zhang et al. (2022): DHEN distributed training strategy with 4 GPUs shown](figures/dhen2022-fig4-dhen-training.png)
+*Figure 4 (Zhang et al., 2022): The hybrid distributed training strategy for DHEN (shown for 4 GPUs). Embedding tables are model-parallel across the pod; dense DHEN layers are replicated on each GPU and trained with data parallelism, with allreduce for gradient synchronization.*
+
 ### 6.2 Fully Sharded Data Parallel
 
 Standard DP imposes a ceiling on model size equal to per-GPU HBM capacity. To go beyond, the authors use **Fully Sharded Data Parallel (FSDP)** (FairScale / DeepSpeed ZeRO). FSDP shards model weights across all GPUs, materializing each layer's weights via `allgather` on the forward/backward critical path, then immediately discarding them. Additional memory techniques: activation checkpointing (recompute activations in backward), CPU offloading (parameters/gradients stored in CPU RAM, fetched to GPU just before use).
@@ -257,6 +269,9 @@ HSDP tradeoffs vs. FSDP:
 - **Cost**: Supports models up to $8\times$ (GPUs per host) the size of pure DP, not arbitrarily large; adds 1.125x communication overhead in bytes due to the additional `allreduce`, though this is hidden by pipelining.
 
 In practice, small-to-medium DHENs use HSDP; very large DHENs fall back to FSDP.
+
+![Figure 5 from Zhang et al. (2022): FSDP vs HSDP comparison with 2 hosts and 2 GPUs each](figures/dhen2022-fig5-fsdp-vs-hsdp.png)
+*Figure 5 (Zhang et al., 2022): FSDP (top) vs. HSDP (bottom) shown for 2 hosts with 2 GPUs each. In FSDP, allgather must span all GPUs cluster-wide over slow RoCEv2. In HSDP, allgather is confined to NVLink-connected GPUs within a single host; cross-host gradient averaging is done asynchronously via allreduce over RoCEv2, overlapped with backward computation.*
 
 ### 6.4 Common Optimizations
 
@@ -334,6 +349,9 @@ At matched or lower FLOP budgets, DHEN consistently outperforms MoE. MoE scales 
 On a 256-GPU cluster, experiments with an 8-layer DHEN using DP yield 1.08x end-to-end speedup from: FP16 embedding + AMP + quantized BF16 allreduce + quantized AllToAll. The remaining bottleneck is optimizer cost and AllToAll latency not fully overlapped with dense layer compute.
 
 For depth beyond 22 layers, DP fails (OOM). HSDP supports larger models than DP and achieves **up to 1.2x throughput over FSDP** for the same model size. FSDP supports arbitrary depth but with high `allgather` latency on the critical path across all cluster GPUs; HSDP restricts `allgather` to NVLink within a single host, eliminating the RoCEv2 bottleneck.
+
+![Figure 6 from Zhang et al. (2022): HSDP supports larger model sizes than DP and higher throughput than FSDP](figures/dhen2022-fig6-dhen-speedup.png)
+*Figure 6 (Zhang et al., 2022): Training throughput comparison across DP, FSDP, and HSDP at varying DHEN layer counts on a 256-GPU cluster. DP succeeds only up to 22 layers (OOM beyond); HSDP consistently achieves up to 1.2x the throughput of FSDP by replacing cluster-wide allgather with fast intra-host NVLink allgather.*
 
 ---
 

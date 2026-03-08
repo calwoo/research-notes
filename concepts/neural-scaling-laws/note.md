@@ -249,6 +249,9 @@ This is a linear relationship between $\log L$ and $\log N$, so ordinary least-s
 
 The data exponent $\alpha_D \approx 0.095$ exceeds the parameter exponent $\alpha_N \approx 0.076$. On a log-log plot, a steeper slope means faster loss reduction per unit log-scale investment. Concretely: to halve the excess loss from the data term alone, you need $D' = D \cdot 2^{1/\alpha_D} = D \cdot 2^{10.5} \approx 1480 D$; to halve the excess loss from the model term alone, you need $N' = N \cdot 2^{1/\alpha_N} = N \cdot 2^{13.2} \approx 9600 N$. Data delivers more loss reduction per order-of-magnitude scaling than parameters — at least within the regime Kaplan et al. studied. This observation, however, was later revised by Chinchilla (Hoffmann et al. 2022), which found the two exponents to be much closer to equal when the fitting procedure is tightened.
 
+![Figure 1 from Kaplan et al. (2020): power-law scaling of language model loss with model size, dataset size, and compute](figures/kaplan2020-fig1-scaling-overview.png)
+*Figure 1 (Kaplan et al., 2020): Smooth, consistent power-law improvement in test loss as each of model size $N$, dataset size $D$, and compute $C$ are scaled independently over many orders of magnitude. The log-log linearity across six or more decades in scale is the central empirical fact that scaling laws formalize.*
+
 ### 3.2 The Compute-Efficient Frontier
 
 The most practically important result of Kaplan et al. is an answer to the question: **given a fixed compute budget $C$, how should we split between model size $N$ and training tokens $D$?**
@@ -325,6 +328,9 @@ The procedure is:
 - When Kaplan trains for one epoch to measure $L(D)$, small models are used to keep compute manageable. The data exponent is measured in a regime where model capacity is the bottleneck, not data, distorting $\beta$.
 
 By contrast, Chinchilla's IsoFLOP curves compare every model on a **compute-equal footing**: a 7B-parameter model trained on $\sim$143B tokens competes directly against a 70B model trained on $\sim$14B tokens, both using the same total FLOPs. The optimal point emerges naturally from the loss surface rather than from extrapolation of univariate fits.
+
+![Figure 3 from Hoffmann et al. (2022): IsoFLOP curves showing the optimal N-D tradeoff](figures/hoffmann2022-fig3-isoflop-curves.png)
+*Figure 3 (Hoffmann et al., 2022): IsoFLOP curves — each curve holds total compute $C = 6ND$ constant while varying the parameter count $N$. Each curve has a clear loss minimum, identifying the compute-optimal $(N^*, D^*)$ pair for that FLOP budget. Connecting the minima across curves reveals the $N^* \propto C^{1/2}$, $D^* \propto C^{1/2}$ scaling, overturning the Kaplan prescription of $N^* \propto C^{0.73}$.*
 
 ### 4.2 Analytical Derivation via Lagrangian Optimization
 
@@ -412,6 +418,9 @@ This is the **"20 tokens per parameter" rule**. It is not exact — the precise 
 - Gopher: $N = 280\text{B}$ parameters, $D = 300\text{B}$ tokens $\Rightarrow$ $D/N \approx 1.1$ tokens per parameter
 
 Both models used roughly 10–20$\times$ fewer tokens than the compute-optimal prescription. The Chinchilla model itself — 70B parameters trained on 1.4T tokens — achieved lower loss than Gopher (280B parameters, $4\times$ larger) at the same compute budget, directly validating the prescription. The name "Chinchilla" refers to this 70B model.
+
+![Figure 1 from Hoffmann et al. (2022): overlaid optimal N and D predictions from all three fitting approaches](figures/hoffmann2022-fig1-overlaid-predictions.png)
+*Figure 1 (Hoffmann et al., 2022): Optimal model size $N^*$ and token count $D^*$ as a function of compute budget $C$, as predicted by all three fitting approaches (IsoFLOP minima, parametric global fit, and per-model-size estimation). The three methods converge on the same $N^* \approx D^* \propto C^{1/2}$ scaling, establishing that the Chinchilla prescription is robust to fitting methodology. The dashed lines show the Kaplan et al. (2020) projection for comparison.*
 
 ### 4.4 Why Kaplan's Exponents Were Biased
 
