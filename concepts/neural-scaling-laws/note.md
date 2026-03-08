@@ -36,7 +36,7 @@
 
 ## 1. Motivation
 
-One of the most striking empirical findings in modern deep learning is deceptively simple: if you train language models of varying sizes on varying amounts of data and plot the resulting loss on a log-log scale, you get a straight line. Not approximately straight — straight enough to extrapolate across many orders of magnitude with quantitative accuracy. This is power-law behavior, and it is the central empirical fact that scaling laws are built to explain.
+One of the most striking empirical findings in modern deep learning is deceptively simple: if you train language models of varying sizes on varying amounts of data and plot the resulting loss on a log-log scale, you get a straight line. Not approximately straight — straight enough to extrapolate across many orders of magnitude with quantitative accuracy. This is *power-law* behavior, and it is the central empirical fact that *scaling laws* are built to explain.
 
 ### The Empirical Observation
 
@@ -44,9 +44,9 @@ This observation did not originate with language models. Hestness et al. (2017) 
 
 $$\varepsilon(m) \propto \alpha_0 \, m^{\beta_g}$$
 
-with domain-specific exponents $\beta_g$ ranging from $-0.07$ (word language models) to $-0.35$ (image classification, top-5 error). Crucially, they found that model architecture improvements shift the loss curve downward — reducing the constant $\alpha_0$ — but do not alter the power-law exponent $\beta_g$. The slope in log-log space is a property of the task and data distribution, not of the model family. This observation provides an early empirical argument that scaling exponents are universal characteristics of the data manifold, not architectural artifacts.
+with domain-specific exponents $\beta_g$ ranging from $-0.07$ (word language models) to $-0.35$ (image classification, top-5 error). Crucially, they found that model architecture improvements shift the loss curve downward — reducing the constant $\alpha_0$ — but do not alter the power-law exponent $\beta_g$. The slope in log-log space is a property of the task and data distribution, not of the model family. This observation provides an early empirical argument that *scaling exponents* are universal characteristics of the data manifold, not architectural artifacts.
 
-The Kaplan et al. (2020) and Hoffmann et al. (2022) results then brought this phenomenon into the large-scale language model regime and provided a quantitative framework for compute-optimal training. Let $L$ denote cross-entropy loss (in nats or bits per token) on a held-out test set. Fix everything else — architecture family, optimizer, learning rate schedule — and vary either the number of non-embedding model parameters $N$, the number of training tokens $D$, or the total compute budget $C$. Empirically:
+The Kaplan et al. (2020) and Hoffmann et al. (2022) results then brought this phenomenon into the large-scale language model regime and provided a quantitative framework for *compute-optimal* training. Let $L$ denote *cross-entropy loss* (in nats or bits per token) on a held-out test set. Fix everything else — architecture family, optimizer, learning rate schedule — and vary either the number of non-embedding model parameters $N$, the number of training tokens $D$, or the total *compute budget* $C$. Empirically:
 
 $$L(N) \sim N^{-\alpha_N}, \qquad L(D) \sim D^{-\alpha_D}, \qquad L(C) \sim C^{-\alpha_C}$$
 
@@ -131,7 +131,7 @@ Empirically, $\beta \approx 0.095$ for the same class of models. The data expone
 
 #### Why the Additive Structure Is Plausible
 
-The additive form $L = E + A/N^\alpha + B/D^\beta$ deserves scrutiny. Why should the capacity-limited and data-limited contributions simply add?
+The additive form $L = E + A/N^\alpha + B/D^\beta$ deserves scrutiny. Why should the capacity-limited and *data-limited* contributions simply add?
 
 The justification is that each term represents an **independent source of excess loss above the irreducible floor**:
 
@@ -300,9 +300,9 @@ Using the paper's reported values:
 
 $$N^* \propto C^{0.73}, \qquad D^* \propto C^{0.27}$$
 
-**Interpretation.** When compute doubles ($C \to 2C$), the optimal model size scales as $2^{0.73} \approx 1.66\times$ while the optimal token count scales only as $2^{0.27} \approx 1.21\times$. Parameters should scale roughly $2.7\times$ faster than data per compute doubling. This prescription says: **scale models aggressively, and data relatively modestly.** GPT-3 (Brown et al. 2020) follows this prescription closely: 175B parameters trained on approximately 300B tokens, a ratio consistent with the Kaplan compute-efficient frontier.
+**Interpretation.** When compute doubles ($C \to 2C$), the optimal model size scales as $2^{0.73} \approx 1.66\times$ while the optimal token count scales only as $2^{0.27} \approx 1.21\times$. **Parameters should scale roughly $2.7\times$ faster than data per compute doubling.** This prescription says: **scale models aggressively, and data relatively modestly.** GPT-3 (Brown et al. 2020) follows this prescription closely: 175B parameters trained on approximately 300B tokens, a ratio consistent with the Kaplan compute-efficient frontier.
 
-This conclusion would later be contested by Hoffmann et al. (2022), who argued that Kaplan et al.'s fitting procedure — particularly the use of single-epoch data runs to estimate $\beta$ — systematically underestimated the data exponent. The Chinchilla result, with $\alpha \approx \beta$, implies equal scaling of parameters and tokens per compute doubling, overturning the "scale models faster" prescription.
+This conclusion would later be contested by Hoffmann et al. (2022), who argued that Kaplan et al.'s fitting procedure — particularly the use of single-epoch data runs to estimate $\beta$ — systematically underestimated the data exponent. **The Chinchilla result, with $\alpha \approx \beta$, implies equal scaling of parameters and tokens per compute doubling, overturning the "scale models faster" prescription.**
 
 ---
 
@@ -317,7 +317,7 @@ Chinchilla's key innovation is experimental design. Rather than varying $N$ whil
 The procedure is:
 
 1. Choose a set of compute budgets $\{C_1, C_2, \ldots\}$ spanning several orders of magnitude.
-2. For each $C_i$, train many models at different $(N, D)$ pairs satisfying $6ND = C_i$. These are **IsoFLOP curves** — each curve holds compute constant and trades parameters for tokens.
+2. For each $C_i$, train many models at different $(N, D)$ pairs satisfying $6ND = C_i$. These are ***IsoFLOP curves*** — each curve holds compute constant and trades parameters for tokens.
 3. Each run uses all $D$ tokens in a single pass (no multi-epoch training), so the comparison is clean: every model on the curve $6ND = C_i$ uses exactly $C_i$ FLOPs.
 4. Record the final loss for each run and find $(N^*, D^*)$ that minimizes it on each IsoFLOP curve.
 5. Fit the relationship between $C_i$ and $(N^*_i, D^*_i)$ across curves.
@@ -471,7 +471,7 @@ $$L(D; N_i) = E_{N_i} + \frac{B_{N_i}}{D^{\beta}}$$
 
 via OLS in log-space to obtain estimates $\hat{E}_{N_i}$ and $\hat{\beta}_{N_i}$.
 
-Then treat $\hat{E}_{N_i}$ as the effective irreducible loss at model size $N_i$ and fit:
+Then treat $\hat{E}_{N_i}$ as the effective *irreducible loss* at model size $N_i$ and fit:
 
 $$\hat{E}_{N_i} = E + \frac{A}{N_i^\alpha}$$
 
