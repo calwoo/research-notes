@@ -39,9 +39,14 @@ docs/           ← documentation and design docs
 - `concepts/attention-transformer/solutions.md` — full answer key
 
 **Exercise file structure** (every `exercises.md` must follow this order):
-1. **Derivation problems** — mathematical proofs and re-derivations
-2. **Conceptual questions** — intuition and reasoning questions
-3. **Implementation sketches** — pseudocode or math-level algorithm sketches
+1. **Mathematical Development** — derivations, proofs, limit arguments, and mathematically sharp conceptual results (16–18 problems)
+2. **Algorithmic Applications** — pseudocode sketches, numerical implementation, complexity analysis (5–7 problems)
+
+Problems are numbered continuously 1–N across both sections. Each problem requires:
+- An italic 1–2 sentence preamble stating what the problem establishes
+- A `> **Prerequisites:**` blockquote linking to the relevant note section via Obsidian wikilink
+
+Solutions use **Key insight** + **Sketch** format (not full worked derivations).
 
 ## Notes Format
 
