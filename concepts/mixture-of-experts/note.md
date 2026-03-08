@@ -52,6 +52,9 @@ Concretely, suppose a dense feed-forward network has $P$ parameters and costs $F
 
 This is the parameter-efficiency argument: for a fixed inference compute budget, MoE models can achieve better quality than dense models because they can access vastly more parameters without paying the full FLOP cost.
 
+![Dense decoder block vs sparse MoE decoder block: the single FFNN is replaced by multiple expert FFNNs](figures/grootendorst2024-dense-vs-sparse-decoder.png)
+*Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. A dense Transformer decoder block (left) uses a single FFNN sublayer; a sparse MoE decoder block (right) replaces it with multiple parallel expert FFNNs, only a subset of which are activated per token.*
+
 ### Conditional Computation as a Principle
 
 The broader principle underlying MoE is **conditional computation**: the idea that not every part of a network should be activated for every input. Bengio et al. (2013) articulated this formally as a research agenda: the computational graph of a neural network need not be fully traversed for each example; different inputs should trigger different subgraphs. MoE instantiates this principle at the layer level, where the "subgraph" is a single expert's feed-forward network.
@@ -102,6 +105,9 @@ This concentrates the gate mass onto a selected subset, while the experts in $\m
 
 The top-$k$ selection is not differentiable: the set $\mathcal{T}(x)$ is a discrete function of $z(x)$, so gradients cannot flow through the selection boundary. In practice, training works by treating the selected set as given (stop-gradient on the selection) and backpropagating through the softmax weights and through the selected experts' outputs. This is a valid but heuristic approximation to the true gradient.
 
+![Hard top-k gating flow: input X through router weight matrix W produces logits H(x), KeepTopK masks non-selected experts to -inf, Softmax produces sparse gate G(x), selected expert output E(x) is scaled by gate weight to produce output y](figures/grootendorst2024-hard-topk-gating-flow.png)
+*Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. The hard top-k gating computation: input $x$ is projected through the router weight matrix $W$ to produce logits $H(x)$; KeepTopK sets all but the top-$k$ entries to $-\infty$; Softmax over the surviving logits yields the sparse gate $G(x)$; only the selected expert's output $E(x)$ is computed and scaled by the gate weight to produce the final output $y$.*
+
 ### Relation to Ensemble Methods
 
 The soft MoE output $y = \sum_i g_i(x) f_i(x)$ is formally a weighted ensemble, where the weights $g_i(x)$ depend on the input. This is a **mixture of experts** rather than a **committee** (equal weights) or a **boosting ensemble** (sequential, residual correction). The critical distinction from static ensembles is that the gating is input-conditional: the mixture weights $g_i(x)$ vary with $x$, implementing a learned partition (soft or hard) of the input space among specialists.
@@ -130,6 +136,9 @@ The noise magnitude $\operatorname{Softplus}((W_n^\top x)_i)$ is itself learned,
 
 The noise serves two functions: (1) it stochastically promotes underutilized experts by occasionally routing tokens to them despite lower mean logits, and (2) its gradient through $W_n$ provides a signal to the noise scaling network based on how beneficial or detrimental the exploration was. This constitutes a form of RL-inspired exploration in the gating.
 
+![Noisy top-k gating formula: H(x) = x * W + n, where W is the router weight matrix and n is Gaussian noise scaled by Softplus](figures/grootendorst2024-noisy-gating-formula.png)
+*Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. The noisy top-k gating formula: the routing logit $H(x) = xW + n$ adds a small Gaussian noise term $n$ to the linear projection, introducing stochasticity that prevents routing collapse by occasionally promoting underutilized experts.*
+
 **Remark (Inference).** At inference time, the noise term is set to zero: $H_i(x) = z_i(x)$. The gating is deterministic.
 
 ### The Load Imbalance Problem
@@ -141,6 +150,9 @@ Formally, let $\mathcal{B}$ be a batch of $T$ tokens. Define the **load** of exp
 $$\text{Load}_i(\mathcal{B}) = \sum_{x \in \mathcal{B}} \mathbf{1}[i \in \mathcal{T}(x)]$$
 
 A balanced configuration would have $\text{Load}_i(\mathcal{B}) = kT/E$ for all $i$ (equal share of $k$ activations per token distributed over $E$ experts). Any deviation from this is load imbalance. The challenge is encouraging balance without eliminating the specialization that makes MoE useful.
+
+![Load imbalance: tokens from a batch routed predominantly to FFNN 1 while FFNN 2 and FFNN 3 receive almost none](figures/grootendorst2024-load-imbalance.png)
+*Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. An illustration of load imbalance: the router assigns the majority of tokens in a batch to a single expert (FFNN 1), while the remaining experts sit idle. This creates a computational bottleneck and prevents unused experts from receiving gradient updates.*
 
 ---
 
@@ -201,6 +213,9 @@ $$C = \left\lfloor \frac{kT}{E} \cdot \phi \right\rfloor$$
 where $\phi \geq 1$ is the **capacity factor**. Each expert processes at most $C$ tokens; tokens routed to an already-full expert are **dropped** — their expert representation is replaced by the residual (the token representation before the MoE layer), so the expert contributes zero to that token's output.
 
 A capacity factor of $\phi = 1$ means the expert handles exactly its fair share, and any imbalance causes dropping. A capacity factor of $\phi = 1.25$ provides a 25% buffer above the uniform share, reducing dropping at the cost of pre-allocating extra compute capacity. For inference, capacity factor constraints are typically relaxed or removed.
+
+![Expert capacity enforcement: FFNN 1 has reached capacity (3 tokens), so overflow tokens are redirected to FFNN 4 instead](figures/grootendorst2024-expert-capacity.png)
+*Source: Grootendorst (2024), A Visual Guide to Mixture of Experts. Expert capacity in practice: when FFNN 1 has already processed its capacity (here, 3 tokens), any additional tokens that the router would send to it are instead redirected to the next preferred expert (FFNN 4). Tokens with no available expert slot are dropped.*
 
 **Remark (Token Dropping as a Regularizer).** Token dropping is not merely an engineering constraint. It can be interpreted as a training-time regularizer: tokens whose first-choice expert is at capacity must rely on their second or subsequent choices, which forces those tokens to be processable by multiple experts and prevents over-specialization of the routing.
 
@@ -399,3 +414,4 @@ Router initialization matters because routing decisions in the first few steps o
 | Jiang et al. (2024) — Mixtral of Experts | Presents Mixtral 8x7B, a top-2 sparse MoE LLM with 46.7B total / 12.9B active parameters; outperforms Llama 2 70B on most benchmarks with 5x fewer active parameters. | [arXiv:2401.04088](https://arxiv.org/abs/2401.04088) |
 | Mu and Lin (2025) — A Comprehensive Survey of MoE | Broad survey of MoE algorithms, theory, and applications spanning continual learning, meta-learning, multi-task learning, reinforcement learning, vision, and NLP. | [arXiv:2503.07137](https://arxiv.org/abs/2503.07137) |
 | Bengio et al. (2013) — Estimating or Propagating Gradients Through Stochastic Neurons | Formalizes conditional computation as a research agenda; discusses gradient estimation through discrete stochastic decisions. | [arXiv:1305.2982](https://arxiv.org/abs/1305.2982) |
+| Grootendorst 2024 (Visual Guide to MoE) | Illustrated walkthrough of MoE routing, load balancing, and expert specialization | https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-mixture-of-experts |
