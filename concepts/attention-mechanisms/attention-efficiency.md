@@ -132,6 +132,9 @@ The same factorization applies to $\mathbf{W}_V^{\text{MHA}}$. This perspective 
 
 Larger models benefit more from GQA, because they use more heads (making MQA's single-head constraint more severe) while the relative FLOPs consumed by KV cache loading decrease (quadratic FLOPs vs linear KV bandwidth).
 
+![Figure 2 from Ainslie et al. (2023): side-by-side comparison of Multi-Head Attention, Grouped-Query Attention, and Multi-Query Attention head structures](figures/gqa2023-fig2-mha-gqa-mqa-comparison.png)
+*Figure 2 (Ainslie et al., 2023): MHA gives every query head its own K and V head (left). GQA-G assigns one K/V head per group of H/G query heads (centre). MQA collapses all heads to a single shared K and V (right). The memory cost of the KV cache scales as the number of K/V heads, so the three designs represent a continuum from maximum expressiveness (MHA) to minimum cache footprint (MQA).*
+
 ---
 
 ## 4. Rotary Positional Embeddings
@@ -157,6 +160,9 @@ Since $\mathbf{R}(\phi)$ is orthogonal, $\mathbf{R}(m\theta)^{\top} = \mathbf{R}
 $$\left[\mathbf{R}(m\theta)\mathbf{q}\right]^{\top} \left[\mathbf{R}(n\theta)\mathbf{k}\right] = \mathbf{q}^{\top} \mathbf{R}((n-m)\theta) \mathbf{k}$$
 
 **The dot product depends only on the relative position $n - m$, not on $m$ or $n$ individually.**
+
+![Figure 1 from Su et al. (2021): illustration of the Rotary Position Embedding mechanism](figures/roformer2021-fig1-rope-illustration.png)
+*Figure 1 (Su et al., 2021): Implementation of Rotary Position Embedding. Each query and key vector is multiplied by a block-diagonal rotation matrix whose angle is proportional to the token's absolute position. Because the rotation of Q at position m and the rotation of K at position n combine to a net rotation by (n − m), the resulting dot product encodes only the relative offset between the two positions.*
 
 ### 4.3 Extension to Higher Dimensions
 
@@ -211,6 +217,9 @@ where $\mathbf{W}_K^{\text{up},h} \in \mathbb{R}^{d_k \times d_c}$ and $\mathbf{
 $$\frac{\text{MLA cache size}}{\text{MHA cache size}} = \frac{d_c}{2 H d_k}$$
 
 For the DeepSeek-V2 numbers: $512 / (2 \times 128 \times 128) = 512 / 32{,}768 \approx 1.6\%$ of MHA.
+
+![Figure 3 from DeepSeek-AI (2024): simplified comparison of MHA, GQA, MQA, and MLA attention mechanisms](figures/deepseekv2-fig3-mla-architecture.png)
+*Figure 3 (DeepSeek-AI, 2024): Simplified illustration of Multi-Head Attention (MHA), Grouped-Query Attention (GQA), Multi-Query Attention (MQA), and Multi-Head Latent Attention (MLA). MLA replaces the per-head K and V tensors with a single low-dimensional latent vector $\mathbf{c}_t^{KV}$ of size $d_c$, which is projected back to full K and V representations via learned up-projections. Only this latent is stored in the KV cache, achieving a ~57× reduction over MHA.*
 
 ### 5.2 Query Compression
 
