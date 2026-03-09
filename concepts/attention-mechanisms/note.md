@@ -1,0 +1,243 @@
+# Standard Softmax Attention Mechanisms
+
+## Table of Contents
+
+- [[#1. Introduction and Motivation|1. Introduction and Motivation]]
+- [[#2. Single-Head Scaled Dot-Product Attention|2. Single-Head Scaled Dot-Product Attention]]
+  - [[#2.1 Query, Key, Value Projections|2.1 Query, Key, Value Projections]]
+  - [[#2.2 Attention Score Computation and Causal Masking|2.2 Attention Score Computation and Causal Masking]]
+  - [[#2.3 Softmax Normalization and Weighted Aggregation|2.3 Softmax Normalization and Weighted Aggregation]]
+  - [[#2.4 Output Projection and Residual Connection|2.4 Output Projection and Residual Connection]]
+- [[#3. Matrix Form of Attention|3. Matrix Form of Attention]]
+- [[#4. Multi-Head Attention|4. Multi-Head Attention]]
+- [[#5. KV Caching|5. KV Caching]]
+  - [[#5.1 Motivation: Avoiding Redundant Computation During Decoding|5.1 Motivation: Avoiding Redundant Computation During Decoding]]
+  - [[#5.2 Memory Growth with Sequence Length|5.2 Memory Growth with Sequence Length]]
+  - [[#5.3 Variants: GQA, MLA, and Sparse Attention|5.3 Variants: GQA, MLA, and Sparse Attention]]
+- [[#6. References|6. References]]
+
+---
+
+## 1. Introduction and Motivation
+
+Modern language models process text as a sequence of discrete tokens. After embedding, each token is represented as a vector in $\mathbb{R}^D$. A central challenge is allowing each token to *selectively aggregate information* from other tokens in the sequence — a mechanism called *attention*.
+
+The key deficiency of earlier architectures (RNNs, LSTMs) was the *sequential bottleneck*: information from token $i$ must pass through all intermediate hidden states to influence token $j \gg i$, creating vanishing gradient paths and preventing parallelism during training. The *self-attention* mechanism, introduced by Vaswani et al. (2017), resolves both problems by computing pairwise interactions between all tokens in $O(1)$ sequential steps, at the cost of $O(T^2)$ memory and compute per layer, where $T$ is the sequence length.
+
+This note develops standard softmax attention rigorously from first principles, building from the single-head case to multi-head attention and the key-value caching technique used during autoregressive inference. The companion note `linear-attention.md` covers the recurrent and linear attention reformulations that trade the $O(T^2)$ compute cost for a bounded-memory recurrence.
+
+**Notation.** Throughout, scalars are lowercase italic ($q$, $k$, $v$, $d$), vectors are lowercase bold ($\mathbf{q}$, $\mathbf{k}$), and matrices are uppercase bold ($\mathbf{W}$, $\mathbf{Q}$, $\mathbf{K}$, $\mathbf{V}$). The sequence length is $T$, the embedding dimension is $D$, and the per-head key/query dimension is $d_k$ with value dimension $d_v$.
+
+---
+
+## 2. Single-Head Scaled Dot-Product Attention
+
+We develop single-head attention for an autoregressive (decoder-only) setting, where each token may only attend to itself and tokens that precede it in the sequence (*causal masking*).
+
+Let the input to the attention layer be $T$ vectors $\mathbf{x}_1, \mathbf{x}_2, \ldots, \mathbf{x}_T \in \mathbb{R}^D$, one per token.
+
+### 2.1 Query, Key, Value Projections
+
+**Definition (Q/K/V Projections).** Given input embeddings $\mathbf{x}_t \in \mathbb{R}^D$, the attention mechanism defines three learned linear maps:
+
+$$\mathbf{q}_t = \mathbf{W}_Q \mathbf{x}_t, \quad \mathbf{k}_t = \mathbf{W}_K \mathbf{x}_t, \quad \mathbf{v}_t = \mathbf{W}_V \mathbf{x}_t$$
+
+where $\mathbf{W}_Q, \mathbf{W}_K \in \mathbb{R}^{d_k \times D}$ and $\mathbf{W}_V \in \mathbb{R}^{d_v \times D}$ are parameter matrices. The resulting vectors $\mathbf{q}_t, \mathbf{k}_t \in \mathbb{R}^{d_k}$ and $\mathbf{v}_t \in \mathbb{R}^{d_v}$ are the *query*, *key*, and *value* for token $t$, respectively.
+
+**Intuition.** The query $\mathbf{q}_t$ encodes "what information is token $t$ looking for?" The keys $\mathbf{k}_j$ encode "what information does token $j$ offer?" and the value $\mathbf{v}_j$ encodes "what content does token $j$ contribute if selected?" This phrasing is heuristic — the projections are jointly learned end-to-end and the division of roles emerges from training.
+
+In the original Transformer, $d_k = d_v = D / H$ where $H$ is the number of attention heads (see Section 4). For the single-head case take $d_k = d_v = D$.
+
+### 2.2 Attention Score Computation and Causal Masking
+
+**Definition (Raw Attention Score).** The raw attention score of token $t$ with respect to token $j$ is the inner product:
+
+$$e_{tj} = \mathbf{q}_t^\top \mathbf{k}_j \in \mathbb{R}$$
+
+This score measures the alignment between the query of token $t$ and the key of token $j$.
+
+**Why does the dot product serve as a compatibility score?** If $\mathbf{W}_Q$ and $\mathbf{W}_K$ learn to map semantically similar concepts to nearby directions, then $\mathbf{q}_t^\top \mathbf{k}_j$ is large when token $j$ is relevant to token $t$, and small (or negative) otherwise. The softmax in the next step converts these raw scores into a probability distribution.
+
+**Scaling.** A critical detail is that the dot product is scaled by $1/\sqrt{d_k}$ before the softmax. The motivation is as follows. Assume the components of $\mathbf{q}_t$ and $\mathbf{k}_j$ are i.i.d. with mean $0$ and variance $1$. Then the dot product $e_{tj} = \sum_{i=1}^{d_k} q_i k_i$ has:
+
+$$\mathbb{E}[e_{tj}] = \sum_{i=1}^{d_k} \mathbb{E}[q_i]\,\mathbb{E}[k_i] = 0$$
+
+$$\operatorname{Var}(e_{tj}) = \sum_{i=1}^{d_k} \operatorname{Var}(q_i k_i) = \sum_{i=1}^{d_k} \mathbb{E}[q_i^2]\,\mathbb{E}[k_i^2] = d_k$$
+
+So the standard deviation of $e_{tj}$ grows as $\sqrt{d_k}$. For large $d_k$, the raw scores are large in magnitude, which drives the softmax into a near-one-hot regime where almost all weight concentrates on a single token. In this saturated regime, the softmax gradient becomes vanishingly small:
+
+$$\frac{\partial \text{softmax}(s)_j}{\partial s_j} = \text{softmax}(s)_j\,(1 - \text{softmax}(s)_j) \approx 0 \quad \text{when } \text{softmax}(s)_j \approx 1$$
+
+**The fix** is to scale the scores: $\tilde{e}_{tj} = e_{tj}/\sqrt{d_k}$. Under the same independence assumption, $\operatorname{Var}(\tilde{e}_{tj}) = 1$, restoring the softmax inputs to a regime with healthy gradients regardless of $d_k$.
+
+**Definition (Causal Mask).** In autoregressive generation, token $t$ is not permitted to attend to tokens $j > t$ (future tokens are not yet generated). The *causal mask* $M \in \mathbb{R}^{T \times T}$ encodes this constraint:
+
+$$M_{tj} = \begin{cases} 0 & \text{if } j \leq t \\ -\infty & \text{if } j > t \end{cases}$$
+
+Adding $M_{tj}$ to the scaled score $\tilde{e}_{tj}$ before softmax sets the attention weight for all future tokens to $\exp(-\infty) = 0$, exactly implementing the causal constraint.
+
+### 2.3 Softmax Normalization and Weighted Aggregation
+
+**Definition (Attention Weights).** The attention weight that token $t$ assigns to token $j$ is:
+
+$$\alpha_{tj} = \frac{\exp\!\left(\tilde{e}_{tj} + M_{tj}\right)}{\displaystyle\sum_{j'=1}^{T} \exp\!\left(\tilde{e}_{tj'} + M_{tj'}\right)}$$
+
+Due to the causal mask, this simplifies to:
+
+$$\alpha_{tj} = \frac{\exp\!\left(\mathbf{q}_t^\top \mathbf{k}_j / \sqrt{d_k}\right)}{\displaystyle\sum_{j'=1}^{t} \exp\!\left(\mathbf{q}_t^\top \mathbf{k}_{j'} / \sqrt{d_k}\right)}, \quad j \leq t, \quad \alpha_{tj} = 0 \text{ for } j > t$$
+
+The weights $\{\alpha_{tj}\}_{j=1}^{t}$ form a valid probability distribution on the tokens up to and including $t$.
+
+**Definition (Attention Output).** The output of the attention computation for token $t$ is the weighted sum of value vectors over all tokens that $t$ is permitted to attend to:
+
+$$\mathbf{o}_t = \sum_{j=1}^{t} \alpha_{tj}\, \mathbf{v}_j \in \mathbb{R}^{d_v}$$
+
+This is a *convex combination* of value vectors. If the attention weights are nearly one-hot (concentrated on token $j^*$), then $\mathbf{o}_t \approx \mathbf{v}_{j^*}$, effectively "retrieving" the value associated with the most relevant key. When weights are diffuse, $\mathbf{o}_t$ is a soft blend of multiple value vectors.
+
+### 2.4 Output Projection and Residual Connection
+
+The attention output $\mathbf{o}_t \in \mathbb{R}^{d_v}$ lives in the value space. To return to the embedding dimension $D$ (required for subsequent layers), a learned *output projection* $\mathbf{W}_O \in \mathbb{R}^{D \times d_v}$ is applied:
+
+$$\mathbf{z}_t = \mathbf{W}_O\, \mathbf{o}_t \in \mathbb{R}^D$$
+
+A *residual connection* then adds the original embedding back to the projected attention output:
+
+$$\hat{\mathbf{x}}_t = \mathbf{x}_t + \mathbf{z}_t$$
+
+The residual connection serves two purposes: (1) it gives the gradient a direct path from the loss back to earlier layers, alleviating vanishing gradients in deep networks; (2) it allows the attention sublayer to learn a *correction* or *update* to the existing representation rather than reconstructing it from scratch.
+
+*In practice, layer normalization is applied either before (pre-norm) or after (post-norm) the attention sublayer, but we omit this detail as it does not affect the attention computation itself.*
+
+---
+
+## 3. Matrix Form of Attention
+
+The per-token description in Section 2 is pedagogically clear but computationally inconvenient. In practice, all tokens in the sequence are processed simultaneously via matrix operations.
+
+**Definition (Matrix Attention).** Stack all queries, keys, and values into matrices:
+
+$$\mathbf{Q} = \begin{bmatrix} \mathbf{q}_1^\top \\ \vdots \\ \mathbf{q}_T^\top \end{bmatrix} \in \mathbb{R}^{T \times d_k}, \quad \mathbf{K} = \begin{bmatrix} \mathbf{k}_1^\top \\ \vdots \\ \mathbf{k}_T^\top \end{bmatrix} \in \mathbb{R}^{T \times d_k}, \quad \mathbf{V} = \begin{bmatrix} \mathbf{v}_1^\top \\ \vdots \\ \mathbf{v}_T^\top \end{bmatrix} \in \mathbb{R}^{T \times d_v}$$
+
+These are themselves computed from the input matrix $\mathbf{X} = [\mathbf{x}_1, \ldots, \mathbf{x}_T]^\top \in \mathbb{R}^{T \times D}$:
+
+$$\mathbf{Q} = \mathbf{X}\mathbf{W}_Q^\top, \quad \mathbf{K} = \mathbf{X}\mathbf{W}_K^\top, \quad \mathbf{V} = \mathbf{X}\mathbf{W}_V^\top$$
+
+The *score matrix* $\mathbf{S} \in \mathbb{R}^{T \times T}$ collects all pairwise scaled dot products:
+
+$$\mathbf{S} = \frac{\mathbf{Q}\mathbf{K}^\top}{\sqrt{d_k}}$$
+
+where $S_{tj} = \mathbf{q}_t^\top \mathbf{k}_j / \sqrt{d_k}$ as desired.
+
+**Definition (Masked Scaled Dot-Product Attention).** The full causal attention computation in matrix form is:
+
+$$\text{Attn}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \text{softmax}\!\left(\frac{\mathbf{Q}\mathbf{K}^\top}{\sqrt{d_k}} + \mathbf{M}\right)\mathbf{V}$$
+
+where the softmax is applied row-wise, and $\mathbf{M} \in \mathbb{R}^{T \times T}$ is the causal mask with $M_{tj} = 0$ for $j \leq t$ and $M_{tj} = -\infty$ for $j > t$. In standard matrix notation, $\mathbf{M}$ is the *strictly upper-triangular* $-\infty$ mask (with zeros on and below the diagonal).
+
+**Remark (Complexity).** The computation $\mathbf{Q}\mathbf{K}^\top$ requires $O(T^2 d_k)$ floating-point operations and produces a $T \times T$ matrix requiring $O(T^2)$ memory. **This quadratic dependence on sequence length is the fundamental bottleneck of softmax attention.** For a sequence of length $T = 128{,}000$ (a common modern context length), the attention matrix alone would require roughly $128{,}000^2 \times 4\,\text{bytes} \approx 62\,\text{GB}$ in float32 — far exceeding typical device memory. Techniques such as FlashAttention (Dao et al., 2022) avoid materializing this matrix explicitly by fusing the softmax and value aggregation into a single pass, but the asymptotic cost remains $O(T^2)$.
+
+---
+
+## 4. Multi-Head Attention
+
+A single attention head computes a single weighted combination of value vectors. *Multi-head attention* runs $H$ attention heads in parallel, each operating in a distinct $d_k$-dimensional subspace of the embedding.
+
+**Definition (Multi-Head Attention).** Let $H$ be the number of heads. For each head $h \in \{1, \ldots, H\}$, introduce separate projection matrices:
+
+$$\mathbf{W}_Q^{(h)} \in \mathbb{R}^{d_k \times D}, \quad \mathbf{W}_K^{(h)} \in \mathbb{R}^{d_k \times D}, \quad \mathbf{W}_V^{(h)} \in \mathbb{R}^{d_v \times D}$$
+
+The $h$-th head output is:
+
+$$\text{head}_h = \text{Attn}\!\left(\mathbf{X}\mathbf{W}_Q^{(h)\top},\, \mathbf{X}\mathbf{W}_K^{(h)\top},\, \mathbf{X}\mathbf{W}_V^{(h)\top}\right) \in \mathbb{R}^{T \times d_v}$$
+
+The $H$ head outputs are concatenated along the feature dimension:
+
+$$\text{MultiHead}(\mathbf{X}) = \left[\text{head}_1 \;\Big|\; \text{head}_2 \;\Big|\; \cdots \;\Big|\; \text{head}_H\right] \mathbf{W}_O$$
+
+where $[\cdot | \cdots | \cdot]$ denotes column-wise concatenation producing a $T \times (H d_v)$ matrix, and $\mathbf{W}_O \in \mathbb{R}^{H d_v \times D}$ is the shared output projection that maps back to the embedding dimension $D$.
+
+**Standard dimensionality.** In the original Transformer (Vaswani et al., 2017), $d_k = d_v = D / H$, so each head projects down to a $D/H$-dimensional space. The concatenated output has dimension $H \cdot (D/H) = D$, so $\mathbf{W}_O \in \mathbb{R}^{D \times D}$. The total parameter count for all projections is:
+
+$$H \cdot (d_k D + d_k D + d_v D) + D \cdot D = 3D^2 + D^2 = 4D^2$$
+
+which is the same as four $D \times D$ matrices — equal to the parameter count of a single-head attention with $d_k = d_v = D$. **Multi-head attention achieves representational diversity at no extra parameter cost relative to a single full-rank head.**
+
+**Why multiple heads?** Each head learns a different linear projection of queries, keys, and values. The model can simultaneously attend to relationships at different positions and in different feature subspaces — for example, one head may capture syntactic dependencies while another captures semantic similarity. This is a structural inductive bias enabling richer representations, though the specific role of each head is not directly controlled during training.
+
+**Remark (Equivalence to a single large head).** When $H = 1$ and $d_k = d_v = D$, multi-head attention reduces exactly to single-head attention with $\mathbf{W}_Q, \mathbf{W}_K, \mathbf{W}_V, \mathbf{W}_O \in \mathbb{R}^{D \times D}$.
+
+---
+
+## 5. KV Caching
+
+### 5.1 Motivation: Avoiding Redundant Computation During Decoding
+
+Autoregressive generation proceeds token by token. At decode step $t$, the model has already generated tokens $1, \ldots, t-1$ and must produce token $t$. The attention computation at step $t$ requires the queries, keys, and values for all tokens $1, \ldots, t$.
+
+**Without caching**, one would recompute $\mathbf{k}_j = \mathbf{W}_K \mathbf{x}_j$ and $\mathbf{v}_j = \mathbf{W}_V \mathbf{x}_j$ for every past token $j < t$ at every decode step. This is pure waste: the embeddings $\mathbf{x}_j$ for $j < t$ are fixed (they were generated in prior steps), so their keys and values are also fixed.
+
+**With caching**, define the *KV cache* for a layer as:
+
+$$\mathcal{C}_t = \bigl\{(\mathbf{k}_1, \mathbf{v}_1), \ldots, (\mathbf{k}_{t-1}, \mathbf{v}_{t-1})\bigr\}$$
+
+At step $t$:
+1. Compute only $\mathbf{q}_t$, $\mathbf{k}_t$, $\mathbf{v}_t$ for the new token.
+2. Append $(\mathbf{k}_t, \mathbf{v}_t)$ to the cache: $\mathcal{C}_{t+1} = \mathcal{C}_t \cup \{(\mathbf{k}_t, \mathbf{v}_t)\}$.
+3. Compute the attention output using the cached keys and values: $\mathbf{o}_t = \sum_{j=1}^{t} \alpha_{tj}\, \mathbf{v}_j$.
+
+*The query $\mathbf{q}_t$ must be recomputed at each step because it depends on the new token embedding $\mathbf{x}_t$, which is only available at step $t$. Keys and values for prior tokens are reused without recomputation.*
+
+**Prefill vs. decode.** In practice, generation divides into two phases:
+
+- *Prefill*: The full prompt of $T_0$ tokens is processed in a single parallel forward pass (using the matrix form of Section 3). The resulting keys and values for all $T_0$ tokens are written into the cache.
+- *Decode*: Each subsequent token is generated one at a time, reading from and extending the cache.
+
+### 5.2 Memory Growth with Sequence Length
+
+**Definition (KV Cache Memory).** For a transformer with $L$ layers, $H$ heads per layer, head dimension $d_k = d_v = d$, and a sequence of length $T$ tokens, the KV cache requires:
+
+$$\text{Memory}_{\text{KV}} = 2 \times L \times H \times T \times d \text{ elements}$$
+
+(the factor of $2$ accounts for storing both keys and values). Since $H \times d = D$ (the model embedding dimension), this simplifies to:
+
+$$\text{Memory}_{\text{KV}} = 2 L T D \text{ elements}$$
+
+In float16 (2 bytes per element), this is $4 L T D$ bytes. **The KV cache memory grows linearly with sequence length $T$.** For a model with $L = 80$ layers, $D = 8192$ (e.g., a 70B-parameter model), and $T = 128{,}000$:
+
+$$\text{Memory}_{\text{KV}} = 4 \times 80 \times 128{,}000 \times 8192 \approx 336\,\text{GB}$$
+
+This is often larger than the model weights themselves, making KV cache memory a primary bottleneck in long-context LLM serving.
+
+**Compute cost per decode step.** At decode step $t$, computing $\mathbf{q}_t^\top \mathbf{k}_j$ for all $j \leq t$ requires $O(t \cdot d)$ multiply-adds. Over $T - T_0$ decode steps, the total compute for attention is $O((T - T_0)^2 d)$ — still quadratic in the total generated length, but avoiding the redundant key/value recomputation that would add a factor of $(T - T_0)$.
+
+### 5.3 Variants: GQA, MLA, and Sparse Attention
+
+The linear memory cost of the KV cache (and the large absolute magnitudes for long contexts) has motivated several architectural variants that reduce the cache footprint.
+
+**Multi-Query Attention (MQA).** Proposed by Shazeer (2019), MQA uses a single shared key/value head across all query heads. Each head has its own $\mathbf{W}_Q^{(h)}$ but all $H$ heads share a single $\mathbf{W}_K$ and $\mathbf{W}_V$. This reduces the KV cache by a factor of $H$.
+
+**Grouped-Query Attention (GQA).** Ainslie et al. (2023) generalize MQA by grouping the $H$ query heads into $G$ groups ($1 \leq G \leq H$), where each group shares one key/value head. MHA corresponds to $G = H$ (each query head has its own KV head) and MQA corresponds to $G = 1$. **GQA achieves quality close to MHA with inference speed approaching MQA**, offering a practical interpolation between the two extremes.
+
+**Multi-Head Latent Attention (MLA).** Introduced in DeepSeek-V2 (2024), MLA compresses the KV cache by projecting keys and values into a low-dimensional *latent space* before caching. Specifically, a compressed representation $\mathbf{c}_t \in \mathbb{R}^{d_c}$ with $d_c \ll H d$ is cached, from which full-rank keys and values are reconstructed via learned up-projections at inference time. This reduces the per-token cache footprint from $2Hd$ to $d_c$ elements.
+
+**Sparse Attention.** Rather than attending to all $t$ preceding tokens, sparse attention patterns restrict each query to a subset of keys. Representative schemes include:
+- *Local (sliding-window) attention*: token $t$ attends only to tokens $[t - w, t]$ for window size $w$, achieving $O(Tw)$ memory.
+- *Global + local attention* (Longformer, Beltagy et al., 2020): a small number of designated global tokens attend to the full sequence, while all others use local windows.
+- *Random + local + global attention* (BigBird, Zaheer et al., 2020): adds random attention edges to the local + global pattern, proven to be a universal sequence function approximator.
+
+*Sparse patterns preserve the core softmax attention computation but are architecturally constrained — they must be designed or learned carefully to avoid dropping critical long-range dependencies.*
+
+---
+
+## 6. References
+
+| Reference Name | Brief Summary | Link to Reference |
+|---|---|---|
+| Vaswani et al. (2017), "Attention Is All You Need" | Introduces the Transformer architecture: scaled dot-product attention, multi-head attention, positional encodings, and the encoder-decoder structure | [arxiv.org/abs/1706.03762](https://arxiv.org/abs/1706.03762) |
+| Shazeer (2019), "Fast Transformer Decoding: One Write-Head is All You Need" | Introduces multi-query attention (MQA) with a single shared KV head, reducing inference memory cost by a factor of $H$ | [arxiv.org/abs/1911.02150](https://arxiv.org/abs/1911.02150) |
+| Ainslie et al. (2023), "GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints" | Proposes grouped-query attention (GQA) as an interpolation between MHA and MQA; shows uptrained GQA matches MHA quality at near-MQA speed | [arxiv.org/abs/2305.13245](https://arxiv.org/abs/2305.13245) |
+| DeepSeek-AI (2024), "DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model" | Introduces multi-head latent attention (MLA), compressing the KV cache via a low-dimensional latent projection | [arxiv.org/abs/2405.04434](https://arxiv.org/abs/2405.04434) |
+| Dao et al. (2022), "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness" | IO-aware algorithm for computing exact softmax attention without materializing the full $T \times T$ score matrix, using tiled SRAM-resident computation | [arxiv.org/abs/2205.14135](https://arxiv.org/abs/2205.14135) |
+| Beltagy et al. (2020), "Longformer: The Long-Document Transformer" | Introduces sliding-window local attention combined with task-specific global tokens, achieving $O(T)$ attention complexity | [arxiv.org/abs/2004.05150](https://arxiv.org/abs/2004.05150) |
+| Zaheer et al. (2020), "Big Bird: Transformers for Longer Sequences" | Extends Longformer with random attention edges; proves the sparse pattern is a universal approximator and Turing complete | [arxiv.org/abs/2007.14062](https://arxiv.org/abs/2007.14062) |
+| Umar Jamil, "Attention Mechanisms" (YouTube, 2024) | Video walkthrough of standard and linear attention mechanisms, covering Q/K/V projections, KV caching, and the recurrent reformulation | [youtu.be/pUCWwGR5WmQ](https://youtu.be/pUCWwGR5WmQ) |
