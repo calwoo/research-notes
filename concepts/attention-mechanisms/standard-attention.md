@@ -108,6 +108,12 @@ The residual connection serves two purposes: (1) it gives the gradient a direct 
 
 *In practice, layer normalization is applied either before (pre-norm) or after (post-norm) the attention sublayer, but we omit this detail as it does not affect the attention computation itself.*
 
+![Figure 2 (left) from Vaswani et al. (2017): Scaled Dot-Product Attention diagram](figures/vaswani2017-fig2left-scaled-dot-product-attention.png)
+*Figure 2, left (Vaswani et al., 2017): The scaled dot-product attention computation. Queries Q and Keys K are multiplied (MatMul), scaled by $1/\sqrt{d_k}$, optionally masked (the causal mask in decoder-only models), passed through Softmax to produce attention weights, then used to weight-sum the Values V via a final MatMul.*
+
+![Figure 1 from Vaswani et al. (2017): The full Transformer encoder-decoder architecture](figures/vaswani2017-fig1-transformer-architecture.png)
+*Figure 1 (Vaswani et al., 2017): The original Transformer architecture. The left stack is the encoder (bidirectional multi-head attention followed by feed-forward sublayers); the right stack is the decoder (causal masked multi-head attention, cross-attention over encoder outputs, then feed-forward sublayers). Decoder-only language models retain only the right stack with causal masking, discarding the encoder and cross-attention.*
+
 ---
 
 ## 3. Matrix Form of Attention
@@ -155,6 +161,9 @@ The $H$ head outputs are concatenated along the feature dimension:
 $$\text{MultiHead}(\mathbf{X}) = \left[\text{head}_1 \;\Big|\; \text{head}_2 \;\Big|\; \cdots \;\Big|\; \text{head}_H\right] \mathbf{W}_O$$
 
 where $[\cdot | \cdots | \cdot]$ denotes column-wise concatenation producing a $T \times (H d_v)$ matrix, and $\mathbf{W}_O \in \mathbb{R}^{H d_v \times D}$ is the shared output projection that maps back to the embedding dimension $D$.
+
+![Figure 2 (right) from Vaswani et al. (2017): Multi-Head Attention diagram](figures/vaswani2017-fig2right-multi-head-attention.png)
+*Figure 2, right (Vaswani et al., 2017): Multi-head attention. The inputs Q, K, V are each passed through $h$ separate learned linear projections (the stacked "Linear" boxes), then $h$ scaled dot-product attention computations run in parallel. Their outputs are concatenated and passed through a final linear projection (the "Linear" box at the top) to produce the multi-head output.*
 
 **Standard dimensionality.** In the original Transformer (Vaswani et al., 2017), $d_k = d_v = D / H$, so each head projects down to a $D/H$-dimensional space. The concatenated output has dimension $H \cdot (D/H) = D$, so $\mathbf{W}_O \in \mathbb{R}^{D \times D}$. The total parameter count for all projections is:
 
