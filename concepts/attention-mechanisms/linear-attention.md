@@ -100,6 +100,9 @@ The transition is linear in $S_{t-1}$ (the coefficient is the identity map), hen
 
 *Crucially, the hidden state $S_t$ has dimension $d_k \times d_v$ at every step, regardless of $T$.* During inference one need only store $S_t$, not all past keys and values.
 
+![Figure 3b from Sun et al. (2023): recurrent retention mechanism showing state update and read](figures/sun2023-fig3b-recurrent-retention.png)
+*Figure 3b (Sun et al., 2023): The recurrent form of the retention mechanism. At each step the recurrent state $S_{n-1}$ is scaled by the decay $\gamma$, incremented by the outer product $K_n^\top V_n$ (write), and then read by $Q_n$ to produce output $O_n$. This is exactly the linear attention recurrence $S_t = \gamma S_{t-1} + \mathbf{k}_t^\top \mathbf{v}_t$, $\mathbf{o}_t = \mathbf{q}_t S_t$, making the RNN structure of the state matrix explicit.*
+
 ### 2.4 Memory Complexity Comparison
 
 | Scheme | Inference memory per layer |
@@ -110,6 +113,9 @@ The transition is linear in $S_{t-1}$ (the coefficient is the identity map), hen
 **During inference, the linear attention state matrix costs $O(d_k \cdot d_v)$ memory regardless of sequence length, eliminating the KV-cache growth bottleneck.**
 
 For typical values $d_k = d_v = 128$, this is a matrix of $128 \times 128 = 16{,}384$ floats ($\approx 64$ KB per head) — fixed, no matter how long the sequence grows.
+
+![Figure 1 from Katharopoulos et al. (2020): time scaling comparison of softmax, linear, and Reformer attention](figures/katharopoulos2020-fig1-compute-comparison.png)
+*Figure 1 (Katharopoulos et al., 2020): Wall-clock time (ms) versus sequence length for softmax attention (blue, dashed, $O(T^2)$ slope), linear attention (black solid, $O(T)$ slope), and Reformer LSH variants (blue dotted). Linear attention's time grows linearly with $T$, while softmax attention grows quadratically — directly reflecting the constant-memory recurrence versus the KV-cache growth shown in the table above.*
 
 ---
 
@@ -197,6 +203,9 @@ The chunkwise form lends itself to a FlashAttention-style tiling strategy (used 
 
 By fusing all four operations (state update, $O_i^\text{inter}$, masked intra-chunk attention, output accumulation) into a single kernel, HBM reads/writes are minimized. This is the approach of Yang et al.'s FlashLinearAttention algorithm.
 
+![Figure from Dao & Gu (2024): SSD semiseparable matrix block decomposition and chunkwise algorithm](figures/dao2024-ssd-algorithm.png)
+*Figure (Dao & Gu, 2024): The SSD chunkwise algorithm. Top: the output matrix $Y = MX$ where $M$ is a semiseparable matrix, shown tiled into four block types — orange (diagonal intra-chunk, computed as masked attention), green (low-rank input-to-state), yellow (low-rank state-to-state recurrence), and blue (low-rank state-to-output). Bottom: the corresponding data-flow — inputs $X$ are processed within each chunk (intra), states $H$ accumulate across chunks (inter), and outputs $Y$ combine both contributions. This decomposition is exactly the chunkwise form $O_i = Q_i S_{i-1}^\text{end} + (Q_i K_i^\top \odot M)V_i$ derived above.*
+
 ---
 
 ## 5. Decay and Gating Mechanisms
@@ -233,6 +242,9 @@ where $\zeta_i$ is a per-token decay weight within the chunk. The factor $\gamma
 
 *The constant $\gamma$ is never updated at inference time — it is a fixed hyperparameter, not a learned function of the input.* This is both its strength (no input-dependent overhead) and its weakness (the effective memory horizon is fixed and cannot adapt to content).
 
+![Figure 3a from Sun et al. (2023): parallel retention form showing the masked attention computation](figures/sun2023-fig3a-parallel-retention.png)
+*Figure 3a (Sun et al., 2023): The parallel representation of retention. Input $X$ is projected to $Q$, $K$, $V$; the output is $(QK^\top \odot D)V$ where $D$ is the decay mask with $D_{t,j} = \gamma^{t-j}$; GroupNorm (GN) normalizes the result. This is the training-time parallel form of the RetNet recurrence — a standard masked matrix multiply with a geometric decay mask in place of the usual binary causal mask.*
+
 ### 5.3 Scalar Data-Dependent Decay: Mamba-2
 
 Dao and Gu (2024) introduce the *State Space Duality* (SSD) framework in Mamba-2. The key architectural change is making the decay a *scalar* function of the input at each step:
@@ -255,6 +267,9 @@ $$L_{t,j} = \prod_{s=j+1}^{t} \gamma_s \quad (t \geq j), \qquad L_{t,j} = 0 \qua
 
 Then $O = (L \odot Q K^\top) V$, which is a *structured masked attention* that generalizes RetNet's geometric decay mask. **The scalar constraint on $A_t$ is precisely what preserves the matrix-multiply structure in $L$**, keeping the chunkwise algorithm hardware-efficient.
 
+![Figure from Dao & Gu (2024): Mamba-2 block architecture comparing sequential and parallel forms](figures/dao2024-mamba2-architecture.png)
+*Figure (Dao & Gu, 2024): The Mamba-2 block in sequential (left) and parallel (right) forms. The SSM parameters $A$ (scalar decay), $X$ (input), $B$ (key analogue), and $C$ (query analogue) are produced by learned projections; the gating $\sigma$ on the right branch creates the SiLU-gated output. The key architectural change from Mamba-1 is that $A$, $B$, $C$ are now computed in parallel from the same input, making the block compatible with the tensor-parallel training setup required by the SSD chunkwise algorithm.*
+
 ### 5.4 Vector Data-Dependent Gating: GLA
 
 Yang et al. (2024) introduce *Gated Linear Attention* (GLA), which generalizes the scalar gate to a vector-valued gate while preserving the outer-product structure of the state update:
@@ -270,6 +285,8 @@ where $\boldsymbol{\alpha}_t \in \mathbb{R}^{d_k}$ and $\boldsymbol{\beta}_t \in
 Computing $\boldsymbol{\alpha}_t$ and $\boldsymbol{\beta}_t$ from input $x_t$ via a learned linear map adds minimal overhead. GLA empirically outperforms RetNet and standard linear attention while achieving training speed competitive with FlashAttention-2.
 
 RWKV-6 (Peng et al., 2024) uses a related vector gating scheme, applying data-dependent linear interpolation (*ddlerp*) to construct per-channel decay vectors, combined with LoRA-style low-rank adaptation for efficiency.
+
+<!-- Figure from Yang et al. (2024) "Gated Linear Attention" (arXiv 2312.06635) unavailable: ar5iv HTML conversion failed with fatal error; no accessible preprint figure source found -->
 
 ---
 
