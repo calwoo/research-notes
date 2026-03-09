@@ -34,7 +34,7 @@
 
 ## 1. Introduction: Beyond Quadratic Compute and Linear Memory
 
-Standard softmax attention (see companion note `note.md`) operates with $O(T^2 d_k)$ time and $O(T^2)$ memory per layer, where $T$ is the sequence length. During training this is managed by FlashAttention-style tiling, but during autoregressive inference a separate bottleneck emerges: the *KV cache*, which stores all $T$ key and value vectors seen so far and grows as $O(T \cdot (d_k + d_v))$ per layer. For a model with $L$ layers, a sequence of length $T = 128\text{k}$, and $d_k = d_v = 128$, this is tens of gigabytes per forward pass — limiting the batch size and thus throughput.
+Standard softmax attention (see companion note `standard-attention.md`) operates with $O(T^2 d_k)$ time and $O(T^2)$ memory per layer, where $T$ is the sequence length. During training this is managed by FlashAttention-style tiling, but during autoregressive inference a separate bottleneck emerges: the *KV cache*, which stores all $T$ key and value vectors seen so far and grows as $O(T \cdot (d_k + d_v))$ per layer. For a model with $L$ layers, a sequence of length $T = 128\text{k}$, and $d_k = d_v = 128$, this is tens of gigabytes per forward pass — limiting the batch size and thus throughput.
 
 This note addresses the family of architectures that replace softmax attention with a computation that:
 

@@ -102,7 +102,7 @@ Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, and Polosukhin (2017)
 
 $$\text{Attention}(Q, K, V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V$$
 
-The division by $\sqrt{d_k}$ is not cosmetic. Assume query and key components are i.i.d. with mean $0$ and variance $1$. The dot product $\mathbf{q}^\top \mathbf{k} = \sum_{i=1}^{d_k} q_i k_i$ then has variance $d_k$. For large $d_k$, these large-magnitude logits drive the softmax into a near-one-hot regime where gradients vanish. Scaling by $1/\sqrt{d_k}$ restores unit variance to the logits regardless of dimension, stabilizing training. See [[note#2. Single-Head Scaled Dot-Product Attention|§2 of note.md]] for a full derivation.
+The division by $\sqrt{d_k}$ is not cosmetic. Assume query and key components are i.i.d. with mean $0$ and variance $1$. The dot product $\mathbf{q}^\top \mathbf{k} = \sum_{i=1}^{d_k} q_i k_i$ then has variance $d_k$. For large $d_k$, these large-magnitude logits drive the softmax into a near-one-hot regime where gradients vanish. Scaling by $1/\sqrt{d_k}$ restores unit variance to the logits regardless of dimension, stabilizing training. See [[standard-attention#2. Single-Head Scaled Dot-Product Attention|§2 of standard-attention.md]] for a full derivation.
 
 Compared to Luong's general (bilinear) score, scaled dot-product attention is a special case where the weight matrix $\mathbf{W}_a$ is constrained to the identity scaled by $1/\sqrt{d_k}$. The key difference from Bahdanau's additive score is computational: no tanh evaluation, and the full $QK^\top$ matrix can be computed as a single matrix multiply.
 
@@ -207,7 +207,7 @@ $$m(x_1, x_2) = \max(m(x_1), m(x_2)), \qquad \ell(x_1, x_2) = e^{m(x_1) - m} \el
 
 **FlashAttention reduces HBM reads/writes from $O(T^2)$ to $O(T^2 / M)$** (where $M$ is the SRAM size), achieving 2–4× wall-clock speedup and reducing memory from $O(T^2)$ to $O(T)$ for the intermediate attention matrices. Arithmetic work is slightly increased, but the bottleneck is IO, not compute.
 
-FlashAttention-2 (2023) and FlashAttention-3 (2024) refined the tiling strategy and improved occupancy on H100 GPUs. The IO-aware design principle influenced virtually all subsequent efficient attention implementations. See [[note#5. KV Caching|§5 of note.md]] for the KV cache context.
+FlashAttention-2 (2023) and FlashAttention-3 (2024) refined the tiling strategy and improved occupancy on H100 GPUs. The IO-aware design principle influenced virtually all subsequent efficient attention implementations. See [[standard-attention#5. KV Caching|§5 of standard-attention.md]] for the KV cache context.
 
 ### 4.3 Multi-Query and Grouped-Query Attention
 

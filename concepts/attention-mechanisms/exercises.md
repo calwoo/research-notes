@@ -37,7 +37,7 @@
 
 *This problem establishes the statistical motivation for the $1/\sqrt{d_k}$ scaling factor by deriving the variance of the unscaled attention score and showing that scaling restores unit variance.*
 
-> **Prerequisites:** cf. note [[note#2.2 Attention Score Computation and Causal Masking|§2.2 — Attention Score Computation and Causal Masking]]
+> **Prerequisites:** cf. note [[standard-attention#2.2 Attention Score Computation and Causal Masking|§2.2 — Attention Score Computation and Causal Masking]]
 
 (a) Let $\mathbf{q}, \mathbf{k} \in \mathbb{R}^{d_k}$ with i.i.d. components satisfying $\mathbb{E}[q_i] = \mathbb{E}[k_i] = 0$ and $\operatorname{Var}(q_i) = \operatorname{Var}(k_i) = 1$, and suppose all $q_i, k_j$ are mutually independent. Compute $\mathbb{E}[\mathbf{q}^\top \mathbf{k}]$ and $\operatorname{Var}(\mathbf{q}^\top \mathbf{k})$.
 
@@ -49,7 +49,7 @@
 
 *This problem makes rigorous the claim that adding $-\infty$ to a softmax input drives that entry's weight exactly to zero, and extends the result to the numerical floating-point regime.*
 
-> **Prerequisites:** cf. note [[note#2.2 Attention Score Computation and Causal Masking|§2.2 — Attention Score Computation and Causal Masking]]
+> **Prerequisites:** cf. note [[standard-attention#2.2 Attention Score Computation and Causal Masking|§2.2 — Attention Score Computation and Causal Masking]]
 
 (a) Let $\mathbf{s} \in \mathbb{R}^T$ and let $\tilde{s}_j = s_j + M_j$ where $M_j \in \{0, -\infty\}$. Show that for any $j$ with $M_j = -\infty$, the $j$-th softmax output equals exactly $0$ regardless of the values $\{s_{j'}\}_{j' \neq j}$.
 
@@ -61,7 +61,7 @@
 
 *This problem proves that the matrix formula $\operatorname{Attn}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \operatorname{softmax}({\mathbf{Q}\mathbf{K}^\top}/{\sqrt{d_k}} + \mathbf{M})\mathbf{V}$ is row-for-row identical to the per-token computation.*
 
-> **Prerequisites:** cf. note [[note#3. Matrix Form of Attention|§3 — Matrix Form of Attention]]
+> **Prerequisites:** cf. note [[standard-attention#3. Matrix Form of Attention|§3 — Matrix Form of Attention]]
 
 (a) Let $A = \operatorname{softmax}(\mathbf{Q}\mathbf{K}^\top / \sqrt{d_k} + \mathbf{M})$, where softmax is applied row-wise. Show that the $t$-th row of $A$, denoted $\mathbf{a}_t^\top$, equals $(\alpha_{t1}, \ldots, \alpha_{tT})$ as defined in the per-token formula of §2.3.
 
@@ -71,9 +71,9 @@
 
 ### Problem 4: Multi-Head Attention Parameter Count
 
-*This problem re-derives the parameter count claimed in note.md — that multi-head attention has the same $4D^2$ parameters as four $D \times D$ matrices — and investigates what changes under non-standard dimensionality.*
+*This problem re-derives the parameter count claimed in standard-attention.md — that multi-head attention has the same $4D^2$ parameters as four $D \times D$ matrices — and investigates what changes under non-standard dimensionality.*
 
-> **Prerequisites:** cf. note [[note#4. Multi-Head Attention|§4 — Multi-Head Attention]]
+> **Prerequisites:** cf. note [[standard-attention#4. Multi-Head Attention|§4 — Multi-Head Attention]]
 
 (a) With $H$ heads, $d_k = d_v = D/H$, and a shared output projection $\mathbf{W}_O \in \mathbb{R}^{D \times D}$, verify that the total parameter count across all projection matrices $\{\mathbf{W}_Q^{(h)}, \mathbf{W}_K^{(h)}, \mathbf{W}_V^{(h)}\}_{h=1}^H$ and $\mathbf{W}_O$ equals $4D^2$, independent of $H$.
 
@@ -85,7 +85,7 @@
 
 *This problem establishes that large-magnitude inputs cause the softmax Jacobian to become rank-deficient, providing a rigorous foundation for why scaling is necessary beyond the variance argument.*
 
-> **Prerequisites:** cf. note [[note#2.2 Attention Score Computation and Causal Masking|§2.2 — Attention Score Computation and Causal Masking]]
+> **Prerequisites:** cf. note [[standard-attention#2.2 Attention Score Computation and Causal Masking|§2.2 — Attention Score Computation and Causal Masking]]
 
 (a) Let $\mathbf{p} = \operatorname{softmax}(\mathbf{s})$ for $\mathbf{s} \in \mathbb{R}^n$. Show that the Jacobian $J \in \mathbb{R}^{n \times n}$ has entries $J_{ij} = p_i(\delta_{ij} - p_j)$, and prove that $J$ is always singular (has a zero eigenvalue).
 
@@ -109,7 +109,7 @@
 
 *This problem derives the KV cache memory formula and instantiates it for a concrete large model to establish that the cache often dominates the weight memory.*
 
-> **Prerequisites:** cf. note [[note#5.2 Memory Growth with Sequence Length|§5.2 — Memory Growth with Sequence Length]]
+> **Prerequisites:** cf. note [[standard-attention#5.2 Memory Growth with Sequence Length|§5.2 — Memory Growth with Sequence Length]]
 
 (a) For a transformer with $L$ layers, $H$ heads, head dimension $d = d_k = d_v$, and sequence length $T$, show that the total KV cache requires $2LHdT$ stored scalars. Simplify using $Hd = D$ to obtain $2LDT$.
 
@@ -261,7 +261,7 @@ Factor the result to obtain $S_t = S_{t-1} + \beta_t \mathbf{k}_t^\top (\mathbf{
 
 *This problem forces precise formulation of the two-phase KV cache algorithm and establishes the asymptotic cost of each phase.*
 
-> **Prerequisites:** cf. note [[note#5.1 Motivation: Avoiding Redundant Computation During Decoding|§5.1 — Motivation: Avoiding Redundant Computation During Decoding]]
+> **Prerequisites:** cf. note [[standard-attention#5.1 Motivation: Avoiding Redundant Computation During Decoding|§5.1 — Motivation: Avoiding Redundant Computation During Decoding]]
 
 (a) **Prefill phase pseudocode**: Write pseudocode for processing a prompt of $T_0$ tokens. The pseudocode should: accept the prompt token matrix $\mathbf{X} \in \mathbb{R}^{T_0 \times D}$; compute $\mathbf{Q}, \mathbf{K}, \mathbf{V}$; run full causal attention; populate the cache $\mathcal{C}$ with all $T_0$ key-value pairs. Annotate with shapes at each step.
 

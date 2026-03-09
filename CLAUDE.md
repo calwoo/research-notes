@@ -10,18 +10,18 @@ This is a personal knowledge repository for agent-created notes, walkthroughs, a
 
 ## Directory Structure
 
-The repository uses a category-first layout. Each topic gets its own subdirectory containing all three related files:
+The repository uses a category-first layout. Each topic gets its own subdirectory:
 
 ```
 concepts/       ← explanations of ML/math concepts
   <topic>/
-    note.md         ← the research note/summary
-    exercises.md    ← problem set
-    solutions.md    ← full answer key
-    figures/        ← images downloaded from cited papers (optional)
+    <descriptive-name>.md   ← one or more note files, named meaningfully
+    exercises.md            ← problem set (required)
+    solutions.md            ← full answer key (required)
+    figures/                ← images downloaded from cited papers (optional)
 papers/         ← summaries/analyses of specific papers
   <topic>/
-    note.md
+    note.md         ← main paper summary (single file is fine here)
     exercises.md
     solutions.md
 walkthroughs/   ← step-by-step derivations or implementations
@@ -33,10 +33,16 @@ docs/           ← documentation and design docs
   plans/        ← implementation plans before execution
 ```
 
-**Naming convention:** The topic slug is the folder name. For a topic `attention-transformer` under `concepts`:
-- `concepts/attention-transformer/note.md` — the research note
-- `concepts/attention-transformer/exercises.md` — problem set
-- `concepts/attention-transformer/solutions.md` — full answer key
+**Naming convention for `concepts/`:** The topic slug is the folder name. Note files inside a concept folder should be named to reflect their content — use `note.md` only when a single file suffices; split into multiple descriptively-named files when a topic is broad enough to warrant it. `exercises.md` and `solutions.md` are always required and always use those exact names.
+
+Example for a multi-file concept topic `attention-mechanisms`:
+- `concepts/attention-mechanisms/standard-attention.md` — softmax attention
+- `concepts/attention-mechanisms/linear-attention.md` — linear attention variants
+- `concepts/attention-mechanisms/history.md` — historical development
+- `concepts/attention-mechanisms/exercises.md` — problem set
+- `concepts/attention-mechanisms/solutions.md` — full answer key
+
+**Naming convention for `papers/` and `walkthroughs/`:** Single `note.md` is the default. Split only if the topic genuinely has distinct subtopics.
 
 **Exercise file structure** (every `exercises.md` must follow this order):
 1. **Mathematical Development** — derivations, proofs, limit arguments, and mathematically sharp conceptual results (16–18 problems)
@@ -56,7 +62,7 @@ Solutions use **Key insight** + **Sketch** format (not full worked derivations).
 
 ### Typographic Style Rules
 
-Apply these consistently in all `note.md` files:
+Apply these consistently in all note files:
 
 | Element | Style | Example |
 |---------|-------|---------|
@@ -83,7 +89,7 @@ Notes are viewed in Obsidian. Use Obsidian's wikilink syntax for all TOC links �
 ## Project Agents
 
 Specialized subagents are defined in `.claude/agents/`. Available agents:
-- `note-writer` — researches and writes `note.md` following repo format
+- `note-writer` — researches and writes note files following repo format
 - `exercise-writer` — writes `exercises.md` + `solutions.md` from a finished note
 - `image-extractor` — fetches figures from arXiv HTML (`ar5iv.org/html/{id}`) and embeds them
 - `reference-finder` — finds high-quality references for a topic via web search
