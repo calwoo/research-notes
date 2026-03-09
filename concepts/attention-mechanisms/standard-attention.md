@@ -227,6 +227,8 @@ The linear memory cost of the KV cache (and the large absolute magnitudes for lo
 
 *Sparse patterns preserve the core softmax attention computation but are architecturally constrained — they must be designed or learned carefully to avoid dropping critical long-range dependencies.*
 
+For full mathematical derivations of MQA, GQA (including the low-rank factorization interpretation), MLA (including the matrix absorption trick and decoupled RoPE), and DeepSeek Sparse Attention, see the companion note [[attention-efficiency|attention-efficiency.md]].
+
 ---
 
 ## 6. References
