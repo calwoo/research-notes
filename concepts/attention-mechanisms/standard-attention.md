@@ -14,7 +14,13 @@
   - [[#5.1 Motivation: Avoiding Redundant Computation During Decoding|5.1 Motivation: Avoiding Redundant Computation During Decoding]]
   - [[#5.2 Memory Growth with Sequence Length|5.2 Memory Growth with Sequence Length]]
   - [[#5.3 Variants: GQA, MLA, and Sparse Attention|5.3 Variants: GQA, MLA, and Sparse Attention]]
-- [[#6. References|6. References]]
+- [[#6. Memory-Efficient Exact Attention|6. Memory-Efficient Exact Attention]]
+  - [[#6.1 The Core Observation: Deferred Normalization|6.1 The Core Observation: Deferred Normalization]]
+  - [[#6.2 Numerical Stability via Online Softmax|6.2 Numerical Stability via Online Softmax]]
+  - [[#6.3 Tiling for Practical O(sqrt n) Memory|6.3 Tiling for Practical O(sqrt n) Memory]]
+  - [[#6.4 Backpropagation via Recomputation|6.4 Backpropagation via Recomputation]]
+  - [[#6.5 Relation to FlashAttention|6.5 Relation to FlashAttention]]
+- [[#7. References|7. References]]
 
 ---
 
@@ -240,7 +246,106 @@ For full mathematical derivations of MQA, GQA (including the low-rank factorizat
 
 ---
 
-## 6. References
+## 6. Memory-Efficient Exact Attention
+
+The matrix attention formulation in Section 3 has a fundamental memory problem: computing $\mathbf{S} = \mathbf{Q}\mathbf{K}^\top / \sqrt{d_k}$ requires materializing a $T \times T$ matrix that costs $O(T^2)$ memory. For $T = 16{,}384$ in float32, this is over 4 GB — a hard barrier for long sequences. Rabe and Staats (2021) ask: *is the $O(T^2)$ memory cost inherent, or is it an artifact of the naive implementation?*
+
+The answer is the latter. The attention output $\mathbf{o}_t$ for a single query $\mathbf{q}_t$ is:
+
+$$\mathbf{o}_t = \frac{\displaystyle\sum_{j=1}^{t} \mathbf{v}_j \exp\!\left(\mathbf{q}_t^\top \mathbf{k}_j / \sqrt{d_k}\right)}{\displaystyle\sum_{j=1}^{t} \exp\!\left(\mathbf{q}_t^\top \mathbf{k}_j / \sqrt{d_k}\right)}$$
+
+This is a ratio of two quantities that can each be computed by *streaming over the key-value pairs*, with only $O(1)$ state maintained. The $T \times T$ score matrix is never necessary; it is an artifact of computing all queries simultaneously.
+
+### 6.1 The Core Observation: Deferred Normalization
+
+Write $s_j = \mathbf{q}_t^\top \mathbf{k}_j / \sqrt{d_k}$ for brevity. The attention output is:
+
+$$\mathbf{o}_t = \frac{\displaystyle\sum_{j=1}^{t} \mathbf{v}_j e^{s_j}}{\displaystyle\sum_{j=1}^{t} e^{s_j}} = \frac{\mathbf{V}^*}{S^*}$$
+
+where $\mathbf{V}^* = \sum_j \mathbf{v}_j e^{s_j} \in \mathbb{R}^{d_v}$ is a weighted value accumulator and $S^* = \sum_j e^{s_j} \in \mathbb{R}$ is the partition function. Both can be computed with a sequential update:
+
+$$\mathbf{V}^* \leftarrow \mathbf{V}^* + \mathbf{v}_j e^{s_j}, \qquad S^* \leftarrow S^* + e^{s_j}$$
+
+At each step, only the current $(\mathbf{k}_j, \mathbf{v}_j)$ pair and the running accumulators $(\mathbf{V}^*, S^*)$ must reside in memory — the previous $j-1$ key-value pairs can be discarded. **A single query's attention output therefore requires $O(1)$ memory with respect to sequence length.** Iterating over all $T$ queries adds a position counter requiring $O(\log T)$ bits, giving $O(\log T)$ memory for the full self-attention computation.
+
+### 6.2 Numerical Stability via Online Softmax
+
+The update above is numerically unstable: $e^{s_j}$ overflows in float32 when $s_j \gtrsim 88$. Standard softmax avoids this by subtracting the global maximum $m = \max_j s_j$ before exponentiating. In a streaming setting the global maximum is not known in advance.
+
+**Definition (Online Softmax Accumulation).** Maintain a third accumulator $m^* \in \mathbb{R}$ for the running maximum. Initialize $m^* = -\infty$, $\mathbf{V}^* = \mathbf{0}$, $S^* = 0$. For each $(s_j, \mathbf{v}_j)$:
+
+1. Compute new maximum: $m_j = \max(m^*, s_j)$.
+2. Rescale existing accumulators: $\mathbf{V}^* \leftarrow \mathbf{V}^* \cdot e^{m^* - m_j}$, $S^* \leftarrow S^* \cdot e^{m^* - m_j}$.
+3. Incorporate new term: $\mathbf{V}^* \leftarrow \mathbf{V}^* + \mathbf{v}_j \cdot e^{s_j - m_j}$, $S^* \leftarrow S^* + e^{s_j - m_j}$.
+4. Update maximum: $m^* \leftarrow m_j$.
+
+**Correctness.** At each step, the invariant is:
+
+$$\mathbf{V}^* = \sum_{j' \leq j} \mathbf{v}_{j'} e^{s_{j'} - m^*}, \qquad S^* = \sum_{j' \leq j} e^{s_{j'} - m^*}$$
+
+After all $T$ steps, $m^*$ equals the global maximum $m = \max_j s_j$ and the final output is:
+
+$$\mathbf{o}_t = \frac{\mathbf{V}^*}{S^*} = \frac{\displaystyle\sum_j \mathbf{v}_j e^{s_j - m}}{\displaystyle\sum_j e^{s_j - m}}$$
+
+which is the numerically stable softmax exactly. Each rescaling step requires one scalar multiply applied to an $\mathbb{R}^{d_v}$ vector — $O(d_v)$ work and no additional memory beyond the $O(d_v)$ accumulator.
+
+*This online softmax accumulation is the mathematical heart of memory-efficient exact attention. Every subsequent algorithm in this family — including FlashAttention — is a variant of this update.*
+
+### 6.3 Tiling for Practical O(sqrt n) Memory
+
+The $O(1)$ algorithm processes key-value pairs one at a time. On modern accelerators (TPUs, GPUs), scalar sequential processing is inefficient — hardware throughput comes from batched tensor operations. Rabe and Staats bridge the theory–practice gap with a *tiled* implementation.
+
+**Definition (Tiled Attention).** Partition the sequence into *blocks* of size $B$. For a query block $Q_b \in \mathbb{R}^{B \times d_k}$ and key-value block $(K_c, V_c) \in \mathbb{R}^{B \times d_k} \times \mathbb{R}^{B \times d_v}$, define the *partial summary*:
+
+$$\text{summary}(Q_b, K_c, V_c) = \left(\mathbf{V}^*_{b,c},\, S^*_{b,c},\, m^*_{b,c}\right)$$
+
+where for each query row $\mathbf{q} \in Q_b$:
+
+$$m^*_{b,c}(\mathbf{q}) = \max_{j \in c} \mathbf{q}^\top \mathbf{k}_j / \sqrt{d_k}, \quad S^*_{b,c}(\mathbf{q}) = \sum_{j \in c} e^{s_j - m^*_{b,c}}, \quad \mathbf{V}^*_{b,c}(\mathbf{q}) = \sum_{j \in c} \mathbf{v}_j e^{s_j - m^*_{b,c}}$$
+
+These summaries are computed in parallel (one $B \times B$ matrix multiply per KV block). The outer loop then *combines* summaries across all KV blocks, applying a global rescaling analogous to the online softmax update:
+
+$$m^* \leftarrow \max(m^*_{\text{prev}},\, m^*_{b,c}), \quad S^* \leftarrow S^*_{\text{prev}} \cdot e^{m^*_{\text{prev}} - m^*} + S^*_{b,c} \cdot e^{m^*_{b,c} - m^*}, \quad \mathbf{V}^* \leftarrow \mathbf{V}^*_{\text{prev}} \cdot e^{m^*_{\text{prev}} - m^*} + \mathbf{V}^*_{b,c} \cdot e^{m^*_{b,c} - m^*}$$
+
+**Complexity.** With block size $B = \sqrt{T}$:
+- Each partial summary costs $O(B^2 d_k) = O(T d_k)$ work and $O(B^2) = O(T)$ scratch space — but summaries are computed and discarded sequentially.
+- At any point, only one query block ($O(B d_k)$ memory), one KV block ($O(B(d_k + d_v))$ memory), and the running accumulator ($O(B d_v)$ memory) must coexist.
+- Total peak memory: $O(B(d_k + d_v)) = O(\sqrt{T} \cdot d)$.
+
+**For $T = 16{,}384$ and $d = 128$:** standard attention stores $T^2 = 268\text{M}$ floats. The tiled algorithm peaks at $\sqrt{T} \cdot d \approx 128 \times 128 = 16\text{K}$ floats per query block — a reduction of roughly $16{,}000\times$ in the attention matrix footprint. In practice, batching and the KV block adds a constant factor; Rabe and Staats report a **59× memory reduction at $T = 16{,}384$ for inference**.
+
+### 6.4 Backpropagation via Recomputation
+
+Computing the attention output is memory-efficient, but training requires gradients. Naive backpropagation through the forward pass would require storing all intermediate partial summaries $(\mathbf{V}^*_{b,c}, S^*_{b,c}, m^*_{b,c})$ — one per (query block, KV block) pair — which costs $O(T/B \times T/B \times B) = O(T^2 / B)$ memory, exactly the same as standard attention when $B = O(1)$.
+
+Rabe and Staats resolve this by *recomputing* partial summaries during the backward pass rather than storing them. The summary function is a simple deterministic computation over the query and KV blocks, so recomputation is cheap:
+
+- **Forward pass:** compute and *discard* all summaries after combining them into the running accumulator. Store only the final output $\mathbf{o}_t$ and the combined state $(S^*_{\text{final}}, m^*_{\text{final}})$ for each query.
+- **Backward pass:** for each query-KV block pair, *recompute* the partial summary from stored $Q_b$ and $K_c, V_c$, then compute the gradient contribution.
+
+The stored quantities are $O(T d_v)$ (the outputs $\mathbf{o}_t$) and $O(T)$ (the scalars $S^*, m^*$), which is linear rather than quadratic.
+
+**Cost.** Recomputation doubles the number of forward-pass FLOPs for the attention blocks. Rabe and Staats report approximately **30–35% total training slowdown** relative to the naive materialize-and-store approach, with a **32× memory reduction at $T = 16{,}384$**.
+
+*This gradient-checkpointing strategy is exact (no approximation) and the tradeoff is purely compute vs. memory. In a regime where GPU memory is the binding constraint — which is typical for long-sequence training — the 30% extra compute is well worth it.*
+
+### 6.5 Relation to FlashAttention
+
+Rabe and Staats (December 2021) establish the theoretical and algorithmic foundation. FlashAttention (Dao et al., May 2022) takes the same online softmax insight and augments it with *IO-awareness*:
+
+| Dimension | Rabe & Staats (2021) | FlashAttention (2022) |
+|---|---|---|
+| Primary target | Minimize HBM resident memory | Minimize HBM read/write bandwidth |
+| Tile size | $B = \sqrt{T}$ (memory-optimal) | $B = $ SRAM capacity (throughput-optimal) |
+| Backward pass | Generic JAX checkpointing | Custom CUDA kernel with stored softmax statistics |
+| Implementation | JAX, TPU-oriented | CUDA, GPU-first |
+| Speedup | Slowdown of ~30% vs. naive | Speedup of 2–4× vs. naive (bandwidth savings dominate) |
+
+FlashAttention observes that modern GPUs have fast on-chip SRAM (shared memory) that is orders of magnitude faster to access than HBM (device DRAM). If tiles are sized to fit in SRAM, each tile is loaded from HBM exactly once rather than $O(T/B)$ times. This converts $O(T^2)$ HBM accesses to $O(T^2 / \text{SRAM})$ — a large constant-factor improvement that translates to 2–4× end-to-end speedup. **The mathematical content is Rabe & Staats; the systems innovation is Dao et al.**
+
+---
+
+## 7. References
 
 | Reference Name | Brief Summary | Link to Reference |
 |---|---|---|
@@ -248,6 +353,7 @@ For full mathematical derivations of MQA, GQA (including the low-rank factorizat
 | Shazeer (2019), "Fast Transformer Decoding: One Write-Head is All You Need" | Introduces multi-query attention (MQA) with a single shared KV head, reducing inference memory cost by a factor of $H$ | [arxiv.org/abs/1911.02150](https://arxiv.org/abs/1911.02150) |
 | Ainslie et al. (2023), "GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints" | Proposes grouped-query attention (GQA) as an interpolation between MHA and MQA; shows uptrained GQA matches MHA quality at near-MQA speed | [arxiv.org/abs/2305.13245](https://arxiv.org/abs/2305.13245) |
 | DeepSeek-AI (2024), "DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model" | Introduces multi-head latent attention (MLA), compressing the KV cache via a low-dimensional latent projection | [arxiv.org/abs/2405.04434](https://arxiv.org/abs/2405.04434) |
+| Rabe and Staats (2021), "Self-attention Does Not Need O(n²) Memory" | Proves that exact self-attention requires only O(log n) memory via online softmax streaming; presents a practical O(√n) tiled implementation with gradient recomputation | [arxiv.org/abs/2112.05682](https://arxiv.org/abs/2112.05682) |
 | Dao et al. (2022), "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness" | IO-aware algorithm for computing exact softmax attention without materializing the full $T \times T$ score matrix, using tiled SRAM-resident computation | [arxiv.org/abs/2205.14135](https://arxiv.org/abs/2205.14135) |
 | Beltagy et al. (2020), "Longformer: The Long-Document Transformer" | Introduces sliding-window local attention combined with task-specific global tokens, achieving $O(T)$ attention complexity | [arxiv.org/abs/2004.05150](https://arxiv.org/abs/2004.05150) |
 | Zaheer et al. (2020), "Big Bird: Transformers for Longer Sequences" | Extends Longformer with random attention edges; proves the sparse pattern is a universal approximator and Turing complete | [arxiv.org/abs/2007.14062](https://arxiv.org/abs/2007.14062) |
