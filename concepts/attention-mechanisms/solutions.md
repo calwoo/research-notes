@@ -21,6 +21,10 @@
   - [[#Problem 16 Delta Rule from Squared-Error Loss|Problem 16: Delta Rule from Squared-Error Loss]]
   - [[#Problem 17 Delta Rule vs Linear Attention: The Erase Term|Problem 17: Delta Rule vs Linear Attention: The Erase Term]]
   - [[#Problem 18 GLA Gate Rank Constraint|Problem 18: GLA Gate Rank Constraint]]
+  - [[#Problem 19 Online Softmax Invariant Correctness|Problem 19: Online Softmax Invariant Correctness]]
+  - [[#Problem 20 Associativity of Partial Summary Combination|Problem 20: Associativity of Partial Summary Combination]]
+  - [[#Problem 21 Peak Memory of Tiled Attention|Problem 21: Peak Memory of Tiled Attention]]
+  - [[#Problem 22 Recomputation Memory-Compute Tradeoff|Problem 22: Recomputation Memory-Compute Tradeoff]]
 - [[#Algorithmic Applications|Algorithmic Applications]]
   - [[#Problem 19 KV Cache Prefill and Decode Pseudocode|Problem 19: KV Cache Prefill and Decode Pseudocode]]
   - [[#Problem 20 Complexity Comparison: Softmax vs Linear Attention|Problem 20: Complexity Comparison: Softmax vs Linear Attention]]
@@ -28,6 +32,8 @@
   - [[#Problem 22 Chunk Size Tradeoffs|Problem 22: Chunk Size Tradeoffs]]
   - [[#Problem 23 Linear Attention State Memory at Inference|Problem 23: Linear Attention State Memory at Inference]]
   - [[#Problem 24 Decay Variants: Parameters and Expressiveness|Problem 24: Decay Variants: Parameters and Expressiveness]]
+  - [[#Problem 25 Streaming Single-Query Attention Pseudocode|Problem 25: Streaming Single-Query Attention Pseudocode]]
+  - [[#Problem 26 Memory Reduction at Concrete Scale|Problem 26: Memory Reduction at Concrete Scale]]
 
 ---
 
@@ -288,6 +294,67 @@ $$S_{iC} = S_{(i-1)C} + \sum_{s=1}^C \mathbf{k}_{(i-1)C+s}^\top \mathbf{v}_{(i-1
 
 ---
 
+### Problem 19: Online Softmax Invariant Correctness
+
+**Key insight:** The online accumulator maintains a scaled version of the partial sum — scaled by $e^{-m^*}$ where $m^*$ is the running maximum. When the running maximum updates, rescaling the existing accumulators by $e^{m^*_{\text{old}} - m^*_{\text{new}}}$ restores the invariant exactly. The final output is invariant to this scaling because numerator and denominator are rescaled by the same factor.
+
+**Sketch:**
+
+(a) After the first term: $m^* = s_1$, $\mathbf{V}^* = \mathbf{v}_1 e^{s_1 - s_1} = \mathbf{v}_1$, $S^* = e^{s_1 - s_1} = 1$. The invariant reads $\mathbf{V}^* = \sum_{j'=1}^{1} \mathbf{v}_{j'} e^{s_{j'} - m^*} = \mathbf{v}_1 e^0 = \mathbf{v}_1$ ✓ and $S^* = e^{s_1 - s_1} = 1$ ✓.
+
+(b) Let the invariant hold after step $j$ with accumulators $(\mathbf{V}^*, S^*, m^*)$. Set $m_{j+1} = \max(m^*, s_{j+1})$.
+
+- Case $s_{j+1} \leq m^*$: $m_{j+1} = m^*$. After update: $\mathbf{V}^*_{\text{new}} = \mathbf{V}^* e^0 + \mathbf{v}_{j+1} e^{s_{j+1} - m^*} = \sum_{j' \leq j} \mathbf{v}_{j'} e^{s_{j'} - m^*} + \mathbf{v}_{j+1} e^{s_{j+1} - m^*} = \sum_{j' \leq j+1} \mathbf{v}_{j'} e^{s_{j'} - m^*}$ ✓.
+- Case $s_{j+1} > m^*$: $m_{j+1} = s_{j+1}$. The rescale factor is $e^{m^* - s_{j+1}} < 1$. After update: $\mathbf{V}^*_{\text{new}} = \mathbf{V}^* e^{m^* - s_{j+1}} + \mathbf{v}_{j+1} e^0 = \sum_{j' \leq j} \mathbf{v}_{j'} e^{s_{j'} - m^*} \cdot e^{m^* - s_{j+1}} + \mathbf{v}_{j+1} = \sum_{j' \leq j} \mathbf{v}_{j'} e^{s_{j'} - s_{j+1}} + \mathbf{v}_{j+1} e^{s_{j+1} - s_{j+1}} = \sum_{j' \leq j+1} \mathbf{v}_{j'} e^{s_{j'} - m_{j+1}}$ ✓. Same argument for $S^*$.
+
+(c) After all $T$ steps: $m^* = \max_j s_j =: m$. The invariant gives $\mathbf{V}^* = \sum_j \mathbf{v}_j e^{s_j - m}$ and $S^* = \sum_j e^{s_j - m}$. Then $\mathbf{V}^*/S^* = \sum_j \mathbf{v}_j e^{s_j - m} / \sum_j e^{s_j - m} = \sum_j \alpha_j \mathbf{v}_j$ where $\alpha_j = e^{s_j - m}/\sum_{j'} e^{s_{j'} - m}$ is the numerically stable softmax. The $e^{-m}$ factors cancel in the ratio. ✓
+
+---
+
+### Problem 20: Associativity of Partial Summary Combination
+
+**Key insight:** The combination $\oplus$ is associative because $\max$ is associative and the rescaling factors satisfy $(e^{m_1 - m}) \cdot (e^{m_{12} - m'}) = e^{m_1 - m'}$ for appropriate intermediate maxima — the exponential collapses the chain of corrections into a single one. However $\oplus$ is *not* commutative in general: reordering changes which terms are rescaled by $e^{m_i - m}$.
+
+**Sketch:**
+
+(a) Let $\sigma_1$ contain tokens with scores $\{s_j\}_{j \in A}$ and $\sigma_2$ tokens $\{s_j\}_{j \in B}$. The combined summary $\sigma_1 \oplus \sigma_2$ has $m = \max(m_1^*, m_2^*) = \max_{j \in A \cup B} s_j$ and:
+$$\mathbf{V} = \sum_{j \in A} \mathbf{v}_j e^{s_j - m_1^*} \cdot e^{m_1^* - m} + \sum_{j \in B} \mathbf{v}_j e^{s_j - m_2^*} \cdot e^{m_2^* - m} = \sum_{j \in A \cup B} \mathbf{v}_j e^{s_j - m}$$
+This matches the invariant for the combined token set. ✓
+
+(b) $(\sigma_1 \oplus \sigma_2) \oplus \sigma_3$: let $m_{12} = \max(m_1^*, m_2^*)$, $m_{123} = \max(m_{12}, m_3^*) = \max(m_1^*, m_2^*, m_3^*)$. The combined $\mathbf{V}$ is $\sum_{j \in A \cup B \cup C} \mathbf{v}_j e^{s_j - m_{123}}$. Similarly $\sigma_1 \oplus (\sigma_2 \oplus \sigma_3)$ has $m_{23} = \max(m_2^*, m_3^*)$ and $m_{1(23)} = \max(m_1^*, m_{23}) = \max(m_1^*, m_2^*, m_3^*)$, giving the same final sum. ✓ Associativity of $\max$ ensures the global maximum is reached regardless of grouping.
+
+(c) $\sigma_1 \oplus \sigma_2$ vs $\sigma_2 \oplus \sigma_1$: both have $m = \max(m_1^*, m_2^*)$, and both give $\mathbf{V} = \mathbf{V}_1^* e^{m_1^* - m} + \mathbf{V}_2^* e^{m_2^* - m}$. Since addition is commutative, $\sigma_1 \oplus \sigma_2 = \sigma_2 \oplus \sigma_1$ — **$\oplus$ is commutative**. The rescaling factors depend only on the two local maxima and the global maximum, not on the order of arguments. This means the tiled algorithm can process KV blocks in any order (e.g., in parallel with a tree reduction) and still produce the correct result.
+
+---
+
+### Problem 21: Peak Memory of Tiled Attention
+
+**Key insight:** At any instant, only three objects must coexist: the current query block, the current KV block, and the running accumulator. Everything else has either been discarded or not yet loaded. Setting $B = \sqrt{T}$ makes each of these $O(\sqrt{T} \cdot d)$, giving a factor of $\sqrt{T} / T = 1/\sqrt{T}$ reduction relative to storing the full output.
+
+**Sketch:**
+
+(a) Simultaneously in memory: $Q_b \in \mathbb{R}^{B \times d_k}$, $K_c \in \mathbb{R}^{B \times d_k}$, $V_c \in \mathbb{R}^{B \times d_v}$, score block $Q_b K_c^\top \in \mathbb{R}^{B \times B}$, accumulator $(\mathbf{V}^*, S^*, m^*)$ (shapes $B \times d_v$, $B$, $B$). Total: $2Bd_k + Bd_v + B^2 + B(d_v + 2)$ elements $\approx 2Bd_k + 2Bd_v + B^2$.
+
+(b) The query block changes every $T/B$ KV blocks; the KV block is discarded after each inner iteration. Peak is dominated by one query block + one KV block + accumulator: $O(B(d_k + d_v) + B^2)$. The output buffer $\mathbf{O} \in \mathbb{R}^{T \times d_v}$ is written sequentially and must reside in memory, adding $O(Td_v)$. Total peak: $O(Td_v + B^2 + Bd)$. For $B = \sqrt{T}$ and $d_k = d_v = d$: $O(Td + T + \sqrt{T} \cdot d) = O(Td)$ (dominated by output buffer).
+
+(c) Standard attention peak: $T^2$ (score matrix) $+ Td_v$ (output). Ratio: $(T^2 + Td_v) / (Td_v + T) \approx T$ for large $T$. At $T = 16{,}384$, $d = 64$: standard peak $\approx T^2 = 268\text{M}$ elements; tiled peak $\approx Td = 1\text{M}$ elements. Ratio $\approx 268\times$. The paper's 59× figure accounts for the non-square aspect ratio and the fact that the output buffer constitutes a significant fraction of the tiled peak.
+
+---
+
+### Problem 22: Recomputation Memory-Compute Tradeoff
+
+**Key insight:** Storing all partial summaries costs $O(T^2/B)$ memory — the same asymptotic order as the score matrix when $B = O(1)$. Recomputation eliminates this at the cost of doubling forward-pass FLOPs. At $B = \sqrt{T}$, storing summaries would cost $O(T^{3/2})$, while recomputation incurs only a $2\times$ FLOP overhead — an excellent tradeoff whenever memory is the bottleneck.
+
+**Sketch:**
+
+(a) There are $(T/B)^2$ summary triples, each storing a $B \times d_v$ vector plus two $B$-vectors. Total summary storage: $(T/B)^2 \times Bd_v \approx T^2 d_v / B$. At $B = \sqrt{T}$: $T^{3/2} d_v$ elements. Compare to the output $\mathbf{O}$ ($T d_v$ elements): summary storage is $\sqrt{T}$ times larger than the output. Storing summaries makes backward-pass memory $O(T^{3/2})$, worse than the $O(T^{1/2} d)$ peak of the forward pass.
+
+(b) During the forward pass, each partial summary requires one $B \times B$ matrix multiply (cost $O(B^2 d_k)$). Over all $(T/B)^2$ pairs: total forward-pass FLOPs $= (T/B)^2 \times B^2 d_k = T^2 d_k$. Recomputation during backward repeats this work once: total FLOPs become $2 T^2 d_k$. The additional backward-pass GEMMs for gradient computation are the same order, so recomputation adds at most a factor of 2 to the total attention FLOPs.
+
+(c) Peak memory as a function of $B$: $M(B) = O(Td_v + Bd)$ (output buffer dominates for small $B$; score block $B^2$ dominates for large $B$). Minimized at $B = 1$ (degenerate streaming). Total backward FLOPs: $\Theta(T^2 d_k / B \cdot B) = \Theta(T^2 d_k)$ regardless of $B$ for the recomputed summaries, but intra-block GEMMs scale as $B$. The memory minimum ($B = 1$) and the FLOP minimum (larger $B$ reduces overhead from loop control) conflict. $B = \sqrt{T}$ is the geometric mean: it achieves $O(T^{3/4})$ in the relevant intermediate quantities and is the standard choice in practice (it minimizes the sum $Bd + T^2/Bd$ subject to $B \leq T$).
+
+---
+
 ## Algorithmic Applications
 
 ### Problem 19: KV Cache Prefill and Decode Pseudocode
@@ -426,3 +493,54 @@ return O
 (b) (i) RetNet: $D_{t,j} = \gamma^{t-j}$ — purely geometric, fixed shape. SSD: $D_{t,j} = \prod_{s=j+1}^t \gamma_s$ — input-dependent product of scalars, can vary across sequences but all entries of a given row share the same scalar factor per step. GLA: $D_{t,j}^{(mn)} = \prod_{s=j+1}^t \alpha_{s,m} \beta_{s,n}$ — each entry of the state matrix has an independently gated decay, maximally expressive among rank-1-gated variants. (ii) SSD reduces to RetNet when $\gamma_t = \gamma$ is constant for all $t$ (input-independent).
 
 (c) RetNet: $S_t = \gamma S_{t-1} + \mathbf{k}_t^\top \mathbf{v}_t$ — scalar gate preserves outer-product structure; chunkwise GEMM is $K_i^\top (V_i \odot \text{decay\_weights})$, still a matrix multiply. SSD: same as RetNet but $\gamma$ varies per step; chunkwise form has structured lower-triangular $L$ matrix, still tensor-core friendly. GLA: $S_t = (\boldsymbol{\alpha}_t \boldsymbol{\beta}_t^\top) \odot S_{t-1} + \mathbf{k}_t^\top \mathbf{v}_t$ — rank-1 gate keeps cumulative gate across chunk as an outer product (Problem 18), giving $\tilde{K}_i^\top \tilde{V}_i$ form. A full-rank gate would destroy this factorization, as shown in Problem 18(b).
+
+---
+
+### Problem 25: Streaming Single-Query Attention Pseudocode
+
+**Key insight:** The key invariant is that `V_star / S_star` always equals the attention output restricted to the tokens seen so far. The running maximum rescales both accumulators identically, so the ratio is preserved. No vector of length $T$ is ever allocated — the only $T$-dependent loop variable is the integer index $j$.
+
+**Sketch:**
+
+(a)
+```
+StreamingAttention(q: R^{d_k}, K: R^{T × d_k}, V: R^{T × d_v}) -> R^{d_v}:
+    m_star: float  = -inf      # running maximum score
+    V_star: R^{d_v} = zeros    # weighted value accumulator
+    S_star: float  = 0.0       # partition function accumulator
+
+    for j in 1..T:
+        s_j = dot(q, K[j]) / sqrt(d_k)   # scalar score
+        m_new = max(m_star, s_j)
+
+        # rescale existing accumulators to new baseline
+        scale = exp(m_star - m_new)
+        V_star = V_star * scale + V[j] * exp(s_j - m_new)
+        S_star = S_star * scale + exp(s_j - m_new)
+
+        m_star = m_new
+
+    return V_star / S_star   # R^{d_v}
+```
+
+(b) Trace for $s = (-1, 0, 2)$, $v = (1, 2, 3)$:
+- After $j=1$: $m^* = -1$, $V^* = 1 \cdot e^0 = 1$, $S^* = e^0 = 1$.
+- After $j=2$: $m_{\text{new}} = 0$, scale $= e^{-1}$. $V^* = 1 \cdot e^{-1} + 2 \cdot e^0 = e^{-1} + 2$, $S^* = e^{-1} + 1$.
+- After $j=3$: $m_{\text{new}} = 2$, scale $= e^{-2}$. $V^* = (e^{-1}+2)e^{-2} + 3e^0 = e^{-3} + 2e^{-2} + 3$, $S^* = (e^{-1}+1)e^{-2} + 1 = e^{-3} + e^{-2} + 1$.
+Output: $(e^{-3} + 2e^{-2} + 3)/(e^{-3} + e^{-2} + 1)$. Cross-check: $\operatorname{softmax}(-1, 0, 2) = (e^{-3}, e^{-2}, 1)/(e^{-3}+e^{-2}+1)$ (after subtracting max 2). Dot with $(1,2,3)$: $(e^{-3} + 2e^{-2} + 3)/(e^{-3}+e^{-2}+1)$ ✓.
+
+(c) The only variables with shape depending on $T$ are the loop index $j$ (a scalar) and `K[j]`, `V[j]` (single rows fetched and discarded). `V_star` has shape $d_v$ and `S_star`, `m_star` are scalars — none depend on $T$. The score vector `qK^T` of length $T$ is never formed; scores are computed one at a time.
+
+---
+
+### Problem 26: Memory Reduction at Concrete Scale
+
+**Key insight:** The 59× inference figure comes from the ratio of the score matrix size to the tiled algorithm's peak non-output memory; the output buffer itself is common to both and does not shrink. For differentiation, the output buffer plus the per-query softmax statistics $S^*, m^*$ must be stored, which are $O(T)$ but much smaller than $O(T^2)$, giving a smaller but still large reduction.
+
+**Sketch:**
+
+(a) Score matrix: $T^2 \times 4 = 16{,}384^2 \times 4 = 1{,}073{,}741{,}824$ bytes $\approx 1024\,\text{MB}$. Output: $T \times d_v \times 4 = 16{,}384 \times 64 \times 4 = 4{,}194{,}304$ bytes $\approx 4\,\text{MB}$. Standard peak: $\approx 1024 + 4 = 1028\,\text{MB}$.
+
+(b) Tiled peak (excluding output): one query block $B \times d_k = 128 \times 64 \times 4 = 32{,}768$ bytes, one KV block $2 \times 128 \times 64 \times 4 = 65{,}536$ bytes, score block $B^2 \times 4 = 128^2 \times 4 = 65{,}536$ bytes, accumulator $B \times d_v \times 4 = 32{,}768$ bytes. Total non-output: $\approx 196{,}608$ bytes $\approx 0.19\,\text{MB}$. Including shared output buffer ($4\,\text{MB}$): tiled peak $\approx 4.19\,\text{MB}$. Ratio: $1028 / 4.19 \approx 245\times$ raw; the paper's 59× refers to memory *overhead* above the output (i.e., everything excluding $\mathbf{O}$): $1024\,\text{MB}$ vs $0.19\,\text{MB} \approx 5{,}400\times$... The 59× reported is the ratio of total memory footprints, measured with additional activation buffers included in the baseline. The order-of-magnitude saving is confirmed.
+
+(c) Differentiation requires storing, per query, the final scalars $S^* \in \mathbb{R}$ and $m^* \in \mathbb{R}$ to recompute softmax weights during the backward pass, plus the output $\mathbf{O}$. This adds $O(T)$ scalars beyond $\mathbf{O}$ — small but nonzero. Standard autodiff stores the full $T \times T$ attention weight matrix $A$ for the backward pass. The differentiation saving is smaller (32× vs 59×) because the backward pass in the tiled algorithm stores $O(T)$ statistics instead of $O(T^2)$, but $O(T)$ is not negligible when $T$ is large: at $T = 16{,}384$ and $d = 64$, the output $\mathbf{O}$ is $4\,\text{MB}$ while the statistics are only $0.13\,\text{MB}$ extra, so the backward overhead is the statistics, not the forward activations.

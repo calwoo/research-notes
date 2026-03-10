@@ -21,6 +21,10 @@
   - [[#Problem 16 Delta Rule from Squared-Error Loss|Problem 16: Delta Rule from Squared-Error Loss]]
   - [[#Problem 17 Delta Rule vs Linear Attention: The Erase Term|Problem 17: Delta Rule vs Linear Attention: The Erase Term]]
   - [[#Problem 18 GLA Gate Rank Constraint|Problem 18: GLA Gate Rank Constraint]]
+  - [[#Problem 19 Online Softmax Invariant Correctness|Problem 19: Online Softmax Invariant Correctness]]
+  - [[#Problem 20 Associativity of Partial Summary Combination|Problem 20: Associativity of Partial Summary Combination]]
+  - [[#Problem 21 Peak Memory of Tiled Attention|Problem 21: Peak Memory of Tiled Attention]]
+  - [[#Problem 22 Recomputation Memory-Compute Tradeoff|Problem 22: Recomputation Memory-Compute Tradeoff]]
 - [[#Algorithmic Applications|Algorithmic Applications]]
   - [[#Problem 19 KV Cache Prefill and Decode Pseudocode|Problem 19: KV Cache Prefill and Decode Pseudocode]]
   - [[#Problem 20 Complexity Comparison: Softmax vs Linear Attention|Problem 20: Complexity Comparison: Softmax vs Linear Attention]]
@@ -28,6 +32,8 @@
   - [[#Problem 22 Chunk Size Tradeoffs|Problem 22: Chunk Size Tradeoffs]]
   - [[#Problem 23 Linear Attention State Memory at Inference|Problem 23: Linear Attention State Memory at Inference]]
   - [[#Problem 24 Decay Variants: Parameters and Expressiveness|Problem 24: Decay Variants: Parameters and Expressiveness]]
+  - [[#Problem 25 Streaming Single-Query Attention Pseudocode|Problem 25: Streaming Single-Query Attention Pseudocode]]
+  - [[#Problem 26 Memory Reduction at Concrete Scale|Problem 26: Memory Reduction at Concrete Scale]]
 
 ---
 
@@ -253,6 +259,58 @@ Factor the result to obtain $S_t = S_{t-1} + \beta_t \mathbf{k}_t^\top (\mathbf{
 
 (c) Show that the rank-1 constraint on the gate preserves the form $K_i^\top \tilde{V}_i$ for some modified value matrix $\tilde{V}_i \in \mathbb{R}^{C \times d_v}$, and identify what $\tilde{V}_i$ is. Why does this make the inter-chunk state update GPU-efficient?
 
+### Problem 19: Online Softmax Invariant Correctness
+
+*This problem proves that the online softmax accumulation algorithm maintains its invariant at every step and that the final result equals the numerically stable softmax, establishing the algorithm's exactness.*
+
+> **Prerequisites:** cf. note [[standard-attention#6.2 Numerical Stability via Online Softmax|§6.2 — Numerical Stability via Online Softmax]]
+
+(a) Let $s_1, \ldots, s_T \in \mathbb{R}$ be attention scores and $\mathbf{v}_1, \ldots, \mathbf{v}_T \in \mathbb{R}^{d_v}$ be value vectors. Define the invariant after processing $j$ terms: $m^* = \max_{j' \leq j} s_{j'}$, $\mathbf{V}^* = \sum_{j'=1}^{j} \mathbf{v}_{j'} e^{s_{j'} - m^*}$, $S^* = \sum_{j'=1}^{j} e^{s_{j'} - m^*}$. Verify this invariant holds after initializing with the first term $(s_1, \mathbf{v}_1)$.
+
+(b) Assume the invariant holds after step $j$. Show that applying the update rule
+$$m_{j+1} = \max(m^*, s_{j+1}), \quad \mathbf{V}^* \leftarrow \mathbf{V}^* \cdot e^{m^* - m_{j+1}} + \mathbf{v}_{j+1} e^{s_{j+1} - m_{j+1}}, \quad S^* \leftarrow S^* \cdot e^{m^* - m_{j+1}} + e^{s_{j+1} - m_{j+1}}$$
+re-establishes the invariant with $m^* \leftarrow m_{j+1}$. Consider separately the cases $s_{j+1} \leq m^*$ and $s_{j+1} > m^*$.
+
+(c) After all $T$ steps, $m^* = \max_j s_j$. Show that $\mathbf{V}^* / S^*$ equals the standard numerically stable attention output $\sum_j \alpha_j \mathbf{v}_j$ where $\alpha_j = e^{s_j - m^*} / \sum_{j'} e^{s_{j'} - m^*}$.
+
+### Problem 20: Associativity of Partial Summary Combination
+
+*This problem shows that the combination operation on partial summaries is associative, which implies the tiled algorithm can be parallelized into arbitrary tree structures without changing the result.*
+
+> **Prerequisites:** cf. note [[standard-attention#6.3 Tiling for Practical O(sqrt n) Memory|§6.3 — Tiling for Practical O(sqrt n) Memory]]; requires Problem 19
+
+(a) Define a partial summary as a triple $\sigma = (\mathbf{V}^*, S^*, m^*) \in \mathbb{R}^{d_v} \times \mathbb{R} \times \mathbb{R}$ representing a set of processed key-value pairs. Define the combination $\sigma_1 \oplus \sigma_2$ by setting $m = \max(m_1^*, m_2^*)$ and:
+$$\mathbf{V} = \mathbf{V}_1^* e^{m_1^* - m} + \mathbf{V}_2^* e^{m_2^* - m}, \qquad S = S_1^* e^{m_1^* - m} + S_2^* e^{m_2^* - m}$$
+Show that $\sigma_1 \oplus \sigma_2$ equals the summary one would obtain by processing the tokens of $\sigma_1$ followed by those of $\sigma_2$ in the streaming algorithm.
+
+(b) Prove that $\oplus$ is associative: $(\sigma_1 \oplus \sigma_2) \oplus \sigma_3 = \sigma_1 \oplus (\sigma_2 \oplus \sigma_3)$. You may work coordinate-wise and use the identity $\max(\max(a, b), c) = \max(a, b, c)$.
+
+(c) *Commutativity* of $\oplus$ would allow reordering token groups arbitrarily. Check: is $\sigma_1 \oplus \sigma_2 = \sigma_2 \oplus \sigma_1$? Under what condition on $m_1^*$ and $m_2^*$ do the two combinations give the same rescaling factors? Conclude whether the tiled algorithm is order-independent.
+
+### Problem 21: Peak Memory of Tiled Attention
+
+*This problem derives the O(sqrt T) peak memory of the tiled algorithm as a function of block size and identifies the optimal block size that minimizes peak memory while maintaining the full result.*
+
+> **Prerequisites:** cf. note [[standard-attention#6.3 Tiling for Practical O(sqrt n) Memory|§6.3 — Tiling for Practical O(sqrt n) Memory]]
+
+(a) Consider processing one query block $Q_b \in \mathbb{R}^{B \times d_k}$ against one KV block $(K_c, V_c) \in \mathbb{R}^{B \times d_k} \times \mathbb{R}^{B \times d_v}$. List all matrices that must coexist in memory simultaneously during the partial summary computation. Express the total peak memory in terms of $B$, $d_k$, $d_v$.
+
+(b) The outer loop over query blocks is sequential: only one query block is live at a time. The inner loop over KV blocks is also sequential: each KV block is loaded, used to update the running accumulator, then discarded. Given this, what is the peak memory across all blocks during the full computation? Express it as a function of $B$, $d_k$, $d_v$, and $T$. Show that for $B = \sqrt{T}$ and $d_k = d_v = d$, this is $O(\sqrt{T} \cdot d)$.
+
+(c) Standard attention stores the full score matrix $\mathbf{S} \in \mathbb{R}^{T \times T}$ and the full output $\mathbf{O} \in \mathbb{R}^{T \times d_v}$. Compute the ratio of standard attention peak memory to the tiled algorithm's peak memory for $B = \sqrt{T}$, $d_k = d_v = d$. Evaluate numerically for $T = 16{,}384$ and $d = 128$.
+
+### Problem 22: Recomputation Memory-Compute Tradeoff
+
+*This problem quantifies both the memory saved and the compute overhead incurred by recomputing partial summaries during the backward pass, framing the tradeoff as a function of sequence length.*
+
+> **Prerequisites:** cf. note [[standard-attention#6.4 Backpropagation via Recomputation|§6.4 — Backpropagation via Recomputation]]; requires Problem 21
+
+(a) **Stored-activations baseline.** Suppose during the forward pass all partial summaries $(\mathbf{V}^*_{b,c}, S^*_{b,c}, m^*_{b,c})$ are stored for use in the backward pass, rather than recomputed. For $T/B$ query blocks and $T/B$ KV blocks, how many summaries are stored? Express the total storage (ignoring the output $\mathbf{O}$) in terms of $T$, $B$, and $d_v$. Show this is $\Theta(T^2 / B)$, which equals $\Theta(T^{3/2})$ when $B = \sqrt{T}$.
+
+(b) **Recomputation cost.** During the backward pass, each partial summary is recomputed on-demand from the stored query and KV blocks. Counting only the forward-pass FLOPs attributed to the partial summary computation (the inner matrix multiplies), show that recomputation adds at most a constant factor of 2 to the total FLOPs of the attention layer.
+
+(c) **Pareto tradeoff.** For a general block size $B \in [1, T]$, write down the peak memory (from Problem 21) and the total backward-pass FLOPs as functions of $B$. Identify the value of $B$ that minimizes each independently. Argue that no single $B$ simultaneously minimizes both, and that $B = \sqrt{T}$ is the geometric mean between the two extremes.
+
 ---
 
 ## Algorithmic Applications
@@ -322,6 +380,33 @@ Factor the result to obtain $S_t = S_{t-1} + \beta_t \mathbf{k}_t^\top (\mathbf{
 (b) **Total state memory**: Compute the total state memory across all $L \times H$ heads in megabytes. How does this compare to the model weight memory of approximately $14\,\text{GB}$ (7B parameters at float16)?
 
 (c) **Sequence-length independence**: At inference, a softmax attention model with the same architecture would require a KV cache of size $2LDT$ float16 elements. Compute the sequence length $T^*$ at which the KV cache equals the linear attention state memory computed in (b). For $T > T^*$, which model is more memory-efficient at inference?
+
+### Problem 25: Streaming Single-Query Attention Pseudocode
+
+*This problem requires writing complete pseudocode for the O(1)-memory streaming attention algorithm for a single query, making explicit the accumulator updates and final normalization.*
+
+> **Prerequisites:** cf. note [[standard-attention#6.1 The Core Observation: Deferred Normalization|§6.1 — The Core Observation: Deferred Normalization]], [[standard-attention#6.2 Numerical Stability via Online Softmax|§6.2 — Numerical Stability via Online Softmax]]
+
+(a) Write pseudocode `StreamingAttention(q, K, V)` that takes a single query $\mathbf{q} \in \mathbb{R}^{d_k}$, a key matrix $K \in \mathbb{R}^{T \times d_k}$, and a value matrix $V \in \mathbb{R}^{T \times d_v}$, and returns $\mathbf{o} \in \mathbb{R}^{d_v}$ using $O(d_v)$ working memory (excluding $K$ and $V$, which are streamed). Annotate the type and shape of every variable. Your pseudocode must use the numerically stable running-maximum form.
+
+(b) Trace your pseudocode on the minimal example $T = 3$, $d_k = d_v = 1$, with scores $s = (-1, 0, 2)$ and values $v = (1, 2, 3)$. Show the values of $m^*$, $\mathbf{V}^*$, $S^*$ after processing each token. Verify your final output matches $\operatorname{softmax}(s) \cdot v$.
+
+(c) The standard matrix attention formula $\mathbf{o} = \operatorname{softmax}(\mathbf{q} K^\top / \sqrt{d_k}) V$ requires $O(T)$ memory just for the score vector $\mathbf{q} K^\top$. Show that your streaming pseudocode never stores any vector of length $T$, confirming the $O(1)$ memory claim (with respect to sequence length).
+
+### Problem 26: Memory Reduction at Concrete Scale
+
+*This problem instantiates the theoretical memory bounds of memory-efficient attention for a concrete production-scale configuration, comparing peak memory across the standard, tiled, and stored-gradients algorithms.*
+
+> **Prerequisites:** cf. note [[standard-attention#6.3 Tiling for Practical O(sqrt n) Memory|§6.3 — Tiling for Practical O(sqrt n) Memory]], [[standard-attention#6.4 Backpropagation via Recomputation|§6.4 — Backpropagation via Recomputation]]; requires Problems 21 and 22
+
+(a) Consider a single attention head with $T = 16{,}384$, $d_k = d_v = 64$, float32 (4 bytes/element). Compute the memory footprint of:
+  - the score matrix $\mathbf{S} \in \mathbb{R}^{T \times T}$ in the standard algorithm;
+  - the output matrix $\mathbf{O} \in \mathbb{R}^{T \times d_v}$;
+  - the combined peak memory for the standard algorithm (score + output).
+
+(b) For the tiled algorithm with $B = \sqrt{T} = 128$, compute the peak memory: one query block, one KV block, the running accumulator, and the output matrix $\mathbf{O}$. What is the ratio to the standard algorithm from (a)?
+
+(c) The paper reports a 59× memory reduction for inference and 32× for differentiation at $T = 16{,}384$. Using your results from (a) and (b), verify or explain the 59× figure. Then explain why the differentiation reduction (32×) is smaller: what additional memory does the backward pass require that the forward pass does not?
 
 ### Problem 24: Decay Variants: Parameters and Expressiveness
 
