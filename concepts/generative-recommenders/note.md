@@ -22,12 +22,15 @@
 - [[#5. Generative Ranking: Sequential Transduction|5. Generative Ranking: Sequential Transduction]]
   - [[#5.1 HSTU: The Foundational Architecture|5.1 HSTU: The Foundational Architecture]]
   - [[#5.2 GenRank: Efficient Industrial Generative Ranking|5.2 GenRank: Efficient Industrial Generative Ranking]]
+  - [[#5.3 GR2: LLM-Based Reranking with Reasoning|5.3 GR2: LLM-Based Reranking with Reasoning]]
 - [[#6. Scaling Laws for Generative Recommenders|6. Scaling Laws for Generative Recommenders]]
   - [[#6.1 The HSTU Scaling Law|6.1 The HSTU Scaling Law]]
   - [[#6.2 Why Generative Models Scale and DLRMs Do Not|6.2 Why Generative Models Scale and DLRMs Do Not]]
   - [[#6.3 Connection to Neural Scaling Laws|6.3 Connection to Neural Scaling Laws]]
 - [[#7. Open Problems and Future Directions|7. Open Problems and Future Directions]]
 - [[#8. References|8. References]]
+
+> **See also:** [[systems|ML Systems for Generative Recommenders]] — a companion note covering distributed training, inference serving, embedding infrastructure, and online learning for production-scale GR deployments.
 
 ---
 
@@ -57,6 +60,9 @@ In production at scale (Meta, Xiaohongshu, Baidu, etc.), the recommendation syst
 4. **Policy layer**: apply business rules, diversity constraints, and contextual adjustments to the ranked output.
 
 Historically, each stage was a separate system with its own architecture, feature engineering pipeline, and training objective. A key consequence is that knowledge learned in one stage (e.g., that users who watched sports content are likely to engage with fitness ads) is not automatically transferred to other stages.
+
+![Figure 2 from Zhai et al. (2024): comparison of feature and training procedure differences between DLRMs and generative recommenders](figures/hstu-fig3-architecture-comparison.png)
+*Figure 3 (Zhai et al., 2024): Left — the full DLRM setup with categorical feature embeddings, FM pairwise interactions, and impression-level training. Right — a simplified HSTU showing the unified interleaved sequence of item and action tokens with causal attention. This architectural contrast is the core of the paradigm shift.*
 
 ### 1.3 Why Scale Makes This Hard
 
@@ -213,13 +219,39 @@ The TIGER paper (Rajput et al., NeurIPS 2023) proposes encoding each item as a *
 
 The first level captures the coarsest structure (broad category); each subsequent level refines the approximation. Items with similar content embeddings receive similar semantic IDs — specifically, similar prefixes $(c_1, c_2, \ldots)$ — enabling hierarchical retrieval.
 
+![Figure 2 from Rajput et al. (NeurIPS 2023): semantic ID generation and seq2seq architecture of TIGER](figures/tiger-fig1-overview.png)
+*Figure 1 (Rajput et al., NeurIPS 2023): Overview of the TIGER framework. Each item is encoded into a tuple of discrete semantic tokens (semantic ID) via RQ-VAE. Sequential recommendation is then expressed as a generative retrieval task: the encoder-decoder Transformer takes the user's history of semantic IDs and autoregressively decodes the semantic ID of the next item.*
+
 **The seq2seq generation procedure.** TIGER trains a Transformer-based encoder-decoder. The encoder processes the user's history of semantic IDs. The decoder autoregressively generates the semantic ID of the next item, producing $(c_1, c_2, \ldots, c_K)$ one token at a time. At each decode step, the output vocabulary is of size $V$ (typically 256), not $|\mathcal{I}|$.
 
 **Beam search over the code tree.** By searching over partially generated codes, beam search traverses the item semantic tree efficiently. A beam of width $B$ explores $B$ candidate prefixes at each decoding step, pruning invalid completions (codes not assigned to any item). The total cost scales as $O(B \cdot K \cdot V)$ rather than $O(|\mathcal{I}|)$.
 
 **Proposition (Representational Capacity).** With $K$ quantization levels and codebooks of size $V$, the total number of distinct semantic IDs is $V^K$. For $K = 3$, $V = 256$: capacity is $256^3 \approx 1.7 \times 10^7$, sufficient for typical item inventories. Longer codes accommodate larger inventories with finer granularity.
 
-**The information loss problem.** Quantization is lossy by construction. The RQ-VAE approximates $\mathbf{z}$ as $\hat{\mathbf{z}} = \sum_{k=1}^K \mathbf{e}_{c_k}$, discarding the residual $\mathbf{r}_K$. The reconstruction error $\|\mathbf{z} - \hat{\mathbf{z}}\|$ is bounded by the codebook resolution, but cannot be driven to zero without increasing $K$ or $V$, both of which increase inference cost. Fine-grained item-level distinctions — which may matter critically for borderline ranking decisions — can be lost in the discrete representation.
+![Figure 3 from Rajput et al. (NeurIPS 2023): residual quantization process in RQ-VAE](figures/tiger-fig3-rqvae-residual-quantization.png)
+*Figure 3 (Rajput et al., NeurIPS 2023): The residual quantization process. The encoder output $\mathbf{r}_0$ is quantized to the nearest codebook entry $c_1$; the residual $\mathbf{r}_1 = \mathbf{r}_0 - \mathbf{e}_{c_1}$ is then quantized at the next level, and so on. The semantic ID is the tuple $(c_1, c_2, \ldots, c_K)$ of codeword indices.*
+
+**The RQ-VAE training objective.** The encoder and codebooks are trained jointly to minimize reconstruction error while keeping codebook entries close to the inputs they represent:
+
+$$\mathcal{L}_{\text{RQ-VAE}} = \underbrace{\|\mathbf{z} - \hat{\mathbf{z}}\|_2^2}_{\text{reconstruction}} + \beta \sum_{k=1}^K \underbrace{\|\text{sg}[\mathbf{r}_k] - \mathbf{e}_{c_k}\|_2^2}_{\text{codebook loss}} + \gamma \sum_{k=1}^K \underbrace{\|\mathbf{r}_k - \text{sg}[\mathbf{e}_{c_k}]\|_2^2}_{\text{commitment loss}}$$
+
+where $\hat{\mathbf{z}} = \sum_{k=1}^K \mathbf{e}_{c_k}$ is the reconstruction, and $\text{sg}[\cdot]$ denotes stop-gradient. The codebook loss moves each entry toward the inputs assigned to it; the commitment loss moves the encoder outputs toward the codebook entries. Neither gradient flows through the argmin — the *straight-through estimator* passes gradients directly from $\hat{\mathbf{z}}$ to $\mathbf{z}$ as if the quantization step were the identity.
+
+**The codebook collapse problem.** The straight-through estimator creates a pathological failure mode: codebook entries that are rarely selected receive no gradient signal and drift toward irrelevance, causing more and more inputs to be assigned to the same small set of active entries. Empirically (Liang et al., GR2 2026), without mitigation, a $K=4$ RQ-VAE achieves only $\sim$31% codebook utilization — meaning most of the codebook is dead, and many distinct items share identical semantic IDs (*SID collision*). A model that cannot distinguish two items by their SIDs cannot recommend one over the other.
+
+Two techniques are necessary and sufficient to achieve $\geq$99% uniqueness (Liang et al., 2026):
+
+1. **EMA codebook updates.** Instead of updating codebook entries via backpropagation, update them by an exponential moving average of the inputs assigned to each entry:
+$$\mathbf{e}_j^{(k)} \leftarrow \gamma\, \mathbf{e}_j^{(k)} + (1 - \gamma)\, \bar{\mathbf{r}}_j^{(k)}, \quad \gamma \in [0.95, 0.99]$$
+where $\bar{\mathbf{r}}_j^{(k)}$ is the mean of all residuals $\mathbf{r}_k$ assigned to entry $j$ in the current batch. This provides a stable, direct update signal to codebook entries bypassing the straight-through gradient — the most critical single technique.
+
+2. **Random last level.** At inference time, the final quantization level $c_K$ is assigned *uniformly at random* from unused codewords rather than by nearest-neighbor. This sacrifices reconstruction fidelity at the finest level in exchange for guaranteed distinctiveness. Alone it contributes +28.7% uniqueness; combined with EMA it closes the gap to $\geq$99.95%.
+
+**The uniqueness–quality tradeoff.** Adding a *contrastive loss* on top of $\mathcal{L}_{\text{RQ-VAE}}$ encourages items that co-occur in user histories to have similar SIDs:
+$$\mathcal{L}_{\text{ctr}} = -\frac{1}{|\mathcal{P}(i)|} \sum_{p \in \mathcal{P}(i)} \log \frac{\exp(\tilde{\mathbf{h}}_i^\top \tilde{\mathbf{h}}_p / T)}{\exp(\tilde{\mathbf{h}}_i^\top \tilde{\mathbf{h}}_p / T) + \sum_{n \in \mathcal{N}(i)} \exp(\tilde{\mathbf{h}}_i^\top \tilde{\mathbf{h}}_n / T)}$$
+This encodes collaborative signal into the code structure — items frequently bought together share prefix codes, making beam search more likely to retrieve semantically related items. However, it also *reduces* uniqueness by −13.2% (similar items intentionally share codes). The tradeoff is empirical: contrastive loss hurts SID uniqueness but improves downstream recommendation quality on standard benchmarks.
+
+**The information loss problem.** Even with perfect uniqueness, quantization is lossy by construction: the final residual $\mathbf{r}_K$ is discarded. The reconstruction error $\|\mathbf{z} - \hat{\mathbf{z}}\|$ cannot be driven to zero without increasing $K$ or $V$, both of which increase inference cost. COBRA (Section 4.2) addresses this by generating a complementary dense vector alongside the sparse ID.
 
 *Additionally, approximately 0.3–6% of beam-searched codes at depth $K=3$ are invalid (assigned to no item), requiring re-ranking or padding. This overhead grows with code depth.*
 
@@ -261,7 +293,16 @@ $$\Phi(\hat{\mathbf{v}}^k, \text{ID}^k) = \text{Softmax}(\tau \cdot \phi^{\text{
 
 where $\mathbf{a}$ is the candidate item's pre-computed dense embedding, and $\tau, \psi$ are temperature hyperparameters controlling the precision-diversity trade-off.
 
+![Figure 1 from Yang et al. (2025): comparison of TIGER and COBRA generative retrieval paradigms](figures/cobra-fig1-paradigm-comparison.png)
+*Figure 1 (Yang et al., COBRA 2025): Left — traditional generative retrieval (TIGER) predicts only a sparse semantic ID. Right — COBRA's cascaded approach: the sparse ID is generated first, then conditions the generation of a complementary dense vector. The joint sparse-dense representation recovers information that either branch alone cannot represent.*
+
+![Figure 2 from Yang et al. (2025): COBRA architecture with cascaded sparse-dense heads](figures/cobra-fig2-architecture.png)
+*Figure 2 (Yang et al., COBRA 2025): The COBRA architecture. A shared Transformer decoder with two heads — SparseHead (cross-entropy over codebook) and DenseHead (contrastive loss over dense vector space). History events are represented by concatenating sparse ID embeddings and dense vectors.*
+
 **Comparison to LIGER.** LIGER (Yang et al., 2024) generates a sparse representation and a dense vector simultaneously, at the same granularity, using pre-trained fixed embeddings. COBRA differs in two ways: (1) the sparse ID is generated first and conditions the dense generation, creating a hierarchical decomposition of uncertainty; (2) dense embeddings are learned end-to-end rather than fixed, allowing them to adapt to the generative pretraining objective.
+
+![Figure 3 from Yang et al. (2025): BeamFusion coarse-to-fine inference procedure](figures/cobra-fig3-beamfusion-inference.png)
+*Figure 3 (Yang et al., COBRA 2025): BeamFusion inference. Beam search over sparse IDs produces $M$ candidates with log-probabilities. For each beam, the DenseHead generates a conditional dense vector. ANN retrieval over dense vectors then produces the final candidate pool, scored by the product of sparse and dense softmax scores.*
 
 **Ablation results.** On an industrial dataset (Baidu, 200M DAU), removing components from the full COBRA system degrades Recall@500:
 
@@ -318,7 +359,16 @@ where $\Delta t_{ij}$ is the elapsed time in seconds between events $i$ and $j$,
 
 **Stochastic length sparsity.** Attention cost is $O(n^2 d)$ per sequence. For users with $n \gg N^{\alpha/2}$, HSTU applies *stochastic length* truncation: sample the full sequence with probability $N^\alpha / n^2$ and a random subsequence of length $N^{\alpha/2}$ otherwise. The expected cost per user is $O(N^\alpha d)$ with $\alpha \in (1, 2]$. For $\alpha = 1.5$, a sequence of length $10^6$ has effective cost $O(10^9)$ rather than $O(10^{12})$. Empirically, 80%+ sparsity is achieved with less than 0.2% metric degradation.
 
+![Figure 4 from Zhai et al. (2024): impact of stochastic length on metrics at sequence lengths n=4096 and n=8192](figures/hstu-fig4-stochastic-length.png)
+*Figure 4 (Zhai et al., 2024): Impact of stochastic length (SL) sampling on NE and HR metrics. Left: $n=4096$. Right: $n=8192$. The horizontal axis shows the sparsity target $N^\alpha$; the plots show that quality degrades by less than 0.2% even at 80%+ sparsity, validating the approach for very long user sequences.*
+
 **Definition (M-FALCON Inference Amortization).** At inference, scoring $b_m$ candidate items naively requires $b_m$ independent forward passes: cost $O(b_m n^2 d)$. M-FALCON processes all candidates in a single forward pass via modified attention masks: candidate items attend to the user history but not to each other. The user history prefix of length $n$ is computed once at cost $O(n^2 d)$; each candidate adds $O(n d)$ incremental cost. Total: $O(n^2 d + b_m n d)$, an $O(b_m)$ reduction for large candidate batches.
+
+![Figure 9 from Zhai et al. (2024): end-to-end inference throughput of GRs with M-FALCON vs DLRMs](figures/hstu-fig9-mfalcon-inference-throughput.png)
+*Figure 9 (Zhai et al., 2024): End-to-end inference throughput comparison between DLRMs and generative recommenders with M-FALCON amortization in the large-scale industrial ranking setting. M-FALCON's shared-history batching closes the inference throughput gap that would otherwise make GR deployment infeasible.*
+
+![Figure 5b from Zhai et al. (2024): HSTU training throughput speedup vs FlashAttention2-based Transformers](figures/hstu-fig5b-training-speedup.png)
+*Figure 5b (Zhai et al., 2024): Training throughput speedup of HSTU (with stochastic length sparsity) relative to a FlashAttention2-based Transformer baseline, plotted against sparsity level. At 80%+ sparsity — the regime used in production — HSTU achieves substantial throughput gains with negligible quality loss.*
 
 **Scaling law.** HSTU demonstrates empirically clean power-law scaling across three orders of magnitude in training compute:
 
@@ -332,6 +382,9 @@ GenRank (Huang et al., 2025) refines the HSTU framework for production deploymen
 
 **Key architectural finding.** The primary ablation result of GenRank is that **the improvement from generative ranking stems from the architecture (autoregressive causal structure), not from the training paradigm (how samples are organized in batches)**. Replacing the causal attention mask with a fully visible mask (T5-style bidirectional attention) causes AUC drops exceeding 0.0100, and the gap grows with model size — confirming that autoregression is an architectural property, not a training convenience.
 
+![Figure 2 from Huang et al. (2025): GenRank model architecture vs HSTU item-oriented organization](figures/genrank-fig2-architecture.png)
+*Figure 2 (Huang et al., GenRank 2025): Architecture comparison between HSTU's item-oriented sequence organization (left) and GenRank's action-oriented organization (right). In the item-oriented scheme each position in the sequence is either an item or an action token; in the action-oriented scheme, each position aggregates the item and its associated action into a single token, halving sequence length.*
+
 **Action-oriented sequence organization.** HSTU interleaves item and action tokens: $(x_0, a_0, x_1, a_1, \ldots)$. GenRank observes that *items serve primarily as positional context for actions*: the recommendation task is to predict actions, not items. GenRank therefore treats each request's items as a unit and organizes the sequence around actions:
 
 $$\mathbf{e}_i^{p,t} = \phi(x_i) + \phi(a_i) + E_{pe,i} + E_{ri,i} + E_{rt,i}$$
@@ -339,6 +392,9 @@ $$\mathbf{e}_i^{p,t} = \phi(x_i) + \phi(a_i) + E_{pe,i} + E_{ri,i} + E_{rt,i}$$
 where $\phi(x_i)$ is the item embedding, $\phi(a_i)$ the action embedding, $E_{pe,i}$ a learnable positional embedding, $E_{ri,i}$ a *request index embedding* (which server request generated this item, enabling the model to identify items from the same exposure session), and $E_{rt,i}$ a *pre-request time embedding* (log-bucketed elapsed time since the previous request).
 
 This consolidation halves sequence length relative to HSTU's interleaved representation, reducing attention cost by **75%** and linear projection cost by **50%**.
+
+![Figure 3 from Huang et al. (2025): GenRank input representation and candidate attention mask](figures/genrank-fig3-candidate-mask.png)
+*Figure 3 (Huang et al., GenRank 2025): (a) The five-component input representation per position: item embedding, action embedding, positional embedding, request index embedding, and pre-request time embedding. (b) The candidate mask structure: candidate items attend to all history positions but are masked from attending to each other, the same design principle as M-FALCON.*
 
 **ALiBi relative position bias.** HSTU uses a learnable relative attention bias $\text{rab}^{p,t}$, which requires storing a bias look-up table and adds $O(n^2)$ memory for training. GenRank replaces this with *Attention with Linear Biases* (ALiBi, Press et al., 2022), a parameter-free bias:
 
@@ -369,6 +425,38 @@ Additionally, P99 inference latency improves by more than 25% relative to the pr
 | Engagements | +1.25% |
 | 7-day lifetime (LT7) | +0.15% |
 
+### 5.3 GR2: LLM-Based Reranking with Reasoning
+
+GR2 (Liang et al., Meta, 2026) introduces a new stage to the generative pipeline: *reranking*. Where ranking (Section 5.1–5.2) scores hundreds of candidates via a sequence model, reranking takes the top-$K$ ranked candidates (typically $K = 10$) and asks an LLM to reason about their relative ordering. The distinction is that reranking operates over a small, already-filtered set — small enough that an LLM can attend to all candidates simultaneously and produce an explicit chain-of-thought justification for its ordering.
+
+**Why reranking benefits from reasoning.** A ranking model predicts $p(a \mid x, h)$ for each candidate independently (or jointly with M-FALCON amortization). It does not explicitly compare candidates against each other or articulate why one is preferred over another. An LLM operating over all $K$ candidates can identify *comparative* signals: "the user bought conditioner last week, so among these candidates the complementary item is X rather than Y." This cross-candidate reasoning can surface orderings the ranking model misses.
+
+**Semantic IDs in LLM context.** For the LLM to reason over items, items must be represented as tokens the LLM can process. GR2 encodes each item as a $K=4$-level RQ-VAE semantic ID (Section 4.1) and adds these as new vocabulary tokens to the LLM's embedding table. The user history and candidate list are both expressed in SID tokens, enabling the LLM to process item identity without natural-language descriptions:
+
+$$\texttt{<|sid\_begin|><s\_a\_57><s\_b\_7><s\_c\_23><s\_d\_4><|sid\_end|>}$$
+
+The LLM (Qwen3-8B) is first *mid-trained* on a mixture of item-alignment tasks — sequential preference prediction, dense captioning from SIDs, user persona grounding — to align the new SID vocabulary with the LLM's existing linguistic representations.
+
+**Three-stage training pipeline.** GR2 trains the reranker in three sequential stages:
+
+1. *Tokenized mid-training*: extend the LLM's vocabulary with SID tokens and mid-train on item-alignment tasks. This stage bridges the gap between the LLM's text-pretrained representations and the discrete item vocabulary.
+
+2. *Supervised fine-tuning on reasoning traces*: a teacher LLM (Qwen3-32B) generates reasoning traces via rejection sampling — the teacher is given the history and candidate set but *not* the ground truth, and samples until it predicts the correct next item. Only successful traces (correct prediction) are kept. This produces training data where the reasoning genuinely leads to the right answer. The SFT loss decouples reasoning tokens from ranking tokens:
+$$\mathcal{L}_{\text{SFT}} = -\lambda_r \sum_{i} \log P(r_i \mid \mathcal{P}, r_{<i}) - \lambda_o \sum_{j} \log P(o_j \mid \mathcal{P}, \tau, o_{<j})$$
+where $\tau = [r_1, \ldots]$ is the reasoning trace, $o$ is the re-ranked output, and $\lambda_r < \lambda_o$ — the ranking output loss is weighted higher to prevent the model from hallucinating plausible-sounding reasoning at the expense of ranking accuracy.
+
+3. *Reinforcement learning via DAPO*: RL fine-tunes the model to maximize a rank-promotion reward. The reward measures how much the ground-truth next item moves up in the re-ranked list relative to the pre-ranked input:
+$$R_{\text{rank}} = \frac{\text{rank}_{\text{pre}}(x^*) - \text{rank}_{\text{re}}(x^*)}{|D|}$$
+A positive value means the target item was promoted; a negative value means it was demoted. The format reward $R_{\text{fmt}}$ (checking that output is parseable JSON) is applied *conditionally*:
+$$R = \begin{cases} R_{\text{rank}} + \alpha R_{\text{fmt}} & \text{if } R_{\text{rank}} > 0 \text{ or } \text{rank}_{\text{pre}}(x^*) = 1 \\ R_{\text{rank}} & \text{otherwise} \end{cases}$$
+The conditional application prevents a degenerate strategy: without it, the model learns to copy the pre-ranked order (zero rank change, guaranteed parseable output) to collect the format reward for free.
+
+**DAPO objective.** The RL optimizer is DAPO (Decoupled Clip and Dynamic sAmpling Policy Optimization), which extends GRPO with two modifications: (1) separate clip thresholds $\varepsilon_{\text{low}}, \varepsilon_{\text{high}}$ for the importance ratio (Clip-Higher strategy, allowing larger positive updates); (2) dynamic sampling that filters out prompts where all $G$ sampled rollouts agree (accuracy = 0 or 1), avoiding zero-gradient updates:
+$$J_{\text{DAPO}}(\theta) = \mathbb{E} \left[ \frac{1}{G} \sum_{i=1}^G \frac{1}{|o_i|} \sum_{t=1}^{|o_i|} \min\!\left( r_{i,t}(\theta)\hat{A}_{i,t},\ \text{clip}(r_{i,t}(\theta), 1{-}\varepsilon_{\text{low}}, 1{+}\varepsilon_{\text{high}}) \hat{A}_{i,t} \right) \right]$$
+where $r_{i,t} = \pi_\theta / \pi_{\theta_{\text{old}}}$ is the token-level importance ratio and $\hat{A}_{i,t}$ is the group-normalized advantage.
+
+**Results.** GR2 outperforms the prior state-of-the-art (OneRec-Think) by +2.4% Recall@5 and +1.3% NDCG@5 on Amazon product datasets. The RL stage is necessary: SFT alone often *degrades* R@1, improving reasoning fluency without improving ranking optimality. The combination of rejection-sampling traces and domain knowledge priming (sequential purchase heuristics injected into prompts) is the best data recipe.
+
 ---
 
 ## 6. Scaling Laws for Generative Recommenders
@@ -383,6 +471,12 @@ $$\text{NE} = 0.549 - 5.3 \times 10^{-3} \ln C$$
 These log-linear relationships hold across three orders of magnitude in compute, from $C \approx 10^3$ to $C \approx 10^6$ PetaFLOPs/day. The fit is tight (no clear break in slope), and the models at the largest scale have 1.5 trillion parameters — comparable to GPT-3/LLaMA-2 in scale.
 
 DLRMs, trained on identical data with increasing compute budgets, cluster at HR@100 $\approx 0.28$–$0.29$ regardless of compute. **The plateau is architectural, not fundamental.**
+
+![Figure 7 from Zhai et al. (2024): scalability of GRs vs DLRMs on retrieval task](figures/hstu-fig7-scaling-law.png)
+*Figure 7a–b (Zhai et al., 2024): Scaling behavior on the retrieval task. Hit Rate@100 for generative recommenders (GRs) grows log-linearly with training compute across three orders of magnitude. DLRMs plateau in the $0.28$–$0.29$ range regardless of additional compute.*
+
+![Figure 7c from Zhai et al. (2024): scalability of GRs vs DLRMs on ranking task](figures/hstu-fig7c-ranking-scaling.png)
+*Figure 7c (Zhai et al., 2024): Scaling behavior on the ranking task. Normalized Entropy (NE, lower is better) for GRs continues to improve with compute while DLRM NE saturates. The 1.5 trillion parameter GR models at the far right represent the deployed production system.*
 
 The Wukong paper (Zhang et al., 2024) provides a complementary result from the DLRM-adjacent direction: an FM-stack architecture designed for CTR prediction achieves approximately **0.1% LogLoss improvement for every quadrupling of compute** across two orders of magnitude, up to 100+ GFLOP/example. Standard DLRM saturates around 31 GFLOP/example. Both results triangulate the same conclusion from different paradigms.
 
@@ -418,6 +512,8 @@ The Kaplan et al. result also predicts *compute-optimal* training: for a fixed c
 
 **Multi-task generalization.** The action space in production recommendation is heterogeneous: clicks, long watches, shares, comments, purchases, and skips each represent different user signals. Current generative models typically predict a single action type or combine them via task-specific heads. Whether a single generative model can simultaneously optimize across these objectives without task-specific architecture remains an open question.
 
+**Reasoning and reranking at scale.** GR2 demonstrates that LLM-based reasoning improves reranking quality on benchmark datasets, but the approach requires a 8B-parameter LLM running over $K=10$ candidates with chain-of-thought generation — orders of magnitude more expensive than a standard ranking forward pass. Whether reasoning-based reranking can be made fast enough for production latency budgets (typically $<$10ms), and whether the quality gains hold at the scale of billions of users, remains to be shown.
+
 **Distribution shift and temporal nonstationarity.** Generative models are trained on historical sequences but deployed on future sequences. User preferences and item distributions shift over time. The HSTU temporal relative attention bias addresses intra-sequence recency, but does not address global distribution shift between training and deployment. Online learning and continual training strategies for generative recommenders at trillion-parameter scale are not yet well understood.
 
 ---
@@ -437,3 +533,7 @@ The Kaplan et al. result also predicts *compute-optimal* training: for a fixed c
 | Generating Diverse High-Fidelity Images with VQ-VAE-2 (Razavi et al., 2019) | Foundational residual quantized VAE architecture underpinning TIGER's semantic ID construction | https://arxiv.org/abs/1906.00446 |
 | Self-Attentive Sequential Recommendation — SASRec (Kang and McAuley, 2018) | First Transformer-based sequential recommender; establishes self-attention for next-item prediction; major baseline for HSTU | https://arxiv.org/abs/1808.09781 |
 | Train Short, Test Long: ALiBi (Press et al., 2022) | Attention with Linear Biases: parameter-free position encoding via head-specific linear penalty on attention distance; adopted by GenRank | https://arxiv.org/abs/2108.12409 |
+| Generative Reasoning Re-ranker — GR2 (Liang et al., Meta 2026) | LLM-based reranking with reasoning traces: three-stage pipeline (tokenized mid-training, rejection-sampling SFT, DAPO RL), rank-promotion reward with conditional format reward to prevent reward hacking, ≥99% SID uniqueness via EMA + Random Last Level | https://arxiv.org/abs/2602.07774 |
+
+<!-- Figure from GR2 (Liang et al., 2026) arXiv:2602.07774 unavailable: ar5iv HTML conversion has a fatal error and no arxiv.org/html version exists for this paper ID. -->
+

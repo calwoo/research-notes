@@ -226,23 +226,70 @@ where $\Delta t_{ij}$ is the elapsed time (in seconds) between events $i$ and $j
 
 ### 4.1 Generative Training vs. Impression-Level Training
 
-**Impression-level training** (DLRM-style): each user with $n_i$ interactions contributes $n_i$ independent training examples. Each example requires a full model forward pass. For an attention-based model with $d$-dimensional embeddings and feed-forward dimension $d_{\text{ff}}$, the cost per user is:
+**Where the per-pass cost comes from.** An attention-based model processing a sequence of length $n$ has two dominant operations per layer:
 
-$$\text{Cost}_i^{\text{impression}} = n_i \cdot \left(n_i^2 d + n_i d_{\text{ff}} d\right)$$
+1. *Self-attention*: the query-key product $QK^\top \in \mathbb{R}^{n \times n}$ requires $n^2$ dot products, each over a $d$-dimensional vector — cost $O(n^2 d)$.
+2. *Feed-forward*: a position-wise MLP with hidden dimension $d_{\text{ff}}$ applies an $O(d_{\text{ff}} d)$ operation at each of the $n$ positions — cost $O(n d_{\text{ff}} d)$.
 
-Summing over all users and taking the max sequence length $N = \max_i n_i$:
+A single forward pass over a sequence of length $n_i$ therefore costs $O(n_i^2 d + n_i d_{\text{ff}} d)$.
+
+---
+
+**Impression-level training.** In DLRM-style training, each user contributes $n_i$ independent training examples — one per logged impression. Each example is a tuple $(\text{user features},\ x_t,\ y_t)$ where $x_t$ is the item shown in that impression and $y_t \in \{0,1\}$ is whether the user clicked. The model takes the user's compressed representation (built from history aggregates and engineered features) together with $x_t$'s features and predicts $p(\text{click} \mid u, x_t)$. Each example is processed as a fully independent forward pass — there is no mechanism to share computation across the $n_i$ examples belonging to the same user. To train on all $n_i$ impressions for user $i$, the model runs $n_i$ *separate* forward passes:
+
+$$\text{Cost}_i^{\text{impression}} = n_i \cdot \underbrace{\left(n_i^2 d + n_i d_{\text{ff}} d\right)}_{\text{one forward pass of length } n_i}$$
+
+Summing over users and bounding by the worst case $N = \max_i n_i$:
 
 $$\sum_i \text{Cost}_i^{\text{impression}} = O(N^3 d + N^2 d_{\text{ff}} d)$$
 
-**Generative training**: each sequence generates one forward pass producing $n_i$ supervised predictions (one per position). However, during training, only a *fraction* $s_u(n_i)$ of positions are sampled as training targets. Setting $s_u(n_i) = 1/n_i$ (one target per user per step):
+Why $n_i$ separate passes? Because impression-level training processes each (user, candidate) pair as a self-contained example — there is no mechanism to share computation across the $n_i$ targets of the same user. Each pass encodes the full user history into a fixed-length vector and scores one target against it.
 
-$$\text{Cost}_i^{\text{generative}} = s_u(n_i) \cdot n_i \cdot \left(n_i^2 d + n_i d^2\right) = n_i^2 d + n_i d^2$$
+---
 
-Summing over users:
+**Generative training.** The generative approach replaces $n_i$ separate passes with a single *teacher-forced* forward pass under a causal mask. Concretely:
 
-$$\sum_i \text{Cost}_i^{\text{generative}} = O(N^2 d + N d^2)$$
+- The full sequence $(x_0, x_1, \ldots, x_{n_i - 1})$ is fed into the model at once.
+- A *causal mask* enforces that position $t$ can only attend to positions $0, \ldots, t-1$ — the model never sees the future within the same pass.
+- The output at position $t$ is a prediction of $x_{t+1}$, using only the causal prefix.
 
-**This is an $O(N)$ reduction in complexity** — a sequence of length $N$ contributes $O(N^2)$ rather than $O(N^3)$ to training cost.
+One forward pass at cost $O(n_i^2 d + n_i d_{\text{ff}} d)$ therefore produces *all* $n_i$ predictions simultaneously. The causal mask makes this informationally equivalent to running $n_i$ separate prefix-conditioned passes — but shares the $O(n_i^2 d)$ attention computation across all predictions rather than repeating it $n_i$ times.
+
+---
+
+**The role of $s_u(n_i)$.** Even though the generative forward pass produces $n_i$ predictions, you don't necessarily compute the loss — and backpropagate gradients — for all of them. The scalar $s_u(n_i) \in (0, 1]$ is the *fraction of positions sampled as loss targets* in a given training step.
+
+Two reasons to set $s_u < 1$:
+
+1. **Gradient normalization.** A user with $n_i = 10{,}000$ interactions would contribute 1,000× more gradient signal than a user with $n_i = 10$ if all positions were used. Setting $s_u(n_i) = c / n_i$ for a constant $c$ equalizes each user's contribution regardless of sequence length.
+2. **Output projection cost.** Predicting the next item requires projecting the hidden state $u_t \in \mathbb{R}^d$ into the item embedding space — a cost of $O(d^2)$ or $O(d \cdot |\mathcal{V}|)$ per position. For large item vocabularies, this per-position output cost dominates if all $n_i$ positions are used.
+
+The key point is that **$s_u$ does not affect the attention computation**. The $O(n_i^2 d)$ forward pass is incurred once regardless of how many targets are sampled — you cannot avoid attending over the full sequence just because you only want one prediction. $s_u$ only controls how many output projections and loss evaluations follow the shared forward pass.
+
+**Example.** Say user $i$ has history $(x_0, x_1, x_2, x_3, x_4)$. One causal forward pass produces hidden states at every position:
+
+$$\underbrace{x_0 \to u_0,\quad x_1 \to u_1,\quad x_2 \to u_2,\quad x_3 \to u_3,\quad x_4 \to u_4}_{\text{one forward pass, cost } O(n_i^2 d)}$$
+
+where $u_t$ is conditioned on $(x_0, \ldots, x_t)$ only (enforced by the causal mask). Each $u_t$ can predict the next item $x_{t+1}$, giving four candidate loss targets:
+
+| Position $t$ | Prediction | Ground truth | Compute loss? |
+|---|---|---|---|
+| 0 | $\text{proj}(u_0) \approx x_1$ | $x_1$ | maybe |
+| 1 | $\text{proj}(u_1) \approx x_2$ | $x_2$ | maybe |
+| 2 | $\text{proj}(u_2) \approx x_3$ | $x_3$ | maybe |
+| 3 | $\text{proj}(u_3) \approx x_4$ | $x_4$ | maybe |
+
+With $s_u = 1/n_i = 1/5$, one position is sampled at random — say $t = 2$. Only $-\log p(x_3 \mid u_2)$ is evaluated; the hidden states at positions 0, 1, 3 are computed but discarded. The $O(n_i^2 d)$ attention cost was already paid for all of them.
+
+Setting $s_u(n_i) = 1/n_i$ (one target per user per step), the total cost per user is:
+
+$$\text{Cost}_i^{\text{generative}} = \underbrace{n_i^2 d + n_i d_{\text{ff}} d}_{\text{forward pass (fixed)}} + \underbrace{\frac{1}{n_i} \cdot n_i \cdot d^2}_{s_u \cdot n_i \text{ output projections}} = n_i^2 d + n_i d_{\text{ff}} d + d^2$$
+
+Dropping the $d^2$ term (dominated for large $n_i$) and summing over users:
+
+$$\sum_i \text{Cost}_i^{\text{generative}} = O(N^2 d + N d_{\text{ff}} d)$$
+
+**This is an $O(N)$ reduction** relative to impression-level training. A user with 1,000 interactions costs $O(N^2 d)$ rather than $O(N^3 d)$, simply because the forward pass is shared across all their predictions instead of repeated for each one.
 
 ### 4.2 Stochastic Length Sparsity
 
