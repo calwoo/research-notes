@@ -57,6 +57,22 @@ These choices introduce fundamental scalability barriers:
 - Impression-level training complexity scales as $O(N^3 d)$ where $N = \max_i n_i$ is the maximum sequence length (shown in Section 4.1).
 - Separate retrieval/ranking pipelines double infrastructure cost and prevent knowledge transfer between stages.
 
+**Why DLRMs fail to scale with compute (Zhao et al., 2023).** The HSTU paper cites Zhao et al. (KDD 2023) as empirical grounding for the scaling failure. Their paper identifies a precise mechanism they term *quality saturation*: DLRM-style systems that represent items with per-ID embeddings (*item-centric ranking*, ICR) encounter a parameter explosion as the item inventory grows.
+
+On creator-economy platforms (feeds, short video), the item inventory grows linearly over time: $|\mathcal{I}| = O(t)$. Total parameter count therefore grows as:
+
+$$\text{params}(t) = \text{const} + |\mathcal{I}(t)| \cdot d$$
+
+Meanwhile, the total training data volume grows only as $O(t)$ as well — so the training signal per parameter stays constant rather than improving. Zhao et al. show this leads to a hard asymptotic error floor:
+
+$$\mathbb{E}\left[\|\hat{\theta}_t - \theta^*\|^2\right]_{\text{ICR}} = \Omega(1) \quad \text{as } t \to \infty$$
+
+compared to $O(1/t)$ for their proposed user-centric alternative. *This is not a data problem — it holds even as training data grows without bound.* The parameter count simply outruns the available training signal because item embeddings are *ephemeral*: items leave the inventory (videos deleted, ads expired), and their embeddings accumulate signal briefly before becoming irrelevant. The model cannot amortize compute over a stable vocabulary the way LLMs amortize over a fixed token set.
+
+Concretely, at 60 days of training data, an ICR model is **21× larger** in total parameters than a user-centric counterpart trained on identical data — yet achieves worse metric performance. Increasing embedding dimension (a direct proxy for model capacity and compute) causes ICR to *degrade* in production experiments (Table 4 of Zhao et al.), while the user-centric model continues to improve. Distribution drift compounds the problem: model quality degrades significantly within 24 hours of training cutoff on fast-moving item distributions, so additional compute invested in a larger ICR model depreciates rapidly.
+
+HSTU's response to this analysis is to abandon per-item embeddings as the primary modeling unit and instead treat recommendation as sequential transduction over a bounded, dense user action space — sidestepping the parameter explosion entirely.
+
 ### 1.2 Why Standard Transformers Fail on Recommendation Data
 
 The natural candidate for replacing DLRMs is the Transformer, which already models sequential data via self-attention. However, naively applying Transformers to industrial recommendation data fails for three reasons:
@@ -88,6 +104,26 @@ All user interactions are merged into a single *chronological time series*. Each
 The sequence for user $i$ is:
 
 $$h_i = (x_0, x_1, \ldots, x_{n_i - 1}) \in \mathbb{R}^{n_i \times d}$$
+
+> **Aside: what does "target-aware" mean?** In recommendation, you're always scoring a specific candidate item (the "target") against a user's history. A model is *target-aware* if the user representation it computes depends on which candidate is being scored. A context-free model sum-pools history into one fixed vector $\mathbf{u}$ used identically for every candidate. A target-aware model recomputes $\mathbf{v}_U(A)$ per candidate, upweighting history items semantically related to $A$ and downweighting irrelevant ones — so the same user appears different when scoring a tennis racket vs. a laptop. This is strictly more expressive than any static numerical feature, which commits to a fixed aggregation at engineering time.
+
+**Why removing numerical features is justified: the DIN argument (Zhou et al., 2018).** This design choice rests on an observation from the *Deep Interest Network* paper: the role that handcrafted numerical features play is to summarize the relevance of a user's behavioral history to the candidate item being scored. Typical features include:
+
+- **Weighted/decayed counters**: "number of clicks on sports items in the past 7 days" (approximates recent interest in a category)
+- **Engagement ratios**: $\text{CTR} = \frac{\text{clicks on category } c}{\text{impressions on category } c}$ (approximates preference intensity per category)
+- **Aggregated cross-product features**: clicks broken down by (category, brand, price tier) to capture fine-grained preference slices
+
+All of these are *fixed, pre-computed aggregations* over the raw history — they collapse the sequence into a scalar or small vector that human engineers believe is informative. The fundamental limitation is that they are *context-free*: a feature like "7-day sports CTR" is the same regardless of whether the current candidate is a tennis racket or running shoes.
+
+DIN replaces static pooling with a **local activation unit** that produces a candidate-conditioned user representation:
+
+$$\mathbf{v}_U(A) = \sum_{j=1}^{H} a(\mathbf{e}_j,\, \mathbf{v}_A)\cdot \mathbf{e}_j$$
+
+where $\mathbf{v}_A$ is the candidate item embedding, $\{\mathbf{e}_j\}$ are history item embeddings, and the scalar weights $a(\mathbf{e}_j, \mathbf{v}_A)$ are output by a small MLP applied to the concatenation $[\mathbf{e}_j,\ \mathbf{v}_A,\ \mathbf{e}_j \odot \mathbf{v}_A,\ \mathbf{e}_j \otimes \mathbf{v}_A]$. The outer product term $\mathbf{e}_j \otimes \mathbf{v}_A$ gives the network explicit access to cross-item feature interactions. Crucially, the weights are **not softmax-normalized** — the magnitude of $\mathbf{v}_U(A)$ encodes preference *intensity*, not just relative attention.
+
+The consequence is that DIN subsumes numerical aggregates: the model can learn to selectively upweight the subset of history behaviors semantically related to the candidate, dynamically recomputing what a "sports CTR" counter would have captured but conditioned on the specific candidate at inference time. This is strictly more expressive — it adapts the aggregation to each candidate rather than committing to a single feature partition at feature engineering time.
+
+HSTU extends this logic to its limit: given a *sufficiently expressive* sequential transducer (HSTU layers stacked to 1.5T parameters) operating over the full user history, the model can implicitly recompute arbitrary candidate-conditioned aggregations that any handcrafted numerical feature encodes — while also capturing higher-order temporal patterns no static feature could represent. At scale, the raw action sequence is informationally richer than any fixed derived feature set.
 
 ### 2.2 Retrieval vs. Ranking Formulation
 
@@ -377,5 +413,7 @@ A unified future architecture would likely combine:
 | Scaling Laws for Neural Language Models (Kaplan et al.) | Original power-law scaling for LLMs | https://arxiv.org/abs/2001.08361 |
 | FlashAttention-2: Faster Attention with Better Parallelism | Efficient attention baseline for speed comparison | https://arxiv.org/abs/2307.08691 |
 | DLRM: An Advanced, Open Source Deep Learning Recommendation Model | Meta DLRM baseline that plateaus | https://arxiv.org/abs/1906.00091 |
+| Deep Interest Network for Click-Through Rate Prediction (Zhou et al., KDD 2018) | Introduces target-aware local activation: candidate-conditioned attention over user history where weights are derived from the outer product of history and candidate embeddings (no softmax normalization). Foundational justification for removing handcrafted numerical features in HSTU — target-aware attention implicitly recomputes what static aggregates approximate, conditioned on each candidate. | https://arxiv.org/abs/1706.06978 |
+| Breaking the Curse of Quality Saturation with User-Centric Ranking (Zhao et al., KDD 2023) | Formal analysis and empirical evidence that item-centric DLRMs hit a hard asymptotic error floor as item inventory grows; motivates HSTU's abandonment of per-item embeddings | https://arxiv.org/abs/2305.15333 |
 | SiLU / Swish Activation: Gaussian Error Linear Units | Theoretical basis for SiLU nonlinearity | https://arxiv.org/abs/1606.08415 |
 | Dirichlet Process Mixture Models | Statistical model motivating pointwise attention design | https://www.gatsby.ucl.ac.uk/~ywteh/research/npbayes/dpchp.pdf |
