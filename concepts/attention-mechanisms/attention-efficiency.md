@@ -68,7 +68,7 @@ $$\mathbf{o}_t^h = \sum_{s=1}^{t} a_{t,s}^h \, \mathbf{v}_s, \quad a_{t,s}^h = \
 
 The $H$ outputs are concatenated and passed through an output projection $\mathbf{W}_O \in \mathbb{R}^{D \times H d_v}$.
 
-In einsum notation (following Shazeer 2019), the batched computation reads:
+In einsum notation (following [Shazeer 2019](https://arxiv.org/abs/1911.02150)), the batched computation reads:
 
 $$Q = \operatorname{einsum}(\text{"bnd,hdk} \to \text{bhnk"}, X, P_Q), \quad K = \operatorname{einsum}(\text{"bmd,dk} \to \text{bmk"}, M, P_K)$$
 
@@ -93,7 +93,7 @@ The corresponding memory-to-compute ratio for incremental decoding improves from
 
 ### 2.3 Quality Tradeoffs
 
-Sharing a single KV projection eliminates the per-head specialization of keys and values. Empirically (Shazeer 2019), MQA achieves around 12× decoder speedup on encoder-decoder translation tasks with only minor quality degradation — approximately 0.2 BLEU points on WMT14 — and comparable perplexity on language modeling. The quality gap is tolerable for many applications but motivates the intermediate Grouped-Query Attention of Section 3.
+Sharing a single KV projection eliminates the per-head specialization of keys and values. Empirically ([Shazeer 2019](https://arxiv.org/abs/1911.02150)), MQA achieves around 12× decoder speedup on encoder-decoder translation tasks with only minor quality degradation — approximately 0.2 BLEU points on WMT14 — and comparable perplexity on language modeling. The quality gap is tolerable for many applications but motivates the intermediate Grouped-Query Attention of Section 3.
 
 ---
 
@@ -128,11 +128,11 @@ The same factorization applies to $\mathbf{W}_V^{\text{MHA}}$. This perspective 
 
 **Memory reduction.** GQA-$G$ stores $2 G d_k$ scalars per token per layer (versus $2 H d_k$ for MHA), giving a reduction factor of $H/G$. For GQA-8 with $H = 32$ (LLaMA-style), this is a 4× reduction.
 
-**Expressiveness.** All $H/G$ heads within a group are constrained to attend to the same linear subspace of the context. This removes the ability for those heads to develop specialized key/value representations. In practice (Ainslie et al. 2023), GQA-8 upscaled from an MHA checkpoint matches MHA quality on summarization, translation, and question answering while attaining inference speed close to MQA. *The quality gap between GQA and MHA is substantially smaller than the gap between MQA and MHA.*
+**Expressiveness.** All $H/G$ heads within a group are constrained to attend to the same linear subspace of the context. This removes the ability for those heads to develop specialized key/value representations. In practice ([Ainslie et al. 2023](https://arxiv.org/abs/2305.13245)), GQA-8 upscaled from an MHA checkpoint matches MHA quality on summarization, translation, and question answering while attaining inference speed close to MQA. *The quality gap between GQA and MHA is substantially smaller than the gap between MQA and MHA.*
 
 Larger models benefit more from GQA, because they use more heads (making MQA's single-head constraint more severe) while the relative FLOPs consumed by KV cache loading decrease (quadratic FLOPs vs linear KV bandwidth).
 
-![Figure 2 from Ainslie et al. (2023): side-by-side comparison of Multi-Head Attention, Grouped-Query Attention, and Multi-Query Attention head structures](figures/gqa2023-fig2-mha-gqa-mqa-comparison.png)
+![Figure 2 from [Ainslie et al. (2023)](https://arxiv.org/abs/2305.13245): side-by-side comparison of Multi-Head Attention, Grouped-Query Attention, and Multi-Query Attention head structures](figures/gqa2023-fig2-mha-gqa-mqa-comparison.png)
 *Figure 2 (Ainslie et al., 2023): MHA gives every query head its own K and V head (left). GQA-G assigns one K/V head per group of H/G query heads (centre). MQA collapses all heads to a single shared K and V (right). The memory cost of the KV cache scales as the number of K/V heads, so the three designs represent a continuum from maximum expressiveness (MHA) to minimum cache footprint (MQA).*
 
 ---
@@ -143,7 +143,7 @@ Larger models benefit more from GQA, because they use more heads (making MQA's s
 
 Standard dot-product attention computes $\mathbf{q}^{\top} \mathbf{k}$ without any position information. The original Transformer injects *absolute* positional information by adding a sinusoidal bias to the input embeddings before projection. This has two drawbacks: (i) absolute positions generalize poorly to lengths not seen during training; (ii) the positional signal is entangled with content in the same embedding space.
 
-*Rotary Positional Embeddings* (RoPE), introduced by Su et al. (2021), take a different approach: modify the query and key vectors themselves so that their inner product depends only on the *relative* offset between their positions. This is achieved by rotating query and key vectors by an angle proportional to their absolute position; the rotation acts like a carrier frequency that cancels in the dot product.
+*Rotary Positional Embeddings* (RoPE), introduced by [Su et al. (2021)](https://arxiv.org/abs/2104.09864), take a different approach: modify the query and key vectors themselves so that their inner product depends only on the *relative* offset between their positions. This is achieved by rotating query and key vectors by an angle proportional to their absolute position; the rotation acts like a carrier frequency that cancels in the dot product.
 
 ### 4.2 2D Rotation Construction
 
@@ -161,7 +161,7 @@ $$\left[\mathbf{R}(m\theta)\mathbf{q}\right]^{\top} \left[\mathbf{R}(n\theta)\ma
 
 **The dot product depends only on the relative position $n - m$, not on $m$ or $n$ individually.**
 
-![Figure 1 from Su et al. (2021): illustration of the Rotary Position Embedding mechanism](figures/roformer2021-fig1-rope-illustration.png)
+![Figure 1 from [Su et al. (2021)](https://arxiv.org/abs/2104.09864): illustration of the Rotary Position Embedding mechanism](figures/roformer2021-fig1-rope-illustration.png)
 *Figure 1 (Su et al., 2021): Implementation of Rotary Position Embedding. Each query and key vector is multiplied by a block-diagonal rotation matrix whose angle is proportional to the token's absolute position. Because the rotation of Q at position m and the rotation of K at position n combine to a net rotation by (n − m), the resulting dot product encodes only the relative offset between the two positions.*
 
 ### 4.3 Extension to Higher Dimensions
@@ -194,7 +194,7 @@ $$\left[\mathbf{R}^{d_k}(m)\mathbf{q}\right]^{\top} \left[\mathbf{R}^{d_k}(n)\ma
 
 ## 5. Multi-Head Latent Attention
 
-Standard MQA sacrifices expressiveness entirely; GQA is a middle ground. *Multi-head Latent Attention* (MLA), introduced in DeepSeek-V2, takes a different approach: cache a low-dimensional *latent* vector and reconstruct full KV tensors via learned up-projections, enabling both high expressiveness and a very small cache footprint.
+Standard MQA sacrifices expressiveness entirely; GQA is a middle ground. *Multi-head Latent Attention* (MLA), introduced in [DeepSeek-V2](https://arxiv.org/abs/2405.04434), takes a different approach: cache a low-dimensional *latent* vector and reconstruct full KV tensors via learned up-projections, enabling both high expressiveness and a very small cache footprint.
 
 ### 5.1 Low-Rank KV Compression
 
@@ -210,7 +210,7 @@ $$\mathbf{k}_t^h = \mathbf{W}_K^{\text{up},h} \mathbf{c}_t^{KV} \in \mathbb{R}^{
 
 where $\mathbf{W}_K^{\text{up},h} \in \mathbb{R}^{d_k \times d_c}$ and $\mathbf{W}_V^{\text{up},h} \in \mathbb{R}^{d_v \times d_c}$ are learned per-head up-projections.
 
-**DeepSeek-V2 dimensions.** The model uses $H = n_h = 128$ query heads, $d_k = d_v = d_h = 128$, so standard MHA would cache $2 \times 128 \times 128 = 32{,}768$ scalars per token per layer. MLA sets $d_c = 512$ (approximately $4 d_h$), caching only 512 scalars — a compression ratio of $d_c / (2 H d_k) = 512 / 32{,}768 \approx 1/64$. *In practice the effective cache includes additional RoPE components (Section 5.5), bringing the ratio to approximately $1/57$.*
+**[DeepSeek-V2](https://arxiv.org/abs/2405.04434) dimensions.** The model uses $H = n_h = 128$ query heads, $d_k = d_v = d_h = 128$, so standard MHA would cache $2 \times 128 \times 128 = 32{,}768$ scalars per token per layer. MLA sets $d_c = 512$ (approximately $4 d_h$), caching only 512 scalars — a compression ratio of $d_c / (2 H d_k) = 512 / 32{,}768 \approx 1/64$. *In practice the effective cache includes additional RoPE components (Section 5.5), bringing the ratio to approximately $1/57$.*
 
 **Memory reduction factor:**
 
@@ -218,7 +218,7 @@ $$\frac{\text{MLA cache size}}{\text{MHA cache size}} = \frac{d_c}{2 H d_k}$$
 
 For the DeepSeek-V2 numbers: $512 / (2 \times 128 \times 128) = 512 / 32{,}768 \approx 1.6\%$ of MHA.
 
-![Figure 3 from DeepSeek-AI (2024): simplified comparison of MHA, GQA, MQA, and MLA attention mechanisms](figures/deepseekv2-fig3-mla-architecture.png)
+![Figure 3 from [DeepSeek-AI (2024)](https://arxiv.org/abs/2405.04434): simplified comparison of MHA, GQA, MQA, and MLA attention mechanisms](figures/deepseekv2-fig3-mla-architecture.png)
 *Figure 3 (DeepSeek-AI, 2024): Simplified illustration of Multi-Head Attention (MHA), Grouped-Query Attention (GQA), Multi-Query Attention (MQA), and Multi-Head Latent Attention (MLA). MLA replaces the per-head K and V tensors with a single low-dimensional latent vector $\mathbf{c}_t^{KV}$ of size $d_c$, which is projected back to full K and V representations via learned up-projections. Only this latent is stored in the KV cache, achieving a ~57× reduction over MHA.*
 
 ### 5.2 Query Compression
@@ -227,7 +227,7 @@ MLA also compresses queries, not to reduce the KV cache (queries are not cached)
 
 $$\mathbf{c}_t^Q = \mathbf{W}_Q^{\text{down}} \mathbf{h}_t \in \mathbb{R}^{d_c'}, \qquad \mathbf{q}_t^h = \mathbf{W}_Q^{\text{up},h} \mathbf{c}_t^Q \in \mathbb{R}^{d_k}$$
 
-where $\mathbf{W}_Q^{\text{down}} \in \mathbb{R}^{d_c' \times D}$ and $\mathbf{W}_Q^{\text{up},h} \in \mathbb{R}^{d_k \times d_c'}$. In DeepSeek-V2, $d_c' = 1{,}536$.
+where $\mathbf{W}_Q^{\text{down}} \in \mathbb{R}^{d_c' \times D}$ and $\mathbf{W}_Q^{\text{up},h} \in \mathbb{R}^{d_k \times d_c'}$. In [DeepSeek-V2](https://arxiv.org/abs/2405.04434), $d_c' = 1{,}536$.
 
 *This does not affect inference memory for the KV cache.* The intermediate query latent $\mathbf{c}_t^Q$ is ephemeral and not stored across decoding steps.
 
@@ -267,13 +267,13 @@ The rotation $\mathbf{R}^{d_k}(s)$ is position-dependent and lies *between* the 
 
 ### 5.5 Decoupled RoPE as the Solution
 
-DeepSeek-V2 resolves this incompatibility by introducing separate positional components that carry RoPE but bypass the up-projection.
+[DeepSeek-V2](https://arxiv.org/abs/2405.04434) resolves this incompatibility by introducing separate positional components that carry RoPE but bypass the up-projection.
 
 **Definition (Decoupled RoPE).** In addition to the content-based keys derived from $\mathbf{c}_t^{KV}$, MLA maintains a *shared* RoPE key $\mathbf{k}_t^R \in \mathbb{R}^{d_h^R}$ computed directly from the input (no up-projection):
 
 $$\mathbf{k}_t^R = \mathbf{R}^{d_h^R}(t) \, \mathbf{W}_K^R \mathbf{h}_t$$
 
-where $\mathbf{W}_K^R \in \mathbb{R}^{d_h^R \times D}$ is a shared projection and $d_h^R = 64$ in DeepSeek-V2 (half the head dimension). Similarly, each query head receives a per-head RoPE component:
+where $\mathbf{W}_K^R \in \mathbb{R}^{d_h^R \times D}$ is a shared projection and $d_h^R = 64$ in [DeepSeek-V2](https://arxiv.org/abs/2405.04434) (half the head dimension). Similarly, each query head receives a per-head RoPE component:
 
 $$\mathbf{q}_t^{R,h} = \mathbf{R}^{d_h^R}(t) \, \mathbf{W}_Q^{R,h} \mathbf{c}_t^Q$$
 
@@ -281,7 +281,7 @@ The effective key and query for head $h$ are formed by concatenation:
 
 $$\mathbf{k}_t^{\text{eff},h} = \begin{pmatrix} \mathbf{W}_K^{\text{up},h} \mathbf{c}_t^{KV} \\ \mathbf{k}_t^R \end{pmatrix} \in \mathbb{R}^{d_k + d_h^R}, \qquad \mathbf{q}_t^{\text{eff},h} = \begin{pmatrix} \mathbf{q}_t^h \\ \mathbf{q}_t^{R,h} \end{pmatrix} \in \mathbb{R}^{d_k + d_h^R}$$
 
-The cache stores $\mathbf{c}_t^{KV}$ (for the content part, absorption still applies) and $\mathbf{k}_t^R$ (for the positional part, it is a fixed low-dimensional vector). Since $\mathbf{k}_t^R$ requires no up-projection, it suffers no commutativity issue and can be cached directly. **The total cache per token per layer is $d_c + d_h^R = 512 + 64 = 576$ scalars in DeepSeek-V2, versus $2 H d_k = 32{,}768$ for MHA — a compression of approximately 57×.**
+The cache stores $\mathbf{c}_t^{KV}$ (for the content part, absorption still applies) and $\mathbf{k}_t^R$ (for the positional part, it is a fixed low-dimensional vector). Since $\mathbf{k}_t^R$ requires no up-projection, it suffers no commutativity issue and can be cached directly. **The total cache per token per layer is $d_c + d_h^R = 512 + 64 = 576$ scalars in [DeepSeek-V2](https://arxiv.org/abs/2405.04434), versus $2 H d_k = 32{,}768$ for MHA — a compression of approximately 57×.**
 
 ---
 
@@ -291,7 +291,7 @@ The cache stores $\mathbf{c}_t^{KV}$ (for the content part, absorption still app
 
 Even after MLA reduces the KV cache size by 57×, the attention computation itself during decoding still scales as $O(T)$ per token: for each new query, the model must compute dot products with all $T$ cached latents and read them from memory. For very long contexts ($T \sim 128{,}000$), this becomes the dominant cost.
 
-*DeepSeek Sparse Attention* (DSA), introduced in DeepSeek-V3.2-Exp, addresses this by selecting a small subset $\mathcal{S}_t \subset \{1, \ldots, t-1\}$ of $|\mathcal{S}_t| = K$ past tokens for each query position $t$, where $K \ll t$ (in practice $K = 2{,}048$). Full MLA is then computed only over $\mathcal{S}_t$. The challenge is selecting $\mathcal{S}_t$ cheaply and accurately.
+*DeepSeek Sparse Attention* (DSA), introduced in [DeepSeek-V3.2-Exp](https://github.com/deepseek-ai/DeepSeek-V3.2-Exp), addresses this by selecting a small subset $\mathcal{S}_t \subset \{1, \ldots, t-1\}$ of $|\mathcal{S}_t| = K$ past tokens for each query position $t$, where $K \ll t$ (in practice $K = 2{,}048$). Full MLA is then computed only over $\mathcal{S}_t$. The challenge is selecting $\mathcal{S}_t$ cheaply and accurately.
 
 ### 6.2 The Lightning Indexer
 
@@ -327,7 +327,7 @@ That is, after the WHT, no single dimension can dominate. Quantization applied t
 
 **Computational cost.** The WHT can be computed in $O(d^I \log d^I)$ using a butterfly (fast Hadamard transform) algorithm, without materializing the dense matrix $\mathbf{H}$. Since both $\mathbf{q}$ and $\mathbf{k}$ are transformed, the dot product $(\mathbf{H}\mathbf{q}) \cdot (\mathbf{H}\mathbf{k}) = \mathbf{q}^{\top} \mathbf{H}^{\top} \mathbf{H} \mathbf{k} = \mathbf{q}^{\top} \mathbf{k}$ (the WHT is orthogonal), so the transform is invisible to the score values while benefiting quantization stability.
 
-*Note.* The initial DeepSeek-V3.2-Exp technical report included Hadamard preprocessing, but subsequent engineering analysis found no measurable accuracy impact and removed it from the production implementation. The theoretical motivation above describes the original design rationale.
+*Note.* The initial [DeepSeek-V3.2-Exp](https://github.com/deepseek-ai/DeepSeek-V3.2-Exp) technical report included Hadamard preprocessing, but subsequent engineering analysis found no measurable accuracy impact and removed it from the production implementation. The theoretical motivation above describes the original design rationale.
 
 ### 6.5 Two-Stage Training of the Indexer
 
@@ -350,7 +350,7 @@ $$\mathcal{L}^I = \sum_t D_{\mathrm{KL}}\!\left(p_{t,\mathcal{S}_t} \;\big\|\; \
 
 **The indexer input is detached from the main computational graph.** This means: (i) $\mathcal{L}^{\text{LM}}$ gradients do not flow into the indexer, so the main model cannot implicitly communicate with the indexer to ease token selection; (ii) $\mathcal{L}^I$ gradients do not flow into the main model, so the indexer cannot distort the main model's representations in service of making its own job easier. Each component is optimized independently.
 
-**Reported results.** DeepSeek-V3.2-Exp achieves approximately 2–3× faster long-sequence processing and 30–40% memory reduction relative to full dense attention at long contexts, with no measurable quality loss on standard benchmarks including GSM8K and GPQA-Diamond.
+**Reported results.** [DeepSeek-V3.2-Exp](https://github.com/deepseek-ai/DeepSeek-V3.2-Exp) achieves approximately 2–3× faster long-sequence processing and 30–40% memory reduction relative to full dense attention at long contexts, with no measurable quality loss on standard benchmarks including GSM8K and GPQA-Diamond.
 
 ---
 
