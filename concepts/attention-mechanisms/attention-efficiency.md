@@ -111,18 +111,51 @@ GQA interpolates between MHA ($G = H$, one KV head per query head) and MQA ($G =
 
 ### 3.2 GQA as Low-Rank Factorization of the Key and Value Matrices
 
-To make GQA's relationship to MHA precise, write the full MHA key matrix as $\mathbf{W}_K \in \mathbb{R}^{D \times H d_k}$ — the horizontal concatenation of $H$ per-head matrices. GQA implicitly factorizes this as:
+**Setup.** Stack the per-head key projections of MHA into a single matrix:
 
-$$\mathbf{W}_K^{\text{MHA}} \approx \mathbf{W}_K^{\text{down}} \cdot \mathbf{W}_K^{\text{up}}$$
+$$\mathbf{W}_K^{\text{MHA}} = \begin{pmatrix} \mathbf{W}_K^1 \\ \mathbf{W}_K^2 \\ \vdots \\ \mathbf{W}_K^H \end{pmatrix} \in \mathbb{R}^{H d_k \times D}$$
 
-where:
+Applying this to an input $\mathbf{h}_t \in \mathbb{R}^D$ yields all $H$ per-head keys in one shot: $\mathbf{W}_K^{\text{MHA}} \mathbf{h}_t = [\mathbf{k}_t^1; \ldots; \mathbf{k}_t^H]$. This matrix has up to $\min(H d_k, D)$ degrees of freedom — in practice $H d_k \ll D$, so $H d_k$ free parameters.
 
-- $\mathbf{W}_K^{\text{down}} \in \mathbb{R}^{D \times G d_k}$ contains $G$ distinct key projection matrices (one per group), concatenated horizontally.
-- $\mathbf{W}_K^{\text{up}} = \mathbf{I}_{d_k} \otimes \mathbf{1}_{H/G}^{\top} \in \mathbb{R}^{G d_k \times H d_k}$ is a fixed, non-learned *up-projection* that duplicates each group's $d_k$-dimensional key vector to all $H/G$ heads in that group. Here $\otimes$ denotes the Kronecker product and $\mathbf{1}_{H/G}$ is the all-ones vector of length $H/G$.
+**The GQA constraint.** Under GQA-$G$, all $H/G$ heads in group $g$ share $\mathbf{W}_K^g$. The effective key matrix therefore has repeated row-blocks:
 
-The same factorization applies to $\mathbf{W}_V^{\text{MHA}}$. This perspective shows that GQA is not merely an engineering approximation — it is a structured low-rank constraint on the joint KV weight matrix, with the up-projection fixed rather than learned.
+$$\mathbf{W}_K^{\text{GQA}} = \begin{pmatrix} \underbrace{\mathbf{W}_K^1, \ldots, \mathbf{W}_K^1}_{H/G \text{ copies}} \\ \underbrace{\mathbf{W}_K^2, \ldots, \mathbf{W}_K^2}_{H/G \text{ copies}} \\ \vdots \\ \underbrace{\mathbf{W}_K^G, \ldots, \mathbf{W}_K^G}_{H/G \text{ copies}} \end{pmatrix} \in \mathbb{R}^{H d_k \times D}$$
 
-*Remark.* The factorization is over the head dimension, not the embedding dimension $D$. The rank reduction is from $H$ to $G$ in the head axis. Setting $G = 1$ recovers MQA (rank-1 in the head axis); setting $G = H$ recovers unconstrained MHA.
+where each $\mathbf{W}_K^g \in \mathbb{R}^{d_k \times D}$ appears $H/G$ consecutive times. This is not an approximation to $\mathbf{W}_K^{\text{MHA}}$; it is an exact structural constraint.
+
+**The factorization.** Define the compact *down-projection* $\mathbf{W}_K^{\text{down}} \in \mathbb{R}^{G d_k \times D}$ as the vertical stack of the $G$ group projections:
+
+$$\mathbf{W}_K^{\text{down}} = \begin{pmatrix} \mathbf{W}_K^1 \\ \vdots \\ \mathbf{W}_K^G \end{pmatrix}$$
+
+and the fixed *broadcast operator*:
+
+$$\mathbf{U} = (\mathbf{I}_G \otimes \mathbf{1}_{H/G}) \otimes \mathbf{I}_{d_k} \in \mathbb{R}^{H d_k \times G d_k}$$
+
+where $\otimes$ is the Kronecker product, $\mathbf{1}_{H/G} \in \mathbb{R}^{H/G}$ is the all-ones column vector, and $\mathbf{I}_n$ is the $n \times n$ identity. Then:
+
+$$\mathbf{W}_K^{\text{GQA}} = \mathbf{U} \cdot \mathbf{W}_K^{\text{down}}$$
+
+To verify the dimensions: $\mathbf{I}_G \otimes \mathbf{1}_{H/G} \in \mathbb{R}^{H \times G}$ (each diagonal block replicates a scalar $H/G$ times); tensoring with $\mathbf{I}_{d_k}$ promotes each scalar entry to a $d_k \times d_k$ block, giving $\mathbf{U} \in \mathbb{R}^{H d_k \times G d_k}$. Then $\mathbf{U} \mathbf{W}_K^{\text{down}} \in \mathbb{R}^{H d_k \times D}$ as required.
+
+**What $\mathbf{U}$ does.** $\mathbf{U}$ is a block-structured repetition operator. Written out in $d_k \times d_k$ blocks:
+
+$$U_{hg} = \begin{cases} \mathbf{I}_{d_k} & \text{if head } h \text{ belongs to group } g \\ \mathbf{0} & \text{otherwise} \end{cases}$$
+
+It takes the $G d_k$ distinct key coordinates produced by $\mathbf{W}_K^{\text{down}}$ and broadcasts each group's $d_k$-dimensional key to all $H/G$ heads in that group. $\mathbf{U}$ has full column rank $G d_k$ and is not learned.
+
+**Low-rank consequence.** The image of $\mathbf{W}_K^{\text{GQA}}$ as a linear map $\mathbb{R}^D \to \mathbb{R}^{H d_k}$ lies in the column space of $\mathbf{U}$, which has dimension $G d_k$. Therefore:
+
+$$\operatorname{rank}(\mathbf{W}_K^{\text{GQA}}) \leq G d_k = \frac{G}{H} \cdot H d_k$$
+
+A generic (unconstrained) $\mathbf{W}_K^{\text{MHA}}$ achieves rank $H d_k$. GQA forces a $G/H$ rank ceiling, implemented through $G$ learned projections and one fixed broadcast. The two extremes recover the expected cases:
+
+| Setting | $\mathbf{U}$ | Rank bound |
+|---------|-------------|------------|
+| MHA ($G = H$) | $\mathbf{I}_{H d_k}$ (identity) | $H d_k$ (unconstrained) |
+| GQA-$G$ | $(\mathbf{I}_G \otimes \mathbf{1}_{H/G}) \otimes \mathbf{I}_{d_k}$ | $G d_k$ |
+| MQA ($G = 1$) | $\mathbf{1}_H \otimes \mathbf{I}_{d_k}$ | $d_k$ (single shared subspace) |
+
+The same factorization applies identically to the value matrices. This perspective shows GQA is not an engineering heuristic — it is a principled structured low-rank constraint on the KV weight matrices, with the rank controlled by the number of groups $G$.
 
 ### 3.3 Memory vs Expressiveness Tradeoff
 
@@ -132,7 +165,7 @@ The same factorization applies to $\mathbf{W}_V^{\text{MHA}}$. This perspective 
 
 Larger models benefit more from GQA, because they use more heads (making MQA's single-head constraint more severe) while the relative FLOPs consumed by KV cache loading decrease (quadratic FLOPs vs linear KV bandwidth).
 
-![Figure 2 from [Ainslie et al. (2023)](https://arxiv.org/abs/2305.13245): side-by-side comparison of Multi-Head Attention, Grouped-Query Attention, and Multi-Query Attention head structures](figures/gqa2023-fig2-mha-gqa-mqa-comparison.png)
+![Figure 2 from Ainslie et al. (2023): side-by-side comparison of Multi-Head Attention, Grouped-Query Attention, and Multi-Query Attention head structures](figures/gqa2023-fig2-mha-gqa-mqa-comparison.png)
 *Figure 2 (Ainslie et al., 2023): MHA gives every query head its own K and V head (left). GQA-G assigns one K/V head per group of H/G query heads (centre). MQA collapses all heads to a single shared K and V (right). The memory cost of the KV cache scales as the number of K/V heads, so the three designs represent a continuum from maximum expressiveness (MHA) to minimum cache footprint (MQA).*
 
 ---
@@ -161,7 +194,7 @@ $$\left[\mathbf{R}(m\theta)\mathbf{q}\right]^{\top} \left[\mathbf{R}(n\theta)\ma
 
 **The dot product depends only on the relative position $n - m$, not on $m$ or $n$ individually.**
 
-![Figure 1 from [Su et al. (2021)](https://arxiv.org/abs/2104.09864): illustration of the Rotary Position Embedding mechanism](figures/roformer2021-fig1-rope-illustration.png)
+![Figure 1 from Su et al. (2021): illustration of the Rotary Position Embedding mechanism](figures/roformer2021-fig1-rope-illustration.png)
 *Figure 1 (Su et al., 2021): Implementation of Rotary Position Embedding. Each query and key vector is multiplied by a block-diagonal rotation matrix whose angle is proportional to the token's absolute position. Because the rotation of Q at position m and the rotation of K at position n combine to a net rotation by (n − m), the resulting dot product encodes only the relative offset between the two positions.*
 
 ### 4.3 Extension to Higher Dimensions
@@ -218,7 +251,7 @@ $$\frac{\text{MLA cache size}}{\text{MHA cache size}} = \frac{d_c}{2 H d_k}$$
 
 For the DeepSeek-V2 numbers: $512 / (2 \times 128 \times 128) = 512 / 32{,}768 \approx 1.6\%$ of MHA.
 
-![Figure 3 from [DeepSeek-AI (2024)](https://arxiv.org/abs/2405.04434): simplified comparison of MHA, GQA, MQA, and MLA attention mechanisms](figures/deepseekv2-fig3-mla-architecture.png)
+![Figure 3 from DeepSeek-AI (2024): simplified comparison of MHA, GQA, MQA, and MLA attention mechanisms](figures/deepseekv2-fig3-mla-architecture.png)
 *Figure 3 (DeepSeek-AI, 2024): Simplified illustration of Multi-Head Attention (MHA), Grouped-Query Attention (GQA), Multi-Query Attention (MQA), and Multi-Head Latent Attention (MLA). MLA replaces the per-head K and V tensors with a single low-dimensional latent vector $\mathbf{c}_t^{KV}$ of size $d_c$, which is projected back to full K and V representations via learned up-projections. Only this latent is stored in the KV cache, achieving a ~57× reduction over MHA.*
 
 ### 5.2 Query Compression
