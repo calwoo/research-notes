@@ -131,7 +131,13 @@ and the fixed *broadcast operator*:
 
 $$\mathbf{U} = (\mathbf{I}_G \otimes \mathbf{1}_{H/G}) \otimes \mathbf{I}_{d_k} \in \mathbb{R}^{H d_k \times G d_k}$$
 
-where $\otimes$ is the Kronecker product, $\mathbf{1}_{H/G} \in \mathbb{R}^{H/G}$ is the all-ones column vector, and $\mathbf{I}_n$ is the $n \times n$ identity. Then:
+> **Aside: Kronecker product.** For matrices $\mathbf{A} \in \mathbb{R}^{m \times n}$ and $\mathbf{B} \in \mathbb{R}^{p \times q}$, the *Kronecker product* $\mathbf{A} \otimes \mathbf{B} \in \mathbb{R}^{mp \times nq}$ replaces each scalar entry $a_{ij}$ of $\mathbf{A}$ with the block $a_{ij}\mathbf{B}$:
+> $$\mathbf{A} \otimes \mathbf{B} = \begin{pmatrix} a_{11}\mathbf{B} & \cdots & a_{1n}\mathbf{B} \\ \vdots & \ddots & \vdots \\ a_{m1}\mathbf{B} & \cdots & a_{mn}\mathbf{B} \end{pmatrix}$$
+> Two properties used here: (i) **mixed-product**: $(\mathbf{A} \otimes \mathbf{B})(\mathbf{C} \otimes \mathbf{D}) = (\mathbf{AC}) \otimes (\mathbf{BD})$ whenever the ordinary products $\mathbf{AC}$ and $\mathbf{BD}$ are defined; (ii) **associativity**: $(\mathbf{A} \otimes \mathbf{B}) \otimes \mathbf{C} = \mathbf{A} \otimes (\mathbf{B} \otimes \mathbf{C})$.
+>
+> Concretely: $\mathbf{I}_G \otimes \mathbf{1}_{H/G}$ replaces each diagonal $1$ of $\mathbf{I}_G$ with the column $\mathbf{1}_{H/G}$, yielding a block-diagonal repetition matrix in $\mathbb{R}^{H \times G}$. Tensoring that with $\mathbf{I}_{d_k}$ promotes each scalar entry to a $d_k \times d_k$ identity block, giving $\mathbf{U} \in \mathbb{R}^{H d_k \times G d_k}$.
+
+where $\mathbf{1}_{H/G} \in \mathbb{R}^{H/G}$ is the all-ones column vector and $\mathbf{I}_n$ is the $n \times n$ identity. Then:
 
 $$\mathbf{W}_K^{\text{GQA}} = \mathbf{U} \cdot \mathbf{W}_K^{\text{down}}$$
 
