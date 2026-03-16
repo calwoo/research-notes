@@ -235,19 +235,40 @@ $$\left[\mathbf{R}^{d_k}(m)\mathbf{q}\right]^{\top} \left[\mathbf{R}^{d_k}(n)\ma
 
 Standard MQA sacrifices expressiveness entirely; GQA is a middle ground. *Multi-head Latent Attention* (MLA), introduced in [DeepSeek-V2](https://arxiv.org/abs/2405.04434), takes a different approach: cache a low-dimensional *latent* vector and reconstruct full KV tensors via learned up-projections, enabling both high expressiveness and a very small cache footprint.
 
+MLA introduces six new weight matrices. Their roles as linear maps are:
+
+| Matrix | Map | Role |
+|--------|-----|------|
+| $\mathbf{W}_{KV}^{\text{down}}$ | $\mathbb{R}^D \to \mathbb{R}^{d_c}$ | Compress hidden state to KV latent |
+| $\mathbf{W}_K^{\text{up},h}$ | $\mathbb{R}^{d_c} \to \mathbb{R}^{d_k}$ | Expand KV latent to key for head $h$ |
+| $\mathbf{W}_V^{\text{up},h}$ | $\mathbb{R}^{d_c} \to \mathbb{R}^{d_v}$ | Expand KV latent to value for head $h$ |
+| $\mathbf{W}_Q^{\text{down}}$ | $\mathbb{R}^D \to \mathbb{R}^{d_c'}$ | Compress hidden state to query latent |
+| $\mathbf{W}_Q^{\text{up},h}$ | $\mathbb{R}^{d_c'} \to \mathbb{R}^{d_k}$ | Expand query latent to query for head $h$ |
+| $\mathbf{W}_K^R$ | $\mathbb{R}^D \to \mathbb{R}^{d_h^R}$ | Project hidden state to shared RoPE key |
+
+The KV and Q paths through these maps are:
+
+$$\mathbb{R}^D \xrightarrow{\mathbf{W}_{KV}^{\text{down}}} \mathbb{R}^{d_c} \xrightarrow{\mathbf{W}_K^{\text{up},h}} \mathbb{R}^{d_k} \quad \text{(key for head } h\text{)}$$
+
+$$\mathbb{R}^D \xrightarrow{\mathbf{W}_{KV}^{\text{down}}} \mathbb{R}^{d_c} \xrightarrow{\mathbf{W}_V^{\text{up},h}} \mathbb{R}^{d_v} \quad \text{(value for head } h\text{)}$$
+
+$$\mathbb{R}^D \xrightarrow{\mathbf{W}_Q^{\text{down}}} \mathbb{R}^{d_c'} \xrightarrow{\mathbf{W}_Q^{\text{up},h}} \mathbb{R}^{d_k} \quad \text{(query for head } h\text{)}$$
+
+Only $\mathbf{c}_t^{KV} \in \mathbb{R}^{d_c}$ is cached. The up-projections are applied on-the-fly — or, as shown in Section 5.3, absorbed into adjacent matrices so they never need to be applied at all.
+
 ### 5.1 Low-Rank KV Compression
 
 **Definition (MLA KV Down-Projection).** For input hidden state $\mathbf{h}_t \in \mathbb{R}^D$, MLA computes a compressed KV latent:
 
 $$\mathbf{c}_t^{KV} = \mathbf{W}_{KV}^{\text{down}} \mathbf{h}_t \in \mathbb{R}^{d_c}$$
 
-where $\mathbf{W}_{KV}^{\text{down}} \in \mathbb{R}^{d_c \times D}$ is a learned down-projection and $d_c \ll H \cdot d_k$ is the *KV compression dimension*. This single vector $\mathbf{c}_t^{KV}$ is what the KV cache stores, replacing the $H$ key and $H$ value vectors of MHA.
+where $\mathbf{W}_{KV}^{\text{down}} : \mathbb{R}^D \to \mathbb{R}^{d_c}$ is a learned down-projection and $d_c \ll H \cdot d_k$ is the *KV compression dimension*. This single vector $\mathbf{c}_t^{KV}$ is what the KV cache stores, replacing the $H$ key and $H$ value vectors of MHA.
 
 **Definition (MLA KV Up-Projections).** At each attention step, the compressed latent is expanded back to per-head key and value vectors:
 
 $$\mathbf{k}_t^h = \mathbf{W}_K^{\text{up},h} \mathbf{c}_t^{KV} \in \mathbb{R}^{d_k}, \qquad \mathbf{v}_t^h = \mathbf{W}_V^{\text{up},h} \mathbf{c}_t^{KV} \in \mathbb{R}^{d_v}$$
 
-where $\mathbf{W}_K^{\text{up},h} \in \mathbb{R}^{d_k \times d_c}$ and $\mathbf{W}_V^{\text{up},h} \in \mathbb{R}^{d_v \times d_c}$ are learned per-head up-projections.
+where $\mathbf{W}_K^{\text{up},h} : \mathbb{R}^{d_c} \to \mathbb{R}^{d_k}$ and $\mathbf{W}_V^{\text{up},h} : \mathbb{R}^{d_c} \to \mathbb{R}^{d_v}$ are learned per-head up-projections. There are $2H$ such matrices in total — one key and one value map per head — compared to MHA's $2H$ projections from $\mathbb{R}^D$. The difference is the domain: MLA up-projects from the compressed $\mathbb{R}^{d_c}$, so the composition $\mathbf{W}_K^{\text{up},h} \circ \mathbf{W}_{KV}^{\text{down}} : \mathbb{R}^D \to \mathbb{R}^{d_k}$ is a rank-$d_c$ factorization of what would otherwise be a full-rank $\mathbb{R}^D \to \mathbb{R}^{d_k}$ map.
 
 **[DeepSeek-V2](https://arxiv.org/abs/2405.04434) dimensions.** The model uses $H = n_h = 128$ query heads, $d_k = d_v = d_h = 128$, so standard MHA would cache $2 \times 128 \times 128 = 32{,}768$ scalars per token per layer. MLA sets $d_c = 512$ (approximately $4 d_h$), caching only 512 scalars — a compression ratio of $d_c / (2 H d_k) = 512 / 32{,}768 \approx 1/64$. *In practice the effective cache includes additional RoPE components (Section 5.5), bringing the ratio to approximately $1/57$.*
 
@@ -266,7 +287,7 @@ MLA also compresses queries, not to reduce the KV cache (queries are not cached)
 
 $$\mathbf{c}_t^Q = \mathbf{W}_Q^{\text{down}} \mathbf{h}_t \in \mathbb{R}^{d_c'}, \qquad \mathbf{q}_t^h = \mathbf{W}_Q^{\text{up},h} \mathbf{c}_t^Q \in \mathbb{R}^{d_k}$$
 
-where $\mathbf{W}_Q^{\text{down}} \in \mathbb{R}^{d_c' \times D}$ and $\mathbf{W}_Q^{\text{up},h} \in \mathbb{R}^{d_k \times d_c'}$. In [DeepSeek-V2](https://arxiv.org/abs/2405.04434), $d_c' = 1{,}536$.
+where $\mathbf{W}_Q^{\text{down}} : \mathbb{R}^D \to \mathbb{R}^{d_c'}$ and $\mathbf{W}_Q^{\text{up},h} : \mathbb{R}^{d_c'} \to \mathbb{R}^{d_k}$. In [DeepSeek-V2](https://arxiv.org/abs/2405.04434), $d_c' = 1{,}536$.
 
 *This does not affect inference memory for the KV cache.* The intermediate query latent $\mathbf{c}_t^Q$ is ephemeral and not stored across decoding steps.
 
@@ -284,7 +305,7 @@ $$\Delta \mathbf{x}_t = \operatorname{concat}(\mathbf{o}_t^1, \ldots, \mathbf{o}
 
 Defining the absorbed output weight:
 
-$$\mathbf{W}_O' = \operatorname{block-diag}\!\left(\mathbf{W}_V^{\text{up},1}, \ldots, \mathbf{W}_V^{\text{up},H}\right) \mathbf{W}_O \in \mathbb{R}^{H d_c \times D}$$
+$$\mathbf{W}_O' = \operatorname{block-diag}\!\left(\mathbf{W}_V^{\text{up},1}, \ldots, \mathbf{W}_V^{\text{up},H}\right) \mathbf{W}_O \in \mathbb{R}^{H d_c \times D} \quad \bigl(\mathbb{R}^{H d_c} \to \mathbb{R}^D\bigr)$$
 
 one can write $\Delta \mathbf{x}_t = \operatorname{concat}(\tilde{\mathbf{o}}_t^1, \ldots, \tilde{\mathbf{o}}_t^H) \mathbf{W}_O'$, so **no $\mathbf{v}_t^h$ vectors need to be materialized during inference.**
 
@@ -292,7 +313,7 @@ one can write $\Delta \mathbf{x}_t = \operatorname{concat}(\tilde{\mathbf{o}}_t^
 
 $$a_{t,s}^h \propto \exp\!\left(\frac{\mathbf{q}_t^h \cdot \mathbf{k}_s^h}{\sqrt{d_k}}\right) = \exp\!\left(\frac{\mathbf{q}_t^h \cdot \mathbf{W}_K^{\text{up},h} \mathbf{c}_s^{KV}}{\sqrt{d_k}}\right) = \exp\!\left(\frac{\left((\mathbf{W}_K^{\text{up},h})^{\top} \mathbf{q}_t^h\right) \cdot \mathbf{c}_s^{KV}}{\sqrt{d_k}}\right)$$
 
-Define the absorbed query $\tilde{\mathbf{q}}_t^h = (\mathbf{W}_K^{\text{up},h})^{\top} \mathbf{q}_t^h \in \mathbb{R}^{d_c}$. The attention logit is then $\tilde{\mathbf{q}}_t^h \cdot \mathbf{c}_s^{KV}$, computed directly from the cached latent. **Neither $\mathbf{k}_s^h$ nor $\mathbf{v}_s^h$ need to be reconstructed; only the low-dimensional $\mathbf{c}_s^{KV}$ is read from cache.**
+Define the absorbed query $\tilde{\mathbf{q}}_t^h = (\mathbf{W}_K^{\text{up},h})^{\top} \mathbf{q}_t^h \in \mathbb{R}^{d_c}$, where $(\mathbf{W}_K^{\text{up},h})^{\top} : \mathbb{R}^{d_k} \to \mathbb{R}^{d_c}$ is the transpose of the key up-projection. The attention logit is then $\tilde{\mathbf{q}}_t^h \cdot \mathbf{c}_s^{KV}$, computed directly from the cached latent. **Neither $\mathbf{k}_s^h$ nor $\mathbf{v}_s^h$ need to be reconstructed; only the low-dimensional $\mathbf{c}_s^{KV}$ is read from cache.**
 
 ### 5.4 Incompatibility with RoPE
 
