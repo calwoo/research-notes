@@ -256,6 +256,8 @@ $$\mathbb{R}^D \xrightarrow{\mathbf{W}_Q^{\text{down}}} \mathbb{R}^{d_c'} \xrigh
 
 Only $\mathbf{c}_t^{KV} \in \mathbb{R}^{d_c}$ is cached. The up-projections are applied on-the-fly — or, as shown in Section 5.3, absorbed into adjacent matrices so they never need to be applied at all.
 
+*One might worry that caching $\mathbf{c}_t^{KV}$ doesn't help, since $\mathbf{W}_K^{\text{up},h}$ must still be applied to it at each decoding step to recover $\mathbf{k}_t^h$ — the same work avoided by the KV cache in MHA. The resolution is that the up-projection is moved to the query side (Section 5.3): rather than computing $\mathbf{k}_s^h = \mathbf{W}_K^{\text{up},h} \mathbf{c}_s^{KV}$ for every cached token $s$ (cost $O(t \cdot d_c d_k)$), you compute $\tilde{\mathbf{q}}_t^h = (\mathbf{W}_K^{\text{up},h})^\top \mathbf{q}_t^h$ once per step (cost $O(d_c d_k)$, independent of $t$) and then dot against each $\mathbf{c}_s^{KV}$ directly. $\mathbf{c}_s^{KV}$ is the cached key, expressed in $\mathbb{R}^{d_c}$ rather than $\mathbb{R}^{d_k}$.*
+
 ### 5.1 Low-Rank KV Compression
 
 **Definition (MLA KV Down-Projection).** For input hidden state $\mathbf{h}_t \in \mathbb{R}^D$, MLA computes a compressed KV latent:
