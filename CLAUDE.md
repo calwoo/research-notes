@@ -29,6 +29,11 @@ walkthroughs/   ← step-by-step derivations or implementations
     note.md
     exercises.md
     solutions.md
+curricula/      ← structured multi-week learning curricula for a field or subfield
+  <topic>/
+    curriculum.md   ← week-by-week checklist of materials, concepts, learning goals, and milestones
+    exercises.md
+    solutions.md
 docs/           ← documentation and design docs
   plans/        ← implementation plans before execution
 ```
