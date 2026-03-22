@@ -178,6 +178,14 @@ The unified treatment is architecturally significant: a single model trained on 
 
 ### 3.3 Supervision Density: The Key Advantage
 
+**Definition (Supervisor).** A *supervisor* is any ground-truth signal that induces a gradient update during training. Concretely, a supervisor is a (input, target) pair where the target is observed from data and the loss penalizes the model's prediction against it. In recommendation, supervisors take three forms depending on the training paradigm:
+
+- *Impression-level label* (DLRM): a binary or multi-class label $y \in \{0,1\}$ attached to a single (user, item) impression — e.g., clicked / not clicked.
+- *Next-event token* (generative): the next item $x_t$ or action $a_t$ in a user's interaction sequence, observed as the natural continuation of history $h_{t-1}$.
+- *Reward signal* (RL-based, e.g., GR2): a scalar evaluating a generated output — e.g., how much the ground-truth item was promoted in the re-ranked list.
+
+The key distinction is that impression-level supervisors are attached to individual (user, item) pairs and are processed independently, while next-event supervisors are embedded in sequence structure and carry cross-time dependency information.
+
 **Definition (Supervision Density).** For a training dataset of $N$ users with interaction sequences of length $n_i$ each, supervision density is the ratio of independent training signals to model parameters.
 
 Under impression-level DLRM training, each user contributes $n_i$ independent (user, item, label) triples. However, each triple is processed as a separate forward pass — the cross-time dependencies within a user's sequence are ignored. A user with 1,000 interactions contributes 1,000 binary labels but no information about *which* interactions led to *which* subsequent actions.
