@@ -329,13 +329,13 @@ The rotation $\mathbf{R}^{d_k}(s)$ is position-dependent and lies *between* the 
 
 ### 5.5 Decoupled RoPE as the Solution
 
-[DeepSeek-V2](https://arxiv.org/abs/2405.04434) resolves this incompatibility by introducing separate positional components that carry RoPE but bypass the up-projection.
+💡 The key idea: rather than applying RoPE to the full key vector (which poisons the absorption trick), split the attention logit into two *independent additive terms* — one that carries content (no rotation, so absorption still applies) and one that carries position (rotation but no up-projection to absorb). Each term is then tractable for a different reason.
 
-**Definition (Decoupled RoPE).** In addition to the content-based keys derived from $\mathbf{c}_t^{KV}$, MLA maintains a *shared* RoPE key $\mathbf{k}_t^R \in \mathbb{R}^{d_h^R}$ computed directly from the input (no up-projection):
+**Definition (Decoupled RoPE).** In addition to the content-based keys derived from $\mathbf{c}_t^{KV}$, MLA maintains a *shared* RoPE key $\mathbf{k}_t^R \in \mathbb{R}^{d_h^R}$ computed directly from the hidden state (no up-projection):
 
 $$\mathbf{k}_t^R = \mathbf{R}^{d_h^R}(t) \, \mathbf{W}_K^R \mathbf{h}_t$$
 
-where $\mathbf{W}_K^R \in \mathbb{R}^{d_h^R \times D}$ is a shared projection and $d_h^R = 64$ in [DeepSeek-V2](https://arxiv.org/abs/2405.04434) (half the head dimension). Similarly, each query head receives a per-head RoPE component:
+where $\mathbf{W}_K^R \in \mathbb{R}^{d_h^R \times D}$ is a shared projection and $d_h^R = 64$ in [DeepSeek-V2](https://arxiv.org/abs/2405.04434) (half the head dimension). Similarly, each query head receives a per-head RoPE component, computed from the compressed query latent $\mathbf{c}_t^Q$:
 
 $$\mathbf{q}_t^{R,h} = \mathbf{R}^{d_h^R}(t) \, \mathbf{W}_Q^{R,h} \mathbf{c}_t^Q$$
 
@@ -343,7 +343,40 @@ The effective key and query for head $h$ are formed by concatenation:
 
 $$\mathbf{k}_t^{\text{eff},h} = \begin{pmatrix} \mathbf{W}_K^{\text{up},h} \mathbf{c}_t^{KV} \\ \mathbf{k}_t^R \end{pmatrix} \in \mathbb{R}^{d_k + d_h^R}, \qquad \mathbf{q}_t^{\text{eff},h} = \begin{pmatrix} \mathbf{q}_t^h \\ \mathbf{q}_t^{R,h} \end{pmatrix} \in \mathbb{R}^{d_k + d_h^R}$$
 
-The cache stores $\mathbf{c}_t^{KV}$ (for the content part, absorption still applies) and $\mathbf{k}_t^R$ (for the positional part, it is a fixed low-dimensional vector). Since $\mathbf{k}_t^R$ requires no up-projection, it suffers no commutativity issue and can be cached directly. **The total cache per token per layer is $d_c + d_h^R = 512 + 64 = 576$ scalars in [DeepSeek-V2](https://arxiv.org/abs/2405.04434), versus $2 H d_k = 32{,}768$ for MHA — a compression of approximately 57×.**
+**The logit decomposition.** Because the query and key are concatenations of independent parts, their dot product splits into two independent terms:
+
+$$\mathbf{q}_t^{\text{eff},h} \cdot \mathbf{k}_s^{\text{eff},h} = \underbrace{\mathbf{q}_t^h \cdot \mathbf{W}_K^{\text{up},h} \mathbf{c}_s^{KV}}_{\text{(i) content term}} \;+\; \underbrace{\mathbf{q}_t^{R,h} \cdot \mathbf{k}_s^R}_{\text{(ii) positional term}}$$
+
+Each term is handled differently:
+
+📐 **Content term — absorption applies.** There is no rotation on this path, so the up-projection commutes freely to the query side:
+
+$$\mathbf{q}_t^h \cdot \mathbf{W}_K^{\text{up},h} \mathbf{c}_s^{KV} = \underbrace{\left((\mathbf{W}_K^{\text{up},h})^{\top} \mathbf{q}_t^h\right)}_{\tilde{\mathbf{q}}_t^h \;\in\; \mathbb{R}^{d_c}} \cdot \; \mathbf{c}_s^{KV}$$
+
+$\tilde{\mathbf{q}}_t^h$ is computed once at query time. The cache stores only $\mathbf{c}_s^{KV} \in \mathbb{R}^{d_c}$ — no key materialization required. The commutativity problem does not arise because no rotation is interleaved between $\mathbf{W}_K^{\text{up},h}$ and $\mathbf{c}_s^{KV}$.
+
+📐 **Positional term — direct caching, no absorption needed.** Expanding:
+
+$$\mathbf{q}_t^{R,h} \cdot \mathbf{k}_s^R = \left[\mathbf{R}^{d_h^R}(t)\, \mathbf{W}_Q^{R,h} \mathbf{c}_t^Q\right]^{\top} \left[\mathbf{R}^{d_h^R}(s)\, \mathbf{W}_K^R \mathbf{h}_s\right]$$
+
+Both sides are fully concrete low-dimensional vectors — there is no up-projection on the key side to absorb. The rotation $\mathbf{R}^{d_h^R}(s)$ is baked into $\mathbf{k}_s^R$ at encoding time and stored directly in the cache. Because $\mathbf{k}_s^R$ is *shared across all $H$ heads* and lives in $\mathbb{R}^{d_h^R}$, the additional cache overhead is just 64 scalars per token.
+
+**Why this resolves the incompatibility.** The original problem was that $\mathbf{R}(s)$ sits between $\mathbf{c}_s^{KV}$ and $\mathbf{W}_K^{\text{up},h}$, preventing absorption. Decoupled RoPE eliminates this conflict by *removing RoPE from the absorption path entirely*. The content key $\mathbf{W}_K^{\text{up},h}\mathbf{c}_s^{KV}$ carries no positional information; the positional key $\mathbf{k}_s^R$ requires no absorption. The two design constraints never meet.
+
+*The relative-position property (§4.4) is preserved in the positional term.* Substituting:
+
+$$\mathbf{q}_t^{R,h} \cdot \mathbf{k}_s^R \propto \left(\mathbf{W}_Q^{R,h}\mathbf{c}_t^Q\right)^{\top} \mathbf{R}^{d_h^R}(t)^{\top} \mathbf{R}^{d_h^R}(s) \left(\mathbf{W}_K^R \mathbf{h}_s\right) = \left(\mathbf{W}_Q^{R,h}\mathbf{c}_t^Q\right)^{\top} \mathbf{R}^{d_h^R}(s-t) \left(\mathbf{W}_K^R \mathbf{h}_s\right)$$
+
+so the positional logit depends only on the offset $s - t$, exactly as in standard RoPE.
+
+**Cache contents and compression.** The cache stores per token per layer:
+
+| Cached quantity | Dimension | Purpose |
+|---|---|---|
+| $\mathbf{c}_t^{KV}$ | $d_c = 512$ | Content logits for all heads via absorption |
+| $\mathbf{k}_t^R$ | $d_h^R = 64$ | Positional logits, shared across all heads |
+
+**Total: $d_c + d_h^R = 576$ scalars per token per layer, versus $2Hd_k = 32{,}768$ for standard MHA — a compression of approximately 57×.**
 
 ---
 
