@@ -2,14 +2,20 @@
 
 Jiaqi Zhai, Lucy Liao, Xing Liu, Yueming Wang, Rui Li, Xuan Cao, Leon Gao, Zhaojie Gong, Fangda Gu, Michael He, Yinghai Lu, Yu Shi. Meta Platforms, Inc. arXiv 2402.17152, February 2024.
 
-| Dimension | Prior State | This Paper |
-|---|---|---|
-| Recommendation paradigm | Impression-level DLRM: each (user, item) pair scored independently; heterogeneous feature engineering | Sequential transduction: user history as time series; single generative forward pass covers retrieval and ranking |
-| Architecture | DLRMs with FM-like interactions over static features; Transformers unstable on industrial streaming data | HSTU: Transformer variant with pointwise attention (no softmax), temporal relative bias, and fused SiLU gating |
-| Scale | DLRM plateau ~200B params; Transformer NaN loss on industrial data | 1.5 trillion parameters; stable training; scaling law across 3 orders of magnitude |
-| Inference cost | Linear in candidates; no amortization across candidates | M-FALCON: O(n²d) amortized across $b_m$ candidates via modified attention masks |
-| Training efficiency | Impression-level: O(N³d) complexity | Generative with stochastic length: O(N^α d), α ∈ (1,2]; 5.3–15.2× faster than FlashAttention2 |
-| Online performance | Baselines | +12.4% engagement (ranking), +6.2% retrieval HR@100; deployed serving billions of users |
+| Dimension | Prior State | This Paper | Key Result |
+|---|---|---|---|
+| Recommendation paradigm | Impression-level DLRM: each (user, item) pair scored independently; heterogeneous feature engineering | Sequential transduction: user history as time series; single generative forward pass covers retrieval and ranking | +12.4% engagement (ranking), +6.2% retrieval HR@100 |
+| Architecture | DLRMs with FM-like interactions over static features; Transformers unstable on industrial streaming data | HSTU: Transformer variant with pointwise attention (no softmax), temporal relative bias, and fused SiLU gating | Stable training at 1.5T params; NaN-free on industrial streaming data |
+| Scale | DLRM plateau ~200B params; Transformer NaN loss on industrial data | 1.5 trillion parameters; stable training; scaling law across 3 orders of magnitude | Power-law scaling holds across 3 orders of magnitude in FLOPs |
+| Inference cost | Linear in candidates; no amortization across candidates | M-FALCON: O(n²d) amortized across $b_m$ candidates via modified attention masks | 285× model complexity at 1.5–2.5× throughput improvement |
+| Training efficiency | Impression-level: O(N³d) complexity | Generative with stochastic length: O(N^α d), α ∈ (1,2]; 5.3–15.2× faster than FlashAttention2 | 5.3–15.2× faster than FlashAttention2 on 8192-length sequences |
+| Online performance | Baselines | +12.4% engagement (ranking), +6.2% retrieval HR@100; deployed serving billions of users | Deployed to billions of users; largest reported rec-sys gains |
+
+## Relations
+
+**Builds on:** [[papers/dhen-ranking|DHEN]]
+**Extended by:** [[papers/generative-recommenders/wukong|Wukong]]
+**Concepts used:** [[concepts/ab-testing/foundations|A/B Testing Foundations]], [[concepts/attention-mechanisms/standard-attention|Standard Attention]]
 
 ## Table of Contents
 
@@ -75,7 +81,7 @@ HSTU's response to this analysis is to abandon per-item embeddings as the primar
 
 ### 1.2 Why Standard Transformers Fail on Recommendation Data
 
-The natural candidate for replacing DLRMs is the Transformer, which already models sequential data via self-attention. However, naively applying Transformers to industrial recommendation data fails for three reasons:
+The natural candidate for replacing DLRMs is the Transformer, which already models sequential data via [[concepts/attention-mechanisms/standard-attention|self-attention]]. However, naively applying Transformers to industrial recommendation data fails for three reasons:
 
 1. **Non-stationarity.** User interests shift over time; the item vocabulary changes continuously (new items appear, old ones disappear). Standard Transformers assume a fixed vocabulary and stationary distribution. The non-stationary vocabulary makes softmax attention counterproductive (see Section 3.4).
 
@@ -411,7 +417,7 @@ Standard Transformers produce NaN loss on industrial streaming data with long-ta
 
 ### 6.4 Online A/B Tests
 
-Deployed as GR (Generative Recommender) at Meta scale (billions of users):
+Deployed as GR (Generative Recommender) at Meta scale (billions of users), validated via [[concepts/ab-testing/foundations|A/B testing]]:
 
 | System | Metric | Improvement |
 |---|---|---|
@@ -427,7 +433,7 @@ These are among the largest reported recommendation system improvements in recen
 
 ## 7. Relation to Wukong
 
-See [[wukong|Wukong Note]] for the companion paper. Despite appearing in the same month and addressing the same fundamental gap (no scaling law for recommendation systems), Wukong and HSTU are structurally very different:
+See [[papers/generative-recommenders/wukong|Wukong]] for the companion paper. Despite appearing in the same month and addressing the same fundamental gap (no scaling law for recommendation systems), Wukong and HSTU are structurally very different:
 
 | Aspect | Wukong | HSTU |
 |---|---|---|
@@ -437,7 +443,7 @@ See [[wukong|Wukong Note]] for the companion paper. Despite appearing in the sam
 | **Interaction mechanism** | Explicit: $XX^\top Y$ generates controlled cross-feature products | Implicit: $QK^\top$ generates attention-weighted history aggregation |
 | **Scaling driver** | Depth → exponential interaction order ($2^l$ after $l$ layers) | Scale → more parameters efficiently trained via generative supervision |
 | **Submission date** | March 4, 2024 | February 26, 2024 |
-| **Team** | Meta Ads (same team as DHEN) | Meta AI Research |
+| **Team** | Meta Ads (same team as [[papers/dhen-ranking|DHEN]]) | Meta AI Research |
 
 **The logical connection.** Both papers are best understood as responses to the same empirical observation: DLRM-style models plateau while LLMs scale. Wukong's response is *within* the DLRM paradigm: fix the interaction module so that expressivity grows with depth. HSTU's response is *across paradigms*: abandon the DLRM framing entirely and treat recommendation as a generative sequential problem.
 
