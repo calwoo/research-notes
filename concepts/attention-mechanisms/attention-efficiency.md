@@ -346,8 +346,8 @@ flowchart LR
     subgraph KEY["Key path — encode token s"]
         direction TB
         hs["h_s"]:::inp
-        cKV["c_s^KV ∈ ℝ^512\ncontent latent"]:::content
-        kR["k_s^R ∈ ℝ^64\nRoPE key"]:::pos
+        cKV["c_s^KV ∈ ℝ^512<br/>content latent"]:::content
+        kR["k_s^R ∈ ℝ^64<br/>RoPE key"]:::pos
         hs -->|"W_KV^down"| cKV
         hs -->|"W_K^R → R(s)·"| kR
     end
@@ -362,8 +362,8 @@ flowchart LR
         direction TB
         ht["h_t"]:::inp
         cQ["c_t^Q ∈ ℝ^1536"]:::inp
-        qtilde["q̃_t^h ∈ ℝ^512\nabsorbed query"]:::content
-        qtR["q_t^R,h ∈ ℝ^64\nRoPE query"]:::pos
+        qtilde["q̃_t^h ∈ ℝ^512<br/>absorbed query"]:::content
+        qtR["q_t^R,h ∈ ℝ^64<br/>RoPE query"]:::pos
         ht -->|"W_Q^down"| cQ
         cQ -->|"W_Q^up,h → (W_K^up,h)^T"| qtilde
         cQ -->|"W_Q^R,h → R(t)·"| qtR
@@ -371,8 +371,8 @@ flowchart LR
 
     subgraph LOGIT["Attention logit (t, s)"]
         direction TB
-        lc["content:\nq̃_t^h · c_s^KV"]:::logit
-        lp["positional:\nq_t^R,h · k_s^R"]:::logit
+        lc["content:<br/>q̃_t^h · c_s^KV"]:::logit
+        lp["positional:<br/>q_t^R,h · k_s^R"]:::logit
         L["logit(t, s)"]:::logit
         lc -->|"+"| L
         lp -->|"+"| L
@@ -458,23 +458,23 @@ flowchart LR
     subgraph ENC["Encode — token s"]
         direction TB
         hs["h_s"]:::inp
-        kI["k_s^I ∈ ℝ^d^I\nindexer key"]:::indexer
-        kIq["k̂_s^I (INT8)\n+ scale s_k"]:::quant
+        kI["k_s^I ∈ ℝ^d^I<br/>indexer key"]:::indexer
+        kIq["k̂_s^I (INT8)<br/>+ scale s_k"]:::quant
         hs -->|"W_K^I"| kI
         kI -->|"H → quantize"| kIq
     end
 
     subgraph ICACHE["Index Cache"]
         direction TB
-        kIc[("k̂_s^I\ns_k(s)")]:::quant
+        kIc[("k̂_s^I<br/>s_k(s)")]:::quant
     end
 
     subgraph DEC["Decode — token t"]
         direction TB
         ht["h_t"]:::inp
-        qI["q_{t,j}^I ∈ ℝ^d^I\nindexer query, head j"]:::indexer
+        qI["q_{t,j}^I ∈ ℝ^d^I<br/>indexer query, head j"]:::indexer
         qIq["q̂_{t,j}^I (INT8)"]:::quant
-        w["w_{t,j}\nhead weights"]:::indexer
+        w["w_{t,j}<br/>head weights"]:::indexer
         ht -->|"W_Q^{I,j}"| qI
         qI -->|"H → quantize"| qIq
         ht -->|"Linear"| w
@@ -491,8 +491,8 @@ flowchart LR
 
     subgraph ATTN["Sparse Attention"]
         direction TB
-        topk["top-K → S_t\n|S_t| = K = 2048"]:::selection
-        mla["Full MLA\nover S_t only"]:::mla
+        topk["top-K → S_t<br/>|S_t| = K = 2048"]:::selection
+        mla["Full MLA<br/>over S_t only"]:::mla
         topk --> mla
     end
 

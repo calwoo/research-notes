@@ -134,6 +134,12 @@ Notes are viewed in Obsidian. Use Obsidian's wikilink syntax for all TOC links �
 
 This differs from intra-document TOC links (`[[#Exact Heading Text|Display Text]]`). Do not mix the two forms.
 
+### Mermaid Diagram Conventions
+
+- **Line breaks in node labels:** use `<br/>`, not `\n`. Obsidian's Mermaid renderer does not interpret `\n` as a newline inside node label strings.
+  - Correct: `kI["k_s^I ∈ ℝ^d<br/>indexer key"]`
+  - Wrong: `kI["k_s^I ∈ ℝ^d\nindexer key"]`
+
 ## Project Agents
 
 Specialized subagents are defined in `.claude/agents/`. Available agents:
