@@ -331,6 +331,57 @@ The rotation $\mathbf{R}^{d_k}(s)$ is position-dependent and lies *between* the 
 
 💡 The key idea: rather than applying RoPE to the full key vector (which poisons the absorption trick), split the attention logit into two *independent additive terms* — one that carries content (no rotation, so absorption still applies) and one that carries position (rotation but no up-projection to absorb). Each term is then tractable for a different reason.
 
+```mermaid
+flowchart LR
+    classDef content fill:#D6E8FA,stroke:#2E86C1,color:#1A5276
+    classDef pos fill:#FDEBD0,stroke:#D35400,color:#784212
+    classDef cache fill:#E9F7EF,stroke:#1E8449,color:#145A32
+    classDef logit fill:#F4ECF7,stroke:#7D3C98,color:#4A235A
+    classDef inp fill:#EAECEE,stroke:#566573,color:#17202A
+
+    subgraph KEY["Key path — encode token s"]
+        direction TB
+        hs["h_s"]:::inp
+        cKV["c_s^KV ∈ ℝ^512\ncontent latent"]:::content
+        kR["k_s^R ∈ ℝ^64\nRoPE key"]:::pos
+        hs -->|"W_KV^down"| cKV
+        hs -->|"W_K^R → R(s)·"| kR
+    end
+
+    subgraph CACHE["KV Cache"]
+        direction TB
+        cKV_c[("c_s^KV")]:::cache
+        kR_c[("k_s^R")]:::cache
+    end
+
+    subgraph QUERY["Query path — decode token t"]
+        direction TB
+        ht["h_t"]:::inp
+        cQ["c_t^Q ∈ ℝ^1536"]:::inp
+        qtilde["q̃_t^h ∈ ℝ^512\nabsorbed query"]:::content
+        qtR["q_t^R,h ∈ ℝ^64\nRoPE query"]:::pos
+        ht -->|"W_Q^down"| cQ
+        cQ -->|"W_Q^up,h → (W_K^up,h)^T"| qtilde
+        cQ -->|"W_Q^R,h → R(t)·"| qtR
+    end
+
+    subgraph LOGIT["Attention logit (t, s)"]
+        direction TB
+        lc["content:\nq̃_t^h · c_s^KV"]:::logit
+        lp["positional:\nq_t^R,h · k_s^R"]:::logit
+        L["logit(t, s)"]:::logit
+        lc -->|"+"| L
+        lp -->|"+"| L
+    end
+
+    cKV -.->|"cache"| cKV_c
+    kR -.->|"cache"| kR_c
+    cKV_c --> lc
+    qtilde --> lc
+    kR_c --> lp
+    qtR --> lp
+```
+
 **Definition (Decoupled RoPE).** In addition to the content-based keys derived from $\mathbf{c}_t^{KV}$, MLA maintains a *shared* RoPE key $\mathbf{k}_t^R \in \mathbb{R}^{d_h^R}$ computed directly from the hidden state (no up-projection):
 
 $$\mathbf{k}_t^R = \mathbf{R}^{d_h^R}(t) \, \mathbf{W}_K^R \mathbf{h}_t$$
