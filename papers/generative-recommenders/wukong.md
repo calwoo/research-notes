@@ -2,13 +2,18 @@
 
 Buyun Zhang, Liang Luo, Yuxin Chen, Jade Nie, Xi Liu, Daifeng Guo, Yanli Zhao, Shen Li, Yuchen Hao, Yantao Yao, Guna Lakshminarayanan, Ellie Dingqiao Wen, Jongsoo Park, Maxim Naumov, Wenlin Chen. Meta Platforms, Inc. arXiv 2403.02545, March 2024.
 
-| Dimension | Prior State | This Paper |
-|---|---|---|
-| Scaling behavior | Models plateau (DLRM at ~31 GFLOP/example); no established scaling law for recommendation | Power-law scaling maintained across two orders of magnitude (up to 100+ GFLOP/example, ~637B parameters) |
-| Interaction order | Fixed depth → limited order; FM captures order 2; xDeepFM/DCN capture higher orders but plateau | Stacked FMBs: layer $l$ captures interactions up to order $2^l$ (exponential growth via depth) |
-| Architecture | Homogeneous stacking of MLP or single interaction module (DLRM, DCNv2, xDeepFM) | Dual-block layers: FM Block (explicit interactions) + Linear Compression Block (embedding recombination) |
-| Compute efficiency | DCNv2 requires 40× more compute to match Wukong's quality | Optimized FM reduces O(n²d) → O(nkd) via low-rank projection; total O(ndh log n + h²) |
-| Public benchmarks | MaskNet best on KuaiVideo (0.7376 AUC); DCNv2 best on TaobaoAds (0.6457 AUC) | State-of-the-art on all 6 public datasets tested |
+| Dimension | Prior State | This Paper | Key Result |
+|---|---|---|---|
+| Scaling behavior | Models plateau (DLRM at ~31 GFLOP/example); no established scaling law for recommendation | Power-law scaling maintained across two orders of magnitude (up to 100+ GFLOP/example, ~637B parameters) | Power-law scaling sustained up to 100+ GFLOP/example and ~637B parameters |
+| Interaction order | Fixed depth → limited order; FM captures order 2; xDeepFM/DCN capture higher orders but plateau | Stacked FMBs: layer $l$ captures interactions up to order $2^l$ (exponential growth via depth) | Layer $l$ captures interactions up to order $2^l$ (exponential via depth) |
+| Architecture | Homogeneous stacking of MLP or single interaction module (DLRM, DCNv2, xDeepFM) | Dual-block layers: FM Block (explicit interactions) + Linear Compression Block (embedding recombination) | SOTA on all 6 public datasets tested |
+| Compute efficiency | DCNv2 requires 40× more compute to match Wukong's quality | Optimized FM reduces O(n²d) → O(nkd) via low-rank projection; total O(ndh log n + h²) | DCNv2 requires 40x more compute to match Wukong quality |
+| Public benchmarks | MaskNet best on KuaiVideo (0.7376 AUC); DCNv2 best on TaobaoAds (0.6457 AUC) | State-of-the-art on all 6 public datasets tested | KuaiVideo AUC 0.7414 vs 0.7376; TaobaoAds AUC 0.6488 vs 0.6457 |
+
+## Relations
+
+**Builds on:** [[papers/dhen-ranking|DHEN]], [[papers/generative-recommenders/hstu|HSTU]]
+**Concepts used:** [[concepts/neural-scaling-laws/note|Neural Scaling Laws]], [[concepts/ab-testing/foundations|A/B Testing Foundations]]
 
 ## Table of Contents
 
@@ -41,7 +46,7 @@ Buyun Zhang, Liang Luo, Yuxin Chen, Jade Nie, Xi Liu, Daifeng Guo, Yanli Zhao, S
 
 ### 1.1 The Scaling Gap in Recommendation
 
-Language models exhibit a well-studied *scaling law*: loss decreases as a power of compute, $L \propto C^{-\alpha}$, enabling confident prediction of model quality before training. This property has driven massive investment in LLMs. Recommendation systems, which arguably have equal commercial importance (hundreds of billions in ad revenue), lack an equivalent. Prior work found that recommendation models *plateau*: adding parameters beyond a threshold yields diminishing returns, and baselines like DLRM saturate at roughly 31 GFLOP/example on large internal datasets.
+Language models exhibit a well-studied *[[concepts/neural-scaling-laws/note|scaling law]]*: loss decreases as a power of compute, $L \propto C^{-\alpha}$, enabling confident prediction of model quality before training. This property has driven massive investment in LLMs. Recommendation systems, which arguably have equal commercial importance (hundreds of billions in ad revenue), lack an equivalent. Prior work found that recommendation models *plateau*: adding parameters beyond a threshold yields diminishing returns, and baselines like DLRM saturate at roughly 31 GFLOP/example on large internal datasets.
 
 The core question Wukong addresses is: *is the plateau a fundamental property of recommendation problems, or an architectural artifact?*
 
@@ -64,7 +69,7 @@ The fundamental issue: linear depth → linear interaction order. To reach 16th-
 
 ### 1.3 Research Lineage: DHEN to Wukong
 
-Wukong comes from the same Meta Ads team as *DHEN* (Deep and Hierarchical Ensemble Network, KDD 2022). DHEN established that *heterogeneous* interaction modules (self-attention, DCN, convolution, linear) arranged in a hierarchical ensemble outperform any single module type. The insight was architectural diversity, not depth alone.
+Wukong comes from the same Meta Ads team as *[[papers/dhen-ranking|DHEN]]* (Deep and Hierarchical Ensemble Network, KDD 2022). DHEN established that *heterogeneous* interaction modules (self-attention, DCN, convolution, linear) arranged in a hierarchical ensemble outperform any single module type. The insight was architectural diversity, not depth alone.
 
 Wukong takes the next step: rather than ensemble diversity, it achieves quality and scale through *systematic interaction order growth*. Specifically, it abandons the heterogeneous ensemble in favor of a single principled operation — factorization machines — stacked in a way that generates exponentially higher-order interactions. The result is a simpler, more scalable architecture.
 
@@ -217,7 +222,7 @@ The scaling law is demonstrated by varying all five jointly according to a compu
 
 $$\text{AUC improvement} \propto C^\alpha \quad \text{for } C \in [1 \text{ GFLOP}, 100+\text{ GFLOP per example}]$$
 
-where the exponent $\alpha$ is empirically stable across two orders of magnitude. This power-law relationship is analogous to the Chinchilla scaling law for LLMs.
+where the exponent $\alpha$ is empirically stable across two orders of magnitude. This power-law relationship is analogous to the Chinchilla [[concepts/neural-scaling-laws/note|scaling law]] for LLMs.
 
 **Contrast with baselines:** DCNv2, the strongest baseline, requires a *40-fold increase in compute* to reach the quality level that Wukong achieves at 1× compute. DLRM plateaus entirely around 31 GFLOP/example.
 
@@ -286,7 +291,7 @@ Wukong's scale (hundreds of billions of parameters) requires several systems inn
 
 ## 8. Relation to HSTU and Broader Context
 
-See [[hstu|HSTU Note]] for full analysis. Briefly: Wukong and HSTU are near-simultaneous publications from Meta (both early 2024) addressing the *same gap* (no scaling law for recommendation) via *different paradigms*:
+See [[papers/generative-recommenders/hstu|HSTU]] for full analysis. Briefly: Wukong and HSTU are near-simultaneous publications from Meta (both early 2024) addressing the *same gap* (no scaling law for recommendation) via *different paradigms*:
 
 - **Wukong** treats recommendation as a static *ranking problem over dense features*. It scales by deepening and widening the FM-based interaction stack.
 - **HSTU** treats recommendation as a *sequential transduction problem* over user behavior history. It scales by growing the Transformer-like architecture over longer sequences.
