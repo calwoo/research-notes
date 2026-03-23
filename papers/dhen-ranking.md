@@ -2,13 +2,17 @@
 
 Buyun Zhang, Liang Luo, Xi Liu, Jay Li, Zeliang Chen, Weilin Zhang, Xiaohan Wei, Yuchen Hao, Michael Tsang, Wenjun Wang, Yang Liu, Huayu Li, Yasmine Badr, Jongsoo Park, Jiyan Yang, Dheevatsa Mudigere, Ellie Wen. KDD 2022. Meta Platforms, Inc.
 
-| Dimension | Prior State | This Paper |
-|---|---|---|
-| Model architecture | Single interaction module stacked homogeneously (DCN, AutoInt, xDeepFM, etc.) | Hierarchical ensemble of heterogeneous interaction modules stacked in multiple layers |
-| Interaction modeling | One module type per model; high-order interactions from deeper stacking of the same block | Five module types (AdvancedDLRM, self-attention, DCN, linear, convolution) combined per layer; each layer feeds into the next |
-| Ensemble approach | Implicit (ensemble by training multiple separate models) or absent | Explicit intra-layer ensemble with residual shortcut; ensemble output is the next layer's input |
-| Training | Standard data parallel or model parallel; DP limited to model sizes fitting in per-GPU HBM | Hybrid Sharded Data Parallel (HSDP): shard within host over NVLink, allreduce across hosts |
-| Empirical gains | State-of-the-art AdvancedDLRM (internal Meta baseline) | +0.27% NE improvement; 1.2x training throughput over FSDP on a 256-GPU cluster |
+| Dimension | Prior State | This Paper | Key Result |
+|---|---|---|---|
+| Model architecture | Single interaction module stacked homogeneously (DCN, AutoInt, xDeepFM, etc.) | Hierarchical ensemble of heterogeneous interaction modules stacked in multiple layers | -0.273% NE over AdvancedDLRM baseline at 25B examples (8-layer DHEN) |
+| Interaction modeling | One module type per model; high-order interactions from deeper stacking of the same block | Five module types (AdvancedDLRM, self-attention, DCN, linear, convolution) combined per layer; each layer feeds into the next | $k^N$ distinct interaction compositions with $k$ modules and $N$ layers |
+| Ensemble approach | Implicit (ensemble by training multiple separate models) or absent | Explicit intra-layer ensemble with residual shortcut; ensemble output is the next layer's input | Heterogeneous ensemble outperforms every individual module and homogeneous stack at all depths |
+| Training | Standard data parallel or model parallel; DP limited to model sizes fitting in per-GPU HBM | Hybrid Sharded Data Parallel (HSDP): shard within host over NVLink, allreduce across hosts | HSDP achieves 1.2x throughput over FSDP on a 256-GPU cluster |
+| Empirical gains | State-of-the-art AdvancedDLRM (internal Meta baseline) | +0.27% NE improvement; 1.2x training throughput over FSDP on a 256-GPU cluster | DHEN outperforms MoE at matched FLOPs: -0.26% NE vs. -0.10% NE at ~5G FLOPs |
+
+## Relations
+
+**Extended by:** [[papers/generative-recommenders/wukong|Wukong]], [[papers/generative-recommenders/hstu|HSTU]]
 
 ## Table of Contents
 
@@ -132,7 +136,7 @@ The internal DLRM interaction step computes all inner products $\langle x_i, x_j
 
 ### 3.2 Self-Attention
 
-*Self-attention*, the core of Transformer encoders, was introduced to CTR tasks in AutoInt and InterHAt. For DHEN, the module applies a standard Transformer encoder layer:
+*[[concepts/attention-mechanisms/standard-attention|Self-attention]]*, the core of Transformer encoders, was introduced to CTR tasks in AutoInt and InterHAt. For DHEN, the module applies a standard Transformer encoder layer:
 
 $$u = W \cdot \operatorname{TransformerEncoderLayer}(X_n) \tag{4}$$
 
@@ -330,7 +334,7 @@ All DHEN configurations outperform the baseline. Deeper models achieve larger NE
 
 ### 7.4 Scaling Efficiency vs. Mixture of Experts
 
-Table 3 (paper) benchmarks DHEN depth-scaling against MoE-based MLP scaling, both on top of AdvancedDLRM:
+Table 3 (paper) benchmarks DHEN depth-scaling against [[concepts/mixture-of-experts/note|MoE]]-based MLP scaling, both on top of AdvancedDLRM:
 
 | Model | FLOPs | NE diff at 50B |
 |---|---|---|
