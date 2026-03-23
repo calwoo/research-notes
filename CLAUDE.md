@@ -70,8 +70,8 @@ Solutions use **Key insight** + **Sketch** format (not full worked derivations).
 ## Notes Format
 
 - Each note must begin with a table of contents listing all top-level sections and their subsections, immediately after the title.
-- **For paper notes:** include a TL;DR table immediately after the author line and before the TOC. Columns: `| Dimension | Prior State | This Paper | Key Result |`. The `Key Result` column holds the primary quantitative takeaway for that dimension (e.g. "+12.4% engagement", "5.3x faster than FlashAttention2"). Rows should reflect the most important dimensions of novelty.
-- **For paper notes:** include a `## Relations` section immediately after the TL;DR table and before the TOC. The TOC rule ("immediately after the title") is superseded for paper notes by this header order: Title → Authors/venue → TL;DR → Relations → TOC. The `## Relations` heading itself is omitted from the TOC. If all sub-fields are empty, omit the heading entirely.
+- **For paper notes:** include a TL;DR table immediately after the author line. Columns: `| Dimension | Prior State | This Paper | Key Result |`. The `Key Result` column holds the primary quantitative takeaway for that dimension (e.g. "+12.4% engagement", "5.3x faster than FlashAttention2"). Rows should reflect the most important dimensions of novelty.
+- **For paper notes:** include a `## Relations` section immediately after the TL;DR table and before the TOC. See **Paper note header order** below for the full header sequence. The `## Relations` heading itself is omitted from the TOC. If all sub-fields are empty, omit the heading entirely.
 
   The Relations section has three optional sub-fields (omit any that have no entries):
   - `**Builds on:**` — papers this work directly extends or critiques
@@ -83,7 +83,7 @@ Solutions use **Key insight** + **Sketch** format (not full worked derivations).
   ````
   ## Relations
 
-  **Builds on:** [[papers/paper-slug|Display Name]]
+  **Builds on:** [[papers/paper-slug|Display Name]], [[papers/topic/paper-slug|Display Name]]
   **Extended by:** [[papers/follow-up|Display Name]] *(no note yet)*
   **Concepts used:** [[concepts/topic/filename|Display Name]]
   ````
