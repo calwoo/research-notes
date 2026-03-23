@@ -319,13 +319,17 @@ Define the absorbed query $\textcolor{#2E86C1}{\tilde{\mathbf{q}}_t^h} = \textco
 
 ### 5.4 Incompatibility with RoPE
 
-The matrix absorption trick requires that $\mathbf{W}_K^{\text{up},h}$ can be moved to the query side. This is valid only when the key is a linear function of the cached quantity. RoPE breaks this linearity.
+The absorption trick works because $\textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}}$ is a *fixed* matrix — independent of the cached position $s$ — so it can be transposed once and preapplied to the query. RoPE breaks this by making the effective key transformation position-dependent.
 
 With standard RoPE, the key at position $s$ for head $h$ would be:
 
 $$\mathbf{k}_s^h = \textcolor{#D35400}{\mathbf{R}^{d_k}(s)} \, \textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h} \mathbf{c}_s^{KV}}$$
 
-The rotation $\textcolor{#D35400}{\mathbf{R}^{d_k}(s)}$ is position-dependent and lies *between* the cached $\textcolor{#2E86C1}{\mathbf{c}_s^{KV}}$ and the weight $\textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}}$. To absorb $\textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}}$ into the query, one would need to commute it past $\textcolor{#D35400}{\mathbf{R}^{d_k}(s)}$, but $\textcolor{#D35400}{\mathbf{R}^{d_k}(s)}\textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}} \neq \textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}}\textcolor{#D35400}{\mathbf{R}^{d_k}(s)}$ in general — the rotation and the up-projection do not commute. *If one were to apply RoPE naively, the model would need to materialize the full $\mathbf{k}_s^h$ for every cached position at each decoding step, eliminating the benefit of caching only $\mathbf{c}_s^{KV}$.*
+The rotation $\textcolor{#D35400}{\mathbf{R}^{d_k}(s)}$ is applied *outside* — it acts on the result of the up-projection, not between $\textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}}$ and $\textcolor{#2E86C1}{\mathbf{c}_s^{KV}}$. The attention logit is therefore:
+
+$$\mathbf{q}_t^h \cdot \mathbf{k}_s^h = \mathbf{q}_t^h \cdot \textcolor{#D35400}{\mathbf{R}^{d_k}(s)}\,\textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}\mathbf{c}_s^{KV}} = \underbrace{\left(\textcolor{#D35400}{\mathbf{R}^{d_k}(s)}\,\textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}}\right)^{\!\top} \mathbf{q}_t^h}_{\text{position-dependent absorbed query}} \cdot\; \textcolor{#2E86C1}{\mathbf{c}_s^{KV}}$$
+
+The composite $\left(\textcolor{#D35400}{\mathbf{R}^{d_k}(s)}\,\textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}}\right)^{\!\top} = \textcolor{#2E86C1}{(\mathbf{W}_K^{\text{up},h})^{\top}}\textcolor{#D35400}{\mathbf{R}^{d_k}(s)^{\top}}$ varies with $s$: a different matrix must be applied to $\mathbf{q}_t^h$ for every cached position. This is the same $O(t \cdot d_c d_k)$ per-step cost that the absorption trick was designed to avoid — the benefit of caching only $\textcolor{#2E86C1}{\mathbf{c}_s^{KV}}$ is eliminated.
 
 ### 5.5 Decoupled RoPE as the Solution
 
