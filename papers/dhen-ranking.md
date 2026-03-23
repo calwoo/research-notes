@@ -4,7 +4,7 @@ Buyun Zhang, Liang Luo, Xi Liu, Jay Li, Zeliang Chen, Weilin Zhang, Xiaohan Wei,
 
 | Dimension | Prior State | This Paper | Key Result |
 |---|---|---|---|
-| Model architecture | Single interaction module stacked homogeneously (DCN, AutoInt, xDeepFM, etc.) | Hierarchical ensemble of heterogeneous interaction modules stacked in multiple layers | -0.273% NE over AdvancedDLRM baseline at 25B examples (8-layer DHEN) |
+| Model architecture | Single interaction module stacked homogeneously (DCN, AutoInt, xDeepFM, etc.) | Hierarchical ensemble of heterogeneous interaction modules stacked in multiple layers | +0.27% NE improvement over AdvancedDLRM (= −0.273% NE at 25B examples) |
 | Interaction modeling | One module type per model; high-order interactions from deeper stacking of the same block | Five module types (AdvancedDLRM, self-attention, DCN, linear, convolution) combined per layer; each layer feeds into the next | $k^N$ distinct interaction compositions with $k$ modules and $N$ layers |
 | Ensemble approach | Implicit (ensemble by training multiple separate models) or absent | Explicit intra-layer ensemble with residual shortcut; ensemble output is the next layer's input | Heterogeneous ensemble outperforms every individual module and homogeneous stack at all depths |
 | Training | Standard data parallel or model parallel; DP limited to model sizes fitting in per-GPU HBM | Hybrid Sharded Data Parallel (HSDP): shard within host over NVLink, allreduce across hosts | HSDP achieves 1.2x throughput over FSDP on a 256-GPU cluster |
@@ -13,6 +13,7 @@ Buyun Zhang, Liang Luo, Xi Liu, Jay Li, Zeliang Chen, Weilin Zhang, Xiaohan Wei,
 ## Relations
 
 **Extended by:** [[papers/generative-recommenders/wukong|Wukong]], [[papers/generative-recommenders/hstu|HSTU]]
+**Concepts used:** [[concepts/ab-testing/foundations|A/B Testing Foundations]]
 
 ## Table of Contents
 
