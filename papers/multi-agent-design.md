@@ -1,0 +1,281 @@
+# Multi-Agent Design: Optimizing Agents with Better Prompts and Topologies
+
+**Han Zhou, Xingchen Wan, Ruoxi Sun, Hamid Palangi, Shariq Iqbal, Ivan Vulić, Anna Korhonen, Sercan Ö. Arık**
+*ICLR 2026 · [arXiv 2502.02533](https://arxiv.org/abs/2502.02533)*
+
+---
+
+| Dimension | Prior State | This Paper | Key Result |
+|-----------|-------------|------------|------------|
+| MAS design paradigm | Topology search is the primary lever; prompts treated as fixed or hand-crafted | Prompts and topologies are co-optimized in a three-stage pipeline | +8.5 pp average over multi-agent debate baseline across 8 benchmarks |
+| Prompt role in MAS | Often overlooked; single-agent APO not extended to multi-agent blocks | Block-level + workflow-level APO both contribute independently and jointly | Block-level APO alone lifts average from 67.4% to 74.6% |
+| Search space | Full combinatorial topology space with uniform sampling | Influence-weighted pruning focuses search on empirically effective building blocks | Topology search adds ~3 pp on top of prompt-optimized blocks |
+| Generalization | Methods often tied to specific LLM backbone | MASS evaluated on Gemini 1.5 Pro, Claude 3.5 Sonnet, and Mistral Nemo-12B | Consistent +12–15 pp over CoT baseline across all three model families |
+
+## Relations
+
+**Builds on:** [MIPRO (Automatic Prompt Optimization)](https://arxiv.org/abs/2406.11695) *(no note yet)*, [ADAS: Automated Design of Agentic Systems](https://arxiv.org/abs/2408.08435) *(no note yet)*, [AFlow](https://arxiv.org/abs/2410.10762) *(no note yet)*
+**Concepts used:** [[concepts/neural-scaling-laws/note|Neural Scaling Laws]], [[concepts/mixture-of-experts/note|Mixture of Experts]]
+
+---
+
+## Table of Contents
+
+- [[#1. Background and Motivation|1. Background and Motivation]]
+  - [[#1.1 The Multi-Agent Design Problem|1.1 The Multi-Agent Design Problem]]
+  - [[#1.2 Limitations of Prior Work|1.2 Limitations of Prior Work]]
+- [[#2. The Design Space|2. The Design Space]]
+  - [[#2.1 Agent Configuration|2.1 Agent Configuration]]
+  - [[#2.2 Topology Building Blocks|2.2 Topology Building Blocks]]
+  - [[#2.3 Combined Search Space|2.3 Combined Search Space]]
+- [[#3. The MASS Framework|3. The MASS Framework]]
+  - [[#3.1 Formal Optimization Objective|3.1 Formal Optimization Objective]]
+  - [[#3.2 Stage 1: Block-Level Prompt Optimization|3.2 Stage 1: Block-Level Prompt Optimization]]
+  - [[#3.3 Stage 2: Workflow Topology Optimization|3.3 Stage 2: Workflow Topology Optimization]]
+  - [[#3.4 Stage 3: Workflow-Level Prompt Optimization|3.4 Stage 3: Workflow-Level Prompt Optimization]]
+- [[#4. Empirical Results|4. Empirical Results]]
+  - [[#4.1 Main Results on Gemini 1.5 Pro|4.1 Main Results on Gemini 1.5 Pro]]
+  - [[#4.2 Ablation Study|4.2 Ablation Study]]
+  - [[#4.3 Cross-Model Generalization|4.3 Cross-Model Generalization]]
+  - [[#4.4 Token Efficiency|4.4 Token Efficiency]]
+- [[#5. Design Principles|5. Design Principles]]
+  - [[#5.1 Task-Topology Affinity|5.1 Task-Topology Affinity]]
+  - [[#5.2 Optimization Ordering|5.2 Optimization Ordering]]
+- [[#6. Comparison with Prior Automated MAS Methods|6. Comparison with Prior Automated MAS Methods]]
+- [[#7. Limitations and Open Questions|7. Limitations and Open Questions]]
+- [[#References|References]]
+
+---
+
+## 1. Background and Motivation 🤖
+
+### 1.1 The Multi-Agent Design Problem
+
+A *multi-agent system* (MAS) for language models is a computational graph in which multiple LLM-based agents, each with their own prompt (instruction text and optionally few-shot demonstrations), interact through a defined communication *topology* to produce a joint output on some task. The central design question is: given a task distribution $\mathcal{D}$ over input-output pairs $(x, y)$, which agent prompt templates and which interaction topology jointly maximize expected task performance?
+
+The difficulty is the size of the joint space. Prompt space is effectively unbounded — natural language instructions and demonstrations admit infinitely many variations. Topology space, even when restricted to a finite catalog of interaction patterns, is combinatorial in the number and configuration of agents. Prior work has addressed these two dimensions separately: hand-crafting prompts and searching topologies, or vice versa.
+
+### 1.2 Limitations of Prior Work
+
+*Automated Design of Agentic Systems* (ADAS) uses a meta-agent that iteratively proposes new agent code. While expressive, it achieves only marginal empirical gains because it does not systematically optimize agent-level prompts before composing agents into workflows. *AFlow* applies Monte Carlo Tree Search over a predefined operator library to discover effective workflows, but its meta-prompt is not backbone-agnostic, which complicates fair comparison across LLMs.
+
+The shared failure mode is asymmetric treatment of the two design axes: topology receives algorithmic attention while prompts are left sub-optimized, or topology is optimized without accounting for how prompt quality interacts with workflow structure.
+
+---
+
+## 2. The Design Space 📐
+
+### 2.1 Agent Configuration
+
+Each agent $a$ is characterized by:
+- A *role prompt* $p_{\text{inst}} \in \mathcal{P}$ — a natural-language instruction string
+- A *demonstration set* $p_{\text{demo}} \subseteq \mathcal{D}^k$ — up to $k$ few-shot exemplars
+- A *model backbone* $\mathcal{M}$ — the underlying LLM
+
+Let $a = (p_{\text{inst}}, p_{\text{demo}}, \mathcal{M})$ and let $\mathcal{A}$ denote the space of all agent configurations.
+
+### 2.2 Topology Building Blocks
+
+💡 MASS defines a finite catalog of five *topology building blocks*, each parameterized by a count or binary variable. A workflow is built by composing these blocks.
+
+**Definition (Topology Building Blocks).** The five building blocks are:
+
+| Block | Symbol | Parameter $N$ | Semantics |
+|-------|--------|--------------|-----------|
+| Aggregate | $\mathcal{T}_{\text{agg}}$ | $N_a \in \{1,3,5,7,9\}$ | $N_a$ parallel agents; majority-vote or consistent-prediction aggregation |
+| Reflect | $\mathcal{T}_{\text{ref}}$ | $N_r \in \{0,1,2,3,4\}$ | $N_r$ rounds of self-critique and revision |
+| Debate | $\mathcal{T}_{\text{deb}}$ | $N_d \in \{0,1,2,3,4\}$ | $N_d$ rounds of multi-agent opinion exchange; requires $\geq 2$ predictors + 1 debater |
+| Summarize | $\mathcal{T}_{\text{sum}}$ | $N_s \in \{0,1,2,3,4\}$ | Long-context compression via $N_s$ abstraction rounds |
+| Tool-use | $\mathcal{T}_{\text{tool}}$ | $N_T \in \{0,1\}$ | Binary: include external retrieval or code execution |
+
+Each block contributes independently to the workflow when activated (parameter $> 0$).
+
+### 2.3 Combined Search Space
+
+A full configuration is a tuple $\mathbf{a} = (a_0, a_1, \ldots, a_K, N_a, N_r, N_d, N_s, N_T)$ where $a_0$ is the base predictor and $a_1, \ldots, a_K$ are the specialized agents for each activated block. The total number of agents $\mathcal{N}(\mathbf{a})$ must satisfy a budget constraint $\mathcal{N}(\mathbf{a}) < B$.
+
+The search space $\mathcal{A}$ is the Cartesian product of:
+- Unbounded prompt space for each agent role
+- Discrete parameter spaces $\{1,3,5,7,9\} \times \{0,\ldots,4\}^3 \times \{0,1\}$ for the five blocks
+
+This space is intractably large without structure. MASS's key contribution is imposing staged optimization and influence-based pruning to render it tractable.
+
+---
+
+## 3. The MASS Framework 🔑
+
+### 3.1 Formal Optimization Objective
+
+**Definition (MAS Optimization Problem).** Let $\mathcal{W}(\mathbf{a})(x)$ denote the output of workflow $\mathcal{W}$ instantiated with configuration $\mathbf{a}$ on input $x$. The optimization objective is:
+
+$$\mathbf{a}^* = \arg\max_{\mathbf{a} \sim \mathcal{A}} \; \mathbb{E}_{(x,y) \sim \mathcal{D}} \left[ f\!\left(\mathcal{W}(\mathbf{a})(x),\, y\right) \right]$$
+
+where $f(\cdot, \cdot)$ is a task-specific scoring function (e.g., exact match, execution accuracy). Because $\mathcal{A}$ is combinatorially large, MASS decomposes this into three sequential sub-problems.
+
+### 3.2 Stage 1: Block-Level Prompt Optimization
+
+💡 The first stage optimizes agent prompts *independently* for each building block, conditioning on a fixed base agent.
+
+**Step 1a — Base agent optimization.** Given an initial base predictor $a_0$ with default instruction and no demonstrations, run automatic prompt optimization (MIPRO) on $\mathcal{D}$:
+
+$$a_0^* \leftarrow \mathcal{O}_{\mathcal{D}}(a_0)$$
+
+MIPRO jointly optimizes instructions and demonstrations. Concretely: it generates 10 instruction candidates per agent (incorporating dataset summaries and diversity hints), bootstraps up to 3 demonstrations from the model's correct validation predictions, and runs 10 optimization rounds via Bayesian search over the combined space.
+
+**Step 1b — Block-conditioned optimization.** For each topology block $\mathcal{T}_i$ with its associated agent role $a_i$, optimize $a_i$ conditioned on $a_0^*$:
+
+$$a_i^* \leftarrow \mathcal{O}_{\mathcal{D}}(a_i \mid a_0^*)$$
+
+**Step 1c — Influence scoring.** Define the *incremental influence* of block $i$ as the ratio of its optimized performance to baseline:
+
+$$I_{a_i} = \frac{\mathcal{E}(a_i^*)}{\mathcal{E}(a_0^*)}$$
+
+where $\mathcal{E}(\cdot)$ denotes empirical accuracy on a held-out validation split. A block with $I_{a_i} > 1$ provides net benefit; $I_{a_i} < 1$ indicates degradation.
+
+### 3.3 Stage 2: Workflow Topology Optimization
+
+⚙️ Stage 2 uses the influence scores from Stage 1 to bias the topology search toward productive building blocks.
+
+**Definition (Influence-Weighted Sampling).** The inclusion probability for block $i$ is:
+
+$$p_{a_i} = \text{Softmax}(I_{a_i}, t)$$
+
+where $t = 0.05$ is a temperature parameter that *sharpens* the distribution, concentrating probability mass on high-influence blocks. For each candidate workflow configuration, each block dimension $a_i$ is included by drawing $u \sim \text{Uniform}(0,1)$ and retaining the block iff $u \leq p_{a_i}$.
+
+**Rejection sampling.** Configurations violating the agent budget $\mathcal{N}(\mathbf{a}) \geq B$ are rejected and resampled. This ensures computational feasibility without biasing the marginal inclusion probabilities.
+
+**Topology ordering.** The predefined composition order is: Summarize → Reflect → Debate → Aggregate. This ordering reflects the natural information flow: compress context first, then refine individual outputs, then debate across agents, then aggregate.
+
+The topology search evaluates $M$ sampled configurations on the validation set and selects the best-performing workflow $\mathcal{W}^*$.
+
+### 3.4 Stage 3: Workflow-Level Prompt Optimization
+
+🔑 Stage 3 re-runs APO on the *entire best workflow* $\mathcal{W}^*$ end-to-end, allowing agent prompts to adapt to the multi-agent context they will operate in.
+
+$$\mathbf{a}^* \leftarrow \mathcal{O}_{\mathcal{D}}\!\left(\mathbf{a}_{\mathcal{W}^*}\right)$$
+
+The rationale is that agent roles are not independent in context: a reflector agent's optimal instruction differs depending on whether a debate stage follows. Block-level optimization (Stage 1) treats each agent in isolation; Stage 3 captures these *interdependencies*.
+
+**Key conclusion: the three stages are not interchangeable in ordering.** Local optimization must precede topology search (otherwise topology is evaluated on sub-optimal agents), and topology must be fixed before global optimization (otherwise the prompt adapts to the wrong workflow structure). **Each stage contributes approximately 3–7 percentage points of additional accuracy on average.**
+
+---
+
+## 4. Empirical Results 📊
+
+### 4.1 Main Results on Gemini 1.5 Pro
+
+Benchmarks span mathematical reasoning (MATH), discrete reasoning over text (DROP), multi-hop QA (HotpotQA, MuSiQue, 2WikiMQA), and code generation (MBPP, HumanEval, LiveCodeBench). All scores are accuracy (%) averaged over three seeds.
+
+| Task | CoT | Self-Consistency | Multi-Agent Debate | ADAS | MASS |
+|------|-----|------------------|--------------------|------|------|
+| MATH | 71.67 | 77.33 | 78.67 | 80.00 | **84.67** |
+| DROP | 70.59 | 74.06 | 71.78 | 72.96 | **90.52** |
+| HotpotQA | 57.43 | 58.60 | 64.87 | 65.88 | **69.91** |
+| MuSiQue | 37.81 | 41.81 | 46.00 | 41.95 | **51.40** |
+| 2WikiMQA | 63.39 | 67.79 | 71.78 | 71.14 | **73.34** |
+| MBPP | 68.33 | 69.50 | 68.67 | 73.00 | **86.50** |
+| HumanEval | 86.67 | 86.00 | 86.67 | 87.67 | **91.67** |
+| LiveCodeBench | 66.33 | 70.33 | 73.67 | 65.17 | **82.33** |
+| **Average** | 65.28 | 68.18 | 70.26 | 69.72 | **78.79** |
+
+**MASS achieves 78.79% average accuracy, a +8.5 pp improvement over multi-agent debate and +9.1 pp over ADAS.**
+
+### 4.2 Ablation Study
+
+The ablation incrementally applies each stage of MASS on top of the preceding stage (Gemini 1.5 Pro):
+
+| Configuration | MATH | DROP | HotpotQA | MuSiQue | 2WikiMQA | MBPP | HumanEval | LCB | Avg. |
+|---------------|------|------|----------|---------|----------|------|-----------|-----|------|
+| Base CoT | 62.33 | 71.65 | 56.96 | 43.32 | 49.20 | 68.83 | 89.33 | 66.33 | 63.54 |
+| + APO (base agent) | 79.33 | 77.51 | 59.72 | 43.97 | 61.49 | 67.00 | 86.33 | 68.50 | 67.44 |
+| + 1PO (block prompts) | 80.00 | 86.45 | 62.52 | 48.86 | 67.40 | 80.33 | 91.67 | 76.00 | 74.56 |
+| + 2TO (topology search) | 83.00 | 86.75 | 65.22 | 52.61 | 72.82 | 85.00 | 92.00 | 81.33 | 77.55 |
+| + 3PO (workflow prompts) | 84.67 | 90.52 | 69.91 | 51.40 | 73.34 | 86.50 | 91.67 | 82.33 | **78.40** |
+
+Each stage contributes positively in aggregate. *Note the non-monotonicity on MuSiQue at Stage 3PO (51.40 vs. 52.61): workflow-level re-optimization can occasionally specialize prompts away from the configuration optimal for that task alone — a known risk of joint optimization over multi-component systems.*
+
+### 4.3 Cross-Model Generalization
+
+MASS is evaluated across three model families to assess backbone dependence:
+
+| Model | CoT Baseline | MASS | Delta |
+|-------|-------------|------|-------|
+| Gemini 1.5 Pro | 65.28 | 78.79 | +13.5 pp |
+| Claude 3.5 Sonnet | 60.21 | 72.43 | +12.2 pp |
+| Mistral Nemo-12B | 40.40 | 55.90 | +15.5 pp |
+
+**MASS delivers consistent double-digit improvements across all three backbone families.** The relative gain is largest for the weakest model (Mistral Nemo-12B), suggesting that structured prompt and topology optimization is especially valuable when the base model has lower instruction-following capacity.
+
+*Note: AFlow requires Claude 3.5 Sonnet as the meta-optimizer regardless of executor LLM, making cross-backbone comparison to AFlow methodologically fraught.*
+
+### 4.4 Token Efficiency
+
+⚠️ A critical finding is that prompt-optimized single agents frequently outperform multi-agent scaling approaches when token budget is held fixed. Spending tokens on better prompts for a single agent can dominate spending the same tokens on additional agents running default prompts. This challenges the naive scaling intuition that more agents is always better.
+
+*The implication: topology complexity should be justified by demonstrated task-specific benefit (measurable via influence scoring), not assumed to be universally helpful.*
+
+---
+
+## 5. Design Principles 💡
+
+### 5.1 Task-Topology Affinity
+
+Not all topologies improve performance on all tasks. The paper identifies a pattern:
+
+| Task Type | Effective Topologies | Rationale |
+|-----------|---------------------|-----------|
+| Multi-hop QA (HotpotQA, MuSiQue, 2WikiMQA) | Debate | Debate elicits truthful cross-checking across agents on factual chains |
+| Mathematical reasoning (MATH, DROP) | Aggregate (self-consistency) | Multiple independent samples reduce variance on deterministic reasoning |
+| Code generation (MBPP, HumanEval, LCB) | Reflect + Tool-use | Execution feedback enables precise error correction |
+
+*Surprisingly,* on some multi-hop tasks, topologies like Aggregate and Reflect actually *degrade* performance relative to a well-prompted single agent, highlighting that blanket multi-agent composition is not a safe default.
+
+### 5.2 Optimization Ordering
+
+Three overarching design principles emerge:
+
+**Principle 1 (Local before global).** Optimizing individual agents properly before composing them into workflows outweighs the gains from complex unoptimized topologies. A well-prompted single agent defeats a poorly-prompted multi-agent system.
+
+**Principle 2 (Influence-guided search).** High-influence building blocks represent a small fraction of the full topology space. Concentrating search budget on these blocks via influence-weighted sampling is more sample-efficient than uniform exploration.
+
+**Principle 3 (Interdependence matters).** Workflow-level joint optimization captures prompt interdependencies that block-level optimization misses. The optimal instruction for a Reflect agent depends on the Debate context it will receive.
+
+---
+
+## 6. Comparison with Prior Automated MAS Methods 🔍
+
+| Method | Prompt Optimization | Topology Search | Backbone Agnostic | Avg. Accuracy (Gemini 1.5 Pro) |
+|--------|--------------------|-----------------|--------------------|-------------------------------|
+| CoT | None (default) | None (fixed single agent) | Yes | 65.28 |
+| Self-Consistency | None | Fixed (parallel sample) | Yes | 68.18 |
+| Multi-Agent Debate | None | Fixed (debate) | Yes | 70.26 |
+| ADAS | Implicit (meta-agent) | LLM-generated code | Yes | 69.72 |
+| AFlow | None explicit | MCTS over operators | Partially (meta uses Claude) | ~70 |
+| **MASS** | **Block + workflow APO** | **Influence-weighted sampling** | **Yes** | **78.79** |
+
+*ADAS* proposes complex topologies but achieves only subtle gains because prompt optimization is not systematically applied to each block. *AFlow* brings competitive topology search via MCTS but lacks the prompt optimization stages that account for the majority of MASS's gain.
+
+---
+
+## 7. Limitations and Open Questions 🔍
+
+- **Communication topology**: Debate currently assumes fully-connected agent communication. Sparse or structured communication graphs (e.g., ring, tree) could improve efficiency without sacrificing performance.
+- **Search algorithm**: The influence-weighted sampling approach is a heuristic. Bayesian optimization or other structured search methods over the topology space could improve sample efficiency.
+- **Error-based feedback**: APO in MASS uses correct predictions for demonstration bootstrapping. Incorporating error logs and failure analysis into the prompt optimizer could yield higher-quality instructions.
+- **Dynamic topologies**: MASS discovers a fixed workflow at optimization time. Adaptive topologies that select routing at inference time (cf. [[concepts/mixture-of-experts/note|Mixture of Experts]]-style routing) remain unexplored in this setting.
+- **Search space coverage**: The five building blocks are comprehensive but not exhaustive. Specialized topologies for structured generation or tool-augmented reasoning could extend the framework.
+
+---
+
+## References
+
+| Reference Name | Brief Summary | Link to Reference |
+|----------------|--------------|-------------------|
+| [Zhou et al. (2025) — MASS](https://arxiv.org/abs/2502.02533) | Introduces MASS: three-stage MAS optimization via block APO, influence-weighted topology search, and workflow APO | [arXiv 2502.02533](https://arxiv.org/abs/2502.02533) |
+| [MIPRO (Opsahl-Ong et al., 2024)](https://arxiv.org/abs/2406.11695) | Automatic prompt optimization jointly over instructions and few-shot demonstrations using Bayesian search | [arXiv 2406.11695](https://arxiv.org/abs/2406.11695) |
+| [ADAS (Hu et al., 2024)](https://arxiv.org/abs/2408.08435) | LLM meta-agent that iteratively proposes and evaluates new agentic systems in code | [arXiv 2408.08435](https://arxiv.org/abs/2408.08435) |
+| [AFlow (Zhang et al., 2024)](https://arxiv.org/abs/2410.10762) | Monte Carlo Tree Search over predefined agentic operators to discover effective workflows | [arXiv 2410.10762](https://arxiv.org/abs/2410.10762) |
+| [Du et al. (2023) — Multi-Agent Debate](https://arxiv.org/abs/2305.14325) | Demonstrates that debate between LLM agents improves factual accuracy and reasoning | [arXiv 2305.14325](https://arxiv.org/abs/2305.14325) |
+| [Wang et al. (2023) — Self-Consistency](https://arxiv.org/abs/2203.11171) | Samples multiple reasoning chains and takes majority vote to improve CoT accuracy | [arXiv 2203.11171](https://arxiv.org/abs/2203.11171) |
+| [Madaan et al. (2023) — Self-Refine](https://arxiv.org/abs/2303.17651) | Iterative self-feedback and revision loop for LLM output improvement | [arXiv 2303.17651](https://arxiv.org/abs/2303.17651) |
+| [Gemini 1.5 Pro (Google, 2024)](https://arxiv.org/abs/2403.05530) | Primary backbone LLM used in MASS main experiments | [arXiv 2403.05530](https://arxiv.org/abs/2403.05530) |
