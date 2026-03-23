@@ -4,14 +4,18 @@ Yi, Yang, Hong, Cheng, Heldt, Kumthekar, Zhao, Wei, Chi. RecSys 2019. Google.
 
 ## TL;DR
 
-| Dimension | Prior State | This Paper |
-|-----------|-------------|------------|
-| **Training objective** | Batch softmax treats in-batch items as uniform negatives; implicitly minimizes loss under frequency-reweighted partition function $\sum_j q_j e^{s_j}$ | Corrects to target full softmax partition function $\sum_j e^{s_j}$ via logQ correction: subtract $\log \hat{p}_j$ from each item logit before softmax |
-| **Bias source** | Never identified; practitioners observed that popular items are over-penalized but attributed it to data imbalance | Formally derived: uncorrected batch softmax is an unbiased estimator of the wrong objective; bias scales with variance of $\log q_j$ across items |
-| **Frequency estimation** | Requires precomputed per-item frequency table over fixed vocabulary | Online streaming estimator via exponential moving average on inter-arrival times; handles non-stationary distributions and new items without recomputation |
-| **Architecture** | Two-tower inner product model (unchanged) | Two-tower inner product model (unchanged) — correction is training-only, zero inference cost |
-| **Deployment** | ANN index on raw item embeddings | ANN index on corrected-training item embeddings — same serving infrastructure |
-| **Empirical gains** | — | +8% Recall@1 on Wikipedia link prediction; statistically significant live metric gains on YouTube retrieval |
+| Dimension | Prior State | This Paper | Key Result |
+|-----------|-------------|------------|------------|
+| **Training objective** | Batch softmax treats in-batch items as uniform negatives; implicitly minimizes loss under frequency-reweighted partition function $\sum_j q_j e^{s_j}$ | Corrects to target full softmax partition function $\sum_j e^{s_j}$ via logQ correction: subtract $\log \hat{p}_j$ from each item logit before softmax | Unbiased estimator of full softmax under arbitrary sampling distribution |
+| **Bias source** | Never identified; practitioners observed that popular items are over-penalized but attributed it to data imbalance | Formally derived: uncorrected batch softmax is an unbiased estimator of the wrong objective; bias scales with variance of $\log q_j$ across items | Bias proportional to variance of $\log q_j$ across items |
+| **Frequency estimation** | Requires precomputed per-item frequency table over fixed vocabulary | Online streaming estimator via exponential moving average on inter-arrival times; handles non-stationary distributions and new items without recomputation | Streaming estimator via EMA of inter-arrival times; no full-pass over corpus |
+| **Architecture** | Two-tower inner product model (unchanged) | Two-tower inner product model (unchanged) — correction is training-only, zero inference cost | Zero inference cost: correction is training-only |
+| **Deployment** | ANN index on raw item embeddings | ANN index on corrected-training item embeddings — same serving infrastructure | Same ANN serving infrastructure as before |
+| **Empirical gains** | — | +8% Recall@1 on Wikipedia link prediction; statistically significant live metric gains on YouTube retrieval | +65% Recall@10 on Wikipedia; +0.37% engagement lift on YouTube (vs +0.20% uncorrected) |
+
+## Relations
+
+**Builds on:** YouTube DNN ([Covington et al. 2016](https://dl.acm.org/doi/10.1145/2959100.2959190)) *(no note yet)*, Sampled Softmax / logQ correction ([Bengio and Sénécal 2008](https://doi.org/10.1109/TNN.2007.912312)) *(no note yet)*, Count-Min Sketch ([Cormode and Muthukrishnan 2005](https://doi.org/10.1016/j.jalgor.2003.12.001)) *(no note yet)*
 
 ---
 
@@ -303,7 +307,7 @@ The corrected softmax improves over uncorrected by $65\%$ in Recall@10. *Tempera
 | plain-sfx ($\tau = 0.05$) | 0.2069 | 0.2728 | 0.3964 | 0.4586 |
 | correct-sfx ($\tau = 0.05$) | **0.2150** | **0.2960** | **0.4537** | **0.5322** |
 
-**Live A/B experiment**: treatment group receives recommendations augmented by candidates from the neural retrieval system (added to the nomination stage alongside existing nominators).
+**Live [[concepts/ab-testing/foundations|A/B experiment]]**: treatment group receives recommendations augmented by candidates from the neural retrieval system (added to the nomination stage alongside existing nominators).
 
 | System | Engagement Metric Improvement |
 |--------|-------------------------------|
