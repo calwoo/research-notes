@@ -90,6 +90,9 @@ Let $a = (p_{\text{inst}}, p_{\text{demo}}, \mathcal{M})$ and let $\mathcal{A}$ 
 
 Each block contributes independently to the workflow when activated (parameter $> 0$).
 
+![Figure 4 from Zhou et al. (2025): Illustration of the MASS search space and topology building blocks](figures/multi-agent-design/mass-fig4-building-blocks.png)
+*Figure 4 (Zhou et al., 2025): The five topology building blocks — Aggregate, Reflect, Debate, Summarize, and Tool-use — and how they compose into a full workflow. Each block is independently parameterized by a count or binary variable, and the predefined composition order is Summarize → Reflect → Debate → Aggregate.*
+
 ### 2.3 Combined Search Space
 
 A full configuration is a tuple $\mathbf{a} = (a_0, a_1, \ldots, a_K, N_a, N_r, N_d, N_s, N_T)$ where $a_0$ is the base predictor and $a_1, \ldots, a_K$ are the specialized agents for each activated block. The total number of agents $\mathcal{N}(\mathbf{a})$ must satisfy a budget constraint $\mathcal{N}(\mathbf{a}) < B$.
@@ -103,6 +106,9 @@ This space is intractably large without structure. MASS's key contribution is im
 ---
 
 ## 3. The MASS Framework 🔑
+
+![Figure 1 from Zhou et al. (2025): MASS framework overview showing the three-stage pipeline](figures/multi-agent-design/mass-fig1-framework-overview.png)
+*Figure 1 (Zhou et al., 2025): The MASS framework. A hand-crafted MAS (left) is transformed into an optimized design (right) by interleaving block-level prompt optimization, influence-weighted topology search, and workflow-level prompt optimization.*
 
 ### 3.1 Formal Optimization Objective
 
@@ -180,6 +186,9 @@ Benchmarks span mathematical reasoning (MATH), discrete reasoning over text (DRO
 
 **MASS achieves 78.79% average accuracy, a +8.5 pp improvement over multi-agent debate and +9.1 pp over ADAS.**
 
+![Figure 5 from Zhou et al. (2025): Ablation results showing per-stage gains and topology optimization comparison](figures/multi-agent-design/mass-fig5-ablation-results.png)
+*Figure 5 (Zhou et al., 2025): Left — average performance across 8 tasks on Gemini 1.5 Pro as each MASS stage is added (Base CoT → APO → 1PO → 2TO → 3PO). Right — comparative ablation on topology optimization strategies, showing influence-weighted sampling outperforms uniform search.*
+
 ### 4.2 Ablation Study
 
 The ablation incrementally applies each stage of MASS on top of the preceding stage (Gemini 1.5 Pro):
@@ -213,6 +222,9 @@ MASS is evaluated across three model families to assess backbone dependence:
 ⚠️ A critical finding is that prompt-optimized single agents frequently outperform multi-agent scaling approaches when token budget is held fixed. Spending tokens on better prompts for a single agent can dominate spending the same tokens on additional agents running default prompts. This challenges the naive scaling intuition that more agents is always better.
 
 *The implication: topology complexity should be justified by demonstrated task-specific benefit (measurable via influence scoring), not assumed to be universally helpful.*
+
+![Figure 2 from Zhou et al. (2025): Accuracy vs. token count for prompt-optimized agents vs. multi-agent scaling on MATH](figures/multi-agent-design/mass-fig2-token-efficiency.png)
+*Figure 2 (Zhou et al., 2025): Token efficiency comparison on MATH with Gemini 1.5 Pro. A prompt-optimized single agent (APO) achieves better accuracy-per-token than self-consistency, self-refine, or multi-agent debate scaling at equivalent token budgets — demonstrating that prompt quality dominates raw agent count.*
 
 ---
 
@@ -279,3 +291,31 @@ Three overarching design principles emerge:
 | [Wang et al. (2023) — Self-Consistency](https://arxiv.org/abs/2203.11171) | Samples multiple reasoning chains and takes majority vote to improve CoT accuracy | [arXiv 2203.11171](https://arxiv.org/abs/2203.11171) |
 | [Madaan et al. (2023) — Self-Refine](https://arxiv.org/abs/2303.17651) | Iterative self-feedback and revision loop for LLM output improvement | [arXiv 2303.17651](https://arxiv.org/abs/2303.17651) |
 | [Gemini 1.5 Pro (Google, 2024)](https://arxiv.org/abs/2403.05530) | Primary backbone LLM used in MASS main experiments | [arXiv 2403.05530](https://arxiv.org/abs/2403.05530) |
+
+### Agent Topologies
+
+| Reference Name | Brief Summary | Link to Reference |
+|---|---|---|
+| [Guo et al. (2024) — LLM-based Multi-Agents Survey](https://arxiv.org/abs/2402.01680) | IJCAI 2024 survey categorizing LLM multi-agent systems across five streams: framework design, orchestration, problem solving, world simulation, and benchmarks. Most widely cited taxonomy of agent profiling and communication. | [arXiv 2402.01680](https://arxiv.org/abs/2402.01680) |
+| [Wang et al. (2024) — Autonomous Agents Survey](https://arxiv.org/abs/2308.11432) | Unified agent framework covering planning, memory, tool use, and action; foundational reference for the functional modules that nodes in a multi-agent graph must implement. | [arXiv 2308.11432](https://arxiv.org/abs/2308.11432) |
+| [Chen et al. (2025) — Multi-Agent Collaboration Mechanisms](https://arxiv.org/abs/2501.06322) | Systematically characterizes collaboration along five dimensions: actors, type (cooperation/competition/coopetition), structure (peer-to-peer, centralized, distributed), strategy, and coordination protocols. Most structurally precise survey of communication topology variants. | [arXiv 2501.06322](https://arxiv.org/abs/2501.06322) |
+| [Liu et al. (2025) — Topological Structure Learning as Research Priority](https://arxiv.org/abs/2505.22467) | Position paper formally identifying topology — agent selection, structure profiling, topology synthesis — as an underexplored dimension in LLM-MAS; proposes a three-stage framework for topology-aware system design. | [arXiv 2505.22467](https://arxiv.org/abs/2505.22467) |
+| [Zhuge et al. (2024) — G-Designer](https://arxiv.org/abs/2410.11782) | Encodes agents and tasks as nodes in a variational graph autoencoder to generate task-adaptive communication graphs. Learned sparse topologies match or outperform dense hand-crafted ones with up to 95% token reduction on MMLU and HumanEval. | [arXiv 2410.11782](https://arxiv.org/abs/2410.11782) |
+| [Park et al. (2023) — Generative Agents](https://arxiv.org/abs/2304.03442) | 25 LLM-powered agents in a shared sandbox with a memory-reflection-retrieval architecture; influential instantiation of a decentralized flat-graph topology for world simulation. | [arXiv 2304.03442](https://arxiv.org/abs/2304.03442) |
+| [Wu et al. (2023) — AutoGen](https://arxiv.org/abs/2308.08155) | Generalizes agent interaction as a programmable conversation graph supporting sequential, group-chat, and hierarchical topologies; de facto systems reference for multi-agent orchestration patterns. | [arXiv 2308.08155](https://arxiv.org/abs/2308.08155) |
+| [Liu et al. (2025) — MultiAgentBench](https://arxiv.org/abs/2503.01935) | Benchmark comparing star, chain, tree, and full-graph coordination protocols across collaborative and competitive tasks; graph topology consistently outperforms simpler structures. | [arXiv 2503.01935](https://arxiv.org/abs/2503.01935) |
+| [Luo et al. (2025) — LLM Agent Survey](https://arxiv.org/abs/2503.21460) | Comprehensive 2025 survey categorizing collaboration paradigms into centralized control, decentralized cooperation, and hybrid architectures; examines decision hierarchy, communication topology, and task allocation. | [arXiv 2503.21460](https://arxiv.org/abs/2503.21460) |
+
+### Agentic Design Patterns
+
+| Reference Name | Brief Summary | Link to Reference |
+|---|---|---|
+| [Wei et al. (2022) — Chain-of-Thought](https://arxiv.org/abs/2201.11903) | NeurIPS 2022; few-shot chain-of-thought exemplars unlock multi-step reasoning. The primitive reasoning pattern underlying nearly all subsequent agentic planning patterns. | [arXiv 2201.11903](https://arxiv.org/abs/2201.11903) |
+| [Schick et al. (2023) — Toolformer](https://arxiv.org/abs/2302.04761) | Self-supervised training enabling LLMs to decide when and how to call external APIs; establishes the canonical interface between language reasoning and external action. | [arXiv 2302.04761](https://arxiv.org/abs/2302.04761) |
+| [Yao et al. (2023) — ReAct](https://arxiv.org/abs/2210.03629) | Interleaves reasoning traces with environment actions in a unified loop; one of the highest-cited agentic design patterns with strong results on HotpotQA and ALFWorld. | [arXiv 2210.03629](https://arxiv.org/abs/2210.03629) |
+| [Shinn et al. (2023) — Reflexion](https://arxiv.org/abs/2303.11366) | Self-reflection loop: LLM evaluates its trajectory via linguistic feedback stored in episodic memory, then retries. Outperforms ReAct on code generation without gradient updates. | [arXiv 2303.11366](https://arxiv.org/abs/2303.11366) |
+| [Shen et al. (2023) — HuggingGPT](https://arxiv.org/abs/2303.17580) | Controller-executor pattern: LLM planner parses requests into a task DAG, selects specialist models, and synthesizes outputs. Early clear instantiation of hierarchical decomposition + tool dispatch. | [arXiv 2303.17580](https://arxiv.org/abs/2303.17580) |
+| [Wang et al. (2024) — LLM Agent Planning Survey](https://arxiv.org/abs/2402.02716) | First systematic survey of LLM-agent planning, taxonomized into five patterns: task decomposition, plan selection, external module use, reflection, and memory. | [arXiv 2402.02716](https://arxiv.org/abs/2402.02716) |
+| [Masterman et al. (2024) — AI Agent Architecture Landscape](https://arxiv.org/abs/2404.11584) | Survey comparing single-agent ReAct loops, multi-agent delegation, and hierarchical planner-executor designs; discusses how leadership structure affects task outcomes. | [arXiv 2404.11584](https://arxiv.org/abs/2404.11584) |
+| [Roth et al. (2026) — Agentic AI Survey](https://arxiv.org/abs/2601.12560) | Decomposes agents along six axes — Perception, Brain, Planning, Action, Tool Use, Collaboration — tracking evolution from fixed API patterns to multi-agent hierarchies. Most complete single-source taxonomy of agentic design patterns. | [arXiv 2601.12560](https://arxiv.org/abs/2601.12560) |
+| [Schmied et al. (2026) — Design Patterns for Agentic Communities](https://arxiv.org/abs/2601.03624) | Applies GoF-style design patterns to multi-agent LLM systems; formally specifies reusable patterns for coordination, delegation, reflection, and ensemble composition. | [arXiv 2601.03624](https://arxiv.org/abs/2601.03624) |
