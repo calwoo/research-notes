@@ -445,39 +445,101 @@ Even after MLA reduces the KV cache size by 57×, the attention computation itse
 
 *DeepSeek Sparse Attention* (DSA), introduced in [DeepSeek-V3.2-Exp](https://github.com/deepseek-ai/DeepSeek-V3.2-Exp), addresses this by selecting a small subset $\mathcal{S}_t \subset \{1, \ldots, t-1\}$ of $|\mathcal{S}_t| = K$ past tokens for each query position $t$, where $K \ll t$ (in practice $K = 2{,}048$). Full MLA is then computed only over $\mathcal{S}_t$. The challenge is selecting $\mathcal{S}_t$ cheaply and accurately.
 
+DSA splits this into two components with different cost profiles: a *lightweight indexer* that scores all past tokens cheaply (quantized INT8 dot products), and the full *MLA attention* run only over the top-$K$ tokens selected by the indexer. The diagram below shows the data flow.
+
+```mermaid
+flowchart LR
+    classDef indexer fill:#D5F5E3,stroke:#1E8449,color:#145A32
+    classDef quant fill:#D6EAF8,stroke:#2980B9,color:#1A5276
+    classDef selection fill:#FEF9E7,stroke:#D4AC0D,color:#7D6608
+    classDef mla fill:#F4ECF7,stroke:#7D3C98,color:#4A235A
+    classDef inp fill:#EAECEE,stroke:#566573,color:#17202A
+
+    subgraph ENC["Encode — token s"]
+        direction TB
+        hs["h_s"]:::inp
+        kI["k_s^I ∈ ℝ^d^I\nindexer key"]:::indexer
+        kIq["k̂_s^I (INT8)\n+ scale s_k"]:::quant
+        hs -->|"W_K^I"| kI
+        kI -->|"H → quantize"| kIq
+    end
+
+    subgraph ICACHE["Index Cache"]
+        direction TB
+        kIc[("k̂_s^I\ns_k(s)")]:::quant
+    end
+
+    subgraph DEC["Decode — token t"]
+        direction TB
+        ht["h_t"]:::inp
+        qI["q_{t,j}^I ∈ ℝ^d^I\nindexer query, head j"]:::indexer
+        qIq["q̂_{t,j}^I (INT8)"]:::quant
+        w["w_{t,j}\nhead weights"]:::indexer
+        ht -->|"W_Q^{I,j}"| qI
+        qI -->|"H → quantize"| qIq
+        ht -->|"Linear"| w
+    end
+
+    subgraph SCORE["Index Score — per s"]
+        direction TB
+        dot["q̂_{t,j}^I · k̂_s^I"]:::quant
+        relu["s_q·s_k · ReLU(·)"]:::quant
+        wavg["Σ_j w_{t,j} · (·)"]:::indexer
+        Its["I_{t,s}"]:::indexer
+        dot --> relu --> wavg --> Its
+    end
+
+    subgraph ATTN["Sparse Attention"]
+        direction TB
+        topk["top-K → S_t\n|S_t| = K = 2048"]:::selection
+        mla["Full MLA\nover S_t only"]:::mla
+        topk --> mla
+    end
+
+    kIq -.->|"cache"| kIc
+    kIc --> dot
+    qIq --> dot
+    w --> wavg
+    Its --> topk
+```
+
+*Color coding: $\textcolor{#1E8449}{\text{green = indexer scoring path}}$, $\textcolor{#2980B9}{\text{blue = quantization}}$, $\textcolor{#D4AC0D}{\text{gold = token selection}}$.*
+
 ### 6.2 The Lightning Indexer
 
 **Definition (Lightning Indexer).** For each query position $t$, the lightning indexer computes an *index score* $I_{t,s} \geq 0$ for every preceding position $s < t$, and $\mathcal{S}_t$ is the top-$K$ set by score.
 
 The indexer uses a lightweight multi-query-style architecture with $H^I$ indexer query heads of dimension $d^I$ (both much smaller than $H$ and $d_k$) and a single shared indexer key. Let $\mathbf{W}_{Q}^{I,j} \in \mathbb{R}^{d^I \times D}$ be the $j$-th query head projection, $\mathbf{W}_K^I \in \mathbb{R}^{d^I \times D}$ the shared key projection, and $w_{t,j} \geq 0$ learned per-head scalar weights (themselves a linear function of $\mathbf{h}_t$):
 
-$$\mathbf{q}_{t,j}^I = \mathbf{W}_{Q}^{I,j} \mathbf{h}_t \in \mathbb{R}^{d^I}, \qquad \mathbf{k}_s^I = \mathbf{W}_K^I \mathbf{h}_s \in \mathbb{R}^{d^I}$$
+$$\textcolor{#1E8449}{\mathbf{q}_{t,j}^I = \mathbf{W}_{Q}^{I,j} \mathbf{h}_t} \in \mathbb{R}^{d^I}, \qquad \textcolor{#1E8449}{\mathbf{k}_s^I = \mathbf{W}_K^I \mathbf{h}_s} \in \mathbb{R}^{d^I}$$
 
-$$I_{t,s} = \sum_{j=1}^{H^I} w_{t,j} \cdot \operatorname{ReLU}\!\left(\mathbf{q}_{t,j}^I \cdot \mathbf{k}_s^I\right)$$
+$$\textcolor{#1E8449}{I_{t,s} = \sum_{j=1}^{H^I} w_{t,j} \cdot \operatorname{ReLU}\!\left(\mathbf{q}_{t,j}^I \cdot \mathbf{k}_s^I\right)}$$
 
 The ReLU discards negatively-correlated token pairs rather than treating them as weakly relevant. *The squaring convention sometimes reported in the literature is an alternate formulation; the core design is ReLU-activated weighted dot products.*
 
-The token selector then forms $\mathcal{S}_t = \operatorname{top}\text{-}K\{I_{t,s} : s < t\}$, and the full MLA attention is computed only over tokens in $\mathcal{S}_t$.
+Note the encode/decode split visible in the diagram: $\textcolor{#1E8449}{\mathbf{k}_s^I}$ is computed once per token at encoding time and cached (quantized); $\textcolor{#1E8449}{\mathbf{q}_{t,j}^I}$ and $\textcolor{#1E8449}{w_{t,j}}$ are computed fresh at each decoding step for the current query. The per-step cost is therefore $O(K_{\text{cache}} \cdot d^I \cdot H^I)$ INT8 dot products, not $O(K_{\text{cache}} \cdot d_k \cdot H)$ full-precision MLA operations.
+
+The token selector then forms $\mathcal{S}_t = \operatorname{top}\text{-}K\{\textcolor{#1E8449}{I_{t,s}} : s < t\}$, and the full MLA attention is computed only over tokens in $\mathcal{S}_t$.
 
 ### 6.3 Quantization for Index Score Computation
 
 The indexer runs over the full token history at each decoding step, so its constant factor matters. To minimize cost, both query and key vectors are quantized to 8-bit precision before the dot products. Let $\hat{\mathbf{q}}_{t,j}^I$ and $\hat{\mathbf{k}}_s^I$ denote the quantized versions with per-vector or per-block scale factors $s_q$ and $s_k$:
 
-$$I_{t,s} \approx \sum_{j=1}^{H^I} w_{t,j} \cdot \operatorname{ReLU}\!\left(s_q \cdot s_k \cdot \hat{\mathbf{q}}_{t,j}^I \cdot \hat{\mathbf{k}}_s^I\right) = s_q \cdot s_k \cdot \sum_{j=1}^{H^I} w_{t,j} \cdot \operatorname{ReLU}\!\left(\hat{\mathbf{q}}_{t,j}^I \cdot \hat{\mathbf{k}}_s^I\right)$$
+$$\textcolor{#1E8449}{I_{t,s}} \approx \sum_{j=1}^{H^I} \textcolor{#1E8449}{w_{t,j}} \cdot \operatorname{ReLU}\!\left(\textcolor{#2980B9}{s_q \cdot s_k \cdot \hat{\mathbf{q}}_{t,j}^I \cdot \hat{\mathbf{k}}_s^I}\right) = \textcolor{#2980B9}{s_q \cdot s_k} \cdot \sum_{j=1}^{H^I} \textcolor{#1E8449}{w_{t,j}} \cdot \operatorname{ReLU}\!\left(\textcolor{#2980B9}{\hat{\mathbf{q}}_{t,j}^I \cdot \hat{\mathbf{k}}_s^I}\right)$$
 
-where the scale factors have been pulled outside the ReLU (valid since $s_q, s_k > 0$). The indexer keys $\hat{\mathbf{k}}_s^I$ are stored in the cache alongside the MLA latents; the scale factor $s_k(s)$ is stored per block (block size 64) to support efficient dequantization. The goal of the indexer is token *ranking*, not exact score values, so quantization error is tolerable as long as the top-$K$ ordering is approximately preserved.
+where the scale factors have been pulled outside the ReLU (valid since $\textcolor{#2980B9}{s_q}, \textcolor{#2980B9}{s_k} > 0$). The indexer keys $\textcolor{#2980B9}{\hat{\mathbf{k}}_s^I}$ are stored in the cache alongside the MLA latents; the scale factor $\textcolor{#2980B9}{s_k(s)}$ is stored per block (block size 64) to support efficient dequantization. The goal of the indexer is token *ranking*, not exact score values, so quantization error is tolerable as long as the top-$K$ ordering is approximately preserved.
 
 ### 6.4 Hadamard Transform for Quantization Stability
 
 **Problem.** Raw attention vectors often have a heavy-tailed distribution across dimensions: a small number of coordinates carry disproportionately large magnitudes (so-called *outlier dimensions*). When such a vector is quantized to 8 bits, the quantization step size must accommodate the outliers, wasting precision on the majority of near-zero coordinates and degrading the dot product approximation.
 
-**Solution.** Before quantization, apply a *Walsh-Hadamard transform* (WHT) combined with a random sign matrix to the query and key vectors. The WHT is the $d^I \times d^I$ matrix $\mathbf{H}$ satisfying $H_{ij} = d_I^{-1/2}(-1)^{\langle i-1, j-1 \rangle}$ where $\langle \cdot, \cdot \rangle$ is the bitwise inner product of binary representations. This transform has the property that it spreads the energy of any vector uniformly across all coordinates:
+**Solution.** Before quantization, apply a *Walsh-Hadamard transform* (WHT) combined with a random sign matrix to the query and key vectors. The WHT is the $d^I \times d^I$ matrix $\textcolor{#2980B9}{\mathbf{H}}$ satisfying $H_{ij} = d_I^{-1/2}(-1)^{\langle i-1, j-1 \rangle}$ where $\langle \cdot, \cdot \rangle$ is the bitwise inner product of binary representations. This transform has the property that it spreads the energy of any vector uniformly across all coordinates:
 
-$$\|\mathbf{H}\mathbf{x}\|_\infty \leq \|\mathbf{x}\|_2 / \sqrt{d^I}$$
+$$\|\textcolor{#2980B9}{\mathbf{H}}\mathbf{x}\|_\infty \leq \|\mathbf{x}\|_2 / \sqrt{d^I}$$
 
-That is, after the WHT, no single dimension can dominate. Quantization applied to the WHT-transformed vector therefore incurs uniform error across coordinates, reducing the worst-case dot product error from $O(\|\mathbf{x}\|_2)$ to $O(\|\mathbf{x}\|_2 / \sqrt{d^I})$.
+That is, after the WHT, no single dimension can dominate. Quantization applied to the $\textcolor{#2980B9}{\mathbf{H}}$-transformed vector therefore incurs uniform error across coordinates, reducing the worst-case dot product error from $O(\|\mathbf{x}\|_2)$ to $O(\|\mathbf{x}\|_2 / \sqrt{d^I})$.
 
-**Computational cost.** The WHT can be computed in $O(d^I \log d^I)$ using a butterfly (fast Hadamard transform) algorithm, without materializing the dense matrix $\mathbf{H}$. Since both $\mathbf{q}$ and $\mathbf{k}$ are transformed, the dot product $(\mathbf{H}\mathbf{q}) \cdot (\mathbf{H}\mathbf{k}) = \mathbf{q}^{\top} \mathbf{H}^{\top} \mathbf{H} \mathbf{k} = \mathbf{q}^{\top} \mathbf{k}$ (the WHT is orthogonal), so the transform is invisible to the score values while benefiting quantization stability.
+**Computational cost.** The WHT can be computed in $O(d^I \log d^I)$ using a butterfly (fast Hadamard transform) algorithm, without materializing the dense matrix $\textcolor{#2980B9}{\mathbf{H}}$. Since both $\mathbf{q}$ and $\mathbf{k}$ are transformed, the dot product $(\textcolor{#2980B9}{\mathbf{H}}\mathbf{q}) \cdot (\textcolor{#2980B9}{\mathbf{H}}\mathbf{k}) = \mathbf{q}^{\top} \textcolor{#2980B9}{\mathbf{H}}^{\top} \textcolor{#2980B9}{\mathbf{H}} \mathbf{k} = \mathbf{q}^{\top} \mathbf{k}$ (the WHT is orthogonal), so the transform is invisible to the score values while benefiting quantization stability.
 
 *Note.* The initial [DeepSeek-V3.2-Exp](https://github.com/deepseek-ai/DeepSeek-V3.2-Exp) technical report included Hadamard preprocessing, but subsequent engineering analysis found no measurable accuracy impact and removed it from the production implementation. The theoretical motivation above describes the original design rationale.
 
