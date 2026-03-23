@@ -313,9 +313,9 @@ one can write $\Delta \mathbf{x}_t = \operatorname{concat}(\tilde{\mathbf{o}}_t^
 
 **Key-side absorption.** Similarly, for the attention logit between query head $h$ at position $t$ and latent $\mathbf{c}_s^{KV}$:
 
-$$a_{t,s}^h \propto \exp\!\left(\frac{\mathbf{q}_t^h \cdot \mathbf{k}_s^h}{\sqrt{d_k}}\right) = \exp\!\left(\frac{\mathbf{q}_t^h \cdot \mathbf{W}_K^{\text{up},h} \mathbf{c}_s^{KV}}{\sqrt{d_k}}\right) = \exp\!\left(\frac{\left((\mathbf{W}_K^{\text{up},h})^{\top} \mathbf{q}_t^h\right) \cdot \mathbf{c}_s^{KV}}{\sqrt{d_k}}\right)$$
+$$a_{t,s}^h \propto \exp\!\left(\frac{\mathbf{q}_t^h \cdot \mathbf{k}_s^h}{\sqrt{d_k}}\right) = \exp\!\left(\frac{\mathbf{q}_t^h \cdot \textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}} \textcolor{#2E86C1}{\mathbf{c}_s^{KV}}}{\sqrt{d_k}}\right) = \exp\!\left(\frac{\left(\textcolor{#2E86C1}{(\mathbf{W}_K^{\text{up},h})^{\top}} \mathbf{q}_t^h\right) \cdot \textcolor{#2E86C1}{\mathbf{c}_s^{KV}}}{\sqrt{d_k}}\right)$$
 
-Define the absorbed query $\tilde{\mathbf{q}}_t^h = (\mathbf{W}_K^{\text{up},h})^{\top} \mathbf{q}_t^h \in \mathbb{R}^{d_c}$, where $(\mathbf{W}_K^{\text{up},h})^{\top} : \mathbb{R}^{d_k} \to \mathbb{R}^{d_c}$ is the transpose of the key up-projection. The attention logit is then $\tilde{\mathbf{q}}_t^h \cdot \mathbf{c}_s^{KV}$, computed directly from the cached latent. **Neither $\mathbf{k}_s^h$ nor $\mathbf{v}_s^h$ need to be reconstructed; only the low-dimensional $\mathbf{c}_s^{KV}$ is read from cache.**
+Define the absorbed query $\textcolor{#2E86C1}{\tilde{\mathbf{q}}_t^h} = \textcolor{#2E86C1}{(\mathbf{W}_K^{\text{up},h})^{\top}} \mathbf{q}_t^h \in \mathbb{R}^{d_c}$, where $\textcolor{#2E86C1}{(\mathbf{W}_K^{\text{up},h})^{\top}} : \mathbb{R}^{d_k} \to \mathbb{R}^{d_c}$ is the transpose of the key up-projection. The attention logit is then $\textcolor{#2E86C1}{\tilde{\mathbf{q}}_t^h \cdot \mathbf{c}_s^{KV}}$, computed directly from the cached latent. **Neither $\mathbf{k}_s^h$ nor $\mathbf{v}_s^h$ need to be reconstructed; only the low-dimensional $\textcolor{#2E86C1}{\mathbf{c}_s^{KV}}$ is read from cache.**
 
 ### 5.4 Incompatibility with RoPE
 
@@ -323,9 +323,9 @@ The matrix absorption trick requires that $\mathbf{W}_K^{\text{up},h}$ can be mo
 
 With standard RoPE, the key at position $s$ for head $h$ would be:
 
-$$\mathbf{k}_s^h = \mathbf{R}^{d_k}(s) \, \mathbf{W}_K^{\text{up},h} \mathbf{c}_s^{KV}$$
+$$\mathbf{k}_s^h = \textcolor{#D35400}{\mathbf{R}^{d_k}(s)} \, \textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h} \mathbf{c}_s^{KV}}$$
 
-The rotation $\mathbf{R}^{d_k}(s)$ is position-dependent and lies *between* the cached $\mathbf{c}_s^{KV}$ and the weight $\mathbf{W}_K^{\text{up},h}$. To absorb $\mathbf{W}_K^{\text{up},h}$ into the query, one would need to commute it past $\mathbf{R}^{d_k}(s)$, but $\mathbf{R}^{d_k}(s)\mathbf{W}_K^{\text{up},h} \neq \mathbf{W}_K^{\text{up},h}\mathbf{R}^{d_k}(s)$ in general — the rotation and the up-projection do not commute. *If one were to apply RoPE naively, the model would need to materialize the full $\mathbf{k}_s^h$ for every cached position at each decoding step, eliminating the benefit of caching only $\mathbf{c}_s^{KV}$.*
+The rotation $\textcolor{#D35400}{\mathbf{R}^{d_k}(s)}$ is position-dependent and lies *between* the cached $\textcolor{#2E86C1}{\mathbf{c}_s^{KV}}$ and the weight $\textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}}$. To absorb $\textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}}$ into the query, one would need to commute it past $\textcolor{#D35400}{\mathbf{R}^{d_k}(s)}$, but $\textcolor{#D35400}{\mathbf{R}^{d_k}(s)}\textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}} \neq \textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}}\textcolor{#D35400}{\mathbf{R}^{d_k}(s)}$ in general — the rotation and the up-projection do not commute. *If one were to apply RoPE naively, the model would need to materialize the full $\mathbf{k}_s^h$ for every cached position at each decoding step, eliminating the benefit of caching only $\mathbf{c}_s^{KV}$.*
 
 ### 5.5 Decoupled RoPE as the Solution
 
@@ -382,33 +382,35 @@ flowchart LR
     qtR --> lp
 ```
 
+*Color coding used throughout this section: $\textcolor{#2E86C1}{\text{blue = content path}}$, $\textcolor{#D35400}{\text{orange = positional path}}$.*
+
 **Definition (Decoupled RoPE).** In addition to the content-based keys derived from $\mathbf{c}_t^{KV}$, MLA maintains a *shared* RoPE key $\mathbf{k}_t^R \in \mathbb{R}^{d_h^R}$ computed directly from the hidden state (no up-projection):
 
-$$\mathbf{k}_t^R = \mathbf{R}^{d_h^R}(t) \, \mathbf{W}_K^R \mathbf{h}_t$$
+$$\textcolor{#D35400}{\mathbf{k}_t^R = \mathbf{R}^{d_h^R}(t) \, \mathbf{W}_K^R \mathbf{h}_t}$$
 
 where $\mathbf{W}_K^R \in \mathbb{R}^{d_h^R \times D}$ is a shared projection and $d_h^R = 64$ in [DeepSeek-V2](https://arxiv.org/abs/2405.04434) (half the head dimension). Similarly, each query head receives a per-head RoPE component, computed from the compressed query latent $\mathbf{c}_t^Q$:
 
-$$\mathbf{q}_t^{R,h} = \mathbf{R}^{d_h^R}(t) \, \mathbf{W}_Q^{R,h} \mathbf{c}_t^Q$$
+$$\textcolor{#D35400}{\mathbf{q}_t^{R,h} = \mathbf{R}^{d_h^R}(t) \, \mathbf{W}_Q^{R,h} \mathbf{c}_t^Q}$$
 
 The effective key and query for head $h$ are formed by concatenation:
 
-$$\mathbf{k}_t^{\text{eff},h} = \begin{pmatrix} \mathbf{W}_K^{\text{up},h} \mathbf{c}_t^{KV} \\ \mathbf{k}_t^R \end{pmatrix} \in \mathbb{R}^{d_k + d_h^R}, \qquad \mathbf{q}_t^{\text{eff},h} = \begin{pmatrix} \mathbf{q}_t^h \\ \mathbf{q}_t^{R,h} \end{pmatrix} \in \mathbb{R}^{d_k + d_h^R}$$
+$$\mathbf{k}_t^{\text{eff},h} = \begin{pmatrix} \textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h} \mathbf{c}_t^{KV}} \\ \textcolor{#D35400}{\mathbf{k}_t^R} \end{pmatrix} \in \mathbb{R}^{d_k + d_h^R}, \qquad \mathbf{q}_t^{\text{eff},h} = \begin{pmatrix} \textcolor{#2E86C1}{\mathbf{q}_t^h} \\ \textcolor{#D35400}{\mathbf{q}_t^{R,h}} \end{pmatrix} \in \mathbb{R}^{d_k + d_h^R}$$
 
 **The logit decomposition.** Because the query and key are concatenations of independent parts, their dot product splits into two independent terms:
 
-$$\mathbf{q}_t^{\text{eff},h} \cdot \mathbf{k}_s^{\text{eff},h} = \underbrace{\mathbf{q}_t^h \cdot \mathbf{W}_K^{\text{up},h} \mathbf{c}_s^{KV}}_{\text{(i) content term}} \;+\; \underbrace{\mathbf{q}_t^{R,h} \cdot \mathbf{k}_s^R}_{\text{(ii) positional term}}$$
+$$\mathbf{q}_t^{\text{eff},h} \cdot \mathbf{k}_s^{\text{eff},h} = \underbrace{\textcolor{#2E86C1}{\mathbf{q}_t^h \cdot \mathbf{W}_K^{\text{up},h} \mathbf{c}_s^{KV}}}_{\text{(i) content term}} \;+\; \underbrace{\textcolor{#D35400}{\mathbf{q}_t^{R,h} \cdot \mathbf{k}_s^R}}_{\text{(ii) positional term}}$$
 
 Each term is handled differently:
 
 📐 **Content term — absorption applies.** There is no rotation on this path, so the up-projection commutes freely to the query side:
 
-$$\mathbf{q}_t^h \cdot \mathbf{W}_K^{\text{up},h} \mathbf{c}_s^{KV} = \underbrace{\left((\mathbf{W}_K^{\text{up},h})^{\top} \mathbf{q}_t^h\right)}_{\tilde{\mathbf{q}}_t^h \;\in\; \mathbb{R}^{d_c}} \cdot \; \mathbf{c}_s^{KV}$$
+$$\textcolor{#2E86C1}{\mathbf{q}_t^h \cdot \mathbf{W}_K^{\text{up},h} \mathbf{c}_s^{KV}} = \underbrace{\textcolor{#2E86C1}{\left((\mathbf{W}_K^{\text{up},h})^{\top} \mathbf{q}_t^h\right)}}_{\textcolor{#2E86C1}{\tilde{\mathbf{q}}_t^h} \;\in\; \mathbb{R}^{d_c}} \cdot \; \textcolor{#2E86C1}{\mathbf{c}_s^{KV}}$$
 
-$\tilde{\mathbf{q}}_t^h$ is computed once at query time. The cache stores only $\mathbf{c}_s^{KV} \in \mathbb{R}^{d_c}$ — no key materialization required. The commutativity problem does not arise because no rotation is interleaved between $\mathbf{W}_K^{\text{up},h}$ and $\mathbf{c}_s^{KV}$.
+$\textcolor{#2E86C1}{\tilde{\mathbf{q}}_t^h}$ is computed once at query time. The cache stores only $\textcolor{#2E86C1}{\mathbf{c}_s^{KV}} \in \mathbb{R}^{d_c}$ — no key materialization required. The commutativity problem does not arise because no rotation is interleaved between $\textcolor{#2E86C1}{\mathbf{W}_K^{\text{up},h}}$ and $\textcolor{#2E86C1}{\mathbf{c}_s^{KV}}$.
 
 📐 **Positional term — direct caching, no absorption needed.** Expanding:
 
-$$\mathbf{q}_t^{R,h} \cdot \mathbf{k}_s^R = \left[\mathbf{R}^{d_h^R}(t)\, \mathbf{W}_Q^{R,h} \mathbf{c}_t^Q\right]^{\top} \left[\mathbf{R}^{d_h^R}(s)\, \mathbf{W}_K^R \mathbf{h}_s\right]$$
+$$\textcolor{#D35400}{\mathbf{q}_t^{R,h} \cdot \mathbf{k}_s^R = \left[\mathbf{R}^{d_h^R}(t)\, \mathbf{W}_Q^{R,h} \mathbf{c}_t^Q\right]^{\top} \left[\mathbf{R}^{d_h^R}(s)\, \mathbf{W}_K^R \mathbf{h}_s\right]}$$
 
 Both sides are fully concrete low-dimensional vectors — there is no up-projection on the key side to absorb. The rotation $\mathbf{R}^{d_h^R}(s)$ is baked into $\mathbf{k}_s^R$ at encoding time and stored directly in the cache. Because $\mathbf{k}_s^R$ is *shared across all $H$ heads* and lives in $\mathbb{R}^{d_h^R}$, the additional cache overhead is just 64 scalars per token.
 
@@ -416,7 +418,7 @@ Both sides are fully concrete low-dimensional vectors — there is no up-project
 
 *The relative-position property (§4.4) is preserved in the positional term.* Substituting:
 
-$$\mathbf{q}_t^{R,h} \cdot \mathbf{k}_s^R \propto \left(\mathbf{W}_Q^{R,h}\mathbf{c}_t^Q\right)^{\top} \mathbf{R}^{d_h^R}(t)^{\top} \mathbf{R}^{d_h^R}(s) \left(\mathbf{W}_K^R \mathbf{h}_s\right) = \left(\mathbf{W}_Q^{R,h}\mathbf{c}_t^Q\right)^{\top} \mathbf{R}^{d_h^R}(s-t) \left(\mathbf{W}_K^R \mathbf{h}_s\right)$$
+$$\textcolor{#D35400}{\mathbf{q}_t^{R,h} \cdot \mathbf{k}_s^R \propto \left(\mathbf{W}_Q^{R,h}\mathbf{c}_t^Q\right)^{\top} \mathbf{R}^{d_h^R}(t)^{\top} \mathbf{R}^{d_h^R}(s) \left(\mathbf{W}_K^R \mathbf{h}_s\right) = \left(\mathbf{W}_Q^{R,h}\mathbf{c}_t^Q\right)^{\top} \mathbf{R}^{d_h^R}(s-t) \left(\mathbf{W}_K^R \mathbf{h}_s\right)}$$
 
 so the positional logit depends only on the offset $s - t$, exactly as in standard RoPE.
 
