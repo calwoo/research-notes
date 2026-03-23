@@ -23,7 +23,10 @@
 
 - [[#1. Background and Motivation|1. Background and Motivation]]
   - [[#1.1 The Multi-Agent Design Problem|1.1 The Multi-Agent Design Problem]]
-  - [[#1.2 Limitations of Prior Work|1.2 Limitations of Prior Work]]
+  - [[#1.2 Why Multi-Agent Systems Improve Performance|1.2 Why Multi-Agent Systems Improve Performance]]
+  - [[#1.3 A Taxonomy of Interaction Topologies|1.3 A Taxonomy of Interaction Topologies]]
+  - [[#1.4 Agentic Design Patterns|1.4 Agentic Design Patterns]]
+  - [[#1.5 Automated MAS Design: Prior Work|1.5 Automated MAS Design: Prior Work]]
 - [[#2. The Design Space|2. The Design Space]]
   - [[#2.1 Agent Configuration|2.1 Agent Configuration]]
   - [[#2.2 Topology Building Blocks|2.2 Topology Building Blocks]]
@@ -55,11 +58,52 @@ A *multi-agent system* (MAS) for language models is a computational graph in whi
 
 The difficulty is the size of the joint space. Prompt space is effectively unbounded — natural language instructions and demonstrations admit infinitely many variations. Topology space, even when restricted to a finite catalog of interaction patterns, is combinatorial in the number and configuration of agents. Prior work has addressed these two dimensions separately: hand-crafting prompts and searching topologies, or vice versa.
 
-### 1.2 Limitations of Prior Work
+### 1.2 Why Multi-Agent Systems Improve Performance
 
-*Automated Design of Agentic Systems* (ADAS) uses a meta-agent that iteratively proposes new agent code. While expressive, it achieves only marginal empirical gains because it does not systematically optimize agent-level prompts before composing agents into workflows. *AFlow* applies Monte Carlo Tree Search over a predefined operator library to discover effective workflows, but its meta-prompt is not backbone-agnostic, which complicates fair comparison across LLMs.
+The formal justification for multi-agent systems rests on ensemble diversity. If each of $N$ agents independently produces the correct answer with probability $p > 0.5$, the probability that the majority vote is wrong is:
 
-The shared failure mode is asymmetric treatment of the two design axes: topology receives algorithmic attention while prompts are left sub-optimized, or topology is optimized without accounting for how prompt quality interacts with workflow structure.
+$$P(\text{majority wrong}) = \sum_{k > N/2} \binom{N}{k} (1-p)^k p^{N-k}$$
+
+This bound decreases exponentially in $N$ — majority voting concentrates probability mass on the correct answer as agents are added, provided they make *independent* errors. For LLM-based agents sharing the same backbone, true independence is impossible, but functional diversity arises from prompt variation, role specialization, and sampling randomness.
+
+[Du et al. (2023)](https://arxiv.org/abs/2305.14325) instantiate this with debate: when multiple LLM instances exchange competing claims and are required to defend their answers, factual accuracy improves because incorrect confident claims face explicit adversarial pressure. [Wang et al. (2023)](https://arxiv.org/abs/2203.11171) demonstrate a simpler version via *self-consistency*: sampling $k$ independent chain-of-thought traces and taking majority vote over final answers consistently outperforms single greedy decoding, purely by reducing variance in reasoning paths.
+
+Beyond voting, multi-agent systems enable *division of cognitive labor*: separate agents can specialize in subtasks (decomposition, verification, synthesis), analogous to role-based routing in [[concepts/mixture-of-experts/note|Mixture of Experts]] architectures. The critical question — which this paper answers — is *which* combination of specialization, aggregation, and interaction rounds yields the best return on tokens spent.
+
+### 1.3 A Taxonomy of Interaction Topologies
+
+Agent interaction topologies vary along two axes: *directionality* (how information flows) and *connectivity* (the graph structure). Six canonical patterns appear across the literature:
+
+| Topology | Connectivity | Information Flow | Representative Systems |
+|----------|-------------|-----------------|----------------------|
+| Sequential | Linear chain | Unidirectional; each agent processes and forwards | HuggingGPT (Shen et al., 2023) |
+| Parallel (aggregation) | Star/broadcast | One producer → many independent voters → aggregator | Self-Consistency (Wang et al., 2023) |
+| Self-critique (reflection) | Self-loop | Agent critiques its own output and revises iteratively | Reflexion (Shinn et al., 2023), Self-Refine (Madaan et al., 2023) |
+| Debate | Fully-connected | Agents exchange competing claims; consensus via synthesis | Du et al. (2023) |
+| Hierarchical | Rooted tree | Controller decomposes task, dispatches to workers, synthesizes | [AutoGen](https://arxiv.org/abs/2308.08155) (Wu et al., 2023) |
+| Peer graph | Arbitrary graph | Agents communicate with neighbors; no central authority | Generative Agents (Park et al., 2023) |
+
+MASS spans most of this taxonomy through its five building blocks. Aggregate instantiates parallel aggregation; Reflect is self-critique; Debate is debate; Summarize is a sequential preprocessing step; Tool-use extends any topology with environment interaction. The key design parameters are *depth* (rounds of interaction: $N_r, N_d$) and *width* (agents in parallel: $N_a$). [G-Designer (Zhuge et al., 2024)](https://arxiv.org/abs/2410.11782) extends the learned-topology direction further by encoding agents and tasks as nodes in a variational graph autoencoder, generating task-adaptive sparse graphs that match dense hand-crafted ones at 95% fewer tokens.
+
+### 1.4 Agentic Design Patterns
+
+Design patterns for agents are canonical, reusable architectures — analogous to software design patterns — that package a recurring interaction structure. Five patterns directly underlie MASS's building blocks:
+
+**Chain-of-Thought** ([Wei et al., 2022](https://arxiv.org/abs/2201.11903)): The primitive reasoning step. Agents decompose problems into explicit intermediate steps before producing a final answer. Every MASS agent role incorporates CoT via its optimized instruction; block-level APO discovers which CoT style is most effective for each role.
+
+**Tool-use** ([Schick et al., 2023 — Toolformer](https://arxiv.org/abs/2302.04761); [Yao et al., 2023 — ReAct](https://arxiv.org/abs/2210.03629)): Agents call external tools (code interpreters, search engines, APIs) mid-reasoning. ReAct interleaves reasoning traces with environment actions in a single loop; Toolformer learns self-supervised API calls. MASS's Tool-use block is the binary activation of this pattern ($N_T \in \{0, 1\}$).
+
+**Reflection** ([Shinn et al., 2023 — Reflexion](https://arxiv.org/abs/2303.11366); [Madaan et al., 2023 — Self-Refine](https://arxiv.org/abs/2303.17651)): An agent critiques its own output using a linguistic feedback signal — either from a separate critic or self-generated — and iteratively revises. Reflexion stores feedback in episodic memory and outperforms ReAct on code generation without gradient updates. MASS's Reflect block runs $N_r$ critique-revision rounds.
+
+**Debate** ([Du et al., 2023](https://arxiv.org/abs/2305.14325)): Multiple agents present competing answers; a synthesizer produces a consensus. Structured argumentation forces models to articulate and defend positions, reducing confident hallucination. MASS's Debate block runs $N_d$ exchange rounds across $\geq 2$ predictor agents plus one dedicated debater/synthesizer.
+
+**Hierarchical decomposition** ([Shen et al., 2023 — HuggingGPT](https://arxiv.org/abs/2303.17580)): A planner decomposes a complex task into a DAG of subtasks, dispatches each to a specialist agent, and synthesizes results. This is the architectural basis for multi-hop QA and code generation pipelines evaluated in MASS. *Surprisingly,* explicit hierarchical decomposition is not among MASS's building blocks — MASS achieves multi-hop gains instead through Debate topology, which forces cross-agent factual checking.
+
+### 1.5 Automated MAS Design: Prior Work
+
+*Automated Design of Agentic Systems* ([ADAS; Hu et al., 2024](https://arxiv.org/abs/2408.08435)) uses a meta-agent that iteratively proposes new agent system code. While expressive, it achieves only marginal empirical gains because it does not systematically optimize agent-level prompts before composing agents into workflows. *AFlow* ([Zhang et al., 2024](https://arxiv.org/abs/2410.10762)) applies Monte Carlo Tree Search over a predefined operator library to discover effective workflows, but its meta-prompt is not backbone-agnostic, complicating fair comparison across LLMs — the meta-optimizer must be Claude 3.5 Sonnet regardless of the executor model.
+
+The shared failure mode is *asymmetric treatment of the two design axes*: topology receives algorithmic attention while prompts are left sub-optimized, or vice versa. Neither axis is sufficient alone: a well-searched topology running sub-optimal prompts is beaten by a well-prompted single agent (§4.4), and a well-optimized single agent misses the gains from structured multi-agent interaction. MASS addresses this by treating both axes as co-equal optimization targets, staged to respect their natural dependency ordering.
 
 ---
 
