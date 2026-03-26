@@ -68,7 +68,7 @@ $$\mathbf{o}_t = \frac{\phi(\mathbf{q}_t) \left(\sum_{j=1}^{t} \phi(\mathbf{k}_j
 
 The denominator is a scalar normalizer. In much of the subsequent literature — and throughout this note — the normalizer is dropped or absorbed, and the simplest feature map $\phi(\mathbf{x}) = \mathbf{x}$ (identity) is used. This yields what is most commonly called *linear attention*:
 
-$$\mathbf{o}_t = \mathbf{q}_t \sum_{j=1}^{t} \mathbf{k}_j^\top \mathbf{v}_j$$
+$$\textcolor{#D35400}{\mathbf{o}_t} = \textcolor{#D35400}{\mathbf{q}_t} \sum_{j=1}^{t} \textcolor{#2E86C1}{\mathbf{k}_j}^\top \textcolor{#2E86C1}{\mathbf{v}_j}$$
 
 *This identity-feature-map form is the starting point for all recurrences below.*
 
@@ -76,19 +76,19 @@ $$\mathbf{o}_t = \mathbf{q}_t \sum_{j=1}^{t} \mathbf{k}_j^\top \mathbf{v}_j$$
 
 Define the *state matrix* at time $t$ as the running sum of outer products:
 
-**Definition (Linear Attention State).** Let $\mathbf{k}_j \in \mathbb{R}^{1 \times d_k}$ and $\mathbf{v}_j \in \mathbb{R}^{1 \times d_v}$ be the key and value row vectors at position $j$. The state matrix is:
+📐 **Definition (Linear Attention State).** Let $\mathbf{k}_j \in \mathbb{R}^{1 \times d_k}$ and $\mathbf{v}_j \in \mathbb{R}^{1 \times d_v}$ be the key and value row vectors at position $j$. The state matrix is:
 
-$$S_t = \sum_{j=1}^{t} \mathbf{k}_j^\top \mathbf{v}_j \in \mathbb{R}^{d_k \times d_v}$$
+$$\textcolor{#2E86C1}{S_t} = \sum_{j=1}^{t} \textcolor{#2E86C1}{\mathbf{k}_j}^\top \textcolor{#2E86C1}{\mathbf{v}_j} \in \mathbb{R}^{d_k \times d_v}$$
 
-Each term $\mathbf{k}_j^\top \mathbf{v}_j$ is a rank-1 outer product. The output of linear attention for token $t$ is then:
+Each term $\textcolor{#2E86C1}{\mathbf{k}_j}^\top \textcolor{#2E86C1}{\mathbf{v}_j}$ is a rank-1 outer product. The output of linear attention for token $t$ is then:
 
-$$\mathbf{o}_t = \mathbf{q}_t S_t \in \mathbb{R}^{1 \times d_v}$$
+$$\textcolor{#D35400}{\mathbf{o}_t} = \textcolor{#D35400}{\mathbf{q}_t} \textcolor{#2E86C1}{S_t} \in \mathbb{R}^{1 \times d_v}$$
 
-From the definition of $S_t$, we immediately derive the recurrence:
+From the definition of $\textcolor{#2E86C1}{S_t}$, we immediately derive the recurrence:
 
-$$S_t = S_{t-1} + \mathbf{k}_t^\top \mathbf{v}_t, \qquad S_0 = \mathbf{0}$$
+$$\textcolor{#2E86C1}{S_t} = \textcolor{#2E86C1}{S_{t-1}} + \textcolor{#2E86C1}{\mathbf{k}_t}^\top \textcolor{#2E86C1}{\mathbf{v}_t}, \qquad \textcolor{#2E86C1}{S_0} = \mathbf{0}$$
 
-This is a *rank-1 update*: the new state equals the old state plus a single outer product. The update costs $O(d_k \cdot d_v)$ time and the output computation $\mathbf{o}_t = \mathbf{q}_t S_t$ costs the same — both are independent of $T$.
+This is a *rank-1 update*: the new state equals the old state plus a single outer product. The update costs $O(d_k \cdot d_v)$ time and the output computation $\textcolor{#D35400}{\mathbf{o}_t} = \textcolor{#D35400}{\mathbf{q}_t} \textcolor{#2E86C1}{S_t}$ costs the same — both are independent of $T$.
 
 ### 2.3 Linear RNN Interpretation
 
@@ -110,7 +110,7 @@ The transition is linear in $S_{t-1}$ (the coefficient is the identity map), hen
 | Softmax attention (KV cache) | $O(T \cdot (d_k + d_v))$ — grows with $T$ |
 | Linear attention (state matrix) | $O(d_k \cdot d_v)$ — constant in $T$ |
 
-**During inference, the linear attention state matrix costs $O(d_k \cdot d_v)$ memory regardless of sequence length, eliminating the KV-cache growth bottleneck.**
+🔑 **During inference, the linear attention state matrix costs $O(d_k \cdot d_v)$ memory regardless of sequence length, eliminating the KV-cache growth bottleneck.**
 
 For typical values $d_k = d_v = 128$, this is a matrix of $128 \times 128 = 16{,}384$ floats ($\approx 64$ KB per head) — fixed, no matter how long the sequence grows.
 
@@ -123,7 +123,7 @@ For typical values $d_k = d_v = 128$, this is a matrix of $128 \times 128 = 16{,
 
 ### 3.1 Sequential Recurrence Bottleneck
 
-The recurrence $S_t = S_{t-1} + \mathbf{k}_t^\top \mathbf{v}_t$ is inherently sequential: $S_t$ depends on $S_{t-1}$, which depends on $S_{t-2}$, and so on. During training, where all $T$ tokens are available simultaneously, naive execution of this recurrence requires $T$ sequential steps. This defeats the parallel computation advantage that made softmax attention fast to train via matrix multiplications on GPUs.
+⚠️ The recurrence $S_t = S_{t-1} + \mathbf{k}_t^\top \mathbf{v}_t$ is inherently sequential: $S_t$ depends on $S_{t-1}$, which depends on $S_{t-2}$, and so on. During training, where all $T$ tokens are available simultaneously, naive execution of this recurrence requires $T$ sequential steps. This defeats the parallel computation advantage that made softmax attention fast to train via matrix multiplications on GPUs.
 
 By contrast, standard softmax attention processes the full sequence as a single $T \times T$ matrix multiply — all entries of $Q K^\top$ are computed in parallel. The linear recurrence sacrifices this parallelism for the memory advantage.
 
@@ -224,11 +224,11 @@ Unrolling $n$ steps: $S_t = \sum_{j=1}^{t} \gamma^{t-j} \mathbf{k}_j^\top \mathb
 
 Sun et al. (2023) introduced the *Retentive Network* (RetNet), in which the state transition uses a fixed scalar decay $\gamma \in (0,1)$ combined with complex-valued rotary encodings. In the simplified scalar form:
 
-**Definition (RetNet Retention).** The retention state satisfies:
+📐 **Definition (RetNet Retention).** The retention state satisfies:
 
-$$S_t = \gamma S_{t-1} + \mathbf{k}_t^\top \mathbf{v}_t, \qquad \mathbf{o}_t = \mathbf{q}_t S_t$$
+$$\textcolor{#2E86C1}{S_t} = \textcolor{#1E8449}{\gamma} \textcolor{#2E86C1}{S_{t-1}} + \textcolor{#2E86C1}{\mathbf{k}_t}^\top \textcolor{#2E86C1}{\mathbf{v}_t}, \qquad \textcolor{#D35400}{\mathbf{o}_t} = \textcolor{#D35400}{\mathbf{q}_t} \textcolor{#2E86C1}{S_t}$$
 
-where $\gamma$ is a head-specific constant (different heads use different decay values). The parallel form writes the full-sequence output as:
+where $\textcolor{#1E8449}{\gamma}$ is a head-specific constant (different heads use different decay values). The parallel form writes the full-sequence output as:
 
 $$O = (Q K^\top \odot D) V$$
 
@@ -240,7 +240,7 @@ $$R_i = \gamma^C R_{i-1} + K_i^\top (V_i \odot \zeta_i)$$
 
 where $\zeta_i$ is a per-token decay weight within the chunk. The factor $\gamma^C$ discounts the entire previous state by the chunk length.
 
-*The constant $\gamma$ is never updated at inference time — it is a fixed hyperparameter, not a learned function of the input.* This is both its strength (no input-dependent overhead) and its weakness (the effective memory horizon is fixed and cannot adapt to content).
+💡 *The constant $\gamma$ is never updated at inference time — it is a fixed hyperparameter, not a learned function of the input.* This is both its strength (no input-dependent overhead) and its weakness (the effective memory horizon is fixed and cannot adapt to content).
 
 ![Figure 3a from Sun et al. (2023): parallel retention form showing the masked attention computation](figures/sun2023-fig3a-parallel-retention.png)
 *Figure 3a (Sun et al., 2023): The parallel representation of retention. Input $X$ is projected to $Q$, $K$, $V$; the output is $(QK^\top \odot D)V$ where $D$ is the decay mask with $D_{t,j} = \gamma^{t-j}$; GroupNorm (GN) normalizes the result. This is the training-time parallel form of the RetNet recurrence — a standard masked matrix multiply with a geometric decay mask in place of the usual binary causal mask.*
@@ -249,23 +249,23 @@ where $\zeta_i$ is a per-token decay weight within the chunk. The factor $\gamma
 
 Dao and Gu (2024) introduce the *State Space Duality* (SSD) framework in Mamba-2. The key architectural change is making the decay a *scalar* function of the input at each step:
 
-**Definition (SSD Layer).** The SSD recurrence is:
+📐 **Definition (SSD Layer).** The SSD recurrence is:
 
-$$S_t = a_t S_{t-1} + \mathbf{b}_t^\top x_t, \qquad y_t = \mathbf{c}_t S_t$$
+$$\textcolor{#2E86C1}{S_t} = \textcolor{#1E8449}{a_t} \textcolor{#2E86C1}{S_{t-1}} + \mathbf{b}_t^\top x_t, \qquad y_t = \mathbf{c}_t \textcolor{#2E86C1}{S_t}$$
 
 where $a_t \in \mathbb{R}$ is a scalar derived from input $x_t$ (typically $a_t = \sigma(w_a^\top x_t)$ for some learned vector $w_a$), and $\mathbf{b}_t, \mathbf{c}_t$ are the data-dependent key and query analogues.
 
 The *scalar-times-identity* constraint on $A$ — that is, $A_t = a_t I_{d_k}$ where $I_{d_k}$ is the identity matrix — distinguishes SSD from earlier SSMs (which allow fully diagonal or even dense $A_t$). This constraint is what makes the connection to linear attention exact and enables a tensor-core-friendly chunkwise algorithm.
 
-In attention notation with $a_t = \gamma_t$ (data-dependent scalar decay):
+In attention notation with $a_t = \textcolor{#1E8449}{\gamma_t}$ (data-dependent scalar decay):
 
-$$S_t = \gamma_t S_{t-1} + \mathbf{k}_t^\top \mathbf{v}_t, \qquad \mathbf{o}_t = \mathbf{q}_t S_t$$
+$$\textcolor{#2E86C1}{S_t} = \textcolor{#1E8449}{\gamma_t} \textcolor{#2E86C1}{S_{t-1}} + \textcolor{#2E86C1}{\mathbf{k}_t}^\top \textcolor{#2E86C1}{\mathbf{v}_t}, \qquad \textcolor{#D35400}{\mathbf{o}_t} = \textcolor{#D35400}{\mathbf{q}_t} \textcolor{#2E86C1}{S_t}$$
 
 The parallel (attention-form) dual constructs a lower-triangular matrix $L \in \mathbb{R}^{T \times T}$:
 
 $$L_{t,j} = \prod_{s=j+1}^{t} \gamma_s \quad (t \geq j), \qquad L_{t,j} = 0 \quad (t < j)$$
 
-Then $O = (L \odot Q K^\top) V$, which is a *structured masked attention* that generalizes RetNet's geometric decay mask. **The scalar constraint on $A_t$ is precisely what preserves the matrix-multiply structure in $L$**, keeping the chunkwise algorithm hardware-efficient.
+Then $O = (L \odot Q K^\top) V$, which is a *structured masked attention* that generalizes RetNet's geometric decay mask. 🔑 **The scalar constraint on $A_t$ is precisely what preserves the matrix-multiply structure in $L$**, keeping the chunkwise algorithm hardware-efficient.
 
 ![Figure from Dao & Gu (2024): Mamba-2 block architecture comparing sequential and parallel forms](figures/dao2024-mamba2-architecture.png)
 *Figure (Dao & Gu, 2024): The Mamba-2 block in sequential (left) and parallel (right) forms. The SSM parameters $A$ (scalar decay), $X$ (input), $B$ (key analogue), and $C$ (query analogue) are produced by learned projections; the gating $\sigma$ on the right branch creates the SiLU-gated output. The key architectural change from Mamba-1 is that $A$, $B$, $C$ are now computed in parallel from the same input, making the block compatible with the tensor-parallel training setup required by the SSD chunkwise algorithm.*
@@ -274,13 +274,13 @@ Then $O = (L \odot Q K^\top) V$, which is a *structured masked attention* that g
 
 Yang et al. (2024) introduce *Gated Linear Attention* (GLA), which generalizes the scalar gate to a vector-valued gate while preserving the outer-product structure of the state update:
 
-**Definition (GLA State Update).** The GLA recurrence uses element-wise gates:
+📐 **Definition (GLA State Update).** The GLA recurrence uses element-wise gates:
 
-$$S_t = (\boldsymbol{\alpha}_t \boldsymbol{\beta}_t^\top) \odot S_{t-1} + \mathbf{k}_t^\top \mathbf{v}_t$$
+$$\textcolor{#2E86C1}{S_t} = (\textcolor{#1E8449}{\boldsymbol{\alpha}_t} \textcolor{#1E8449}{\boldsymbol{\beta}_t}^\top) \odot \textcolor{#2E86C1}{S_{t-1}} + \textcolor{#2E86C1}{\mathbf{k}_t}^\top \textcolor{#2E86C1}{\mathbf{v}_t}$$
 
-where $\boldsymbol{\alpha}_t \in \mathbb{R}^{d_k}$ and $\boldsymbol{\beta}_t \in \mathbb{R}^{d_v}$ are data-dependent vectors, and $\odot$ denotes element-wise (Hadamard) multiplication. The gate matrix $\boldsymbol{\alpha}_t \boldsymbol{\beta}_t^\top \in \mathbb{R}^{d_k \times d_v}$ is rank-1, which is the crucial structural property.
+where $\textcolor{#1E8449}{\boldsymbol{\alpha}_t} \in \mathbb{R}^{d_k}$ and $\textcolor{#1E8449}{\boldsymbol{\beta}_t} \in \mathbb{R}^{d_v}$ are data-dependent vectors, and $\odot$ denotes element-wise (Hadamard) multiplication. The gate matrix $\textcolor{#1E8449}{\boldsymbol{\alpha}_t} \textcolor{#1E8449}{\boldsymbol{\beta}_t}^\top \in \mathbb{R}^{d_k \times d_v}$ is rank-1, which is the crucial structural property.
 
-*Why must the gate be rank-1?* If the gate were an arbitrary matrix $G_t \in \mathbb{R}^{d_k \times d_v}$, the state update $G_t \odot S_{t-1}$ would break the outer-product recurrence: the chunkwise state $K_i^\top V_i$ would no longer have a clean matrix-multiply form when propagated through the gate. The rank-1 factorization $\boldsymbol{\alpha}_t \boldsymbol{\beta}_t^\top$ ensures the cumulative gate across a chunk is still an outer product, preserving the $(d_k \times C)(C \times d_v)$ GEMM structure in the FlashLinearAttention kernel.
+💡 *Why must the gate be rank-1?* If the gate were an arbitrary matrix $G_t \in \mathbb{R}^{d_k \times d_v}$, the state update $G_t \odot S_{t-1}$ would break the outer-product recurrence: the chunkwise state $K_i^\top V_i$ would no longer have a clean matrix-multiply form when propagated through the gate. The rank-1 factorization $\boldsymbol{\alpha}_t \boldsymbol{\beta}_t^\top$ ensures the cumulative gate across a chunk is still an outer product, preserving the $(d_k \times C)(C \times d_v)$ GEMM structure in the FlashLinearAttention kernel.
 
 Computing $\boldsymbol{\alpha}_t$ and $\boldsymbol{\beta}_t$ from input $x_t$ via a learned linear map adds minimal overhead. GLA empirically outperforms RetNet and standard linear attention while achieving training speed competitive with FlashAttention-2.
 
@@ -304,7 +304,7 @@ With high temperature, this approaches nearest-neighbor retrieval: all weight co
 
 The linear attention state matrix $S_t$ can be interpreted as the weight matrix of a *linear regression model* trained online to map keys to values.
 
-**Claim:** The recurrence $S_t = S_{t-1} + \mathbf{k}_t^\top \mathbf{v}_t$ is a single step of stochastic gradient descent on the loss $\mathcal{L}_t(S) = -\mathbf{q}_t \cdot \mathbf{k}_t S^\top$ (with $\mathbf{q}_t = \mathbf{k}_t$ and unit step size).
+📐 **Claim:** The recurrence $S_t = S_{t-1} + \mathbf{k}_t^\top \mathbf{v}_t$ is a single step of stochastic gradient descent on the loss $\mathcal{L}_t(S) = -\mathbf{q}_t \cdot \mathbf{k}_t S^\top$ (with $\mathbf{q}_t = \mathbf{k}_t$ and unit step size).
 
 *Derivation.* Consider the negative dot-product loss:
 
@@ -337,7 +337,7 @@ The query $\mathbf{q}_t = \mathbf{x}_t W_Q$ reads from the fast weight memory: $
 
 The instability of the negative dot-product loss motivates using the squared error:
 
-**Definition (Online Squared-Error Loss).** At step $t$, define the loss as the squared discrepancy between the current prediction of $S_{t-1}$ applied to $\mathbf{k}_t$ and the target value $\mathbf{v}_t$:
+📐 **Definition (Online Squared-Error Loss).** At step $t$, define the loss as the squared discrepancy between the current prediction of $S_{t-1}$ applied to $\mathbf{k}_t$ and the target value $\mathbf{v}_t$:
 
 $$\mathcal{L}_t(S) = \frac{1}{2} \| S_{t-1} \mathbf{k}_t^\top - \mathbf{v}_t^\top \|^2$$
 
@@ -351,13 +351,13 @@ $$\nabla_S \mathcal{L}_t = \mathbf{k}_t^\top (S_{t-1} \mathbf{k}_t^\top)^\top \m
 
 Gradient descent with step size $\beta_t$ gives:
 
-$$S_t = S_{t-1} - \beta_t \nabla_S \mathcal{L}_t = S_{t-1} + \beta_t \mathbf{k}_t^\top \mathbf{v}_t - \beta_t \mathbf{k}_t^\top \mathbf{k}_t S_{t-1}$$
+$$\textcolor{#2E86C1}{S_t} = \textcolor{#2E86C1}{S_{t-1}} - \beta_t \nabla_S \mathcal{L}_t = \textcolor{#2E86C1}{S_{t-1}} + \beta_t \textcolor{#2E86C1}{\mathbf{k}_t}^\top \textcolor{#2E86C1}{\mathbf{v}_t} - \beta_t \textcolor{#2E86C1}{\mathbf{k}_t}^\top \textcolor{#2E86C1}{\mathbf{k}_t} \textcolor{#2E86C1}{S_{t-1}}$$
 
 Factoring:
 
-$$S_t = S_{t-1} + \beta_t \mathbf{k}_t^\top (\mathbf{v}_t - \mathbf{k}_t S_{t-1})$$
+$$\textcolor{#2E86C1}{S_t} = \textcolor{#2E86C1}{S_{t-1}} + \beta_t \textcolor{#2E86C1}{\mathbf{k}_t}^\top (\textcolor{#2E86C1}{\mathbf{v}_t} - \textcolor{#2E86C1}{\mathbf{k}_t} \textcolor{#2E86C1}{S_{t-1}})$$
 
-**Definition (Delta Rule Update).** The update $S_t = S_{t-1} + \beta_t \mathbf{k}_t^\top (\mathbf{v}_t - \mathbf{k}_t S_{t-1})$ is the *delta rule* (Widrow-Hoff rule) applied to fast weight memory.
+🔑 **Definition (Delta Rule Update).** The update $S_t = S_{t-1} + \beta_t \mathbf{k}_t^\top (\mathbf{v}_t - \mathbf{k}_t S_{t-1})$ is the *delta rule* (Widrow-Hoff rule) applied to fast weight memory.
 
 The term $\mathbf{k}_t S_{t-1}$ is the *current prediction*: what the memory $S_{t-1}$ would output if queried with $\mathbf{k}_t$. The correction $\mathbf{v}_t - \mathbf{k}_t S_{t-1}$ is the *prediction error*. The state is updated proportionally to this error, projected back via $\mathbf{k}_t^\top$.
 
@@ -370,7 +370,7 @@ Comparing to standard linear attention:
 
 *When $\mathbf{k}_t S_{t-1} = \mathbf{0}$ (empty memory or orthogonal keys), the delta rule reduces to linear attention.* When memory is non-empty, the delta rule first subtracts the existing association before writing the new one — preventing overwriting conflicts and maintaining better key-value fidelity over long contexts.
 
-**The delta rule introduces an implicit "erase-then-write" dynamic that linear attention lacks, giving the state matrix higher effective capacity at the cost of a $\mathbf{k}_t S_{t-1}$ matrix-vector product per step.**
+🔑 **The delta rule introduces an implicit "erase-then-write" dynamic that linear attention lacks, giving the state matrix higher effective capacity at the cost of a $\mathbf{k}_t S_{t-1}$ matrix-vector product per step.**
 
 ---
 

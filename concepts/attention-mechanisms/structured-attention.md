@@ -33,7 +33,7 @@ The key insight is that marginal inference in many tractable graphical models �
 
 ## 2. Standard Attention as Marginal Inference
 
-**Definition (Attention as Posterior Expectation).** Let $z \in \{1, \ldots, n\}$ be a categorical latent variable selecting one input position. Define a distribution over $z$ given inputs and query:
+💡 **Definition (Attention as Posterior Expectation).** Let $z \in \{1, \ldots, n\}$ be a categorical latent variable selecting one input position. Define a distribution over $z$ given inputs and query:
 
 $$p(z = i \mid \mathbf{x}, \mathbf{q}) = \frac{\exp(\theta_i)}{\sum_{j=1}^{n} \exp(\theta_j)}, \qquad \theta_i = \frac{\mathbf{q}^\top \mathbf{x}_i}{\sqrt{d}}$$
 
@@ -45,7 +45,7 @@ where $f(\mathbf{x}, z) = \mathbf{x}_z$ retrieves the $z$-th representation.
 
 This framing exposes the generalization seam: the choice of graphical model governing $z$ is not fixed. If we replace the categorical $z$ with a *structured* latent variable and replace the softmax normalization with the corresponding *partition function*, we obtain a family of structured attention mechanisms parameterized by the graphical model.
 
-**Remark.** The potentials $\theta_i$ play the role of *log-unnormalized probabilities* in the graphical model. Inference in the categorical model reduces to computing a single normalizing constant — the softmax denominator — which is trivially $O(n)$. Structured models require more sophisticated inference algorithms but retain the same interpretive skeleton.
+💡 **Remark.** The potentials $\theta_i$ play the role of *log-unnormalized probabilities* in the graphical model. Inference in the categorical model reduces to computing a single normalizing constant — the softmax denominator — which is trivially $O(n)$. Structured models require more sophisticated inference algorithms but retain the same interpretive skeleton.
 
 ---
 
@@ -53,9 +53,9 @@ This framing exposes the generalization seam: the choice of graphical model gove
 
 ### 3.1 Model Definition
 
-**Definition (Linear-Chain CRF Attention).** Let $z = (z_1, \ldots, z_n)$ with each $z_i \in \{0, 1\}$ be a binary sequence indicating which positions are selected. The joint distribution over $z$ is a *linear-chain conditional random field*:
+📐 **Definition (Linear-Chain CRF Attention).** Let $z = (z_1, \ldots, z_n)$ with each $z_i \in \{0, 1\}$ be a binary sequence indicating which positions are selected. The joint distribution over $z$ is a *linear-chain conditional random field*:
 
-$$p(z \mid \mathbf{x}, \mathbf{q}) \propto \exp\!\left(\sum_{i=1}^{n} \theta_i z_i + \sum_{i=1}^{n-1} \psi_{i,i+1}(z_i, z_{i+1})\right)$$
+$$p(z \mid \mathbf{x}, \mathbf{q}) \propto \exp\!\left(\sum_{i=1}^{n} \textcolor{#2E86C1}{\theta_i} z_i + \sum_{i=1}^{n-1} \textcolor{#D35400}{\psi_{i,i+1}}(z_i, z_{i+1})\right)$$
 
 where:
 - $\theta_i = \mathbf{q}^\top \mathbf{x}_i / \sqrt{d}$ are *unary potentials* (attention scores for position $i$),
@@ -63,29 +63,29 @@ where:
 
 The context vector is the marginal expectation:
 
-$$\mathbf{c} = \sum_{i=1}^{n} \mu_i \cdot \mathbf{x}_i, \qquad \mu_i = p(z_i = 1 \mid \mathbf{x}, \mathbf{q})$$
+$$\mathbf{c} = \sum_{i=1}^{n} \textcolor{#1E8449}{\mu_i} \cdot \mathbf{x}_i, \qquad \textcolor{#1E8449}{\mu_i} = p(z_i = 1 \mid \mathbf{x}, \mathbf{q})$$
 
-where $\mu_i$ is the *unary marginal* for position $i$, obtained via the forward-backward algorithm.
+where $\textcolor{#1E8449}{\mu_i}$ is the *unary marginal* for position $i$, obtained via the forward-backward algorithm.
 
 ### 3.2 Forward-Backward Algorithm
 
 Define *forward messages* $\alpha_i(z_i)$ and *backward messages* $\beta_i(z_i)$ for each $z_i \in \{0, 1\}$.
 
-**Initialization:**
+📐 **Initialization:**
 
-$$\alpha_1(z_1) = \exp(\theta_1 z_1)$$
+$$\textcolor{#D35400}{\alpha_1}(z_1) = \exp(\textcolor{#2E86C1}{\theta_1} z_1)$$
 
-$$\beta_n(z_n) = 1$$
+$$\textcolor{#D35400}{\beta_n}(z_n) = 1$$
 
 **Recursions:**
 
-$$\alpha_i(z_i) = \exp(\theta_i z_i) \sum_{z_{i-1} \in \{0,1\}} \exp\!\left(\psi_{i-1,i}(z_{i-1}, z_i)\right) \alpha_{i-1}(z_{i-1})$$
+$$\textcolor{#D35400}{\alpha_i}(z_i) = \exp(\textcolor{#2E86C1}{\theta_i} z_i) \sum_{z_{i-1} \in \{0,1\}} \exp\!\left(\textcolor{#D35400}{\psi_{i-1,i}}(z_{i-1}, z_i)\right) \textcolor{#D35400}{\alpha_{i-1}}(z_{i-1})$$
 
-$$\beta_i(z_i) = \sum_{z_{i+1} \in \{0,1\}} \exp\!\left(\psi_{i,i+1}(z_i, z_{i+1})\right) \exp(\theta_{i+1} z_{i+1}) \,\beta_{i+1}(z_{i+1})$$
+$$\textcolor{#D35400}{\beta_i}(z_i) = \sum_{z_{i+1} \in \{0,1\}} \exp\!\left(\textcolor{#D35400}{\psi_{i,i+1}}(z_i, z_{i+1})\right) \exp(\textcolor{#2E86C1}{\theta_{i+1}} z_{i+1}) \,\textcolor{#D35400}{\beta_{i+1}}(z_{i+1})$$
 
-**Marginal computation.** The unnormalized joint at position $i$ with $z_i = v$ is $\alpha_i(v) \beta_i(v)$. The unary marginal is therefore:
+**Marginal computation.** The unnormalized joint at position $i$ with $z_i = v$ is $\textcolor{#D35400}{\alpha_i}(v)\, \textcolor{#D35400}{\beta_i}(v)$. The unary marginal is therefore:
 
-$$\mu_i = p(z_i = 1 \mid \mathbf{x}, \mathbf{q}) = \frac{\alpha_i(1)\,\beta_i(1)}{\alpha_i(0)\,\beta_i(0) + \alpha_i(1)\,\beta_i(1)}$$
+$$\textcolor{#1E8449}{\mu_i} = p(z_i = 1 \mid \mathbf{x}, \mathbf{q}) = \frac{\textcolor{#D35400}{\alpha_i}(1)\,\textcolor{#D35400}{\beta_i}(1)}{\textcolor{#D35400}{\alpha_i}(0)\,\textcolor{#D35400}{\beta_i}(0) + \textcolor{#D35400}{\alpha_i}(1)\,\textcolor{#D35400}{\beta_i}(1)}$$
 
 **Remark.** The forward-backward algorithm is exact for chain-structured graphical models by the elimination principle: the chain topology ensures each variable is eliminated exactly once, and no fill-in is created.
 
@@ -95,7 +95,7 @@ Each forward or backward step involves a sum over $|\{0,1\}|^2 = 4$ terms, so ea
 
 $$\text{Total complexity} = O(n \cdot |\mathcal{Z}|^2) = O(4n) = O(n)$$
 
-**The linear-chain CRF attention mechanism has the same asymptotic complexity as softmax attention but encodes sequential contiguity structure through the pairwise potentials.**
+🔑 **The linear-chain CRF attention mechanism has the same asymptotic complexity as softmax attention but encodes sequential contiguity structure through the pairwise potentials.**
 
 ---
 
@@ -121,21 +121,21 @@ $$\mathbf{c} = \sum_{i \neq j} \mu_{ij}\, \mathbf{x}_j, \qquad \mu_{ij} = p(z_{i
 
 **Proposition (Eisner Complexity).** The inside-outside algorithm for projective dependency tree marginals runs in $O(n^3)$ time, matching the complexity of CKY parsing for constituency grammars.
 
-*This cubic cost is the primary practical overhead of parser attention relative to softmax or CRF attention.*
+⚠️ *This cubic cost is the primary practical overhead of parser attention relative to softmax or CRF attention.*
 
 ### 4.2 Non-Projective Trees and the Matrix-Tree Theorem
 
 For *non-projective* dependency trees (where crossing arcs are permitted), the set of valid structures is the set of all *spanning trees* of the complete directed graph on $n$ nodes. The partition function over spanning trees and the edge marginals admit a closed-form via the *Matrix-Tree Theorem* (Kirchhoff, 1847; extended to directed graphs by Tutte, 1948).
 
-**Definition (Weighted Laplacian).** Let $A \in \mathbb{R}^{n \times n}$ be the arc-weight matrix with $A_{ij} = \exp(\theta_{ij})$ for $i \neq j$ and $A_{ii} = 0$. The *weighted Laplacian* $\mathbf{L} \in \mathbb{R}^{n \times n}$ is:
+📐 **Definition (Weighted Laplacian).** Let $\textcolor{#2E86C1}{A} \in \mathbb{R}^{n \times n}$ be the arc-weight matrix with $\textcolor{#2E86C1}{A_{ij}} = \exp(\textcolor{#2E86C1}{\theta_{ij}})$ for $i \neq j$ and $\textcolor{#2E86C1}{A_{ii}} = 0$. The *weighted Laplacian* $\textcolor{#D35400}{\mathbf{L}} \in \mathbb{R}^{n \times n}$ is:
 
-$$L_{ij} = \begin{cases} \sum_{k \neq i} A_{ki} & i = j \\ -A_{ji} & i \neq j \end{cases}$$
+$$\textcolor{#D35400}{L_{ij}} = \begin{cases} \sum_{k \neq i} \textcolor{#2E86C1}{A_{ki}} & i = j \\ -\textcolor{#2E86C1}{A_{ji}} & i \neq j \end{cases}$$
 
-**Theorem (Matrix-Tree).** The sum of weights of all spanning trees rooted at node $r$ equals any cofactor of $\mathbf{L}$ obtained by deleting row $r$ and column $r$. In the unrooted setting, the partition function is $\det(\mathbf{L}^{(r)})$ where $\mathbf{L}^{(r)}$ is the $(n{-}1) \times (n{-}1)$ reduced Laplacian.
+🔑 **Theorem (Matrix-Tree).** The sum of weights of all spanning trees rooted at node $r$ equals any cofactor of $\textcolor{#D35400}{\mathbf{L}}$ obtained by deleting row $r$ and column $r$. In the unrooted setting, the partition function is $\det(\textcolor{#D35400}{\mathbf{L}^{(r)}})$ where $\textcolor{#D35400}{\mathbf{L}^{(r)}}$ is the $(n{-}1) \times (n{-}1)$ reduced Laplacian.
 
 **Corollary (Edge Marginals).** The marginal probability of arc $(j \to i)$ in the non-projective spanning-tree distribution is:
 
-$$\mu_{ij} = A_{ij}\, [\mathbf{L}^{-1}]_{ii}$$
+$$\textcolor{#1E8449}{\mu_{ij}} = \textcolor{#2E86C1}{A_{ij}}\, [\textcolor{#D35400}{\mathbf{L}}^{-1}]_{ii}$$
 
 where $[\mathbf{L}^{-1}]_{ii}$ is the $(i,i)$ entry of the inverse of the reduced Laplacian. This requires a single matrix inversion, costing $O(n^3)$ in general but amenable to GPU parallelism via batched LAPACK routines.
 
@@ -159,7 +159,7 @@ which numerically is a sequence of `logsumexp` and addition operations — stabl
 
 ### 5.2 Signed Log-Space Backward Pass
 
-**The critical difficulty in backpropagating through DP recurrences is that gradient expressions involve differences of marginals, which can be negative.** The log-sum-exp semiring cannot represent negative quantities.
+⚠️ **The critical difficulty in backpropagating through DP recurrences is that gradient expressions involve differences of marginals, which can be negative.** The log-sum-exp semiring cannot represent negative quantities.
 
 The backward pass therefore uses a *signed log-space semifield* that tracks each value as a pair $(\text{sign}, \log|\text{value}|) \in \{+1, -1\} \times \mathbb{R}$, with:
 
@@ -169,7 +169,7 @@ Multiplication is sign-multiplicative: $(\sigma_a \cdot \sigma_b,\; a' + b')$. T
 
 ### 5.3 Gradient Structure
 
-**Proposition (Gradient of Context Vector).** Let $\mathbf{c} = \sum_i \mu_i \mathbf{x}_i$ be the CRF attention context vector. The gradient of a scalar loss $\ell$ with respect to the unary potential $\theta_i$ is:
+📐 **Proposition (Gradient of Context Vector).** Let $\mathbf{c} = \sum_i \textcolor{#1E8449}{\mu_i} \mathbf{x}_i$ be the CRF attention context vector. The gradient of a scalar loss $\ell$ with respect to the unary potential $\theta_i$ is:
 
 $$\frac{\partial \ell}{\partial \theta_i} = \frac{\partial \ell}{\partial \mathbf{c}} \cdot \mathbf{x}_i \cdot \frac{\partial \mu_i}{\partial \theta_i} + \sum_{j \neq i} \frac{\partial \ell}{\partial \mathbf{c}} \cdot \mathbf{x}_j \cdot \frac{\partial \mu_j}{\partial \theta_i}$$
 
@@ -196,7 +196,7 @@ and the marginals are $\mu_i = \sigma(\theta_i)$ (sigmoid), which under the cons
 
 *More precisely,* the categorical softmax model and the binary CRF model with $\psi = 0$ are not literally identical (categorical $z$ selects exactly one index; binary $z$ can select any subset), but both recover the same context vector formula $\mathbf{c} = \sum_i \operatorname{softmax}(\theta)_i \mathbf{x}_i$ in the limit where the model is constrained to select exactly one position. The CRF with nonzero $\psi$ is therefore a strict generalization, adding sequential dependencies without changing the form of the context vector computation.
 
-**The key theoretical unification: structured attention subsumes softmax attention as the zero-coupling degenerate case, and extends it to any tractable graphical model by substituting the appropriate marginal inference algorithm.**
+🔑 **The key theoretical unification: structured attention subsumes softmax attention as the zero-coupling degenerate case, and extends it to any tractable graphical model by substituting the appropriate marginal inference algorithm.**
 
 ---
 
@@ -204,7 +204,7 @@ and the marginals are $\mu_i = \sigma(\theta_i)$ (sigmoid), which under the cons
 
 Kim et al. (2017) evaluate structured attention on four tasks: tree transduction, neural machine translation (NMT), question answering, and natural language inference (SNLI).
 
-**Tree transduction.** Inputs are trees of depth up to 3; the task requires the model to transduce the tree structure from the input. Softmax attention achieves 49.6% accuracy; linear-chain CRF attention achieves 87.0%. The structured model learns to segment inputs along tree boundaries without any explicit structural supervision.
+🔑 **Tree transduction.** Inputs are trees of depth up to 3; the task requires the model to transduce the tree structure from the input. Softmax attention achieves 49.6% accuracy; linear-chain CRF attention achieves 87.0%. The structured model learns to segment inputs along tree boundaries without any explicit structural supervision.
 
 **NMT (Japanese-English, character-to-word).** CRF attention achieves 14.6 BLEU versus 12.6 BLEU for softmax attention, a gain of 2.0 BLEU points. The improvement is attributed to the model's ability to attend to contiguous character spans corresponding to morphological units.
 
