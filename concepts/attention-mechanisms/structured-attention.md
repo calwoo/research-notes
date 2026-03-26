@@ -3,6 +3,11 @@
 ## Table of Contents
 
 - [[#1. Motivation and Setup|1. Motivation and Setup]]
+  - [[#1.1 What Softmax Attention Really Computes|1.1 What Softmax Attention Really Computes]]
+  - [[#1.2 The Independence Problem|1.2 The Independence Problem]]
+  - [[#1.3 Structured Latent Variables and Graphical Models|1.3 Structured Latent Variables and Graphical Models]]
+  - [[#1.4 Why Inference, Not Sampling|1.4 Why Inference, Not Sampling]]
+  - [[#1.5 Tractability via Dynamic Programming|1.5 Tractability via Dynamic Programming]]
 - [[#2. Standard Attention as Marginal Inference|2. Standard Attention as Marginal Inference]]
 - [[#3. Linear-Chain CRF Attention|3. Linear-Chain CRF Attention]]
   - [[#3.1 Model Definition|3.1 Model Definition]]
@@ -23,11 +28,65 @@
 
 ## 1. Motivation and Setup
 
-Standard softmax attention produces a *categorical* distribution over $n$ input positions. Given a query $\mathbf{q} \in \mathbb{R}^d$ and a sequence of input representations $\mathbf{x} = (\mathbf{x}_1, \ldots, \mathbf{x}_n)$ with $\mathbf{x}_i \in \mathbb{R}^d$, the output context vector selects a single soft-weighted combination of inputs. This restricts the inductive bias to that of a *mixture model*: the network may implicitly attend to multiple positions, but the latent structure is entirely unordered and independent across positions.
+### 1.1 What Softmax Attention Really Computes
 
-Many natural language phenomena are instead governed by *combinatorial* structures: contiguous spans, constituency parses, dependency trees. Structured Attention Networks (Kim, Denton, Hoang, and Rush, ICLR 2017) replace the categorical latent variable in standard attention with a *structured* latent variable whose distribution is defined by a *graphical model*, and compute the context vector as an expectation under that distribution via exact marginal inference.
+Standard softmax attention is most commonly presented as a weighted sum — but it is worth being precise about what probability model it implicitly defines. Given a query $\mathbf{q} \in \mathbb{R}^d$ and a sequence of input representations $\mathbf{x} = (\mathbf{x}_1, \ldots, \mathbf{x}_n)$ with $\mathbf{x}_i \in \mathbb{R}^d$, attention computes the following distribution over positions and uses it to aggregate inputs:
 
-The key insight is that marginal inference in many tractable graphical models — linear-chain *conditional random fields*, projective dependency parsers — can be expressed as differentiable dynamic programs, making the entire attention mechanism end-to-end differentiable without requiring discrete sampling.
+$$p(z = i \mid \mathbf{x}, \mathbf{q}) = \frac{\exp(\theta_i)}{\sum_{j=1}^n \exp(\theta_j)}, \qquad \theta_i = \frac{\mathbf{q}^\top \mathbf{x}_i}{\sqrt{d}}, \qquad \mathbf{c} = \sum_{i=1}^n p(z=i) \cdot \mathbf{x}_i$$
+
+The distribution $p(z)$ here is a *categorical distribution* — a distribution over a finite set of discrete outcomes $\{1, \ldots, n\}$. Think of it as a weighted die with $n$ sides: the network assigns a probability to each input position, and the context vector $\mathbf{c}$ is the expected value of the input selected by a single roll. The weight on position $i$ is determined entirely by how well $\mathbf{x}_i$ matches the query $\mathbf{q}$.
+
+Because the context vector is an expectation over a single-position selection, attention is a *mixture model*: $\mathbf{c}$ is a convex combination of inputs, with coefficients summing to 1. This framing is not just aesthetic — it reveals the model's *inductive bias*, i.e., what class of solutions it naturally prefers. A mixture model prefers solutions where one or a few positions are highly relevant, with relevance scores that are mutually independent.
+
+### 1.2 The Independence Problem
+
+The critical limitation of softmax attention is buried in the word "categorical." A categorical distribution treats its outcomes as an *unordered set*: the probability assigned to position 3 is completely independent of the probability assigned to position 4. The model has no built-in mechanism to prefer that positions 3 and 4 are *jointly* selected — say, because they form a contiguous span — nor to enforce that the selected positions form a coherent syntactic unit.
+
+Many natural language phenomena have precisely this kind of *combinatorial* structure:
+
+- **Contiguous spans:** In reading comprehension, the answer to a question is typically a contiguous phrase — "the Battle of Hastings," words 7 through 11. A softmax attention head has no way to encode the constraint that the selected positions should form a run of adjacent tokens.
+- **Dependency trees:** In syntax, every word in a sentence has a grammatical *head* — the word it modifies. "Kicked" is the head of "the ball," and "the boy" depends on "kicked." These head–dependent relationships form a *tree* — a connected graph with no cycles — over the $n$ words. Which word is whose head is a binary decision for each pair, and the set of decisions must be consistent (forming a tree).
+- **Constituency parses:** Sentences nest into phrases: a noun phrase, inside a verb phrase, inside a sentence. The correct parse is a *hierarchical tree structure* over the words, with exponentially many candidate trees. The right tree is defined by a combinatorial set of binary span decisions.
+
+In each case the "ideal" attention pattern is a *structured subset* with internal dependencies between its members. Softmax assigns independent weights to each position, which is a poor inductive bias for these problems. The model can in principle learn to approximate structured behavior, but it must do so without any structural prior built in to guide it.
+
+### 1.3 Structured Latent Variables and Graphical Models
+
+The insight of Structured Attention Networks (Kim, Denton, Hoang, and Rush, ICLR 2017) is to replace the categorical latent variable $z \in \{1, \ldots, n\}$ with a *structured* latent variable — one whose state space is not a flat list of positions but a combinatorial set of objects like binary sequences or trees.
+
+To define a probability distribution over such objects, they use a *graphical model*. Informally, a graphical model is a compact representation of a joint distribution over many random variables, where a graph encodes the dependency structure between variables. Each node is a random variable; an edge between two nodes means those variables are statistically dependent. Variables not connected by an edge are *conditionally independent* given their neighbors.
+
+Two graphical models are used in this work:
+
+- **Linear-chain CRF (Conditional Random Field):** The latent variable is a binary sequence $z = (z_1, \ldots, z_n)$ with $z_i \in \{0, 1\}$ indicating whether position $i$ is selected. The graph is a chain: each $z_i$ is connected only to $z_{i-1}$ and $z_{i+1}$. This encoding enforces *sequential contiguity*: the selection probability of position $i$ is influenced by whether its neighbors are selected.
+- **Non-projective dependency tree (spanning-tree distribution):** The latent variable is a *spanning tree* over the $n$ positions — a tree that visits every word, where each directed arc $(j \to i)$ represents "$j$ governs $i$." The distribution over trees is parameterized by arc weights derived from query-key attention scores.
+
+In both cases, replacing the softmax categorical with this structured distribution injects the appropriate structural prior directly into the attention mechanism — no post-hoc regularization needed.
+
+### 1.4 Why Inference, Not Sampling
+
+Given a structured distribution $p(z \mid \mathbf{x}, \mathbf{q})$ over sequences or trees, the context vector is still defined as an *expectation*:
+
+$$\mathbf{c} = \mathbb{E}_{z \sim p(z \mid \mathbf{x}, \mathbf{q})}\!\left[\sum_i z_i \mathbf{x}_i\right] = \sum_{i=1}^n \underbrace{p(z_i = 1 \mid \mathbf{x}, \mathbf{q})}_{\mu_i} \cdot \mathbf{x}_i$$
+
+The per-position coefficient $\mu_i = p(z_i = 1 \mid \mathbf{x}, \mathbf{q})$ is the *marginal probability* that position $i$ is included in the selected structure — obtained by summing over all valid structured configurations $z$ that include position $i$. Computing these coefficients is called *marginal inference*.
+
+An alternative to computing marginals would be to *sample* a structure $z \sim p(z \mid \mathbf{x}, \mathbf{q})$ and use $\mathbf{c} = \sum_i z_i \mathbf{x}_i$ directly. This breaks training: because $z$ is discrete, the mapping from attention parameters $\theta$ to the context vector is a *step function* — it is zero everywhere it is differentiable, and undefined at the transitions. Gradient descent cannot propagate a learning signal through a discrete sample.
+
+By instead computing marginals $\mu_i$ exactly, the context vector becomes a *smooth, deterministic function* of the parameters $\theta$ and $\psi$. Gradients flow cleanly: $\partial \mathbf{c} / \partial \theta_i = (\partial \mu_i / \partial \theta_i) \mathbf{x}_i$, and the $\partial \mu_i / \partial \theta_j$ terms are exactly what the backward pass of the inference algorithm computes.
+
+### 1.5 Tractability via Dynamic Programming
+
+Exact marginal inference is not always possible — for a general graphical model over $n$ binary variables, the number of configurations is $2^n$, making exhaustive summation exponentially expensive. The models studied here are specifically chosen to be *tractable*: exact inference can be done in polynomial time.
+
+The two cases, and their costs:
+
+| Model | Marginal algorithm | Time complexity |
+|---|---|---|
+| Linear-chain CRF | Forward-backward | $O(n)$ |
+| Non-projective spanning tree | Matrix-Tree theorem + matrix inverse | $O(n^3)$ |
+
+Both algorithms are instances of *dynamic programming* (DP): they break the summation over all configurations into a sequence of smaller subproblems, each solved once and reused. Crucially, both DP algorithms can be implemented as differentiable operations — either by running the backward pass of the DP (for CRFs) or by differentiating through the matrix inverse (for spanning trees). This is what makes structured attention end-to-end trainable without sampling.
 
 ---
 
