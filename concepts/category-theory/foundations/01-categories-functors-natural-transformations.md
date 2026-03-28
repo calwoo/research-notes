@@ -699,6 +699,61 @@ Here $\varepsilon F$ denotes the natural transformation with components $\vareps
 > $$(\varepsilon F) \circ (F\eta) = \mathrm{id}_F \qquad \text{and} \qquad (G\varepsilon) \circ (\eta G) = \mathrm{id}_G.$$
 > Also prove uniqueness: show that the unit and counit together with the triangle identities uniquely determine the adjunction bijection $\phi$.
 
+> [!TIP]- Solution to Exercise 12
+> **Adjunctions between posets.**
+>
+> A poset $(P, \leq)$ is a category in which there is at most one morphism between any two objects, and $a \to b$ exists iff $a \leq b$. An order-preserving map $f: A \to B$ is a functor. A natural transformation $\alpha: f \Rightarrow g$ between two such functors consists of components $\alpha_a: f(a) \to g(a)$, i.e., a morphism $f(a) \leq g(a)$ for each $a$ — and naturality is automatic since there is at most one morphism between any two objects.
+>
+> An adjunction $f \dashv g$ (with $f: A \to B$, $g: B \to A$) requires a bijection $B(f(a), b) \cong A(a, g(b))$ natural in $a \in A$ and $b \in B$. Since each hom-set has at most one element, the bijection simply says these hom-sets are simultaneously empty or simultaneously inhabited. That is:
+> $$f(a) \leq b \quad \iff \quad a \leq g(b).$$
+> This is exactly a *Galois connection* (or *monotone Galois connection*) between the posets $A$ and $B$. The unit and counit become:
+> - Unit: $\eta_a: a \leq g(f(a))$ — each element is below its "round-trip" through $g \circ f$.
+> - Counit: $\varepsilon_b: f(g(b)) \leq b$ — the round-trip through $f \circ g$ is below the original.
+>
+> These follow from the defining condition by setting $b = f(a)$ (giving $f(a) \leq f(a)$, hence $a \leq g(f(a))$) and $a = g(b)$ (giving $f(g(b)) \leq b$).
+>
+> *Example.* Let $A = B = \mathbb{R}$ (with the usual order) and $i: \mathbb{Z} \hookrightarrow \mathbb{R}$ the inclusion. Then $\lceil{-}\rceil \dashv i \dashv \lfloor{-}\rfloor$: ceiling is left adjoint to inclusion and inclusion is left adjoint to floor, since $\lceil x \rceil \leq n \iff x \leq n$ and $n \leq x \iff n \leq \lfloor x \rfloor$ for all $n \in \mathbb{Z}$.
+>
+> **The power set self-adjunction.**
+>
+> The correct statement is that $\mathcal{P}: \mathbf{Set}^{\mathrm{op}} \to \mathbf{Set}$ is *self-adjoint on the right*, i.e., $\mathcal{P}^{\mathrm{op}} \dashv \mathcal{P}$ (equivalently, $\mathcal{P}$ is right adjoint to its own opposite). More precisely, there is a natural bijection
+> $$\mathbf{Set}(X, \mathcal{P}(Y)) \cong \mathbf{Set}(Y, \mathcal{P}(X)).$$
+> Both sides classify subsets of $X \times Y$: a function $f: X \to \mathcal{P}(Y)$ assigns to each $x \in X$ a subset $f(x) \subseteq Y$, which is equivalently a relation $R \subseteq X \times Y$ via $R = \{(x, y) : y \in f(x)\}$. Symmetrically, a function $g: Y \to \mathcal{P}(X)$ corresponds to the *transpose* relation $R^T \subseteq Y \times X$. The bijection is $(f \leftrightarrow g)$ iff $y \in f(x) \iff x \in g(y)$, i.e., they encode the same relation and its transpose. Naturality in $X$ and $Y$ is immediate from functoriality of taking inverse images. $\square$
+
+> [!TIP]- Solution to Exercise 13
+> **Defining the unit and counit from $\phi$.**
+>
+> Given an adjunction $F \dashv G$ with natural bijection $\phi_{A,B}: \mathcal{D}(FA, B) \xrightarrow{\sim} \mathcal{C}(A, GB)$, define:
+> - $\eta_A := \phi_{A,FA}(\mathrm{id}_{FA}) \in \mathcal{C}(A, GFA)$ — apply $\phi$ to the identity on $FA$.
+> - $\varepsilon_B := \phi_{GB,B}^{-1}(\mathrm{id}_{GB}) \in \mathcal{D}(FGB, B)$ — apply $\phi^{-1}$ to the identity on $GB$.
+>
+> Naturality of $\eta$ (i.e., $\eta$ is a natural transformation $\mathrm{id}_\mathcal{C} \Rightarrow GF$): for $f: A' \to A$, we need $GFf \circ \eta_A = \eta_{A'} \circ f$, i.e., $\phi(Ff \circ \mathrm{id}_{FA}) \cdot (-)$ commutes with precomposition by $f$. This follows directly from naturality of $\phi$ in $A$. Similarly, naturality of $\varepsilon$ follows from naturality of $\phi$ in $B$.
+>
+> **Verifying the triangle identities.**
+>
+> *First identity:* $(\varepsilon_F) \circ (F\eta) = \mathrm{id}_F$, i.e., $\varepsilon_{FA} \circ F(\eta_A) = \mathrm{id}_{FA}$ for all $A$.
+>
+> Apply $\phi_{A,FA}$ to both sides. We compute $\phi_{A,FA}(\varepsilon_{FA} \circ F(\eta_A))$. By naturality of $\phi$ in $B$ applied to $\varepsilon_{FA}: FGA \to FA$ (with $B = GFA$ mapped to $FA$):
+> $$\phi_{A,FA}(\varepsilon_{FA} \circ F(\eta_A)) = G(\varepsilon_{FA}) \circ \phi_{A,FGA}(F(\eta_A)).$$
+> Now $\phi_{A,FGA}(F(\eta_A))$: by naturality of $\phi$ in $A$ applied to $\eta_A: A \to GFA$ (with $A' = A$, $B = FGA$), we get $\phi_{A,FGA}(F(\eta_A)) = \phi_{GFA,FGA}(\mathrm{id}_{FGA}) \circ \eta_A = \eta_{GFA} \circ \eta_A$...
+>
+> A cleaner route: use the *transpose* characterisation. For any $h \in \mathcal{D}(FA, B)$, the transpose is $\phi(h) \in \mathcal{C}(A, GB)$, and the inverse is: given $k \in \mathcal{C}(A, GB)$, the morphism $\phi^{-1}(k) = \varepsilon_B \circ Fk \in \mathcal{D}(FA, B)$. To verify this formula: $\phi(\varepsilon_B \circ Fk) = G(\varepsilon_B) \circ \phi(Fk) = G(\varepsilon_B) \circ GFk \circ \eta_A$ (by nat. of $\phi$ in $A$ then $B$). We need this to equal $k$. Apply the second triangle identity (assuming it for now): $G(\varepsilon_B) \circ \eta_{GB} = \mathrm{id}_{GB}$. But $GFk \circ \eta_A = \eta_{GB} \circ k$ by naturality of $\eta$, so $G(\varepsilon_B) \circ \eta_{GB} \circ k = k$. ✓
+>
+> For a direct proof of both identities simultaneously: the bijection $\phi^{-1}(k) = \varepsilon_B \circ Fk$ and $\phi(h) = Gh \circ \eta_A$ together with the requirement $\phi \circ \phi^{-1} = \mathrm{id}$ and $\phi^{-1} \circ \phi = \mathrm{id}$ yield:
+> $$\phi(\phi^{-1}(k)) = G(\varepsilon_B \circ Fk) \circ \eta_A = G\varepsilon_B \circ GFk \circ \eta_A \overset{!}{=} k,$$
+> $$\phi^{-1}(\phi(h)) = \varepsilon_B \circ F(Gh \circ \eta_A) = \varepsilon_B \circ FGh \circ F\eta_A \overset{!}{=} h.$$
+> Setting $k = \mathrm{id}_{GB}$ in the first gives $(G\varepsilon) \circ (\eta G) = \mathrm{id}_G$ (second triangle identity). Setting $h = \mathrm{id}_{FA}$ in the second gives $(\varepsilon F) \circ (F\eta) = \mathrm{id}_F$ (first triangle identity). $\square$
+>
+> **Uniqueness: unit and counit determine $\phi$.**
+>
+> Given $\eta$ and $\varepsilon$ satisfying the triangle identities, define:
+> $$\phi(h) := Gh \circ \eta_A \qquad (h: FA \to B), \qquad \phi^{-1}(k) := \varepsilon_B \circ Fk \qquad (k: A \to GB).$$
+> The triangle identities are precisely what ensure $\phi$ and $\phi^{-1}$ are mutual inverses:
+> - $\phi(\phi^{-1}(k)) = G(\varepsilon_B \circ Fk) \circ \eta_A = G\varepsilon_B \circ GFk \circ \eta_A = G\varepsilon_B \circ \eta_{GB} \circ k$ (naturality of $\eta$) $= \mathrm{id}_{GB} \circ k = k$ (second triangle identity).
+> - $\phi^{-1}(\phi(h)) = \varepsilon_B \circ F(Gh \circ \eta_A) = \varepsilon_B \circ FGh \circ F\eta_A = h \circ \varepsilon_{FA} \circ F\eta_A$ (naturality of $\varepsilon$) $= h \circ \mathrm{id}_{FA} = h$ (first triangle identity).
+>
+> So the formulas $\phi(h) = Gh \circ \eta_A$ and $\phi^{-1}(k) = \varepsilon_B \circ Fk$ express $\phi$ entirely in terms of $\eta$ and $\varepsilon$. Since $\eta$ and $\varepsilon$ are themselves determined by $\phi$ (via $\eta_A = \phi(\mathrm{id}_{FA})$ and $\varepsilon_B = \phi^{-1}(\mathrm{id}_{GB})$), the data $(\phi) \leftrightarrow (\eta, \varepsilon)$ are in bijection, with the triangle identities as the compatibility condition. $\square$
+
 ### 8.5 Uniqueness of Adjoints
 
 **Proposition.** If $F \dashv G$ and $F \dashv G'$, then $G \cong G'$ via a natural isomorphism. Left adjoints are unique up to unique natural isomorphism.
