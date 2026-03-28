@@ -34,6 +34,20 @@
   - [[#11.2 Quantifiers as Adjoints|11.2 Quantifiers as Adjoints]]
   - [[#11.3 Mates|11.3 Mates]]
   - [[#11.4 Arrow Categories|11.4 Arrow Categories]]
+- [[#12. The Category of Elements 🔬|12. The Category of Elements 🔬]]
+  - [[#12.1 Definition: Contravariant Case|12.1 Definition: Contravariant Case]]
+  - [[#12.2 Covariant Version|12.2 Covariant Version]]
+  - [[#12.3 Universal Elements and Representations|12.3 Universal Elements and Representations]]
+  - [[#12.4 The Grothendieck Construction|12.4 The Grothendieck Construction]]
+  - [[#12.5 The Density Theorem via the Category of Elements|12.5 The Density Theorem via the Category of Elements]]
+  - [[#12.6 Functoriality|12.6 Functoriality]]
+- [[#13. Multivariable and Contravariant Adjunctions ⚡|13. Multivariable and Contravariant Adjunctions ⚡]]
+  - [[#13.1 Two-Variable Adjunctions|13.1 Two-Variable Adjunctions]]
+  - [[#13.2 Closed Monoidal Categories|13.2 Closed Monoidal Categories]]
+  - [[#13.3 Currying|13.3 Currying]]
+  - [[#13.4 Contravariant Adjunctions|13.4 Contravariant Adjunctions]]
+  - [[#13.5 The Calculus of Adjunctions|13.5 The Calculus of Adjunctions]]
+  - [[#13.6 Mates: Full Treatment|13.6 Mates: Full Treatment]]
 - [[#References|References]]
 
 ---
@@ -649,6 +663,254 @@ $\mathbf{C}^{\to}$ is the functor category $[\mathbf{2}, \mathbf{C}]$, where $\m
 
 > [!NOTE] Exercise 15
 > Define the arrow category $\mathbf{C}^{\to}$ of a category $\mathbf{C}$ (objects are morphisms of $\mathbf{C}$; a morphism from $f \colon A \to B$ to $g \colon C \to D$ is a commutative square). Show that a functor $F \colon \mathbf{C} \to \mathbf{D}$ extends to a functor $F^{\to} \colon \mathbf{C}^{\to} \to \mathbf{D}^{\to}$, and that an adjunction $F \dashv G \colon \mathbf{C} \rightleftarrows \mathbf{D}$ induces an adjunction $F^{\to} \dashv G^{\to} \colon \mathbf{C}^{\to} \rightleftarrows \mathbf{D}^{\to}$.
+
+---
+
+> [!INFO] Connection to Limits and Colimits
+> Many of the structures studied here — representable functors, initial objects in comma categories, and adjunctions — are intimately related to limits and colimits. For example: a right adjoint preserves all limits, and a left adjoint preserves all colimits. This is developed in [[concepts/category-theory/03-limits-colimits|File 3]].
+
+---
+
+## 12. The Category of Elements 🔬
+
+The *category of elements* is a fundamental construction that packages together a functor and its "points" (elements of its values) into a single category. It is the key to understanding why every presheaf is a colimit of representables, and it provides the conceptual foundation for the Grothendieck construction.
+
+> [!INFO] Riehl's treatment
+> This construction appears in Riehl's *Category Theory in Context*, §2.3 (for the covariant case) and §2.4 (for the density theorem). It is one of the most important tools in topos theory and homotopy theory, connecting the category-theoretic notion of representability with the set-theoretic notion of elements.
+
+### 12.1 Definition: Contravariant Case
+
+🔑 **Definition (Category of elements, contravariant).** Let $F \colon \mathbf{C}^{\mathrm{op}} \to \mathbf{Set}$ be a presheaf. The *category of elements* $\int F$ (also written $\mathrm{el}(F)$ or $\mathbf{C} \int F$) is the category with:
+
+- **Objects:** pairs $(C, x)$ where $C \in \mathbf{C}$ and $x \in F(C)$.
+- **Morphisms:** a morphism $(C, x) \to (C', x')$ in $\int F$ is a morphism $f \colon C \to C'$ in $\mathbf{C}$ such that $F(f)(x') = x$. (Since $F$ is contravariant, $F(f) \colon F(C') \to F(C)$, so the condition is that $f$ "pulls back" $x'$ to $x$.)
+- **Composition:** induced from $\mathbf{C}$: if $f \colon C \to C'$ and $g \colon C' \to C''$ are morphisms in $\int F$, their composite is $g \circ f \colon C \to C''$, and $F(g \circ f)(x'') = F(f)(F(g)(x'')) = F(f)(x') = x$.
+- **Identities:** the identity on $(C, x)$ is $\mathrm{id}_C$, since $F(\mathrm{id}_C)(x) = \mathrm{id}_{F(C)}(x) = x$.
+
+There is a canonical *forgetful functor* (or *projection*) $\pi \colon \int F \to \mathbf{C}$ sending $(C, x) \mapsto C$ and $f \mapsto f$.
+
+> [!WARNING] Variance in morphisms
+> *The condition on morphisms is contravariant:* a morphism $(C, x) \to (C', x')$ is a morphism $f \colon C \to C'$ in $\mathbf{C}$ (going the same direction in $\mathbf{C}$) with $F(f)(x') = x$ (pulling back along $F$). This asymmetry is essential — it ensures the composite of morphisms in $\int F$ is well-defined.
+
+> [!EXAMPLE] Example: Representable presheaf
+> For the representable presheaf $F = \mathbf{C}(-, A) \colon \mathbf{C}^{\mathrm{op}} \to \mathbf{Set}$, an object of $\int F$ is a pair $(C, f)$ where $f \colon C \to A$ is a morphism in $\mathbf{C}$. A morphism $(C, f) \to (C', f')$ in $\int F$ is a morphism $g \colon C \to C'$ with $\mathbf{C}(g, A)(f') = f' \circ g = f$. This is precisely the *slice category* $\mathbf{C}/A$ — objects are morphisms into $A$, and morphisms are commutative triangles.
+
+### 12.2 Covariant Version
+
+**Definition (Category of elements, covariant).** For $F \colon \mathbf{C} \to \mathbf{Set}$ a covariant functor, the category of elements $\int F$ has:
+
+- **Objects:** pairs $(C, x)$ with $x \in F(C)$.
+- **Morphisms:** $(C, x) \to (C', x')$ is a morphism $f \colon C \to C'$ in $\mathbf{C}$ with $F(f)(x) = x'$ (now $F(f)$ pushes $x$ forward to $x'$).
+- **Projection:** $\pi \colon \int F \to \mathbf{C}$ sending $(C, x) \mapsto C$.
+
+> [!INFO] Relationship to the slice category
+> For a covariant $F$, $\int F$ is the *comma category* $(\ast \downarrow F)$ where $\ast$ denotes the singleton set viewed as the unique functor $\mathbf{1} \to \mathbf{Set}$. Concretely, an object is a choice of a set $F(C)$ and an element $x \in F(C)$, which is the same as a function $\{*\} \to F(C)$.
+
+### 12.3 Universal Elements and Representations
+
+📐 The category of elements provides a crisp reformulation of representability via universal elements.
+
+**Definition (Universal element).** A *universal element* for $F \colon \mathbf{C}^{\mathrm{op}} \to \mathbf{Set}$ is a *terminal object* of $\int F$ — a pair $(R, u)$ with $u \in F(R)$ such that for every $(C, x) \in \int F$ there is a unique morphism $(C, x) \to (R, u)$ in $\int F$, i.e., a unique $f \colon C \to R$ in $\mathbf{C}$ with $F(f)(u) = x$.
+
+> [!WARNING] Variance: terminal, not initial
+> *For a contravariant $F \colon \mathbf{C}^{\mathrm{op}} \to \mathbf{Set}$, a universal element is a terminal object of $\int F$, not an initial object.* The direction of the universal property (unique maps into $(R,u)$) matches terminality. For the covariant version, a universal element is an initial object of $\int F$.
+
+**Theorem (Universal element = representation).** $F \colon \mathbf{C}^{\mathrm{op}} \to \mathbf{Set}$ has a universal element $(R, u)$ if and only if $F$ is representable, with $u \in F(R)$ being the element corresponding to $\mathrm{id}_R$ under the natural isomorphism $\mathbf{C}(-, R) \xrightarrow{\sim} F$.
+
+*Proof.* Given a representation $\phi \colon \mathbf{C}(-, R) \xrightarrow{\sim} F$, set $u = \phi_R(\mathrm{id}_R) \in F(R)$. For any $(C, x)$, the unique morphism $(C, x) \to (R, u)$ corresponds to $f = \phi_C^{-1}(x) \colon C \to R$: one checks $F(f)(u) = \phi_C(f) = x$ by naturality of $\phi$. Conversely, if $(R, u)$ is terminal, the bijections $f \mapsto F(f)(u)$ assemble into the natural isomorphism. $\square$
+
+**Key conclusion: $\mathbf{C}(-, R) \cong F$ if and only if $(R, u)$ is terminal in $\int F$ for $u = \phi_R(\mathrm{id}_R)$.**
+
+> [!NOTE] Riehl Exercise: Category of Elements
+> **(i)** Let $F \colon \mathbf{C}^{\mathrm{op}} \to \mathbf{Set}$ be a representable functor with representing object $R$. Show that $\int F$ has a terminal object (not initial — check the variance carefully).
+>
+> **(ii)** For the functor $F = \mathbf{C}(-, A) \colon \mathbf{C}^{\mathrm{op}} \to \mathbf{Set}$, describe $\int F$ explicitly. What are its objects and morphisms?
+>
+> **(iii)** Show that the projection functor $\pi \colon \int F \to \mathbf{C}$ is a *discrete fibration*: for every object $(C, x) \in \int F$ and morphism $f \colon C' \to C$ in $\mathbf{C}$, there is a unique lift of $f$ to a morphism in $\int F$ with target $(C, x)$.
+
+### 12.4 The Grothendieck Construction
+
+💡 The category of elements is a special case of a much more general construction.
+
+**Definition (Grothendieck construction).** Given a functor $F \colon \mathbf{C} \to \mathbf{Cat}$, the *Grothendieck construction* $\int F$ is the category with:
+
+- **Objects:** pairs $(C, D)$ where $C \in \mathbf{C}$ and $D \in F(C)$.
+- **Morphisms:** $(C, D) \to (C', D')$ is a pair $(f \colon C \to C',\; g \colon F(f)(D) \to D')$ where $F(f)(D) \in F(C')$ is the image of $D$ under the functor $F(f) \colon F(C) \to F(C')$.
+- **Composition:** $(f, g) \circ (f', g') = (f \circ f',\; g \circ F(f)(g'))$.
+
+The presheaf case $F \colon \mathbf{C}^{\mathrm{op}} \to \mathbf{Set}$ is recovered by viewing each set $F(C)$ as a *discrete category* (objects are elements, only identity morphisms). Since morphisms must be of the form $F(f)(D) \to D'$ in a discrete category, this forces $F(f)(D) = D'$, which is exactly the morphism condition for $\int F$ in the covariant setting. The contravariant version arises by working with $F \colon \mathbf{C}^{\mathrm{op}} \to \mathbf{Cat}$.
+
+> [!INFO] The Grothendieck construction in homotopy theory
+> The Grothendieck construction is the categorical shadow of a deep phenomenon in homotopy theory: a functor $F \colon \mathbf{C} \to \mathbf{Cat}$ (encoding a "family of categories") is equivalent to a *fibration* $\int F \to \mathbf{C}$. This is the *Grothendieck correspondence*, which was generalised by Lurie to $(\infty, 1)$-categories via the *straightening/unstraightening* equivalence in *Higher Topos Theory*.
+
+### 12.5 The Density Theorem via the Category of Elements
+
+🔑 The category of elements gives a canonical indexing for the colimit decomposition of every presheaf into representables.
+
+**Theorem (Density theorem / co-Yoneda lemma).** Every presheaf $X \in [\mathbf{C}^{\mathrm{op}}, \mathbf{Set}]$ is canonically a colimit of representables:
+
+$$X \cong \operatorname*{colim}_{(C, x) \in \int X} \mathbf{C}(-, C),$$
+
+where the colimit is taken over the diagram $\int X \xrightarrow{\pi} \mathbf{C} \xrightarrow{\mathbf{h}^{\bullet}} [\mathbf{C}^{\mathrm{op}}, \mathbf{Set}]$ (first project to $\mathbf{C}$, then apply the Yoneda embedding $C \mapsto \mathbf{C}(-, C)$).
+
+*Proof sketch.* One verifies that the colimit cocone is given by the natural transformations $\lambda_{(C,x)} \colon \mathbf{C}(-, C) \Rightarrow X$ corresponding (via Yoneda) to the elements $x \in X(C)$. The universal property of the colimit amounts to the Yoneda lemma applied objectwise. $\square$
+
+**Key insight: $\int X$ is the "right" index category** — its objects are precisely the "points" $(C, x)$ of $X$, and the colimit says $X$ is the "union" (in the presheaf sense) of all its representable subpresheaves, glued along the morphisms of $\int X$.
+
+> [!EXAMPLE] Example: Density in Set
+> For $\mathbf{C} = \mathbf{1}$ (the terminal category), $[\mathbf{C}^{\mathrm{op}}, \mathbf{Set}] \cong \mathbf{Set}$. The unique representable is the terminal set $\{*\}$. The category of elements $\int X$ has objects the elements of $X$ and only identity morphisms. The density theorem says $X \cong \operatorname{colim}_{x \in X} \{*\} \cong$ coproduct of $|X|$ copies of $\{*\}$, which is just $X$ itself. $\checkmark$
+
+### 12.6 Functoriality
+
+**Proposition (Functoriality of the Grothendieck construction).** A natural transformation $\alpha \colon F \Rightarrow G$ between presheaves $F, G \colon \mathbf{C}^{\mathrm{op}} \to \mathbf{Set}$ induces a functor $\int \alpha \colon \int F \to \int G$ over $\mathbf{C}$, defined by $(C, x) \mapsto (C, \alpha_C(x))$ on objects and acting as the identity on morphisms (since if $f \colon C \to C'$ satisfies $F(f)(x') = x$, then $G(f)(\alpha_{C'}(x')) = \alpha_C(F(f)(x')) = \alpha_C(x)$ by naturality of $\alpha$, so $f$ also defines a valid morphism $(C, \alpha_C(x)) \to (C', \alpha_{C'}(x'))$ in $\int G$).
+
+This makes $\int(-) \colon [\mathbf{C}^{\mathrm{op}}, \mathbf{Set}] \to \mathbf{Cat}/\mathbf{C}$ a functor (the Grothendieck construction is functorial in the presheaf argument), where $\mathbf{Cat}/\mathbf{C}$ denotes the slice of $\mathbf{Cat}$ over $\mathbf{C}$.
+
+> [!TIP] Why this matters
+> Functoriality means the Grothendieck construction is not just a "trick for a single presheaf" but a genuine functor. In fact, it restricts to an equivalence of categories between the presheaf category $[\mathbf{C}^{\mathrm{op}}, \mathbf{Set}]$ and the full subcategory of $\mathbf{Cat}/\mathbf{C}$ spanned by the *discrete fibrations* over $\mathbf{C}$.
+
+---
+
+## 13. Multivariable and Contravariant Adjunctions ⚡
+
+So far we have treated adjunctions between two categories with a single pair of functors. Many important adjunctions in algebra and geometry involve multiple variables or contravariant functors. This section systematises these generalizations.
+
+> [!INFO] Riehl's treatment
+> Two-variable adjunctions appear in Riehl §4.3, and the mates correspondence (already introduced in §11.3) is treated fully in Riehl §4.4. Closed monoidal categories appear throughout modern algebra, topology, and homotopy theory.
+
+### 13.1 Two-Variable Adjunctions
+
+📐 **Definition (Two-variable adjunction).** Given functors $F \colon \mathbf{C} \times \mathbf{D} \to \mathbf{E}$, $G \colon \mathbf{C}^{\mathrm{op}} \times \mathbf{E} \to \mathbf{D}$, $H \colon \mathbf{D}^{\mathrm{op}} \times \mathbf{E} \to \mathbf{C}$, a *two-variable adjunction* (or *multivariable adjunction*) is a natural isomorphism
+
+$$\mathbf{E}(F(C, D),\, E) \cong \mathbf{D}(D,\, G(C, E)) \cong \mathbf{C}(C,\, H(D, E))$$
+
+natural in all three variables $C \in \mathbf{C}$, $D \in \mathbf{D}$, $E \in \mathbf{E}$.
+
+The prototypical example is the *tensor-hom adjunction* in $\mathbf{Ab}$:
+
+$$\mathbf{Ab}(A \otimes B,\, C) \cong \mathbf{Ab}(A,\, \mathrm{Hom}(B, C)) \cong \mathbf{Ab}(B,\, \mathrm{Hom}(A, C)),$$
+
+where $\mathrm{Hom}(B, C)$ is the internal hom of abelian groups (itself an abelian group). The symmetry $A \otimes B \cong B \otimes A$ implies that the two "right adjoint" slots $G$ and $H$ are both the internal hom, just with arguments swapped.
+
+> [!EXAMPLE] Example: The three functors of a two-variable adjunction
+> In the tensor-hom example, $F = \otimes \colon \mathbf{Ab} \times \mathbf{Ab} \to \mathbf{Ab}$, $G(A, C) = \mathrm{Hom}(A, C) \colon \mathbf{Ab}^{\mathrm{op}} \times \mathbf{Ab} \to \mathbf{Ab}$, and $H(B, C) = \mathrm{Hom}(B, C)$. Fixing any one variable gives an ordinary adjunction in the remaining two.
+
+### 13.2 Closed Monoidal Categories
+
+**Definition (Symmetric monoidal category).** A *symmetric monoidal category* $(\mathbf{C}, \otimes, I)$ consists of a category $\mathbf{C}$, a bifunctor $\otimes \colon \mathbf{C} \times \mathbf{C} \to \mathbf{C}$, a unit object $I$, and natural isomorphisms (associator, left/right unitors, symmetry) satisfying coherence axioms.
+
+**Definition (Closed monoidal category).** A symmetric monoidal category $(\mathbf{C}, \otimes, I)$ is *closed* if for each object $B \in \mathbf{C}$, the functor $- \otimes B \colon \mathbf{C} \to \mathbf{C}$ has a right adjoint, written $[B, -] \colon \mathbf{C} \to \mathbf{C}$ and called the *internal hom* (or *exponential*):
+
+$$\mathbf{C}(A \otimes B,\, C) \cong \mathbf{C}(A,\, [B, C]),$$
+
+naturally in $A$ and $C$ (with $B$ fixed).
+
+| Category | Monoidal product $\otimes$ | Unit $I$ | Internal hom $[B, C]$ |
+|---|---|---|---|
+| $\mathbf{Set}$ | Cartesian product $\times$ | $\{*\}$ | Function set $C^B$ |
+| $\mathbf{Ab}$ | Tensor product $\otimes_\mathbb{Z}$ | $\mathbb{Z}$ | $\mathrm{Hom}(B, C)$ |
+| $\mathbf{Mod}_R$ | $\otimes_R$ | $R$ | $\mathrm{Hom}_R(B, C)$ |
+| $\mathbf{Cat}$ | Cartesian product $\times$ | $\mathbf{1}$ | Functor category $[B, C]$ |
+| $\mathbf{sSet}$ | Cartesian product | $\Delta^0$ | Simplicial mapping space |
+| $\mathbf{Top}$ (compactly generated) | $\times$ | point | Compact-open topology $C^B$ |
+
+> [!WARNING] Not all monoidal categories are closed
+> *$\mathbf{Ab}$ with the categorical product $\oplus$ (which is also the coproduct) is a symmetric monoidal category, but the tensor product $\otimes$ is the monoidal structure that makes it closed.* Checking closedness requires finding the right adjoint, which may not exist in general.
+
+### 13.3 Currying
+
+💡 The tensor-hom adjunction in $\mathbf{Set}$ expresses *currying* — a fundamental principle in both mathematics and programming.
+
+**Theorem (Currying).** There is a natural bijection
+$$\mathbf{Set}(A \times B,\, C) \cong \mathbf{Set}(A,\, C^B) \cong \mathbf{Set}(A,\, \mathbf{Set}(B, C)),$$
+naturally in $A$, $B$, $C$. Explicitly, a function $f \colon A \times B \to C$ corresponds to its *curried* form $\tilde{f} \colon A \to C^B$ defined by $\tilde{f}(a)(b) = f(a, b)$.
+
+The *unit* of the adjunction $- \times B \dashv (-)^B$ is $\eta_A \colon A \to (A \times B)^B$ defined by $\eta_A(a)(b) = (a, b)$.
+
+The *counit* is $\varepsilon_C \colon C^B \times B \to C$ defined by $\varepsilon_C(g, b) = g(b)$ — the *evaluation map*.
+
+**Key conclusion: evaluation $\mathrm{ev} \colon [B, C] \times B \to C$ is the counit of the product-exponential adjunction.**
+
+> [!TIP] Currying in functional programming
+> In typed lambda calculus and functional programming languages, the type isomorphism $A \times B \to C \;\simeq\; A \to (B \to C)$ is exactly currying. Haskell's `curry :: ((a, b) -> c) -> a -> b -> c` implements this bijection. The internal hom $[B, C]$ is the function type `b -> c`.
+
+### 13.4 Contravariant Adjunctions
+
+**Definition (Contravariant adjunction).** A *contravariant adjunction* between $\mathbf{C}$ and $\mathbf{D}$ is a natural isomorphism
+
+$$\mathbf{C}(A,\, GB) \cong \mathbf{D}(B,\, FA)$$
+
+natural in $A \in \mathbf{C}$ and $B \in \mathbf{D}$. Equivalently, it is an ordinary adjunction $F \colon \mathbf{D}^{\mathrm{op}} \rightleftarrows \mathbf{C} \colon G^{\mathrm{op}}$ (where we view $F$ as a functor $\mathbf{D}^{\mathrm{op}} \to \mathbf{C}$ and $G$ as a functor $\mathbf{C}^{\mathrm{op}} \to \mathbf{D}$).
+
+**Example (Dualizing object in $\mathbf{Vect}_k$).** For a field $k$, the duality functor $(-)^* = \mathrm{Hom}_k(-, k) \colon \mathbf{Vect}_k^{\mathrm{op}} \to \mathbf{Vect}_k$ gives a contravariant adjunction:
+$$\mathbf{Vect}_k(V,\, W^*) \cong \mathbf{Vect}_k(W,\, V^*),$$
+because both sides are naturally isomorphic to the set of bilinear forms $V \times W \to k$. *Surprisingly,* this is a self-adjoint contravariant adjunction: $F = G = (-)^*$. Such a structure is called an *ambidextrous adjunction* or *duality*.
+
+> [!EXAMPLE] Example: Stone duality
+> *Stone duality* is a classical contravariant adjunction: the functor $\mathrm{Cl}(-) \colon \mathbf{BoolAlg}^{\mathrm{op}} \to \mathbf{Stone}$ (taking the Stone space of ultrafilters of a Boolean algebra) is left adjoint to the functor $\mathrm{Clop}(-) \colon \mathbf{Stone}^{\mathrm{op}} \to \mathbf{BoolAlg}$ (taking the Boolean algebra of clopen sets). This contravariant adjunction is in fact a contravariant equivalence of categories.
+
+### 13.5 The Calculus of Adjunctions
+
+**Proposition (Composition of adjunctions).** Adjunctions compose: if $F \dashv G \colon \mathbf{C} \rightleftarrows \mathbf{D}$ and $F' \dashv G' \colon \mathbf{D} \rightleftarrows \mathbf{E}$, then $F'F \dashv GG' \colon \mathbf{C} \rightleftarrows \mathbf{E}$.
+
+*Proof.* Compute:
+$$\mathbf{E}(F'FA,\, E) \cong \mathbf{D}(FA,\, G'E) \cong \mathbf{C}(A,\, GG'E),$$
+where the first bijection uses $F' \dashv G'$ and the second uses $F \dashv G$. Both bijections are natural in $A$ and $E$, so their composite is a natural bijection exhibiting $F'F \dashv GG'$. $\square$
+
+**Unit and counit of the composite:** The unit of $F'F \dashv GG'$ is $A \xrightarrow{\eta_A} GFA \xrightarrow{G\eta'_{FA}} GG'F'FA$, and the counit is $F'FGG'E \xrightarrow{F'\varepsilon_{G'E}} F'G'E \xrightarrow{\varepsilon'_E} E$.
+
+> [!INFO] Adjunctions form a 2-category
+> Adjunctions compose and the identity functor is self-adjoint ($\mathrm{id} \dashv \mathrm{id}$ with unit and counit both the identity). More precisely, *adjunctions* are the 1-morphisms of the 2-category $\mathbf{Adj}$ whose 0-morphisms are categories and whose 2-morphisms are *mates* (see §13.6). This 2-categorical structure is developed by Riehl–Verity in their work on formal category theory.
+
+### 13.6 Mates: Full Treatment
+
+🔑 The mates correspondence (previewed in §11.3) admits a full treatment once we have the multivariable perspective.
+
+**Setup.** Suppose we have:
+- Adjunctions $(\eta, \varepsilon) \colon F \dashv G \colon \mathbf{C} \rightleftarrows \mathbf{D}$ and $(\eta', \varepsilon') \colon F' \dashv G' \colon \mathbf{C}' \rightleftarrows \mathbf{D}'$.
+- Functors $H \colon \mathbf{C} \to \mathbf{C}'$ and $K \colon \mathbf{D} \to \mathbf{D}'$.
+
+**Definition (Mate correspondence).** There is a canonical bijection between:
+- Natural transformations $\alpha \colon KF \Rightarrow F'H$ ("forward square"), and
+- Natural transformations $\alpha^\sharp \colon HG \Rightarrow G'K$ ("backward square").
+
+The *mate* $\alpha^\sharp$ of $\alpha \colon KF \Rightarrow F'H$ is defined by the composite:
+
+$$\alpha^\sharp \colon HG \xRightarrow{\eta'_{HG}} G'F'HG \xRightarrow{G'\alpha G} G'KFG \xRightarrow{G'K\varepsilon} G'K.$$
+
+Conversely, the mate of $\beta \colon HG \Rightarrow G'K$ is:
+
+$$\beta^\flat \colon KF \xRightarrow{KF\eta} KFHG \xRightarrow{... } F'HG \xRightarrow{... } F'H,$$
+
+more precisely: $\beta^\flat = (\varepsilon'_{-} \circ F'\beta_F) \colon KF \xRightarrow{K\eta} KFGF \xRightarrow{\beta_{GF}} G'KGF \xRightarrow{...} ...$
+
+The explicit formula for $\beta^\flat$ at component $A \in \mathbf{C}$ is:
+
+$$(\beta^\flat)_A = \varepsilon'_{F'HA} \circ F'(\beta_{GA}) \circ F'H(\eta_A) \;\colon\; KFA \to F'HA.$$
+
+Wait — let us write the correct formula. Given $\beta \colon HG \Rightarrow G'K$, the mate $\beta^\flat \colon KF \Rightarrow F'H$ has components
+
+$$(\beta^\flat)_A = \varepsilon'_{F'HA} \circ F'(\beta_{GA}) \circ F'(H\eta_A)^{-1}...$$
+
+The cleanest statement uses the adjoint transpose directly:
+
+**Proposition (Mate via adjoint transpose).** Given $\alpha \colon KF \Rightarrow F'H$, the mate $\alpha^\sharp_B \colon HGB \to G'KB$ for $B \in \mathbf{D}$ is the adjoint transpose of $K(\varepsilon_B) \circ \alpha_{GB} \colon F'HGB \to KB$ under the adjunction $F' \dashv G'$:
+
+$$\alpha^\sharp_B = \overline{K\varepsilon_B \circ \alpha_{GB}} = G'(K\varepsilon_B \circ \alpha_{GB}) \circ \eta'_{HGB}.$$
+
+**Proposition (Involution).** The mate correspondence is an involution: $(\alpha^\sharp)^\flat = \alpha$ and $(\beta^\flat)^\sharp = \beta$.
+
+*Proof.* Apply the triangle identities for both adjunctions. $\square$
+
+> [!NOTE] Riehl Exercise: Multivariable Adjunctions
+> **(i)** Show directly that $\mathbf{Set}(A \times B, C) \cong \mathbf{Set}(A, \mathbf{Set}(B, C))$ naturally in $A$, $B$, $C$. What are the unit and counit of this adjunction (viewed as $- \times B \dashv (-)^B$ for fixed $B$)?
+>
+> **(ii)** Let $R$ be a commutative ring. Show that the tensor-hom adjunction $\mathbf{Mod}_R(M \otimes_R N, P) \cong \mathbf{Mod}_R(M, \mathrm{Hom}_R(N, P))$ defines a two-variable adjunction, and describe the unit and counit.
+>
+> **(iii)** If $F \dashv G \colon \mathbf{C} \rightleftarrows \mathbf{D}$ and $F' \dashv G' \colon \mathbf{D} \rightleftarrows \mathbf{E}$, verify that $F'F \dashv GG'$ by constructing the unit and counit of the composite adjunction explicitly from the units and counits of the factors.
+
+> [!WARNING] Common mistake: composing mates
+> *When taking mates, the direction of $H$ and $K$ relative to the adjunctions must be tracked carefully.* A natural transformation $\alpha \colon KF \Rightarrow F'H$ goes "from the left-adjoint side to the left-adjoint side," and its mate $\alpha^\sharp \colon HG \Rightarrow G'K$ goes "from the right-adjoint side to the right-adjoint side." Mixing these directions is a common source of errors in 2-categorical arguments.
 
 ---
 
