@@ -42,6 +42,10 @@
   - [[#8.4 Triangle Identities|8.4 Triangle Identities]]
   - [[#8.5 Uniqueness of Adjoints|8.5 Uniqueness of Adjoints]]
   - [[#8.6 Examples|8.6 Examples]]
+- [[#9. Leinster: Examples and Perspective|9. Leinster: Examples and Perspective]]
+  - [[#9.1 Abelianisation as an Adjunction|9.1 Abelianisation as an Adjunction]]
+  - [[#9.2 Stone-Cech Compactification|9.2 Stone-Cech Compactification]]
+  - [[#9.3 What Category Theory Is About|9.3 What Category Theory Is About]]
 - [[#References|References]]
 
 ---
@@ -98,6 +102,14 @@ The following are the canonical examples appearing throughout mathematics.
 
 In each case, composition is ordinary function composition, and identities are identity functions. Verification of the axioms is routine.
 
+> [!INFO] Leinster's notation convention
+> Leinster uses $\mathcal{A}$ (calligraphic) for a generic/variable category, and boldface $\mathbf{Set}$, $\mathbf{Grp}$, etc., for named categories. He writes $\mathcal{A}(A, B)$ uniformly for hom-sets rather than $\mathrm{Hom}_{\mathcal{A}}(A, B)$. These notes follow this convention. Leinster also uses the term *map* interchangeably with *morphism* and *arrow*, and emphasises that "map" need not mean a function between sets.
+
+> [!EXAMPLE]- The category of topological spaces and homotopy classes
+> Leinster uses $\mathbf{Top}$ in the usual sense (continuous maps as morphisms), but also highlights that one can form the *homotopy category* $h\mathbf{Top}$ by taking the same objects but replacing morphisms with homotopy classes $[X, Y]$ of continuous maps. In $h\mathbf{Top}$, two spaces are isomorphic if and only if they are *homotopy equivalent* — a much weaker relation than homeomorphism. For instance, $\mathbb{R}^n$ and the one-point space $\{*\}$ are isomorphic in $h\mathbf{Top}$ (both are contractible), but not homeomorphic.
+>
+> This illustrates a key lesson: changing the morphisms of a category changes what "sameness" means.
+
 > [!EXAMPLE] The matrix category Mat_k
 > 💡 Leinster uses this example to illustrate that objects need not be "sets with structure." Fix a field $k$. Define the category $\mathbf{Mat}_k$ by:
 > - Objects: the natural numbers $0, 1, 2, \ldots$
@@ -125,6 +137,9 @@ Two seemingly degenerate cases are fundamental.
 
 The transitivity of $\leq$ supplies composition ($a \leq b$ and $b \leq c$ imply $a \leq c$), and reflexivity supplies identities ($a \leq a$). Associativity is trivial since there is at most one morphism between any two objects.
 
+> [!INFO] Leinster's formulation of poset categories
+> Leinster emphasises that a *preorder* (where the antisymmetry axiom $a \leq b$ and $b \leq a \Rightarrow a = b$ is dropped) gives an equally valid category. In a preorder, there may be distinct objects $a \neq b$ with morphisms in both directions — corresponding categorically to two distinct objects that are both isomorphic to each other. A poset is a preorder in which the only isomorphisms are the identity morphisms.
+
 **Definition (Monoid as a one-object category).** A *monoid* $(M, \cdot, e)$ — a set with an associative binary operation and a unit element — determines a category $\mathbf{B}M$ with:
 - A single object $*$.
 - $\mathbf{B}M(*,*) = M$ (every element of $M$ is a morphism).
@@ -132,6 +147,9 @@ The transitivity of $\leq$ supplies composition ($a \leq b$ and $b \leq c$ imply
 - Identity: the unit element $e$.
 
 The monoid axioms are exactly the category axioms. **A group is a monoid in which every element is invertible; viewed as a one-object category, it is a category in which every morphism is an isomorphism.**
+
+> [!TIP] The general principle: categories with one object
+> Leinster uses this example to introduce an important general principle: a category with exactly one object is precisely a monoid. More generally, a *groupoid* (a category in which every morphism is an isomorphism) with one object is precisely a group. This prefigures the idea that functors from $\mathbf{B}G$ to $\mathbf{Set}$ are $G$-sets, which is the categorical formulation of group actions (see §11.1 of File 2).
 
 > [!INFO] Historical note
 > Categories were introduced by Eilenberg and Mac Lane in their 1945 paper "General Theory of Natural Equivalences" precisely to give a rigorous home to the notion of natural transformation. The definitions of category and functor were, as Mac Lane later wrote, "auxiliary" — the real prize was naturalness.
@@ -288,6 +306,9 @@ These must satisfy:
 1. **Preservation of composition:** $F(g \circ f) = Fg \circ Ff$ for all composable $f, g$.
 2. **Preservation of identities:** $F(\mathrm{id}_A) = \mathrm{id}_{FA}$ for all $A$.
 
+> [!INFO] Leinster's emphasis on functors as the primary objects
+> Leinster opens Chapter 1 of *Basic Category Theory* by saying that "category theory takes a bird's eye view of mathematics." A key point he makes is that a functor $F : \mathcal{A} \to \mathcal{B}$ must specify *both* what it does to objects and what it does to maps, and the two specifications must be compatible via the functoriality axioms. He cautions that specifying only the object-level map is not enough — the map-level action is essential data.
+
 > [!EXAMPLE] Forgetful functors
 > The *forgetful functor* $U: \mathbf{Grp} \to \mathbf{Set}$ sends a group $(G, \cdot, e, {}^{-1})$ to its underlying set $G$, and sends each homomorphism to the underlying function. It "forgets" the group structure. Similarly one has forgetful functors $\mathbf{Ring} \to \mathbf{Ab} \to \mathbf{Set}$, $\mathbf{Top} \to \mathbf{Set}$, etc.
 
@@ -297,12 +318,33 @@ These must satisfy:
 > [!EXAMPLE] Power set functor
 > The covariant *power set functor* $\mathcal{P}: \mathbf{Set} \to \mathbf{Set}$ sends a set $X$ to its power set $\mathcal{P}(X) = \{S \mid S \subseteq X\}$. For a function $f: X \to Y$, the map $\mathcal{P}(f): \mathcal{P}(X) \to \mathcal{P}(Y)$ is the direct image: $\mathcal{P}(f)(S) = f(S) = \{f(s) \mid s \in S\}$.
 
+> [!EXAMPLE]- Functors between posets and monotone maps
+> 💡 A functor $F : \mathcal{P} \to \mathcal{Q}$ between two posets (viewed as categories) is exactly a *monotone map*: a function $f : P \to Q$ with $a \leq_P b \Rightarrow f(a) \leq_Q f(b)$.
+>
+> *Verification.* A functor must send each morphism $a \leq b$ in $\mathcal{P}$ (i.e., each pair with $a \leq_P b$) to a morphism $f(a) \leq f(b)$ in $\mathcal{Q}$ — which is exactly monotonicity. Preservation of composition is automatic (there is at most one morphism between any two objects), as is preservation of identities.
+>
+> This shows that adjunctions between posets are exactly *Galois connections* — a classical concept in order theory. See File 4, §2 for details.
+
+> [!EXAMPLE]- Functors out of a monoid: representations
+> A functor $F : \mathbf{B}M \to \mathbf{Set}$ from a monoid $M$ (viewed as a one-object category) to $\mathbf{Set}$ is exactly a *left $M$-action* on the set $S = F(*)$: each element $m \in M$ acts as a function $F(m) : S \to S$, and functoriality gives $F(mn) = F(m) \circ F(n)$ and $F(e) = \mathrm{id}_S$.
+>
+> Similarly, a functor $\mathbf{B}G \to \mathbf{Set}$ from a group $G$ is a *$G$-set*. A functor $\mathbf{B}G \to \mathbf{Vect}_k$ is a *$k$-linear representation* of $G$. This is the categorical origin of representation theory.
+
+> [!EXAMPLE] The identity and constant functors
+> For any category $\mathcal{C}$: the *identity functor* $\mathrm{id}_\mathcal{C} : \mathcal{C} \to \mathcal{C}$ sends every object and morphism to itself. For any object $D \in \mathcal{D}$, the *constant functor* $\Delta_D : \mathcal{C} \to \mathcal{D}$ sends every object to $D$ and every morphism to $\mathrm{id}_D$. Constant functors play a central role in the definition of limits (File 3, §1).
+
 ### 4.2 Contravariant Functors
 
 **Definition (Contravariant functor).** A *contravariant functor* from $\mathcal{C}$ to $\mathcal{D}$ is a covariant functor $F: \mathcal{C}^{\mathrm{op}} \to \mathcal{D}$. Concretely, it assigns to each $f: A \to B$ in $\mathcal{C}$ a morphism $Ff: FB \to FA$ in $\mathcal{D}$, reversing the direction, with $F(g \circ f) = Ff \circ Fg$.
 
+> [!INFO] Leinster on contravariant functors
+> Leinster consistently avoids using the term "contravariant functor" as a standalone concept, preferring instead to say "$F$ is a functor $\mathcal{A}^{\mathrm{op}} \to \mathcal{B}$." This has the advantage that all general results about functors apply automatically by viewing $\mathcal{A}^{\mathrm{op}}$ as the domain. The term "contravariant" is retained here for expository clarity, but beware that some modern treatments (following Leinster) omit it entirely.
+
 > [!EXAMPLE] Contravariant power set
 > The contravariant power set functor sends $f: X \to Y$ to the preimage map $f^{-1}: \mathcal{P}(Y) \to \mathcal{P}(X)$. This is functorial because $(g \circ f)^{-1} = f^{-1} \circ g^{-1}$.
+
+> [!EXAMPLE]- The dual vector space functor
+> The functor $(-)^* : \mathbf{Vect}_k^{\mathrm{op}} \to \mathbf{Vect}_k$ sending $V \mapsto V^* = \mathrm{Hom}_k(V, k)$ and $f : V \to W$ to $f^* : W^* \to V^*$ (precomposition with $f$) is a contravariant functor. It is *not* naturally isomorphic to the identity functor on $\mathbf{FDVect}_k$ (there is no canonical isomorphism $V \cong V^*$), but the double-dual $(-)^{**}$ *is* naturally isomorphic to the identity — this is the content of the canonical natural transformation $\alpha : \mathrm{id} \Rightarrow (-)^{**}$ described in §5.1.
 
 ### 4.3 Hom-Functors
 
@@ -363,12 +405,27 @@ GA \arrow[r, "Gf"'] & GB
 
 That is: $\alpha_B \circ Ff = Gf \circ \alpha_A$ for every $f: A \to B$.
 
+> [!INFO] Leinster's phrasing of naturality
+> Leinster phrases the naturality condition precisely as: "the square commutes for every map $f : A \to B$ in $\mathcal{A}$." He emphasises that a natural transformation $\alpha : F \Rightarrow G$ is not just a collection of morphisms — the commutativity of the naturality square for *every* morphism in $\mathcal{A}$ is what makes $\alpha$ "natural" (i.e., independent of arbitrary choices). The original motivation of Eilenberg and Mac Lane was exactly to give a precise definition distinguishing "natural" from "non-natural" isomorphisms.
+
 > [!EXAMPLE] A canonical natural transformation
 > Let $V$ be a finite-dimensional real vector space. There is a natural transformation $\alpha: \mathrm{id}_{\mathbf{FDVect}_\mathbb{R}} \Rightarrow (-)^{**}$ (the double-dual functor) whose component at $V$ is the canonical map
 > $$\alpha_V: V \to V^{**}, \quad v \mapsto \hat{v}, \quad \hat{v}(\phi) := \phi(v).$$
 > Naturality: for any linear map $f: V \to W$, we need $\alpha_W \circ f = f^{**} \circ \alpha_V$. This holds because $\widehat{f(v)}(\psi) = \psi(f(v)) = (f^*\psi)(v) = \widehat{v}(f^*\psi) = (f^{**}\hat{v})(\psi)$.
 >
 > In contrast, there is a non-natural isomorphism $V \cong V^*$ (requiring a choice of basis), illustrating that naturality is a substantive condition.
+
+> [!EXAMPLE]- Natural transformations between functors from a group
+> Let $G$ be a group viewed as a one-object category $\mathbf{B}G$, and let $F, H : \mathbf{B}G \to \mathbf{Set}$ be two functors, i.e., two $G$-sets $S = F(*)$ and $T = H(*)$. A natural transformation $\alpha : F \Rightarrow H$ consists of a single component $\alpha_* : S \to T$ (one component per object, and $\mathbf{B}G$ has one object). The naturality square for each $g \in G$ (viewed as a morphism $* \to *$) requires:
+> $$\alpha_* \circ F(g) = H(g) \circ \alpha_*,$$
+> i.e., $\alpha_*$ must commute with the $G$-action on both sides. This is precisely the condition that $\alpha_*$ is a *$G$-equivariant map* (a morphism of $G$-sets). **Natural transformations between $G$-set functors are exactly $G$-equivariant maps.**
+
+> [!EXAMPLE]- Determinant as a natural transformation
+> 💡 For each $n \geq 1$, the *determinant* defines a natural transformation $\det : \mathrm{GL}_n \Rightarrow (-)^\times$ from the general linear group functor to the units functor, where both are viewed as functors $\mathbf{CRing} \to \mathbf{Grp}$ from the category of commutative rings to the category of groups.
+>
+> Explicitly: for a commutative ring $R$, $\mathrm{GL}_n(R)$ is the group of $n \times n$ invertible matrices over $R$, and $R^\times$ is the group of units of $R$. The determinant $\det_R : \mathrm{GL}_n(R) \to R^\times$ is a group homomorphism for each $R$. Naturality: for any ring homomorphism $\phi : R \to S$, the diagram
+> $$\det_S \circ \mathrm{GL}_n(\phi) = \phi^\times \circ \det_R$$
+> commutes — applying $\phi$ entry-wise to a matrix and then taking the determinant equals first taking the determinant in $R$ and then applying $\phi$.
 
 ### 5.2 Vertical Composition
 
@@ -604,6 +661,48 @@ Here $\varepsilon F$ denotes the natural transformation with components $\vareps
 > Show that $|\mathrm{Sym}(X)| = |\mathrm{Ord}(X)| = n!$ for every $n$-element set $X$, so the two functors are pointwise isomorphic. However, show that $\mathrm{Sym}$ and $\mathrm{Ord}$ are **not** naturally isomorphic as functors $\mathbf{Bij} \to \mathbf{Set}$.
 
 *Hint.* A natural isomorphism would give, for each finite set $X$, a bijection $\alpha_X: \mathrm{Sym}(X) \to \mathrm{Ord}(X)$ natural in $X$. Naturality requires $\alpha_X$ to be equivariant with respect to the action of $\mathrm{Sym}(X)$ on itself by conjugation and on orderings by relabeling. Consider the case $|X| = 2$ or $|X| = 3$ and derive a contradiction.
+
+---
+
+---
+
+## 9. Leinster: Examples and Perspective 📖
+
+This section collects key examples and philosophical remarks from Leinster's *Basic Category Theory* that complement and enrich the material above.
+
+### 9.1 Abelianisation as an Adjunction
+
+> [!EXAMPLE]- Abelianisation: the most important free-forgetful adjunction
+> The *abelianisation* of a group $G$ is the quotient $G^{\mathrm{ab}} = G / [G, G]$, where $[G, G]$ is the *commutator subgroup* (the subgroup generated by $\{ghg^{-1}h^{-1} : g, h \in G\}$). This construction defines a functor $\mathrm{ab} : \mathbf{Grp} \to \mathbf{Ab}$.
+>
+> The key property is that every group homomorphism from $G$ to an abelian group $A$ factors uniquely through $G^{\mathrm{ab}}$:
+> $$\mathbf{Ab}(G^{\mathrm{ab}}, A) \cong \mathbf{Grp}(G, \iota A),$$
+> where $\iota : \mathbf{Ab} \hookrightarrow \mathbf{Grp}$ is the inclusion (forgetful) functor. This is the adjunction $\mathrm{ab} \dashv \iota$.
+>
+> The unit $\eta_G : G \to G^{\mathrm{ab}}$ is the quotient map, and the counit is the identity $\mathrm{id}_A : \mathrm{ab}(\iota A) = A^{\mathrm{ab}} \xrightarrow{\sim} A$ (since $A$ is already abelian, $[A, A] = \{e\}$, so $A^{\mathrm{ab}} = A$).
+>
+> Leinster uses this as a canonical example of a *reflective subcategory*: $\mathbf{Ab}$ is a reflective full subcategory of $\mathbf{Grp}$, with the reflector being abelianisation.
+
+### 9.2 Stone-Cech Compactification
+
+> [!EXAMPLE]- Stone-Čech compactification as a universal property
+> Let $\mathbf{KHaus}$ be the full subcategory of $\mathbf{Top}$ whose objects are compact Hausdorff topological spaces. The inclusion $\iota : \mathbf{KHaus} \hookrightarrow \mathbf{Top}$ has a left adjoint $\beta : \mathbf{Top} \to \mathbf{KHaus}$ called the *Stone-Čech compactification*: for any topological space $X$ and compact Hausdorff space $K$, there is a natural bijection
+> $$\mathbf{KHaus}(\beta X, K) \cong \mathbf{Top}(X, K).$$
+> The unit $\eta_X : X \to \beta X$ is the canonical dense embedding of $X$ into its Stone-Čech compactification. The universal property says: every continuous map from $X$ to a compact Hausdorff space extends uniquely to $\beta X$.
+>
+> Leinster uses this as an example of an adjunction that cannot be understood concretely without significant set-theoretic machinery — illustrating that the adjunction *is* the content, not an encoding of some prior construction.
+
+### 9.3 What Category Theory Is About
+
+> [!INFO] Leinster's perspective on the purpose of category theory
+> In the preface to *Basic Category Theory*, Leinster writes: "Category theory takes a bird's eye view of mathematics. From high up, we can see the common threads that connect different areas of mathematics, and apply the same abstract structures and concepts across different fields."
+>
+> He identifies three recurring themes:
+> 1. **Sameness:** Equivalences of categories are the right notion of "sameness" for categories — not isomorphism. Two equivalent categories share all categorical properties.
+> 2. **Universal properties:** Constructions defined by universal properties are unique up to unique isomorphism, and are preserved by functors that respect the relevant structures.
+> 3. **Functoriality:** The distinction between "functorial" and "non-functorial" constructions is deep. A construction that cannot be made into a functor (e.g., choosing a basis for a vector space) is fundamentally different from one that can.
+>
+> Leinster's book deliberately keeps the scope narrow — categories, functors, natural transformations, adjunctions, representables, and limits — to present these ideas in their cleanest form.
 
 ---
 

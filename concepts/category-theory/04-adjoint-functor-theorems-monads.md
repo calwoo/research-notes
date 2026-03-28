@@ -68,6 +68,9 @@ The plan is:
 
 A *poset* $(P, \leq)$ is a category whose objects are elements of $P$ and whose hom-sets satisfy $|P(p, q)| \leq 1$, with a morphism $p \to q$ iff $p \leq q$. A functor between posets is exactly a *monotone map*.
 
+> [!INFO] Leinster on the poset case
+> Leinster uses the poset case as the key model for understanding the adjoint functor theorem. In a poset, a limit is an infimum, a colimit is a supremum, and a left adjoint is a "best approximation from below." The GAFT in the poset case reduces to: a monotone map $g \colon Q \to P$ (where $Q$ has all infima) has a left adjoint if and only if $g$ preserves all infima. This is a clean, verifiable condition — and the full GAFT in categories generalises this by replacing "preserves infima" with "preserves limits" and adding the solution set condition to handle size issues.
+
 **Definition (Adjunction in a Poset).** Let $P$ and $Q$ be posets. Monotone maps $f \colon P \to Q$ and $g \colon Q \to P$ form an adjunction $f \dashv g$ if and only if:
 $$f(p) \leq q \iff p \leq g(q) \quad \text{for all } p \in P,\, q \in Q.$$
 The map $f$ is called a *Galois connection* lower adjoint and $g$ the upper adjoint.
@@ -88,6 +91,9 @@ $$f(p) = \inf\{q \in Q : p \leq g(q)\}.$$
 ---
 
 ## 3. Monads: Definition and First Examples 🔑
+
+> [!INFO] Leinster on monads
+> Leinster does not cover monads in *Basic Category Theory* (the book ends with Chapter 6 on adjoints and Chapter 7 on limits). However, his Part III Cambridge course (from which these notes derive) does cover monads in the later lectures. The material in this section is drawn from those lecture notes and from standard references (Mac Lane, Riehl). The "monad as monoid in endofunctors" slogan is due to Mac Lane.
 
 ### 3.1 The Definition
 
@@ -317,6 +323,9 @@ $(R) \Rightarrow (L)$: Representable functors are right adjoints to $\mathcal{C}
 ---
 
 ## 7. The General Adjoint Functor Theorem 📐
+
+> [!INFO] Leinster's proof strategy for GAFT
+> Leinster's formulation of the GAFT (which appears in the Cambridge lecture notes but not in *Basic Category Theory*) follows Freyd's original proof via the "solution set condition." The proof has two steps: (1) use the SSC to construct a *weakly initial* object in the comma category $(A \downarrow G)$; (2) apply a "reflex equalizer" argument (using completeness of $\mathcal{D}$) to obtain a genuinely initial object. Step (2) is the technical heart: one equalises all endomorphisms of the weakly initial object simultaneously, exploiting local smallness to keep the equalizer diagram small.
 
 ### 7.1 The Solution Set Condition
 

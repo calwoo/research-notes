@@ -46,6 +46,11 @@
 
 ## 1. Diagrams and Cones 🗺️
 
+> [!INFO] Leinster's approach to limits (Chapter 5)
+> Leinster opens Chapter 5 of *Basic Category Theory* by defining limits as "the most general kind of limit" and motivating them via three examples: products (a discrete diagram), equalizers (a parallel pair), and pullbacks (a cospan). He then gives the general definition and proves the key results: limits in $\mathbf{Set}$ are explicit, limits are representable, and right adjoints preserve them. He also emphasises the *duality principle*: every result about limits has a dual result about colimits, obtained by reversing all arrows.
+>
+> Leinster's notation: he writes $\lim D$ for a limit of the diagram $D$ and $\varprojlim D$ for an inverse limit when the index category is a poset; he uses $\varinjlim D$ for a direct/colimit. These notes follow this convention.
+
 ### 1.1 The Shape Category
 
 A *diagram* in a category $\mathcal{C}$ is simply a functor $D : \mathcal{I} \to \mathcal{C}$, where $\mathcal{I}$ is a small category called the *index category* or *shape*. The objects of $\mathcal{I}$ label the vertices of the diagram, and the morphisms of $\mathcal{I}$ label the arrows between them.
@@ -136,12 +141,36 @@ The following table catalogues the most important special instances of limits an
 | *Pullback* | $\bullet \to \bullet \leftarrow \bullet$ | Limit | Fiber product over a common target |
 | *Pushout* | $\bullet \leftarrow \bullet \to \bullet$ | Colimit | Amalgamated sum over a common source |
 
+> [!EXAMPLE]- Pullbacks in concrete categories
+> 💡 The *pullback* of a cospan $A \xrightarrow{f} C \xleftarrow{g} B$ is the limit of the diagram of shape $\bullet \to \bullet \leftarrow \bullet$. It is the object $A \times_C B$ with projections to $A$ and $B$, such that the square commutes and is universal with this property.
+>
+> In $\mathbf{Set}$: $A \times_C B = \{(a, b) \in A \times B \mid f(a) = g(b)\}$ — the "fibered product" over $C$.
+>
+> In $\mathbf{Top}$: the pullback of continuous maps $f : A \to C$ and $g : B \to C$ is $\{(a,b) \in A \times B : f(a) = g(b)\}$ with the subspace topology.
+>
+> In $\mathbf{Grp}$: the pullback is the fiber product $\{(a, b) \in A \times B : f(a) = g(b)\}$ with componentwise group structure.
+>
+> The dual construction — the *pushout* of a span $A \xleftarrow{f} C \xrightarrow{g} B$ — is $A \sqcup_C B$ (the amalgamated sum). In $\mathbf{Set}$: the pushout is $(A \sqcup B)/{\sim}$ where $f(c) \sim g(c)$ for all $c \in C$. In $\mathbf{Grp}$: the pushout is the free product with amalgamation $A *_C B$.
+
+> [!EXAMPLE]- Equalizers and kernel pairs
+> The *equalizer* of $f, g \colon A \rightrightarrows B$ is the limit of the parallel pair diagram. In $\mathbf{Set}$: $\mathrm{eq}(f,g) = \{a \in A \mid f(a) = g(a)\} \hookrightarrow A$.
+>
+> In $\mathbf{Grp}$: the equalizer of $f, g \colon G \rightrightarrows H$ is the subgroup $\{x \in G \mid f(x) = g(x)\}$ with the inclusion homomorphism.
+>
+> The *kernel pair* of a morphism $f \colon A \to B$ is the pullback of $f$ along itself: the object $A \times_B A$ with two projection morphisms $p_1, p_2 \colon A \times_B A \rightrightarrows A$. In $\mathbf{Set}$, this is the equivalence relation $\{(a, a') \mid f(a) = f(a')\}$. Kernel pairs are fundamental to the theory of regular categories.
+
+> [!INFO] Leinster on limits as "the same idea in many guises"
+> Leinster (§5.1) observes that products, equalizers, and pullbacks are all "the same idea in different guises." All three are instances of the same universal property: a terminal cone over a diagram. The unifying language of limits and diagrams shows that these seemingly disparate constructions are manifestations of a single concept. This is a prime example of the "bird's eye view" that category theory provides.
+
 > [!NOTE] Exercise 1
 > **Exercise 1.** Define "limit" and "colimit" of a diagram $D : \mathcal{I} \to \mathcal{C}$ in a category $\mathcal{C}$. Discuss uniqueness. Give three examples of each in specific categories not discussed in lectures.
 
 ---
 
 ## 3. Limits in Set 🔢
+
+> [!INFO] Leinster on limits in Set (§5.1 of Basic Category Theory)
+> Leinster proves that limits in $\mathbf{Set}$ can be computed explicitly as the "matching families" formula below. He uses this as the foundation for a general existence theorem: any category with products and equalizers has all limits (§9 of these notes), and these exist in $\mathbf{Set}$ (products are Cartesian products; equalizers are subsets). Leinster then proves that the limit in $\mathbf{Set}$ has the claimed universal property by a direct verification, rather than citing abstract theorems.
 
 ### 3.1 Explicit Description of the Limit
 
@@ -341,6 +370,9 @@ $$\text{split epic} \implies \text{regular epic} \implies \text{epic}$$
 
 ## 9. Building Limits from Products and Equalizers 🏗️
 
+> [!INFO] Leinster's coverage of this theorem (Theorem 5.1.5)
+> Leinster proves the construction of all finite limits from products and equalizers in Theorem 5.1.5 of *Basic Category Theory*. His proof is constructive: given a finite diagram $D : \mathcal{I} \to \mathcal{C}$, he explicitly writes down the product $P = \prod_{i} Di$ over all objects and $Q = \prod_{u: i \to j} Dj$ over all morphisms, then defines two maps $s, t : P \to Q$ and takes the equalizer. He also proves the reduction from pullbacks to products and equalizers (pullbacks are a special case of finite limits), and notes that pullbacks together with a terminal object already suffice.
+
 The following theorem shows that one need not check all limit shapes separately: a small number of "primitive" limit types suffice to generate all finite limits.
 
 **Theorem (Finite limits from products and equalizers).** A category $\mathcal{C}$ has all finite limits if and only if it has:
@@ -485,15 +517,31 @@ At each $B$, this is a limit cone in $\mathbf{Set}$ by the previous theorem (app
 
 This is one of the most important theorems in category theory.
 
-**Theorem (RAPLC/LAPC).** Let $F \dashv G : \mathcal{C} \rightleftharpoons \mathcal{D}$ be an adjunction.
+**Theorem (Right adjoints preserve limits; left adjoints preserve colimits).** Let $F \dashv G : \mathcal{C} \rightleftharpoons \mathcal{D}$ be an adjunction.
 - $G$ (the right adjoint) preserves all limits that exist in $\mathcal{D}$.
 - $F$ (the left adjoint) preserves all colimits that exist in $\mathcal{C}$.
 
-*Proof (right adjoints preserve limits).* Let $(L, (\pi_i))$ be a limit of $D : \mathcal{I} \to \mathcal{D}$. We must show that $(GL, (G\pi_i))$ is a limit of $GD : \mathcal{I} \to \mathcal{C}$. By the representability criterion, it suffices to show that the canonical map
-$$\mathcal{C}(A, GL) \xrightarrow{\sim} \varprojlim_{i} \mathcal{C}(A, GDi)$$
-is a bijection for each $A \in \mathcal{C}$. Using the adjunction bijection $\mathcal{C}(A, GX) \cong \mathcal{D}(FA, X)$ (natural in $X$), this becomes
-$$\mathcal{D}(FA, L) \xrightarrow{\sim} \varprojlim_{i} \mathcal{D}(FA, Di),$$
-which holds because $\mathcal{D}(FA, -)$ is a representable functor, hence preserves limits by §13. $\square$
+> [!INFO] Leinster's proof strategy
+> Leinster (Theorem 5.2.5 in *Basic Category Theory*) gives an elegant proof via representability. The key insight is: to check that a cone is a limit cone, it suffices to check that the associated map on hom-sets is a bijection. Combining this with the adjunction bijection and the fact that representable functors preserve limits (§13) gives the result in just a few lines. Leinster calls this proof strategy "the representability criterion for limits."
+
+*Proof (right adjoints preserve limits).* Let $(L, (\pi_i)_{i \in \mathcal{I}})$ be a limit of $D : \mathcal{I} \to \mathcal{D}$. We must show that $(GL, (G\pi_i)_{i \in \mathcal{I}})$ is a limit of $GD : \mathcal{I} \to \mathcal{C}$.
+
+By the representability criterion (§13 applied to $\mathcal{C}(A, -)$), it suffices to show that for every $A \in \mathcal{C}$, the canonical map
+$$\mathcal{C}(A, GL) \xrightarrow{\;(G\pi_i \circ -)_i\;} \varprojlim_{i \in \mathcal{I}} \mathcal{C}(A, GDi)$$
+is a bijection. Using the adjunction bijection $\mathcal{C}(A, GX) \cong \mathcal{D}(FA, X)$ (natural in $X \in \mathcal{D}$), this map is naturally identified with:
+$$\mathcal{D}(FA, L) \xrightarrow{\;(\pi_i \circ -)_i\;} \varprojlim_{i \in \mathcal{I}} \mathcal{D}(FA, Di).$$
+This is a bijection because $\mathcal{D}(FA, -)$ is a representable functor, hence preserves all limits by §13. Since the bijection is natural in $A$, we conclude that $(GL, (G\pi_i))$ is a limit of $GD$. $\square$
+
+*Proof (left adjoints preserve colimits).* By duality: a left adjoint $F : \mathcal{C} \to \mathcal{D}$ is a right adjoint in the opposite categories, $F^{\mathrm{op}} : \mathcal{C}^{\mathrm{op}} \to \mathcal{D}^{\mathrm{op}}$ is right adjoint to $G^{\mathrm{op}}$. Limits in $\mathcal{C}^{\mathrm{op}}$ are colimits in $\mathcal{C}$, so the result follows by applying the previous proof to the opposite adjunction. $\square$
+
+> [!TIP] Slogan and applications
+> **"RAPL": Right Adjoints Preserve Limits. "LAPC": Left Adjoints Preserve Colimits.**
+>
+> Applications:
+> - The forgetful functor $\mathbf{Grp} \to \mathbf{Set}$ (right adjoint to the free group functor) preserves all limits: the underlying set of a product of groups is the product of the underlying sets, the equalizer of group homomorphisms is the set-theoretic equalizer, etc.
+> - The free abelian group functor $\mathbf{Set} \to \mathbf{Ab}$ (left adjoint to the forgetful functor) preserves all colimits: the free abelian group on a coproduct $S \sqcup T$ is $\mathbb{Z}^{\oplus S} \oplus \mathbb{Z}^{\oplus T}$.
+> - The tensor product functor $M \otimes_R - : \mathbf{Mod}_R \to \mathbf{Mod}_R$ (left adjoint to $\mathrm{Hom}_R(M, -)$) is *right exact*: it preserves all colimits, hence in particular coequalizers — this is the categorical proof of right exactness of tensor.
+> - The inverse image functor $f^{-1}$ for a continuous map $f$ (left adjoint to $f_*$) preserves all colimits of sheaves.
 
 > [!EXAMPLE] Forgetful functor from Grp to Set
 > The forgetful functor $U : \mathbf{Grp} \to \mathbf{Set}$ has a left adjoint (the free group functor $F : \mathbf{Set} \to \mathbf{Grp}$). Therefore $U$ preserves all limits. In particular, the underlying set of a product of groups is the product of the underlying sets.

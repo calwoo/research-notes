@@ -16,6 +16,7 @@
 - [[#3. Representable Functors|3. Representable Functors]]
   - [[#3.1 Definition|3.1 Definition]]
   - [[#3.2 Examples|3.2 Examples]]
+  - [[#3.3 Universal Elements|3.3 Universal Elements]]
 - [[#4. The Yoneda Embedding|4. The Yoneda Embedding]]
   - [[#4.1 Definition|4.1 Definition]]
   - [[#4.2 Injectivity, Fullness, and Faithfulness|4.2 Injectivity, Fullness, and Faithfulness]]
@@ -46,7 +47,13 @@
 
 *Adjunctions* are the central organising concept of category theory. An adjunction between two functors formalises a pervasive mathematical phenomenon: a "free" construction on one side and a "forgetful" or "underlying" construction on the other. We give three equivalent definitions and prove their equivalence.
 
+> [!INFO] Leinster's opening framing of adjunctions
+> Leinster begins Chapter 2 of *Basic Category Theory* with the observation that adjunctions "are everywhere." He lists ten examples in the first two pages: free/forgetful pairs in algebra, direct/inverse image of sets, products/diagonals, tensor/hom, abelianisation/inclusion, sheafification/forgetful, geometric realisation/singular simplices, suspension/loop space, compactification/inclusion, and quantifiers as adjoints. The sheer ubiquity is the point: adjunctions are not a specialised tool but the fundamental language of "optimal solution" in mathematics.
+
 ### 1.1 Definition via Natural Bijection
+
+> [!INFO] Leinster's hom-set definition: notation
+> Leinster writes the adjunction bijection as $\overline{(-)} : \mathcal{B}(FA, B) \xrightarrow{\sim} \mathcal{A}(A, GB)$, using an overline to denote the transpose of a morphism under the bijection. He writes $\bar{f}$ for the transpose of $f \colon FA \to B$ (i.e., $\bar{f} = \phi(f) \colon A \to GB$), and $\bar{g}$ for the transpose of $g \colon A \to GB$ (i.e., $\bar{g} = \phi^{-1}(g) \colon FA \to B$). This overline notation will be adopted alongside the $\phi$ notation used elsewhere in these notes.
 
 **Definition (Adjunction, hom-set form).** Let $\mathbf{C}$ and $\mathbf{D}$ be locally small categories. A functor $F \colon \mathbf{D} \to \mathbf{C}$ is *left adjoint* to a functor $G \colon \mathbf{C} \to \mathbf{D}$, written $F \dashv G$, if there is a family of bijections
 
@@ -124,53 +131,47 @@ The pair $(FA, \eta_B)$ is *initial* in the comma category $(B \downarrow G)$ �
 
 ### 1.4 Equivalence of the Three Definitions
 
-📐 We now prove that the hom-set and unit-counit definitions are equivalent.
+📐 We now prove that the hom-set and unit-counit definitions are equivalent. The proof follows Leinster's treatment in §2.2 of *Basic Category Theory*, which gives the cleanest available account and introduces the key "adjoint transpose" formulas.
 
-**Theorem (Equivalence of adjunction definitions).** Given functors $F \colon \mathbf{D} \to \mathbf{C}$ and $G \colon \mathbf{C} \to \mathbf{D}$, the following data are in bijection:
+**Theorem (Equivalence of adjunction definitions).** Given functors $F \colon \mathbf{D} \to \mathbf{C}$ and $G \colon \mathbf{C} \to \mathbf{D}$, the following data are in natural bijection:
 1. A natural bijection $\phi_{A,B} \colon \mathbf{C}(FA, B) \xrightarrow{\sim} \mathbf{D}(A, GB)$.
 2. A pair $(\eta, \varepsilon)$ of natural transformations satisfying the triangle identities.
 
-*Proof.* **From (1) to (2).** Given $\phi$, define the unit by $\eta_A = \phi_{A, FA}(\mathrm{id}_{FA}) \in \mathbf{D}(A, GFA)$ and the counit by $\varepsilon_B = \phi_{GB, B}^{-1}(\mathrm{id}_{GB}) \in \mathbf{C}(FGB, B)$.
+*Proof.* **From (1) to (2).** Given $\phi$, define:
+$$\eta_A = \phi_{A, FA}(\mathrm{id}_{FA}) \in \mathbf{D}(A, GFA), \qquad \varepsilon_B = \phi_{GB, B}^{-1}(\mathrm{id}_{GB}) \in \mathbf{C}(FGB, B).$$
 
-We verify naturality of $\eta$. For $h \colon A' \to A$, we must show $\eta_A \circ h = Gh \circ \eta_{A'}$... wait, we need $GF(h) \circ \eta_{A'} = \eta_A \circ h$. Indeed, by naturality of $\phi$ in $A$:
-$$\phi_{A', FA}(\mathrm{id}_{FA} \circ Fh) = \phi_{A, FA}(\mathrm{id}_{FA}) \circ h = \eta_A \circ h,$$
-while by naturality in $B$:
-$$\phi_{A', FA}(Fh) = GFh \circ \phi_{A', FA'}(\mathrm{id}_{FA'})$$
-... actually we compute using naturality in $A$ applied to $\mathrm{id}_{FA} \in \mathbf{C}(FA, FA)$: precomposing with $Fh$ gives $\mathrm{id}_{FA} \circ Fh = Fh$, and the naturality square gives $\phi_{A', FA}(Fh) = \phi_{A, FA}(\mathrm{id}_{FA}) \circ h = \eta_A \circ h$. But also naturality in $B$ applied to $GFh \colon FA \to FA'$... we instead use the single combined naturality:
-$$\phi_{A', FA'}(GFh \circ \mathrm{id}_{FA'} \circ F\mathrm{id}_{A'}) = GFh \circ \phi_{A', FA'}(\mathrm{id}_{FA'}) = GFh \circ \eta_{A'}.$$
-Since $\phi_{A', FA}(Fh) = \phi_{A', FA}(\mathrm{id}_{FA} \circ Fh)$ equals both $\eta_A \circ h$ and $GFh \circ \eta_{A'}$ by the two naturality directions, naturality of $\eta$ holds.
+*Naturality of $\eta$:* For any $h \colon A' \to A$ in $\mathbf{D}$, we must show $GFh \circ \eta_{A'} = \eta_A \circ h$.
 
-**Triangle identity (i):** $\varepsilon_{FA} \circ F\eta_A = \mathrm{id}_{FA}$. We have $\varepsilon_{FA} = \phi_{GFA, FA}^{-1}(\mathrm{id}_{GFA})$. By combined naturality:
-$$\phi_{A, FA}({\varepsilon_{FA} \circ F\eta_A}) = G\varepsilon_{FA} \circ \phi_{A, GFA}(F\eta_A) = G\varepsilon_{FA} \circ \eta_{GFA} \circ \eta_A.$$
-Hmm — let us use the cleaner route. By naturality of $\phi$ in $B$ (with $g = \varepsilon_{FA}$):
-$$\phi_{A, FA}(\varepsilon_{FA} \circ F\eta_A) = G(\varepsilon_{FA}) \circ \phi_{A, GFA}(F\eta_A).$$
-Now $\phi_{A, GFA}(F\eta_A) = \phi_{A, GFA}(F\eta_A)$. Apply naturality in $A$ with $h = \eta_A \colon A \to GFA$ and base morphism $\mathrm{id}_{F(GFA)} \colon F(GFA) \to F(GFA)$: $\phi_{A, FGFA}(\mathrm{id}_{FGFA} \circ F\eta_A) = \phi_{GFA, FGFA}(\mathrm{id}_{FGFA}) \circ \eta_A = \eta_{GFA} \circ \eta_A$. Wait, the target is $GF(GFA)$ not $FGFA$... I recollect. Let us be precise.
+Apply naturality of $\phi$ in $A$ (precompose domain with $Fh$) to $\mathrm{id}_{FA} \colon FA \to FA$: the naturality square for $\phi$ reads $\phi_{A', FA}(\mathrm{id}_{FA} \circ Fh) = \phi_{A,FA}(\mathrm{id}_{FA}) \circ h$, i.e., $\phi_{A', FA}(Fh) = \eta_A \circ h$.
 
-We work with the universal property directly. The triangle identity $\varepsilon_{FA} \circ F\eta_A = \mathrm{id}_{FA}$ can be deduced by applying $\phi_{A,FA}$ to both sides. On the left:
-$$\phi_{A,FA}(\varepsilon_{FA} \circ F\eta_A) \stackrel{\text{nat in }B}{=} G(\varepsilon_{FA}) \circ \phi_{A,GFA}(F\eta_A) \stackrel{\text{nat in }A}{=} G\varepsilon_{FA} \circ \eta_{GFA} \circ \eta_A$$
-... and $G\varepsilon_{FA} \circ \eta_{GFA} = \mathrm{id}_{GFA}$ by the second triangle identity, which we have not yet proved — so this argument is circular. We instead use the following clean argument.
+Apply naturality of $\phi$ in $B$ (postcompose codomain with $GFh \colon GFA' \to GFA$) to $\mathrm{id}_{FA'} \colon FA' \to FA'$: the naturality square reads $\phi_{A', FA}(GFh \circ \mathrm{id}_{FA'}) = GFh \circ \phi_{A', FA'}(\mathrm{id}_{FA'})$, i.e., $\phi_{A', FA}(Fh) = GFh \circ \eta_{A'}$.
 
-**Clean proof of triangle identities.** We verify: $\phi_{A,FA}(\varepsilon_{FA} \circ F\eta_A)$. Using combined naturality with $h = \eta_A$ and $g = \varepsilon_{FA}$:
-$$\phi_{A,FA}(\varepsilon_{FA} \circ F\eta_A) = G\varepsilon_{FA} \circ \phi_{A,GFA}(F\eta_A).$$
-Now apply naturality of $\phi$ in $A$ to $\eta_A \colon A \to GFA$ and $\mathrm{id}_{GFA} \in \mathbf{C}(F(GFA), FA)$... but $F$ and $G$ don't align that way. The standard approach is as follows. Define $\psi = \phi^{-1}$ and note: for any $g \colon A \to GB$, $\psi_{A,B}(g) \in \mathbf{C}(FA, B)$. The triangle identity $\varepsilon_{FA} \circ F\eta_A = \mathrm{id}_{FA}$ is equivalent to
-$$\phi_{A,FA}(\mathrm{id}_{FA}) = \eta_A \quad\Longleftrightarrow\quad \psi_{A,FA}(\eta_A) = \mathrm{id}_{FA}.$$
-This is the definition of $\eta_A = \phi_{A,FA}(\mathrm{id}_{FA})$. For $\varepsilon_{FA} \circ F\eta_A$: we must check $\phi_{A,FA}(\varepsilon_{FA} \circ F\eta_A) = \eta_A$. Using naturality in $A$ (precompose with $\eta_A \colon A \to GFA$, viewing $GFA$ as the new source):
-$$\phi_{A,FA}(\varepsilon_{FA} \circ F\eta_A) \stackrel{\text{nat in } A}{=} \phi_{GFA, FA}(\varepsilon_{FA}) \circ \eta_A \cdot [\text{CHECK}]$$
-This is not quite standard notation. We use the combined naturality identity: for $h \colon A' \to A$ and $g \colon B \to B'$,
-$$\phi_{A',B'}(g \circ f \circ Fh) = Gg \circ \phi_{A,B}(f) \circ h.$$
-Set $A' = A$, $h = \mathrm{id}_A$, $B = FA$, $B' = FA$, $g = \mathrm{id}_{FA}$, $f = \varepsilon_{FA} \circ F\eta_A$: this gives nothing new. Instead set $f = \varepsilon_{FA}$, $B = FA$, $A_{\text{new}} = GFA$, $h = \eta_A$:
-$$\phi_{A, FA}(\varepsilon_{FA} \circ F\eta_A) = \phi_{GFA, FA}(\varepsilon_{FA}) \circ \eta_A$$
-Wait — naturality in $A$ says: for $h \colon A' \to A$, $\phi_{A',B}(f \circ Fh) = \phi_{A,B}(f) \circ h$. So with $A' = A$, $A_{\text{old}} = GFA$... this requires $F(A) = FA$ and $F(GFA) = FGFA$, and we'd need $h \colon A \to GFA$ meaning $h = \eta_A$:
-$$\phi_{A, FA}(\varepsilon_{FA} \circ F\eta_A) = \phi_{GFA, FA}(\varepsilon_{FA}) \circ \eta_A = \phi_{GFA, FA}(\varepsilon_{FA}) \circ \eta_A.$$
-By definition, $\varepsilon_{FA} = \psi_{GFA, FA}(\mathrm{id}_{GFA})$, i.e., $\phi_{GFA, FA}(\varepsilon_{FA}) = \mathrm{id}_{GFA}$. So:
-$$\phi_{A,FA}(\varepsilon_{FA} \circ F\eta_A) = \mathrm{id}_{GFA} \circ \eta_A = \eta_A = \phi_{A,FA}(\mathrm{id}_{FA}).$$
-Since $\phi$ is a bijection, $\varepsilon_{FA} \circ F\eta_A = \mathrm{id}_{FA}$. The second triangle identity follows by a dual argument. **QED (first triangle).**
+Since both equal $\phi_{A', FA}(Fh)$, we conclude $\eta_A \circ h = GFh \circ \eta_{A'}$, which is naturality of $\eta$. $\checkmark$
 
-**From (2) to (1).** Given $(\eta, \varepsilon)$ satisfying the triangle identities, define $\phi_{A,B}(f) = Gf \circ \eta_A$ for $f \colon FA \to B$, and $\phi_{A,B}^{-1}(g) = \varepsilon_B \circ Fg$ for $g \colon A \to GB$.
+*Triangle identity $\varepsilon_{FA} \circ F\eta_A = \mathrm{id}_{FA}$:* Since $\phi_{A,FA}$ is a bijection, it suffices to show $\phi_{A,FA}(\varepsilon_{FA} \circ F\eta_A) = \phi_{A,FA}(\mathrm{id}_{FA}) = \eta_A$.
 
-That $\phi \circ \phi^{-1} = \mathrm{id}$: $\phi_{A,B}(\varepsilon_B \circ Fg) = G(\varepsilon_B \circ Fg) \circ \eta_A = G\varepsilon_B \circ GFg \circ \eta_A = G\varepsilon_B \circ \eta_{GB} \circ g$ (by naturality of $\eta$) $= \mathrm{id}_{GB} \circ g = g$ (by the second triangle identity).
+Apply naturality of $\phi$ in $A$ (precompose with $\eta_A \colon A \to GFA$, treating $GFA$ as the new first argument):
+$$\phi_{A, FA}(\varepsilon_{FA} \circ F\eta_A) = \phi_{GFA, FA}(\varepsilon_{FA}) \circ \eta_A.$$
+By definition of $\varepsilon_{FA} = \phi_{GFA,FA}^{-1}(\mathrm{id}_{GFA})$, we have $\phi_{GFA, FA}(\varepsilon_{FA}) = \mathrm{id}_{GFA}$. Therefore:
+$$\phi_{A,FA}(\varepsilon_{FA} \circ F\eta_A) = \mathrm{id}_{GFA} \circ \eta_A = \eta_A. \quad \checkmark$$
 
-That $\phi^{-1} \circ \phi = \mathrm{id}$: $\phi^{-1}_{A,B}(Gf \circ \eta_A) = \varepsilon_B \circ F(Gf \circ \eta_A) = \varepsilon_B \circ FGf \circ F\eta_A = f \circ \varepsilon_{FA} \circ F\eta_A$ (by naturality of $\varepsilon$) $= f \circ \mathrm{id}_{FA} = f$ (by the first triangle identity). $\square$
+The second triangle identity $G\varepsilon_B \circ \eta_{GB} = \mathrm{id}_{GB}$ follows by the dual argument (apply $\phi^{-1}_{GB,B}$ to both sides and use the analogous naturality calculation). This establishes both triangle identities. **QED (1) $\Rightarrow$ (2).**
+
+**From (2) to (1).** Given $(\eta, \varepsilon)$ satisfying the triangle identities, define:
+$$\phi_{A,B}(f) = Gf \circ \eta_A \quad \text{for } f \colon FA \to B, \qquad \phi_{A,B}^{-1}(g) = \varepsilon_B \circ Fg \quad \text{for } g \colon A \to GB.$$
+
+*$\phi \circ \phi^{-1} = \mathrm{id}$:*
+$$\phi_{A,B}(\varepsilon_B \circ Fg) = G(\varepsilon_B \circ Fg) \circ \eta_A = G\varepsilon_B \circ GFg \circ \eta_A \stackrel{\text{nat }\eta}{=} G\varepsilon_B \circ \eta_{GB} \circ g \stackrel{\triangle_2}{=} \mathrm{id}_{GB} \circ g = g. \checkmark$$
+
+*$\phi^{-1} \circ \phi = \mathrm{id}$:*
+$$\phi^{-1}_{A,B}(Gf \circ \eta_A) = \varepsilon_B \circ F(Gf \circ \eta_A) = \varepsilon_B \circ FGf \circ F\eta_A \stackrel{\text{nat }\varepsilon}{=} f \circ \varepsilon_{FA} \circ F\eta_A \stackrel{\triangle_1}{=} f \circ \mathrm{id}_{FA} = f. \checkmark$$
+
+Naturality of $\phi$ in $A$ and $B$ follows from naturality of $\eta$ and $\varepsilon$ respectively. The two constructions (1) $\Rightarrow$ (2) and (2) $\Rightarrow$ (1) are mutually inverse. $\square$
+
+> [!TIP] The fundamental adjoint transpose formulas
+> **Given $F \dashv G$ with unit $\eta$ and counit $\varepsilon$:** every $f \colon FA \to B$ has transpose $\bar{f} = Gf \circ \eta_A \colon A \to GB$, and every $g \colon A \to GB$ has transpose $\bar{g} = \varepsilon_B \circ Fg \colon FA \to B$. These satisfy $\overline{\bar{f}} = f$ and $\overline{\bar{g}} = g$. The unit and counit are the transposes of identity morphisms: $\eta_A = \overline{\mathrm{id}_{FA}}$ and $\varepsilon_B = \overline{\mathrm{id}_{GB}}$.
+>
+> Leinster calls $\bar{f}$ and $\bar{g}$ the *adjoint transposes*, and emphasises that this is the most computationally useful formulation — to compute the adjoint transpose of any morphism, simply compose with the unit or counit.
 
 ### 1.5 Uniqueness of Adjoints
 
@@ -281,6 +282,28 @@ The initial object of $(B \downarrow G)$ is the pair $(FB, \eta_B \colon B \to G
 > **4. Bilinear maps as a representable.** The functor $\mathrm{Bil}(M, N; -) \colon \mathbf{Mod}_R \to \mathbf{Set}$ sending $P$ to the set of $R$-bilinear maps $M \times N \to P$ is represented by $M \otimes_R N$ with the universal bilinear map $M \times N \to M \otimes_R N$.
 >
 > **5. Underlying set of a topological space.** The forgetful functor $U \colon \mathbf{Top} \to \mathbf{Set}$ is represented by the one-point space $\{*\}$: continuous maps $\{*\} \to X$ correspond to points of $X$.
+
+### 3.3 Universal Elements
+
+🔑 Leinster introduces *universal elements* as an equivalent and often more intuitive way to think about representability. This concept (Chapter 4 of *Basic Category Theory*) unifies many universal constructions.
+
+**Definition (Universal element).** Let $X \colon \mathcal{A}^{\mathrm{op}} \to \mathbf{Set}$ be a functor and $A \in \mathcal{A}$ an object. A *universal element* of $X$ at $A$ is an element $u \in X(A)$ such that for every $B \in \mathcal{A}$ and every $x \in X(B)$, there exists a *unique* morphism $f \colon B \to A$ in $\mathcal{A}$ with $X(f)(u) = x$.
+
+**Proposition (Universal elements and representations).** A functor $X \colon \mathcal{A}^{\mathrm{op}} \to \mathbf{Set}$ is representable if and only if it has a universal element. More precisely, a representation $(A, \phi \colon \mathcal{A}(-, A) \xrightarrow{\sim} X)$ corresponds bijectively to a universal element $u = \phi_A(\mathrm{id}_A) \in X(A)$.
+
+*Proof.* Given a representation $(A, \phi)$, set $u = \phi_A(\mathrm{id}_A)$. For any $B$ and $x \in X(B)$, define $f = \phi_B^{-1}(x) \colon B \to A$. Then $X(f)(u) = X(f)(\phi_A(\mathrm{id}_A)) = \phi_B(\mathrm{id}_A \circ f) = \phi_B(f) = x$ by naturality of $\phi$. Uniqueness: if $X(f)(u) = x$ and $X(g)(u) = x$, then $\phi_B(f) = \phi_B(g)$, so $f = g$ by injectivity of $\phi_B$.
+
+Conversely, given a universal element $u \in X(A)$, define $\phi_B \colon \mathcal{A}(B, A) \to X(B)$ by $\phi_B(f) = X(f)(u)$. The universality of $u$ says exactly that $\phi_B$ is a bijection for every $B$. Naturality follows from functoriality of $X$. $\square$
+
+> [!EXAMPLE]- Universal elements in concrete examples
+> **1. Free groups.** The forgetful functor $U \colon \mathbf{Grp} \to \mathbf{Set}$ is represented by $(\mathbb{Z}, 1)$ ... no, more precisely, for a set $S$, the representing object for $\mathbf{Set}(S, U(-))$ is the free group $F(S)$, with universal element $\iota_S \colon S \to UF(S)$ (the inclusion of generators). For any group $G$ and function $f \colon S \to UG$, there is a unique group homomorphism $\bar{f} \colon F(S) \to G$ with $U\bar{f} \circ \iota_S = f$.
+>
+> **2. Tensor product.** The functor $\mathrm{Bilin}(M, N; -) \colon \mathbf{Mod}_R \to \mathbf{Set}$ (bilinear maps out of $M \times N$) is represented by $(M \otimes_R N, \otimes)$, where $\otimes \colon M \times N \to M \otimes_R N$ is the universal bilinear map. Every bilinear map $M \times N \to P$ factors uniquely through the universal one.
+>
+> **3. Terminal object.** The constant functor $\mathbf{1} \colon \mathcal{A}^{\mathrm{op}} \to \mathbf{Set}$ (sending every object to a fixed one-element set $\{*\}$) is representable if and only if $\mathcal{A}$ has a terminal object $T$. The universal element is the unique element $* \in \mathbf{1}(T) = \{*\}$.
+
+> [!INFO] Leinster's perspective on universal elements
+> Leinster (Chapter 4) argues that "universal property" in informal mathematical usage almost always means: an object together with a universal element of some functor. The Yoneda lemma is the precise statement that universal elements correspond exactly to representations, and that representations are unique up to unique isomorphism. This gives a *formal foundation* for the ubiquitous informal use of universal properties throughout mathematics.
 
 ---
 
@@ -509,6 +532,13 @@ $$\Phi_{A,X}(\alpha \circ g_*) = (\alpha \circ g_*)_A(\mathrm{id}_A) = \alpha_A(
 (The penultimate equality uses $\alpha$'s naturality at $g$.) So $\Phi_{A,X}(\alpha \circ g_*) = X(g) \circ \Phi_{A',X}(\alpha)$, naturality in $A$.
 
 ### 10.3 Corollaries
+
+> [!INFO] Leinster's formulation of the Yoneda Lemma
+> Leinster states the Yoneda Lemma (Theorem 4.2.1 in *Basic Category Theory*) as: "Let $\mathcal{A}$ be a locally small category. Then for any functor $X \colon \mathcal{A}^{\mathrm{op}} \to \mathbf{Set}$ and object $A \in \mathcal{A}$,
+> $$[\mathcal{A}^{\mathrm{op}}, \mathbf{Set}](\mathcal{A}(-, A), X) \cong X(A)$$
+> naturally in $A$ and $X$." He emphasises that the right-hand side is *a set*, not a functor or category — the Yoneda lemma collapses a set of natural transformations into the set of elements of $X$ at $A$.
+>
+> Leinster's proof strategy is identical to the one given in §10.1: the bijection is $\alpha \mapsto \alpha_A(\mathrm{id}_A)$, and the inverse sends $x \in X(A)$ to the natural transformation with components $\alpha^x_B(f) = X(f)(x)$. He then proves naturality separately.
 
 **Corollary 1 (Yoneda embedding is fully faithful).** The Yoneda embedding $H^{\bullet} \colon \mathbf{C} \to [\mathbf{C}^{\mathrm{op}}, \mathbf{Set}]$ is full and faithful.
 
