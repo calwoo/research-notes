@@ -5,9 +5,9 @@
 | Dimension | Prior State | This Paper | Key Result |
 |-----------|-------------|------------|------------|
 | Infinite loop spaces | Boardman–Vogt operad approach; ad hoc delooping constructions | Γ-spaces: a clean functor-theoretic machine producing spectra from symmetric monoidal categories | Every connective spectrum arises from a very special Γ-space |
-| K-theory construction | Quillen's plus-construction; no unified categorical input | Γ-category functor $\mathcal{C} \rightsquigarrow A_\mathcal{C}$ from any symmetric monoidal category | $B_0 = |{NC}|$; deloopings $B_1, B_2, \ldots$ are produced automatically |
+| K-theory construction | Quillen's plus-construction; no unified categorical input | Γ-category functor $\mathcal{C} \rightsquigarrow A_\mathcal{C}$ from any symmetric monoidal category | $B_0 \simeq \lvert N\mathcal{C}\rvert$; deloopings $B_1, B_2, \ldots$ are produced automatically |
 | Barratt–Priddy–Quillen | Known but lacking a clean proof | Stable cohomotopy = $K$-theory of finite sets under disjoint union | $B(\mathbf{B}\Sigma) \simeq \mathbb{S}$ (sphere spectrum) |
-| Relationship Γ-spaces/spectra | No precise functor-level statement | $B$ and $A$ form an adjoint pair $\mathcal{M} \rightleftharpoons \mathcal{S}p$ | **$A \dashv B$ restricts to an equivalence between very special Γ-spaces and connective spectra** |
+| Relationship Γ-spaces/spectra | No precise functor-level statement | $B \dashv A$: $B: \mathcal{M} \rightleftharpoons \mathcal{S}p : A$ with $\mathrm{Hom}(BM, X) \cong \mathrm{Hom}(M, AX)$ | **$B \dashv A$ restricts to an equivalence between very special Γ-spaces and connective spectra** |
 
 ## Relations
 
