@@ -110,6 +110,13 @@ The central organizing object of Segal's theory is a small category $\Gamma$ who
 Composition of $\theta: S \to \mathcal{P}(T)$ and $\phi: T \to \mathcal{P}(U)$ is $\psi: S \to \mathcal{P}(U)$ defined by
 $$\psi(\alpha) = \bigcup_{\beta \in \theta(\alpha)} \phi(\beta).$$
 
+> [!NOTE] Exercise 1
+> *Morphisms in Γ generalize both functions and relations; understanding their explicit combinatorics is essential before applying the Segal condition.*
+>
+> (a) List all morphisms $\mathbf{1} \to \mathbf{2}$ and $\mathbf{2} \to \mathbf{1}$ in Γ. How many are there in each direction? (b) Show that a morphism $\theta: S \to T$ in Γ is an isomorphism if and only if $|\theta(s)| = 1$ for all $s \in S$ and the sets $\{\theta(s)\}_{s \in S}$ partition $T$ — i.e., $\theta$ encodes a bijection $S \xrightarrow{\sim} T$. (c) Deduce that $\mathrm{Aut}_\Gamma(\mathbf{n}) \cong \Sigma_n$.
+>
+> > **Prerequisites:** [[#1. The Category Γ|§1]]
+
 > [!NOTE] Finite pointed sets
 > In modern treatments (and in Segal's own later conventions), $\Gamma^{\mathrm{op}}$ is replaced by $\Gamma_* = \mathbf{Fin}_*$, the skeleton of finite *pointed* sets. The objects are $\mathbf{n}^+ = \{0, 1, \ldots, n\}$ with $0$ as the distinguished basepoint, and morphisms are basepoint-preserving functions. This is the now-standard formulation: a Γ-space is a functor $A: \Gamma^{\mathrm{op}} \to \mathbf{Top}$ (equivalently a functor $\mathbf{Fin}_* \to \mathbf{Top}_*$). Segal's original paper uses the contravariant functor convention from his $\Gamma$.
 
@@ -117,6 +124,13 @@ The key morphisms to single out are the projections $i_k: \mathbf{1} \to \mathbf
 
 > [!INFO] Motivation from abelian groups
 > The definition is motivated by observing that an abelian group $A$ determines maps $\theta^*: A^n \to A^m$ for any $\theta: \{1,\ldots,m\} \to \mathcal{P}\{1,\ldots,n\}$: namely $\theta^*(a_1,\ldots,a_n) = (b_1,\ldots,b_m)$ where $b_i = \sum_{j \in \theta(i)} a_j$. The entire additive structure is encoded this way. Γ-spaces generalize this from strict equalities to homotopy equivalences.
+
+> [!NOTE] Exercise 2
+> *Disjoint union makes Γ itself into a symmetric monoidal category, and understanding this structure foreshadows the role of Γ-spaces as models for commutative monoids.*
+>
+> (a) Show that disjoint union of finite sets extends to a symmetric monoidal structure on Γ, with unit $\mathbf{0} = \emptyset$. (Hint: for morphisms $\theta: S \to \mathcal{P}(T)$ and $\theta': S' \to \mathcal{P}(T')$ with $S \cap S' = T \cap T' = \emptyset$, define $\theta \sqcup \theta': S \sqcup S' \to \mathcal{P}(T \sqcup T')$ in the obvious way and verify functoriality.) (b) Show that $\mathbf{0}$ is an initial object in Γ. (c) Show that Γ has no terminal object. (d) Conclude that Γ is *not* a category with finite products, yet a Γ-space $A$ with $A(\mathbf{0}) \simeq *$ behaves as though $A$ "preserves" the monoidal structure in a homotopy-coherent sense.
+>
+> > **Prerequisites:** [[#1. The Category Γ|§1]], [[concepts/category-theory/foundations/03-limits-colimits|Limits and Colimits §2]]
 
 ---
 
@@ -137,6 +151,13 @@ Condition (2) is the *Segal condition* (also called the *Segal map condition*). 
 > $$A(\mathbf{1}) \times A(\mathbf{1}) \xrightarrow{p_2^{-1}} A(\mathbf{2}) \xrightarrow{m_2^*} A(\mathbf{1})$$
 > a "binary composition law", where $m_2: \mathbf{1} \to \mathbf{2}$ sends $1 \mapsto \{1,2\}$. This makes $A(\mathbf{1})$ into an *H-space*; the higher Segal maps ensure the structure is homotopy-commutative and associative.
 
+> [!NOTE] Exercise 3
+> *A topological abelian group satisfies the Segal condition strictly (with homeomorphisms, not just homotopy equivalences), showing that Γ-spaces are a genuine homotopy generalization of abelian groups.*
+>
+> Let $(G, +)$ be a topological abelian group. Define $\hat{G}(\mathbf{n}) = G^n$ and for a Γ-morphism $\theta: \mathbf{m} \to \mathcal{P}(\mathbf{n})$, define $\hat{G}(\theta): G^n \to G^m$ by $\hat{G}(\theta)(g_1, \ldots, g_n)_i = \sum_{j \in \theta(i)} g_j$. (a) Verify that $\hat{G}$ is a functor (i.e., composition in Γ corresponds to composition of these maps). (b) Show that the Segal map $\varphi_n: \hat{G}(\mathbf{n}) \to \hat{G}(\mathbf{1})^n$ is a homeomorphism, not merely a homotopy equivalence. (c) Show that the binary composition induced (via the map $m_2: \mathbf{1} \to \mathbf{2}$ sending $1 \mapsto \{1,2\}$) is exactly the original group operation $+$.
+>
+> > **Prerequisites:** [[#2. Γ-Spaces: Definition and the Segal Condition|§2.1]], [[#1. The Category Γ|§1]]
+
 ### 2.2 Special and Very Special Γ-Spaces
 
 The distinction between several levels of the Segal condition governs exactly what algebraic structure $A(\mathbf{1})$ carries.
@@ -153,11 +174,25 @@ $$\{\text{topological abelian groups}\} \subsetneq \{\text{very special Γ-space
 
 A topological abelian monoid $M$ defines a Γ-space $A$ with $A(\mathbf{n}) = M^n$ and the projection maps being honest homeomorphisms (not just homotopy equivalences) — this is the case where the Segal condition holds strictly.
 
+> [!NOTE] Exercise 4
+> *The discrete case strips away all homotopy theory and reveals the algebraic skeleton: the Segal condition becomes an equality, and very specialness becomes invertibility.*
+>
+> Let $A$ be a Γ-space with $A(\mathbf{n})$ discrete for all $n$. (a) Show that $A$ being special is equivalent to $A(\mathbf{1})$ being a commutative monoid with multiplication $\mu: A(\mathbf{1}) \times A(\mathbf{1}) \to A(\mathbf{1})$ induced by the unique map $\mathbf{1} \to \mathbf{2}$ sending $1 \mapsto \{1,2\}$ and unit given by $A(\mathbf{0}) = \{*\}$. (b) Show that $A$ is very special if and only if $A(\mathbf{1})$ is a commutative group. (c) Conclude that the category of discrete very special Γ-spaces is equivalent to the category of abelian groups.
+>
+> > **Prerequisites:** [[#2.2 Special and Very Special Γ-Spaces|§2.2]], [[concepts/category-theory/foundations/01-categories-functors-natural-transformations|§01 §2]]
+
 ### 2.3 Γ-Spaces as Simplicial Spaces
 
 There is a covariant functor $\Delta \to \Gamma$ taking $[m] \mapsto \mathbf{m}$ and a non-decreasing map $f: [m] \to [n]$ to the morphism $\theta_f: \mathbf{m} \to \mathcal{P}(\mathbf{n})$ defined by
 $$\theta_f(i) = \{ j \in \mathbf{n} : f(i-1) < j \leq f(i) \}.$$
 Using this functor, every Γ-space $A$ can be *regarded* as a simplicial space. The simplicial structure refines the Γ-structure and is the tool used to form realizations.
+
+> [!NOTE] Exercise 5
+> *Working out the $\Delta \to \Gamma$ functor explicitly on standard generators clarifies how the simplicial and Γ structures interact and prepares the ground for Proposition 1.5.*
+>
+> Let $d^0: [1] \to [2]$ be the face map $d^0(0) = 1$, $d^0(1) = 2$, and let $s^0: [1] \to [0]$ be the unique degeneracy $s^0(0) = s^0(1) = 0$. (a) Compute $\theta_{d^0}: \mathbf{1} \to \mathcal{P}(\mathbf{2})$ using the formula above. (b) Compute $\theta_{s^0}: \mathbf{1} \to \mathcal{P}(\mathbf{0})$. (c) For a Γ-space $A$, describe the induced maps $A(\theta_{d^0}): A(\mathbf{2}) \to A(\mathbf{1})$ and $A(\theta_{s^0}): A(\mathbf{0}) \to A(\mathbf{1})$ in the simplicial space $[n] \mapsto A(\mathbf{n})$. (d) Using that $A(\mathbf{0}) \simeq *$, show that the degeneracy $s^0$ supplies the simplicial unit — the basepoint of $A(\mathbf{1})$.
+>
+> > **Prerequisites:** [[#2.3 Γ-Spaces as Simplicial Spaces|§2.3]], [[#1. The Category Γ|§1]]
 
 **Proposition 1.5 (Segal).** Let $[n] \mapsto A_n$ be a simplicial space such that:
 1. $A_0$ is contractible,
@@ -198,6 +233,13 @@ which is homotopy-Cartesian if and only if the composition law (arising from the
 
 **Corollary.** For a *very special* Γ-space $A$, the adjunction map $A(\mathbf{1}) \xrightarrow{\sim} \Omega BA(\mathbf{1})$ is a homotopy equivalence. Iterating: $B^k A(\mathbf{1}) \simeq \Omega B^{k+1} A(\mathbf{1})$ for all $k \geq 0$, so the spectrum $\mathbf{B}A$ is an *$\Omega$-spectrum* (connective). **This is the fundamental output of Segal's machine: a connective $\Omega$-spectrum from any very special Γ-space.**
 
+> [!NOTE] Exercise 6
+> *The Eilenberg–Mac Lane spectrum $H\mathbb{Z}$ provides the cleanest test case for Segal's delooping machine: starting from $\mathbb{Z}$ (discrete) and iterating $B$ produces the full $K(\mathbb{Z}, n)$ tower.*
+>
+> Let $A$ be the Γ-space associated to $(\mathbb{Z}, +)$ as in Exercise 3, so $A(\mathbf{n}) = \mathbb{Z}^n$ (discrete). (a) Show that $A$ is very special. (b) Argue (using Proposition 1.4 and the fact that $B$ of a discrete grouplike Γ-space is a classifying space) that $BA(\mathbf{1}) \simeq K(\mathbb{Z}, 1) = S^1$. (c) Argue that $B^2 A(\mathbf{1}) \simeq K(\mathbb{Z}, 2) = \mathbb{CP}^\infty$ and $B^n A(\mathbf{1}) \simeq K(\mathbb{Z}, n)$ for all $n$. (d) Identify the spectrum $\mathbf{B}A = (B^n A(\mathbf{1}))_{n \geq 0}$ as the Eilenberg–Mac Lane spectrum $H\mathbb{Z}$, and state what cohomology theory it represents.
+>
+> > **Prerequisites:** [[#3.2 Proposition 1.4 and Its Significance|§3.2]], [[#2.2 Special and Very Special Γ-Spaces|§2.2]]
+
 > [!WARNING] Connectivity at level 0
 > For $k \geq 1$ the spaces $B_k = B^k A(\mathbf{1})$ are connected H-spaces, hence automatically grouplike, and $B_k \simeq \Omega B_{k+1}$. The issue is only at $k = 0$: $A(\mathbf{1})$ itself need not be connected, and $A(\mathbf{1}) \simeq \Omega B_1$ requires the grouplike condition on $\pi_0$.
 
@@ -229,6 +271,13 @@ Concretely, an object of $\hat{\mathcal{C}}(\mathbf{2})$ is a diagram $A_1 \to A
 > The condition that $\theta(\alpha)$ and $\theta(\beta)$ are disjoint for $\alpha \neq \beta$ in $\Gamma$-morphisms is precisely what is needed to map between such sum-diagrams functorially. Morphisms in $\Gamma$ from $S$ to $T$ correspond to functors $\hat{\mathcal{C}}(T) \to \hat{\mathcal{C}}(S)$ by "summing over fibres."
 
 **Verification.** The functor $\hat{\mathcal{C}}(\mathbf{n}) \xrightarrow{p_n} \hat{\mathcal{C}}(\mathbf{1})^n$, which forgets to the single-element values $(A_{\{1\}}, \ldots, A_{\{n\}})$, is an equivalence of categories — the equivalence inverse reconstructs the entire diagram from its single-element values by choosing sums. Thus $S \mapsto \hat{\mathcal{C}}(S)$ is a Γ-category.
+
+> [!NOTE] Exercise 7
+> *Working out $\hat{\mathcal{C}}(\mathbf{2})$ concretely for vector spaces makes the abstract Γ-category construction tangible and connects it to familiar direct-sum diagrams.*
+>
+> Let $\mathcal{C} = \mathbf{FDVect}_\mathbb{R}$ with $\oplus$ as the monoidal structure. (a) Describe the objects of $\hat{\mathcal{C}}(\mathbf{2})$ explicitly: an object is a diagram $V_1 \xrightarrow{i_1} V_{12} \xleftarrow{i_2} V_2$ in $\mathbf{FDVect}_\mathbb{R}$ satisfying a certain condition — state it. Describe the morphisms of $\hat{\mathcal{C}}(\mathbf{2})$. (b) Show that $|\hat{\mathcal{C}}(\mathbf{1})| = \bigsqcup_{n \geq 0} BGL_n(\mathbb{R})$, where $BGL_n(\mathbb{R})$ is the classifying space of $GL_n(\mathbb{R})$. (Hint: $\pi_0|\hat{\mathcal{C}}(\mathbf{1})| = \mathbb{N}$ via dimension, and the automorphisms of an $n$-dimensional space form $GL_n(\mathbb{R})$.) (c) State why $\pi_0|\hat{\mathcal{C}}(\mathbf{1})|$ is not a group, and identify the group completion $K_0(\mathbf{FDVect}_\mathbb{R})$.
+>
+> > **Prerequisites:** [[#4.2 Construction from Sums|§4.2]], [[#4.1 Definition of a Γ-Category|§4.1]]
 
 ### 4.3 Key Examples
 
@@ -311,6 +360,13 @@ To construct the bijection: given a Γ-space $A$ and a basepoint $a \in A(\mathb
 
 The Barratt–Priddy–Quillen theorem is the case $X = \mathrm{pt}$.
 
+> [!NOTE] Exercise 8
+> *The BPQ theorem has a clean algebraic shadow at the level of $K_0$; this exercise derives it and checks that the homotopy-theoretic result is consistent with the algebraic one.*
+>
+> (a) Show that the set of isomorphism classes of objects in $(\Sigma, \sqcup)$ is $\mathbb{N} = \{0, 1, 2, \ldots\}$ (with addition given by $[S] + [T] = [S \sqcup T]$), so $\pi_0|\hat{\Sigma}(\mathbf{1})| \cong (\mathbb{N}, +)$ as commutative monoids. (b) Compute the Grothendieck group completion $K_0(\Sigma, \sqcup) = \mathbb{N}^{\mathrm{gp}}$ and show it is $\mathbb{Z}$. (c) Since $\pi_0(\mathbb{S}) = \mathbb{Z}$ (the stable $0$-stem), verify that the BPQ theorem $B(\mathbf{B}\Sigma) \simeq \mathbb{S}$ is consistent with this algebraic computation. (d) State the analogous algebraic result for Proposition 3.6: what is $\pi_0(\Sigma^\infty X_+)$ in terms of $X$?
+>
+> > **Prerequisites:** [[#6. The Barratt–Priddy–Quillen Theorem|§6]], [[#7. Group Completion and the Grothendieck Construction|§7]]
+
 ---
 
 ## 7. Group Completion and the Grothendieck Construction 📐
@@ -346,6 +402,13 @@ $$T_{A,\mu} \simeq K_0(R) \times BGL(R)^+.$$
 
 **Thus Segal's $A'$ construction recovers Quillen's algebraic K-theory groups $K_n(R) = \pi_n(BGL(R)^+)$ for all $n \geq 1$ as the homotopy groups of a single connective spectrum.**
 
+> [!NOTE] Exercise 9
+> *Group completion is the key passage from "monoid-valued" to "group-valued" K-theory; this exercise identifies it precisely at the level of $\pi_0$ and connects it to the Grothendieck group.*
+>
+> Let $\mathcal{C}$ be a small symmetric monoidal category and write $M = \pi_0|\mathcal{C}|$ for the commutative monoid of path-components (with monoid operation induced by $\oplus$). (a) Show that $M \cong \mathbb{N}\langle\text{iso-classes of objects}\rangle / (\text{monoidal relations})$ (the free commutative monoid on isomorphism classes, quotiented by the $\oplus$-relations). (b) Define the Grothendieck group $K_0(\mathcal{C}) = M^{\mathrm{gp}}$ as the group completion (universal group receiving a monoid homomorphism from $M$) and show $K_0(\mathbf{FDVect}_\mathbb{R}) \cong \mathbb{Z}$ (generated by $[\mathbb{R}]$ with the relation $[V \oplus W] = [V] + [W]$). (c) Show that the natural map $|\mathcal{C}| \to K_0(\mathcal{C}) \times B|\mathcal{C}[M^{-1}]|$ (inverting all $\oplus$-translations) is an equivalence on $\pi_0$ and an isomorphism on $H_*(-; \mathbb{Z})$ when $M$ acts on $H_*(|\mathcal{C}|)$ invertibly (the *group completion theorem*).
+>
+> > **Prerequisites:** [[#7.1 The Group Completion Problem|§7.1]], [[#4. Γ-Categories from Symmetric Monoidal Categories|§4]]
+
 > [!INFO] Historical context
 > This section of the paper, credited heavily to discussions with Quillen, anticipates the *$Q$-construction* in Quillen's 1972 paper "Higher Algebraic K-Theory: I." Segal's and Quillen's approaches give equivalent spectra; the Γ-space approach is more natural for symmetric monoidal categories, while the $Q$-construction applies to exact categories more generally.
 
@@ -365,6 +428,13 @@ A multiplication on $A$ determines a *pairing of spectra* $\mathbf{B}A \wedge \m
 > The category of finite sets has two composition laws: disjoint union $\sqcup$ (additive) and Cartesian product $\times$ (multiplicative). These give $\mathbf{B}\Sigma$ a multiplication in the sense above. The resulting pairing on $\mathbb{S} = B(\mathbf{B}\Sigma)$ is exactly the ring structure on the sphere spectrum. *This is the universal ring spectrum*, and all ring spectra are $\mathbb{S}$-algebra spectra.
 
 For strongly homotopy-associative and commutative ring spectra, one needs a sequence $A_1, A_2, \ldots$ where $A_1 = A$, $A_2$ is a multiplication on $A_1$, $A_3$ is a "multiplication on $A_2$", and so on. Segal indicates this leads to $E_\infty$ ring spectra and promises to return to it elsewhere.
+
+> [!NOTE] Exercise 10
+> *The sphere spectrum $\mathbb{S}$ is the universal ring spectrum because $\mathbf{FinSet}$ is the initial rig category; this exercise makes that universality precise.*
+>
+> (a) Show that $\mathbf{FinSet}$ carries two symmetric monoidal structures $(\sqcup, \emptyset)$ and $(\times, \{*\})$, and that Cartesian product distributes over disjoint union: $X \times (Y \sqcup Z) \cong (X \times Y) \sqcup (X \times Z)$. (b) Explain how this distributivity gives the Γ-space $\mathbf{B}\Sigma$ a multiplication in the sense of Definition 5.1, making the spectrum $\mathbb{S} = B(\mathbf{B}\Sigma)$ into a ring spectrum. (c) Show that $\mathbf{FinSet}$ is the *initial rig category* (a category with two compatible symmetric monoidal structures related by distributivity, with $\emptyset$ absorbing under $\times$): for any rig category $\mathcal{R}$, there is a unique symmetric monoidal functor $\mathbf{FinSet} \to \mathcal{R}$ respecting both structures. (d) Conclude that $\mathbb{S}$ is the initial ring spectrum: for any ring spectrum $E$, there is a unique ring map $\mathbb{S} \to E$.
+>
+> > **Prerequisites:** [[#8. Ring Spectra|§8]], [[#6. The Barratt–Priddy–Quillen Theorem|§6]], [[concepts/category-theory/foundations/01-categories-functors-natural-transformations|§01 §8 (Adjunctions)]]
 
 ---
 
