@@ -57,6 +57,7 @@ indexed by $A \in \mathbf{D}$ and $B \in \mathbf{C}$, that is *natural* in both 
 Naturality in $B$ means: for every morphism $g \colon B \to B'$ in $\mathbf{C}$, the square
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 \mathcal{C}(FA, B) \arrow[r, "\varphi_{A,B}"] \arrow[d, "g \circ {-}"'] & \mathcal{D}(A, GB) \arrow[d, "Gg \circ {-}"] \\
@@ -68,6 +69,7 @@ Naturality in $B$ means: for every morphism $g \colon B \to B'$ in $\mathbf{C}$,
 commutes. Naturality in $A$ means: for every morphism $h \colon A' \to A$ in $\mathbf{D}$, the square
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 \mathcal{C}(FA, B) \arrow[r, "\varphi_{A,B}"] \arrow[d, "{-} \circ Fh"'] & \mathcal{D}(A, GB) \arrow[d, "{-} \circ h"] \\
@@ -96,6 +98,7 @@ $$(\varepsilon F) \circ (F\eta) = \mathrm{id}_F \qquad \text{and} \qquad (G\vare
 Here $\varepsilon F$ denotes the natural transformation with components $\varepsilon_{FA} \colon FGF A \to FA$, and $F\eta$ denotes the natural transformation with components $F(\eta_A) \colon FA \to FGFA$. Written as commutative diagrams for each $A \in \mathbf{D}$ and $B \in \mathbf{C}$:
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 FA \arrow[r, "F\eta_A"] \arrow[dr, "\mathrm{id}_{FA}"'] & FGFA \arrow[d, "\varepsilon_{FA}"] \\
@@ -220,6 +223,7 @@ i.e., $Gk \circ f = f' \circ Fh$ in $\mathbf{C}$.
 - **Identities:** $\mathrm{id}_{(a,b,f)} = (\mathrm{id}_a, \mathrm{id}_b)$.
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 Fa \arrow[r, "f"] \arrow[d, "Fh"'] & Gb \arrow[d, "Gk"] \\
@@ -441,6 +445,7 @@ More explicitly:
 - An initial object in $(B \downarrow G)$ is a pair $(FB, \eta_B)$ with $\eta_B \colon B \to GFB$ such that for any $(X, f)$, there is a unique $h \colon FB \to X$ with $Gh \circ \eta_B = f$.
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 B \arrow[r, "\eta_B"] \arrow[dr, "f"'] & GFB \arrow[d, "Gh"] \\
@@ -597,6 +602,7 @@ The mate correspondence is due to Kelly and Street (1974) and is a fundamental t
 - **Composition:** componentwise.
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 A \arrow[r, "f"] \arrow[d, "u"'] & B \arrow[d, "v"] \\

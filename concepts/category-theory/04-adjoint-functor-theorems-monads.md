@@ -103,6 +103,7 @@ subject to the following two axioms, expressed as commutative diagrams:
 **Associativity:**
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 T^3 \arrow[r, "T\mu"] \arrow[d, "\mu T"'] & T^2 \arrow[d, "\mu"] \\
@@ -116,6 +117,7 @@ That is: $\mu \circ T\mu = \mu \circ \mu T$ as natural transformations $T^3 \Rig
 **Unit laws:**
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 T \arrow[r, "\eta T"] \arrow[dr, "\mathrm{id}_T"'] & T^2 \arrow[d, "\mu"] & T \arrow[l, "T\eta"'] \arrow[dl, "\mathrm{id}_T"] \\
@@ -174,6 +176,7 @@ The Kleisli adjunction is the *initial* adjunction giving rise to $(T, \eta, \mu
 As commutative diagrams:
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 A \arrow[r, "\eta_A"] \arrow[dr, "\mathrm{id}_A"'] & TA \arrow[d, "a"] \\
@@ -183,6 +186,7 @@ A \arrow[r, "\eta_A"] \arrow[dr, "\mathrm{id}_A"'] & TA \arrow[d, "a"] \\
 ```
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 T^2A \arrow[r, "\mu_A"] \arrow[d, "Ta"'] & TA \arrow[d, "a"] \\
@@ -197,6 +201,7 @@ TA \arrow[r, "a"'] & A
 **Definition (T-Algebra Morphism).** A *morphism of $T$-algebras* $f \colon (A, a) \to (B, b)$ is a morphism $f \colon A \to B$ in $\mathcal{C}$ such that $f \circ a = b \circ Tf$.
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 TA \arrow[r, "Tf"] \arrow[d, "a"'] & TB \arrow[d, "b"] \\
@@ -257,6 +262,7 @@ is a *split coequalizer* (or *absolute coequalizer*) if there exist morphisms $s
 4. $g \circ s = t \circ q$.
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 A \arrow[r, "f", shift left=2] \arrow[r, "g"', shift right=2] & B \arrow[r, "q"] \arrow[l, "s", bend right=40] & C \arrow[l, "t", bend right=40]

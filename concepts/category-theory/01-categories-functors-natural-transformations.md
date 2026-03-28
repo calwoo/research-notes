@@ -340,6 +340,7 @@ $$\alpha_A: FA \to GA \quad \text{(for each } A \in \mathrm{ob}(\mathcal{C})\tex
 called the *components* of $\alpha$, such that for every morphism $f: A \to B$ in $\mathcal{C}$, the following *naturality square* commutes:
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 FA \arrow[r, "Ff"] \arrow[d, "\alpha_A"'] & FB \arrow[d, "\alpha_B"] \\
@@ -515,6 +516,7 @@ These are natural because $\phi$ is natural. Every morphism $h \in \mathcal{D}(F
 **Theorem (Triangle identities).** Given an adjunction $F \dashv G$ with unit $\eta$ and counit $\varepsilon$, the following diagrams commute:
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 F \arrow[r, "F\eta"] \arrow[dr, "\mathrm{id}_F"'] & FGF \arrow[d, "\varepsilon F"] \\
@@ -524,6 +526,7 @@ F \arrow[r, "F\eta"] \arrow[dr, "\mathrm{id}_F"'] & FGF \arrow[d, "\varepsilon F
 ```
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 G \arrow[r, "\eta G"] \arrow[dr, "\mathrm{id}_G"'] & GFG \arrow[d, "G\varepsilon"] \\

@@ -67,6 +67,7 @@ $$D(u) \circ \pi_i = \pi_j.$$
 Equivalently, in terms of the *constant functor* $\Delta_N : \mathcal{I} \to \mathcal{C}$ (which sends every object to $N$ and every morphism to $\mathrm{id}_N$), a cone $(N, (\pi_i))$ is precisely a natural transformation $\pi : \Delta_N \Rightarrow D$.
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 & N \arrow[dl, "\pi_i"'] \arrow[dr, "\pi_j"] & \\
@@ -95,6 +96,7 @@ $$\pi_i \circ \, ! \;= \phi_i \quad \text{for all } i \in \mathcal{I}.$$
 We denote the apex $L$ by $\varprojlim D$ or $\lim_{\mathcal{I}} D$ or simply $\lim D$.
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 N \arrow[dr, "\varphi_i"'] \arrow[r, "!", dashed] & {L = \lim D} \arrow[d, "\pi_i"] \\
@@ -227,6 +229,7 @@ Let $F : \mathcal{C} \to \mathcal{D}$ be a functor and $\mathcal{I}$ a small cat
 **Definition (Projective object).** An object $P \in \mathcal{C}$ is *projective* if the representable functor $\mathcal{C}(P, -) : \mathcal{C} \to \mathbf{Set}$ preserves epimorphisms: for every epimorphism $e : A \twoheadrightarrow B$ and every morphism $f : P \to B$, there exists a morphism $g : P \to A$ with $e \circ g = f$.
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 & P \arrow[d, "f"] \arrow[dl, dashed, "\exists g"'] \\
@@ -354,6 +357,7 @@ Define two maps $s, t : P \to Q$: the $u$-component of $s$ is $\pi_j : P \to Dj$
 *Proof.* Equalizers can be built from pullbacks: the equalizer of $f, g : A \rightrightarrows B$ is the pullback of $\langle f, g \rangle : A \to B \times B$ along the diagonal $\Delta : B \to B \times B$. $\square$
 
 ```tikz
+\usepackage{tikz-cd}
 \begin{document}
 \begin{tikzcd}
 A \arrow[dr, "\langle f{,}g\rangle"] & \\
