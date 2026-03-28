@@ -503,6 +503,23 @@ We say $\mathcal{C}$ and $\mathcal{D}$ are *equivalent*, written $\mathcal{C} \s
 
 **Key distinction:** An isomorphism of categories does not require choice; an equivalence (in the $\Leftarrow$ direction) does.
 
+To see why, contrast the two situations precisely.
+
+In an **isomorphism** $F: \mathcal{C} \to \mathcal{D}$, the quasi-inverse $G$ is *given to you*: $G = F^{-1}$, determined on the nose by the equations $GF = \mathrm{id}_\mathcal{C}$ and $FG = \mathrm{id}_\mathcal{D}$. There is nothing to choose. In fact, $G(D)$ is the *unique* object $C$ with $FC = D$, because $F$ is bijective on objects.
+
+In an **equivalence** constructed from the $(\Leftarrow)$ direction, you are handed only the property: *for every $D \in \mathcal{D}$ there exists some $C \in \mathcal{C}$ and some isomorphism $FС \xrightarrow{\sim} D$*. "There exists" is not "here it is." To define a functor $G: \mathcal{D} \to \mathcal{C}$, you must assign to *each* $D$ a specific object $G(D)$ and a specific isomorphism $\varepsilon_D: FG(D) \xrightarrow{\sim} D$. When $\mathcal{D}$ has infinitely many (or a proper class of) objects, making all these choices simultaneously requires the **axiom of choice**.
+
+> [!EXAMPLE] Choosing bases in $\mathbf{FDVect}_k$
+> The functor $F: \mathbf{Mat}_k \to \mathbf{FDVect}_k$ sending $n \mapsto k^n$ is full, faithful, and essentially surjective — every finite-dimensional $k$-vector space $V$ is *isomorphic* to some $k^n$. To build the quasi-inverse $G: \mathbf{FDVect}_k \to \mathbf{Mat}_k$, you must assign to *each* $V$ a specific natural number $G(V) = \dim V$ and a specific isomorphism $\varepsilon_V: k^{\dim V} \xrightarrow{\sim} V$. The isomorphism is just an ordered basis for $V$. So **constructing $G$ requires choosing a basis for every finite-dimensional vector space simultaneously** — a choice function over all of $\mathbf{FDVect}_k$, which is exactly an instance of the axiom of choice.
+>
+> Note the asymmetry: $F$ (the "canonical" direction, $\mathbf{Mat}_k \to \mathbf{FDVect}_k$) is completely explicit. The quasi-inverse $G$ (the "coordinatization" direction) is non-canonical — there is no preferred basis.
+
+> [!INFO] Foundational aside: the axiom of choice and equivalences
+> The theorem "every full, faithful, and essentially surjective functor is an equivalence" is — over a weak foundational base — *equivalent to* a form of the axiom of choice. In **constructive mathematics** (where AC is not available), one instead works with *split* or *cloven* equivalences: the quasi-inverse and the isomorphisms $\eta$, $\varepsilon$ are part of the data, not merely asserted to exist. This is the correct notion in homotopy type theory (where it goes by the name *adjoint equivalence*) and in internal category theory in a topos.
+
+> [!TIP] "Evil" vs. invariant properties
+> This asymmetry is the reason category theorists call isomorphism of categories an **"evil"** notion: it asks whether two categories are *equal as structured sets*, which is sensitive to the labeling of objects. Equivalence is the **invariant** notion — it asks only whether the categories have the same shape up to coherent isomorphism. A property or construction is considered well-behaved in category theory if it is *invariant under equivalence*. The principle of equivalence says: never write down a definition that would distinguish between equivalent categories.
+
 ### 6.3 Comma Categories and Slice Categories
 
 **Definition (Comma category).** Given functors $F: \mathcal{A} \to \mathcal{C}$ and $G: \mathcal{B} \to \mathcal{C}$, the *comma category* $(F \downarrow G)$ (also written $F/G$) has:
