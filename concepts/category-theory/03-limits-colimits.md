@@ -35,6 +35,10 @@
   - [[#15.2 Cartesian Closed Categories|15.2 Cartesian Closed Categories]]
 - [[#16. Stability of Morphism Classes|16. Stability of Morphism Classes]]
 - [[#17. Optional: Homological Algebra via Category Theory|17. Optional: Homological Algebra via Category Theory]]
+- [[#18. The Art of the Diagram Chase|18. The Art of the Diagram Chase 🧩]]
+- [[#19. Complete and Cocomplete Categories|19. Complete and Cocomplete Categories 🌐]]
+- [[#20. Functoriality of Limits|20. Functoriality of Limits ⚙️]]
+- [[#21. Interactions between Limits and Colimits|21. Interactions between Limits and Colimits 🔄]]
 - [[#References|References]]
 
 ---
@@ -676,6 +680,313 @@ from which $\mathrm{Ext}^0(\mathbb{Z}/n\mathbb{Z}, \mathbb{Z}) = 0$ (since $\mat
 
 > [!NOTE] Exercise 16
 > **Exercise 16 (Optional/Further).** Develop the basic theory of projective and injective resolutions in an abelian category $\mathcal{A}$. Define the derived functors $\mathrm{Ext}^n(A, -)$ and $\mathrm{Tor}_n(A, -)$ and describe their universal properties. Show that in $\mathbf{Ab}$, $\mathrm{Ext}^1(\mathbb{Z}/n\mathbb{Z}, \mathbb{Z}) \cong \mathbb{Z}/n\mathbb{Z}$.
+
+---
+
+## 18. The Art of the Diagram Chase 🧩
+
+A *diagram chase* is a proof technique in which one establishes a result by following elements through a commutative diagram, using commutativity and exactness conditions to derive the conclusion. The technique is most powerful in *abelian categories*, where kernels, cokernels, and exact sequences are available, but it generalizes to any *regular category* via generalized elements.
+
+> [!INFO] Historical context
+> The term "diagram chasing" became standard after MacLane systematized it in the 1950s. Eilenberg and Steenrod used the technique extensively in their foundational work on algebraic topology. The Snake Lemma famously appears in the film *It's My Turn* (1980), where Jill Clayburgh's character proves it on a blackboard — making it perhaps the most cinematic theorem in mathematics.
+
+### The Five Lemma
+
+Consider a commutative diagram of abelian groups with exact rows:
+
+```tikz
+\usepackage{tikz-cd}
+\begin{document}
+\begin{tikzcd}
+A_1 \arrow[r, "\alpha_1"] \arrow[d, "f_1"'] & A_2 \arrow[r, "\alpha_2"] \arrow[d, "f_2"'] & A_3 \arrow[r, "\alpha_3"] \arrow[d, "f_3"'] & A_4 \arrow[r, "\alpha_4"] \arrow[d, "f_4"'] & A_5 \arrow[d, "f_5"'] \\
+B_1 \arrow[r, "\beta_1"'] & B_2 \arrow[r, "\beta_2"'] & B_3 \arrow[r, "\beta_3"'] & B_4 \arrow[r, "\beta_4"'] & B_5
+\end{tikzcd}
+\end{document}
+```
+
+**Theorem (Five Lemma).** In the diagram above with exact rows:
+- If $f_1$ is epic and $f_2, f_4$ are isomorphisms, then $f_3$ is monic.
+- If $f_5$ is monic and $f_2, f_4$ are isomorphisms, then $f_3$ is epic.
+- Hence if $f_1, f_2, f_4, f_5$ are all isomorphisms, then $f_3$ is an isomorphism.
+
+*Proof (injectivity of $f_3$).* Suppose $a_3 \in A_3$ with $f_3(a_3) = 0$. Apply $\beta_3 \circ f_3 = f_4 \circ \alpha_3$ to get $f_4(\alpha_3(a_3)) = 0$. Since $f_4$ is injective, $\alpha_3(a_3) = 0$. By exactness of the top row at $A_3$, there exists $a_2 \in A_2$ with $\alpha_2(a_2) = a_3$. Now $\beta_2(f_2(a_2)) = f_3(\alpha_2(a_2)) = f_3(a_3) = 0$. By exactness of the bottom row at $B_2$, there exists $b_1 \in B_1$ with $\beta_1(b_1) = f_2(a_2)$. Since $f_1$ is surjective, there exists $a_1 \in A_1$ with $f_1(a_1) = b_1$. Then $f_2(\alpha_1(a_1)) = \beta_1(f_1(a_1)) = \beta_1(b_1) = f_2(a_2)$. Since $f_2$ is injective, $\alpha_1(a_1) = a_2$. By exactness at $A_2$, $a_3 = \alpha_2(a_2) = \alpha_2(\alpha_1(a_1)) = 0$. $\square$
+
+*Proof (surjectivity of $f_3$).* Let $b_3 \in B_3$. Apply $\beta_3$ to get $\beta_3(b_3) \in B_4$. Since $f_4$ is surjective, write $\beta_3(b_3) = f_4(a_4)$ for some $a_4 \in A_4$. Then $f_5(\alpha_4(a_4)) = \beta_4(f_4(a_4)) = \beta_4(\beta_3(b_3)) = 0$ (by exactness at $B_4$). Since $f_5$ is injective, $\alpha_4(a_4) = 0$, so $a_4 \in \ker \alpha_4 = \mathrm{im}\, \alpha_3$. Write $a_4 = \alpha_3(a_3)$. Then $\beta_3(f_3(a_3)) = f_4(\alpha_3(a_3)) = f_4(a_4) = \beta_3(b_3)$, so $b_3 - f_3(a_3) \in \ker \beta_3 = \mathrm{im}\, \beta_2$. Write $b_3 - f_3(a_3) = \beta_2(b_2)$. Since $f_2$ is surjective, $b_2 = f_2(a_2)$. Then $f_3(a_3 + \alpha_2(a_2)) = f_3(a_3) + f_3(\alpha_2(a_2)) = f_3(a_3) + \beta_2(f_2(a_2)) = f_3(a_3) + (b_3 - f_3(a_3)) = b_3$. $\square$
+
+### The Short Five Lemma
+
+**Theorem (Short Five Lemma).** Consider a commutative diagram with exact rows:
+
+```tikz
+\usepackage{tikz-cd}
+\begin{document}
+\begin{tikzcd}
+0 \arrow[r] & A \arrow[r, "i"] \arrow[d, "f"'] & B \arrow[r, "p"] \arrow[d, "g"'] & C \arrow[r] \arrow[d, "h"'] & 0 \\
+0 \arrow[r] & A' \arrow[r, "i'"'] & B' \arrow[r, "p'"'] & C' \arrow[r] & 0
+\end{tikzcd}
+\end{document}
+```
+
+If $f$ and $h$ are isomorphisms, then $g$ is an isomorphism.
+
+*Proof sketch.* This is a special case of the Five Lemma with $A_1 = B_1 = 0$ and $A_5 = B_5 = 0$. Alternatively: for injectivity of $g$, suppose $g(b) = 0$. Then $h(p(b)) = p'(g(b)) = 0$, so $p(b) = 0$ (since $h$ is monic), thus $b = i(a)$ for some $a$. Then $i'(f(a)) = g(i(a)) = g(b) = 0$, so $f(a) = 0$ (since $i'$ is monic), so $a = 0$ and $b = 0$. For surjectivity: given $b' \in B'$, map $p'(b') \in C'$; since $h$ is surjective, $p'(b') = h(c)$ for some $c \in C$; choose a preimage $b \in B$ with $p(b) = c$ (using surjectivity of $p$); then $p'(b' - g(b)) = 0$, so $b' - g(b) = i'(a')$ for some $a'$; since $f$ is surjective, $a' = f(a)$, giving $b' = g(b) + i'(f(a)) = g(b + i(a)) = g(b + i(a))$. $\square$
+
+### The Snake Lemma
+
+The *Snake Lemma* is the engine of connecting homomorphisms in long exact sequences of homology.
+
+**Theorem (Snake Lemma).** Given a commutative diagram of abelian groups with exact rows:
+
+```tikz
+\usepackage{tikz-cd}
+\begin{document}
+\begin{tikzcd}
+& A \arrow[r, "f"] \arrow[d, "\alpha"'] & B \arrow[r, "g"] \arrow[d, "\beta"'] & C \arrow[r] \arrow[d, "\gamma"'] & 0 \\
+0 \arrow[r] & A' \arrow[r, "f'"'] & B' \arrow[r, "g'"'] & C'
+\end{tikzcd}
+\end{document}
+```
+
+there is an exact sequence
+$$\ker \alpha \xrightarrow{\bar f} \ker \beta \xrightarrow{\bar g} \ker \gamma \xrightarrow{\;\delta\;} \mathrm{coker}\, \alpha \xrightarrow{\bar f'} \mathrm{coker}\, \beta \xrightarrow{\bar g'} \mathrm{coker}\, \gamma,$$
+where $\delta$ is the *connecting homomorphism* defined by the diagram chase: given $c \in \ker \gamma$, choose $b \in B$ with $g(b) = c$; then $g'(\beta(b)) = \gamma(g(b)) = \gamma(c) = 0$, so $\beta(b) \in \ker g' = \mathrm{im}\, f'$; write $\beta(b) = f'(a')$ and set $\delta(c) = [a'] \in A'/\mathrm{im}\, \alpha$.
+
+> [!WARNING] Well-definedness requires checking
+> The definition of $\delta(c)$ involves two choices: the preimage $b$ of $c$ under $g$, and the preimage $a'$ of $\beta(b)$ under $f'$. Independence of $a'$ follows from injectivity of $f'$. Independence of $b$: if $b_1, b_2$ both map to $c$, then $b_1 - b_2 \in \ker g = \mathrm{im}\, f$, so $b_1 - b_2 = f(a)$ for some $a \in A$, and $\beta(b_1) - \beta(b_2) = \beta(f(a)) = f'(\alpha(a)) \in \mathrm{im}\, f' \circ \alpha = f'(\mathrm{im}\, \alpha)$. Thus $\delta$ is well-defined modulo $\mathrm{im}\, \alpha$. $\square$
+
+> [!EXAMPLE]- Snake Lemma applied: long exact sequence of homology
+> The Snake Lemma is the key tool in proving that a short exact sequence of chain complexes $0 \to A_\bullet \to B_\bullet \to C_\bullet \to 0$ gives a long exact sequence in homology:
+> $$\cdots \to H_n(A) \to H_n(B) \to H_n(C) \xrightarrow{\delta} H_{n-1}(A) \to \cdots$$
+> The connecting homomorphism $\delta$ is defined by applying the Snake Lemma to the short exact sequence $0 \to Z_n(A) \to Z_n(B) \to Z_n(C)$ and $B_{n-1}(A) \to B_{n-1}(B) \to B_{n-1}(C) \to 0$, where $Z_n, B_n$ denote cycles and boundaries.
+
+### Diagram Chasing in General Categories
+
+In non-abelian settings, one cannot refer to elements of objects. Instead, one works with *generalized elements*: a morphism $x : T \to A$ is a "$T$-shaped element of $A$." Commutativity $f \circ x = g \circ x$ for all $T$-elements (all $T$ and all $x : T \to A$) implies $f = g$ — this is precisely the Yoneda lemma applied to the natural bijection $\mathcal{C}(T, A) \cong \mathcal{C}(T, A)$.
+
+**Definition (Generalized element).** A *generalized element* of $A \in \mathcal{C}$ of *stage* $T$ is a morphism $x : T \to A$.
+
+💡 *In this language, a cone $(L, (\pi_i))$ is a compatible family of generalized elements $\pi_i : L \to Di$, and the universal property of the limit says that any other such compatible family factors uniquely through $L$.*
+
+This formalism allows diagram chasing in any category, though the arguments become more subtle without exact sequences.
+
+### The Salamander Lemma (Brief Mention)
+
+The *Salamander Lemma* (due to Bergman) is a powerful generalization: for any commutative diagram of abelian groups, the *cohomology at any spot* (the quotient of the kernel by the image of incoming maps) fits into exact sequences relating it to the cohomology of adjacent spots. Riehl (§1.6) gives a clean treatment. The Snake and Five Lemmas become immediate corollaries.
+
+> [!NOTE] Riehl Exercise: Diagram Chasing
+> (i) Prove the Short Five Lemma: in a commutative diagram with exact rows
+> $0 \to A \to B \to C \to 0$ over $0 \to A' \to B' \to C' \to 0$,
+> if both $A \to A'$ and $C \to C'$ are isomorphisms, then $B \to B'$ is an isomorphism.
+>
+> (ii) State and prove the 3×3 lemma (nine lemma): given a commutative 3×3 diagram of abelian groups where all columns are exact and two of the three rows are exact, the third row is also exact.
+>
+> (iii) Define what it means for a sequence $A \xrightarrow{f} B \xrightarrow{g} C$ to be exact at $B$ in terms of equalizers and coequalizers (without referring to elements). Show this recovers the usual notion in $\mathbf{Ab}$.
+
+---
+
+## 19. Complete and Cocomplete Categories 🌐
+
+**Definition (Complete and cocomplete).** A category $\mathcal{C}$ is *complete* if it has all small limits — limits of diagrams $D : \mathcal{I} \to \mathcal{C}$ where $\mathcal{I}$ is a small category. $\mathcal{C}$ is *cocomplete* if it has all small colimits.
+
+> [!NOTE] Size matters
+> "Small" here means the index category $\mathcal{I}$ is a set-sized category (its objects and morphisms form sets, not proper classes). Without this restriction, limits over proper classes may fail to exist even in $\mathbf{Set}$, due to Russell-type paradoxes.
+
+### The Completeness Theorem
+
+**Theorem (Completeness from products and equalizers).** A category $\mathcal{C}$ is complete if and only if it has all small products and all equalizers. Dually, $\mathcal{C}$ is cocomplete if and only if it has all small coproducts and all coequalizers.
+
+*Proof sketch.* The "only if" direction is trivial. For "if": given any small diagram $D : \mathcal{I} \to \mathcal{C}$, the limit is constructed as an equalizer of two maps between products, exactly as in the finite case (§9), but now using small (possibly infinite) products. Specifically, form
+$$P = \prod_{i \in \mathrm{ob}(\mathcal{I})} Di, \qquad Q = \prod_{u : i \to j \text{ in } \mathcal{I}} Dj,$$
+define $s, t : P \to Q$ by $s_u = \pi_j$ and $t_u = D(u) \circ \pi_i$, then $\lim D = \mathrm{eq}(s, t)$. The small product and equalizer exist by hypothesis. $\square$
+
+**This shows that the "generating" limit shapes are products (discrete diagrams) and equalizers (parallel pairs).**
+
+### Examples
+
+| Category | Complete | Cocomplete | Notes |
+|----------|----------|------------|-------|
+| $\mathbf{Set}$ | Yes | Yes | Products are Cartesian products; coproducts are disjoint unions |
+| $\mathbf{Grp}$ | Yes | Yes | Limits created by forgetful functor; colimits via presentations |
+| $\mathbf{Ab}$ | Yes | Yes | Products are direct products; coproducts are direct sums |
+| $\mathbf{Top}$ | Yes | Yes | Products have product topology; coproducts have disjoint union topology |
+| $\mathbf{Vect}_k$ | Yes | Yes | Products and coproducts both available (differ for infinite index) |
+| $\mathbf{Ring}$ | Yes | Yes | Products are Cartesian; coproducts are tensor products (for commutative rings) |
+| $[\mathcal{C}^{\mathrm{op}}, \mathbf{Set}]$ | Yes | Yes | All limits and colimits computed pointwise (§12) |
+| Any Grothendieck topos | Yes | Yes | By Giraud's theorem |
+| $\mathbf{Field}$ | No | No | No terminal object (no field maps to every field); no initial object |
+| $\mathbf{FinSet}$ | Fin. Yes | Fin. Yes | Has all finite limits/colimits; fails for countably infinite products |
+
+> [!DANGER] Fields are not complete
+> The category $\mathbf{Field}$ has neither a terminal nor an initial object in the usual sense: a terminal object would be a field receiving a unique map from every field, but there is no field mapping to $\mathbb{Q}$ and $\mathbb{F}_p$ simultaneously (they have different characteristics). *This failure is categorical, not a size issue.*
+
+### Completeness via Generating Limit Shapes
+
+The theorem above shows that one can reduce all small limits to products and equalizers. A refinement: a category has all *finite* limits iff it has a terminal object, binary products, and equalizers (§9). The "small" version replaces binary products with small products.
+
+**Proposition.** The following are equivalent for a category $\mathcal{C}$:
+1. $\mathcal{C}$ is complete.
+2. $\mathcal{C}$ has all small products and all equalizers.
+3. $\mathcal{C}$ has all small products, a terminal object, and all pullbacks.
+
+### Preservation of Completeness
+
+**Proposition.** Let $F : \mathcal{C} \to \mathcal{D}$.
+- If $F$ creates limits and $\mathcal{C}$ is complete, then $\mathcal{D}$ is complete.
+- If $\mathcal{D}$ is a *reflective subcategory* of $\mathcal{C}$ (inclusion has a left adjoint) and $\mathcal{C}$ is complete, then $\mathcal{D}$ is complete.
+- If $\mathcal{C}$ is complete, then $[\mathcal{J}, \mathcal{C}]$ is complete for any small $\mathcal{J}$ (by pointwise limits, §12).
+
+> [!TIP] Practical criterion
+> To show an algebraic category (groups, rings, modules, etc.) is complete and cocomplete: (1) the forgetful functor to $\mathbf{Set}$ creates limits, so completeness follows from completeness of $\mathbf{Set}$; (2) colimits exist because free algebras exist and coequalizers are quotient algebras.
+
+> [!NOTE] Riehl Exercise: Completeness
+> (i) Show that a category with all small products and equalizers has all small limits. (Hint: construct $\lim D$ as an equalizer of a product, generalizing the finite case in §9.)
+>
+> (ii) Show that $\mathbf{Ab}$ is both complete and cocomplete by verifying: (a) it has all small products (direct products) and equalizers (kernels of difference maps); (b) it has all small coproducts (direct sums) and coequalizers (cokernels of difference maps).
+>
+> (iii) A *complete lattice* is a poset with all small meets (infima) and joins (suprema). Show that a complete lattice, viewed as a category, is both complete and cocomplete. Give an example of a poset that is complete but not a complete lattice.
+
+---
+
+## 20. Functoriality of Limits ⚙️
+
+### Limits as Functors
+
+When $\mathcal{C}$ has all limits of shape $\mathcal{I}$, the assignment $D \mapsto \lim D$ defines a functor
+$$\lim_{\mathcal{I}} : [\mathcal{I}, \mathcal{C}] \to \mathcal{C}.$$
+This is the *right adjoint* to the diagonal functor $\Delta : \mathcal{C} \to [\mathcal{I}, \mathcal{C}]$ (established in §11). Functoriality means: given a natural transformation $\alpha : D \Rightarrow D'$ in $[\mathcal{I}, \mathcal{C}]$, there is an induced map
+$$\lim \alpha : \lim D \to \lim D',$$
+the unique morphism such that $\pi'_i \circ (\lim \alpha) = \alpha_i \circ \pi_i$ for each $i \in \mathcal{I}$, where $\pi, \pi'$ are the respective limit projections. This is obtained by applying the universal property of $\lim D'$ to the cone $(\lim D,\; (\alpha_i \circ \pi_i)_{i \in \mathcal{I}})$ over $D'$.
+
+```mermaid
+flowchart LR
+    subgraph "Functor category [I, C]"
+        D["D (diagram)"]
+        D2["D' (diagram)"]
+        D -- "α (nat. trans.)" --> D2
+    end
+    subgraph "Base category C"
+        limD["lim D"]
+        limD2["lim D'"]
+        limD -- "lim α" --> limD2
+    end
+    D -- "lim_I (right adjoint to Δ)" --> limD
+    D2 --> limD2
+```
+
+### Morphisms of Diagrams and Naturality
+
+**Proposition.** The induced map $\lim \alpha : \lim D \to \lim D'$ satisfies
+$$\pi'_i \circ (\lim \alpha) = \alpha_i \circ \pi_i \quad \text{for each } i \in \mathcal{I}.$$
+Moreover, $\lim(-)$ is functorial: $\lim(\beta \circ \alpha) = (\lim \beta) \circ (\lim \alpha)$ and $\lim(\mathrm{id}_D) = \mathrm{id}_{\lim D}$.
+
+*Proof.* By the universal property of $\lim D'$ applied to the cone over $D'$ with apex $\lim D$ and legs $\alpha_i \circ \pi_i$. The cone condition holds: for $u : i \to j$ in $\mathcal{I}$, $D'(u) \circ (\alpha_i \circ \pi_i) = \alpha_j \circ D(u) \circ \pi_i = \alpha_j \circ \pi_j$ (using naturality of $\alpha$ and the cone condition for $\pi$). Uniqueness gives functoriality. $\square$
+
+### The Limit Functor Preserves Limits
+
+**Theorem.** The limit functor $\lim_{\mathcal{I}} : [\mathcal{I}, \mathcal{C}] \to \mathcal{C}$ is a right adjoint (to $\Delta$), hence by RAPL (§14) it preserves all limits that exist in $[\mathcal{I}, \mathcal{C}]$.
+
+**Corollary ("Fubini for limits").** *A limit of limits is a limit.* More precisely, if $D : \mathcal{I} \times \mathcal{J} \to \mathcal{C}$ is a bifunctor and $\mathcal{C}$ has all limits of shapes $\mathcal{I}$, $\mathcal{J}$, and $\mathcal{I} \times \mathcal{J}$, then there is a natural isomorphism
+$$\lim_{\mathcal{I}} \lim_{\mathcal{J}} D(-,-) \;\cong\; \lim_{\mathcal{I} \times \mathcal{J}} D \;\cong\; \lim_{\mathcal{J}} \lim_{\mathcal{I}} D(-,-).$$
+
+> [!EXAMPLE]- Fubini for products
+> The Fubini isomorphism for products says $\prod_{i \in \mathcal{I}} \prod_{j \in \mathcal{J}} D_{ij} \cong \prod_{(i,j) \in \mathcal{I} \times \mathcal{J}} D_{ij} \cong \prod_{j \in \mathcal{J}} \prod_{i \in \mathcal{I}} D_{ij}$, which is the familiar commutativity and associativity of Cartesian products of sets.
+
+### Continuity of Hom-Functors
+
+**Theorem.** For any $A \in \mathcal{C}$, the hom-functor $\mathcal{C}(A, -) : \mathcal{C} \to \mathbf{Set}$ *preserves all limits*:
+$$\mathcal{C}(A, \lim_{\mathcal{I}} D) \;\cong\; \lim_{\mathcal{I}} \mathcal{C}(A, D(-)).$$
+
+This was already proved in §13. The functoriality of limits strengthens it: the isomorphism is *natural in both $A$ and $D$*, making $\mathcal{C}(-, -)$ a *continuous bifunctor* (contravariant in the first argument, covariant in the second).
+
+**Definition (Continuous functor).** A functor $F : \mathcal{C} \to \mathcal{D}$ is *continuous* if it preserves all small limits. Equivalently: for every small diagram $D : \mathcal{I} \to \mathcal{C}$ and limit $(L, (\pi_i))$ in $\mathcal{C}$, the cone $(F(L), (F\pi_i))$ is a limit of $F \circ D$ in $\mathcal{D}$.
+
+📐 *Every right adjoint is continuous (RAPL). Every representable functor is continuous. The forgetful functor $\mathbf{Grp} \to \mathbf{Set}$ is continuous (it is a right adjoint to the free group functor).*
+
+> [!NOTE] Riehl Exercise: Functoriality of Limits
+> (i) Show that the limit functor $\lim_{\mathcal{I}} : [\mathcal{I}, \mathbf{Set}] \to \mathbf{Set}$ is continuous (preserves all small limits). (Hint: use that it is a right adjoint.)
+>
+> (ii) Let $\mathcal{C}$ have all limits of shapes $\mathcal{I}$ and $\mathcal{J}$. Show that there is a natural isomorphism $\lim_{\mathcal{I}} (\lim_{\mathcal{J}} D) \cong \lim_{\mathcal{I} \times \mathcal{J}} D$ for any diagram $D : \mathcal{I} \times \mathcal{J} \to \mathcal{C}$. (This is "Fubini for limits.")
+>
+> (iii) A functor $F : \mathcal{C} \to \mathcal{D}$ is continuous if it preserves all small limits. Show that every representable functor $\mathcal{C}(A, -) : \mathcal{C} \to \mathbf{Set}$ is continuous. Show that the forgetful functor $\mathbf{Grp} \to \mathbf{Set}$ is continuous.
+
+---
+
+## 21. Interactions between Limits and Colimits 🔄
+
+### Limits and Colimits Do Not Generally Commute
+
+The canonical comparison map
+$$\mathrm{colim}_{j \in \mathcal{J}}\, \lim_{i \in \mathcal{I}} D(i, j) \;\longrightarrow\; \lim_{i \in \mathcal{I}}\, \mathrm{colim}_{j \in \mathcal{J}} D(i, j)$$
+exists for any bifunctor $D : \mathcal{I} \times \mathcal{J} \to \mathcal{C}$, but it is *rarely an isomorphism* in general. The direction of this map (colim of lim maps to lim of colim) reflects the fact that limits "commute past" colimits in this canonical direction.
+
+> [!EXAMPLE]- Counterexample in Set
+> Let $\mathcal{J} = \{0, 1\}$ (discrete, two objects) and $\mathcal{I} = \{0 \to 1\}$ (the walking arrow). Consider the diagram $D : \mathcal{I} \times \mathcal{J} \to \mathbf{Set}$ given by:
+> - $D(0, 0) = \{a\}$, $D(0, 1) = \{b\}$ (disjoint singletons)
+> - $D(1, 0) = D(1, 1) = \{*\}$ (one-point set)
+> - Maps $D(0,j) \to D(1,j)$ are the unique maps.
+>
+> Then $\lim_{\mathcal{I}} D(-,0) = \{a\}$ and $\lim_{\mathcal{I}} D(-,1) = \{b\}$, so $\mathrm{colim}_{\mathcal{J}} \lim_{\mathcal{I}} D = \{a, b\}$ (a two-element set).
+>
+> On the other hand, $\mathrm{colim}_{\mathcal{J}} D(0,-) = \{a, b\}$ and $\mathrm{colim}_{\mathcal{J}} D(1,-) = \{*\}$, so $\lim_{\mathcal{I}} \mathrm{colim}_{\mathcal{J}} D = \{*\}$ (the limit of the map $\{a,b\} \to \{*\}$, which is $\{*\}$).
+>
+> Thus $\mathrm{colim}\, \lim = \{a,b\} \not\cong \{*\} = \lim\, \mathrm{colim}$, and the canonical map $\{a,b\} \to \{*\}$ is not an isomorphism.
+
+### Filtered Colimits
+
+**Definition (Filtered category).** A category $\mathcal{J}$ is *filtered* if:
+1. $\mathcal{J}$ is non-empty,
+2. Any two objects $i, j \in \mathcal{J}$ have a common *upper bound*: there exists $k$ with morphisms $i \to k$ and $j \to k$,
+3. Any two parallel morphisms $f, g : i \rightrightarrows j$ have a common *coequalization*: there exists $k$ and $h : j \to k$ with $h \circ f = h \circ g$.
+
+*Filtered colimits* generalize directed colimits (colimits over directed posets, which satisfy conditions 1 and 2 but not necessarily 3).
+
+> [!EXAMPLE] The canonical filtered category
+> The category $\boldsymbol{\omega} = (0 \to 1 \to 2 \to \cdots)$ of natural numbers is filtered (conditions 1, 2, and 3 are all easy to verify). A colimit over $\boldsymbol{\omega}$ in $\mathbf{Set}$ is a *sequential union*: $\varinjlim X_n = \bigcup_{n} X_n$ (where the union is taken with respect to the inclusion maps $X_n \to X_{n+1}$), with $x \in X_m$ and $y \in X_n$ identified iff they agree in some $X_k$ with $k \geq m, n$.
+
+### Filtered Colimits Commute with Finite Limits in Set
+
+**Theorem (Filtered colimits commute with finite limits).** In $\mathbf{Set}$, if $\mathcal{J}$ is filtered and $\mathcal{I}$ is finite, then the canonical comparison map
+$$\mathrm{colim}_{j \in \mathcal{J}}\, \lim_{i \in \mathcal{I}} D(i,j) \;\xrightarrow{\;\sim\;}\; \lim_{i \in \mathcal{I}}\, \mathrm{colim}_{j \in \mathcal{J}} D(i,j)$$
+is an isomorphism for any $D : \mathcal{I} \times \mathcal{J} \to \mathbf{Set}$.
+
+*Proof sketch (for binary products, $\mathcal{I} = \{0, 1\}$).* An element of $\mathrm{colim}_{j} (D(0,j) \times D(1,j))$ is an equivalence class $[(j, x, y)]$ with $x \in D(0,j)$ and $y \in D(1,j)$. An element of $\mathrm{colim}_{j} D(0,j) \times \mathrm{colim}_{j} D(1,j)$ is a pair $([(j_1, x)], [(j_2, y)])$ with $x \in D(0,j_1)$ and $y \in D(1,j_2)$. Since $\mathcal{J}$ is filtered, there exists $k$ with morphisms $j_1 \to k$ and $j_2 \to k$; pushing forward, we can represent both $x$ and $y$ at stage $k$, giving $[(k, x', y')]$. This defines the inverse map. $\square$
+
+*Proof sketch (for equalizers).* Given $[(j, b)]$ in $\mathrm{colim}_j \mathrm{eq}(f_j, g_j)$, one shows the image in $\mathrm{colim}_j D(j)$ lies in the equalizer of the colimit maps, using the filteredness to coequalize the witnesses.
+
+**🔑 This theorem is the key to understanding the structure of algebraic categories.**
+
+### Algebraic Importance
+
+**Proposition (Algebras are filtered colimits of finitely presented ones).** Every group (ring, module, algebra over a theory $\mathbb{T}$, ...) is a *filtered colimit* of finitely presented ones. Specifically, given a group $G$, its finitely generated subgroups form a directed system (ordered by inclusion), and $G = \varinjlim_{H \subseteq G,\, H \text{ f.g.}} H$.
+
+A *finitely presented algebra* is one with finitely many generators and finitely many relations. The class of all $\mathbb{T}$-algebras that are finitely presented is essentially the "compact objects" of the category.
+
+> [!INFO] Locally presentable categories
+> A category is *locally presentable* if it is cocomplete and every object is a filtered colimit of "small" (presentable) objects. Examples: $\mathbf{Set}$, $\mathbf{Grp}$, $\mathbf{Ab}$, $R$-$\mathbf{Mod}$, $\mathbf{Top}$ (with the right morphisms), any category of algebras for an accessible monad. Locally presentable categories have excellent exactness properties, and the adjoint functor theorem has a particularly clean form for them.
+
+### Sifted Colimits
+
+**Definition (Sifted colimit).** A colimit is *sifted* if the index category $\mathcal{J}$ has the property that the diagonal $\mathcal{J} \to \mathcal{J} \times \mathcal{J}$ is *final* (cofinal). Equivalently, $\mathcal{J}$ is sifted iff $\mathrm{colim}_{\mathcal{J}}$ commutes with finite products in $\mathbf{Set}$.
+
+Filtered colimits and *reflexive coequalizers* (coequalizers of parallel pairs that have a common section) are both sifted. The class of sifted colimits characterizes algebraic categories: a functor $\mathbf{Set}^{\mathrm{op}} \to \mathbf{Set}$ is representable by an algebraic theory iff it preserves sifted colimits.
+
+### Summary: When Limits and Colimits Commute
+
+| Situation | Result |
+|-----------|--------|
+| Finite limits vs. filtered colimits | Commute in $\mathbf{Set}$ (and any algebraic/Grothendieck topos) |
+| Finite products vs. sifted colimits | Commute in $\mathbf{Set}$ (by definition of sifted) |
+| Finite limits vs. filtered colimits in any topos | Commute (by definition of topos + exactness) |
+| Left adjoint vs. all colimits | Left adjoints *preserve* colimits (LAPC, §14) |
+| Finite limits vs. finite colimits | Do not commute in general |
+| All limits vs. all colimits | Do not commute in general |
+
+> [!NOTE] Riehl Exercise: Filtered Colimits
+> (i) Show that the category $\boldsymbol{\omega} = (0 \to 1 \to 2 \to \cdots)$ of natural numbers is filtered. Describe what a colimit over $\boldsymbol{\omega}$ in $\mathbf{Set}$ looks like — show it is a sequential union $\bigcup_n X_n$.
+>
+> (ii) Give an explicit example showing that a non-filtered colimit fails to commute with a finite limit in $\mathbf{Set}$: find a bifunctor $D : \mathcal{I} \times \mathcal{J} \to \mathbf{Set}$ where $\mathcal{J}$ is discrete (hence not filtered) and the canonical comparison map $\mathrm{colim}_{\mathcal{J}} \lim_{\mathcal{I}} D \to \lim_{\mathcal{I}} \mathrm{colim}_{\mathcal{J}} D$ is not an isomorphism.
+>
+> (iii) Let $A$ be an abelian group. Show that $A$ is a filtered colimit (directed union) of its finitely generated subgroups. Conclude that any property preserved by filtered colimits and true for finitely generated abelian groups is true for all abelian groups.
 
 ---
 
