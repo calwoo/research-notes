@@ -127,7 +127,7 @@ Use these types consistently:
 |------|-------|-------------|
 | `NOTE` | blue | Clarifications, definitions that don't fit inline |
 | `INFO` | blue | Background context, historical notes |
-| `TIP` | green | Practical advice, implementation hints |
+| `TIP` | green | Practical advice, implementation hints; **always use for exercise solutions** |
 | `EXAMPLE` | purple | Worked examples, concrete instantiations |
 | `WARNING` | orange | Caveats, conditions where a result breaks down |
 | `DANGER` | red | Common misconceptions, hard failure modes |
@@ -135,6 +135,12 @@ Use these types consistently:
 | `QUOTE` | grey | Verbatim excerpts worth preserving |
 
 **Guidance:** Prefer callouts over parenthetical asides or footnotes. Use collapsible callouts (`-`) for lengthy digressions or full worked examples that only some readers will want. Place at least one callout per major section (`##`) where supplementary information exists.
+
+**Exercise solutions** must always use `[!TIP]-` (collapsible, green). Title format: `Solution to Exercise N`. Example:
+```
+> [!TIP]- Solution to Exercise 3
+> Solution content here.
+```
 
 ### Emoji Usage
 
