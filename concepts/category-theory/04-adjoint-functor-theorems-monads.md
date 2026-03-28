@@ -36,6 +36,7 @@
 - [[#16. Geometric Realization via SAFT|16. Geometric Realization via SAFT]]
 - [[#17. Comonads from Adjunctions|17. Comonads from Adjunctions]]
 - [[#18. Monadic Categories over Set and Top|18. Monadic Categories over Set and Top]]
+- [[#19. Canonical Presentations and the Bar Construction|19. Canonical Presentations and the Bar Construction 🔩]]
 - [[#References|References]]
 
 ---
@@ -695,6 +696,152 @@ We apply Beck's theorem to determine monadicity for various concrete categories.
 > (iv) $\mathbf{Lat}$ (lattices and lattice homomorphisms) over $\mathbf{Set}$.
 >
 > (v) $\mathbf{TopGp}$ (topological groups and continuous group homomorphisms) over $\mathbf{Top}$.
+
+---
+
+## 19. Canonical Presentations and the Bar Construction 🔩
+
+Every T-algebra arises from a coequalizer of free T-algebras — this was established in the coequalizer characterization underlying Beck's theorem (Exercise 10(iii)). But there is something more: there is a *canonical* and *functorial* way to present any algebra as such a coequalizer, built from the monad structure alone. This is the *bar construction*.
+
+### 19.1 Motivation
+
+**Definition (Presentation of a T-algebra).** A *presentation* of a T-algebra $(A, a)$ by free algebras is a coequalizer diagram in $\mathcal{C}^T$:
+$$T^2 A \underset{d_1}{\overset{d_0}{\rightrightarrows}} TA \xrightarrow{q} A$$
+where $d_0 = \mu_A \colon T^2 A \to TA$ (apply multiplication) and $d_1 = Ta \colon T^2 A \to TA$ (apply $T$ to the algebra map). Here $(TA, \mu_A)$ and $(T^2 A, \mu_{TA})$ are free T-algebras.
+
+The coequalizer exists and equals $(A, a)$ because the pair $(d_0, d_1)$ is a *reflexive split coequalizer* in $\mathcal{C}^T$: the section $\eta_{TA} \colon TA \to T^2 A$ satisfies $d_0 \circ \eta_{TA} = \mathrm{id}_{TA} = d_1 \circ \eta_{TA}$ (after unfolding), and the underlying pair in $\mathcal{C}$ is split by the maps $\eta_A \colon A \to TA$ and $\eta_{TA}$.
+
+**Key question:** Is this presentation functorial in $(A, a)$, and does it extend to an entire *resolution* rather than just a single coequalizer step? The bar construction answers both questions affirmatively.
+
+> [!INFO] Geometric intuition
+> In topology, the bar construction $B(M)$ of a topological monoid $M$ produces the *classifying space* $BM$ as a geometric realization of a simplicial space. The simplicial levels $B_n(M) = M^n$ carry face maps given by the monoid multiplication (collapsing adjacent elements) and degeneracy maps given by the unit insertion. The monad-theoretic bar construction is the exact categorical abstraction of this construction.
+
+---
+
+### 19.2 The Bar Resolution
+
+**Definition (Bar Resolution).** Let $(T, \eta, \mu)$ be a monad on $\mathcal{C}$ and let $(A, a \colon TA \to A)$ be a T-algebra. The *bar resolution* of $(A, a)$ is the augmented simplicial object in $\mathcal{C}$:
+
+$$\cdots \underset{}{\overset{}{\underset{}{\overset{}{\rightrightarrows}}}} T^3 A \underset{}{\overset{}{\rightrightarrows}} T^2 A \underset{d_0}{\overset{d_1}{\rightrightarrows}} TA \xrightarrow{a} A$$
+
+where at simplicial level $n$ the object is $T^{n+1} A$, the face maps are:
+$$d_i = T^i \mu_{T^{n-i-1} A} \colon T^{n+1} A \to T^n A, \quad 0 \leq i \leq n,$$
+and the degeneracy maps are:
+$$s_i = T^i \eta_{T^{n-i} A} \colon T^n A \to T^{n+1} A, \quad 0 \leq i \leq n-1.$$
+The augmentation map at level $-1$ is $a \colon TA \to A$.
+
+📐 *Concretely:* At level $n = 0$, the face maps are $d_0 = \mu_A \colon T^2 A \to TA$ and $d_1 = Ta \colon T^2 A \to TA$. At level $n = 1$, the three face maps are $d_0 = \mu_{TA}$, $d_1 = T\mu_A$, and $d_2 = T^2 a$.
+
+> [!EXAMPLE]- Bar resolution for groups
+> Take $T$ = the free group monad on **Set**. For a group $G$ with underlying set $|G|$, we have $T^n|G|$ = the free group on the free group on $\cdots$ on $|G|$ ($n$ times). The face map $d_0 = \mu_{|G|}$ evaluates the outer free group using $G$'s multiplication, while $d_1 = T(a) = T(\text{evaluation})$ evaluates one level inside. The degeneracy $s_0 = \eta_{T|G|}$ inserts the unit into the free group.
+
+**Verification of simplicial identities.** The face and degeneracy maps satisfy the standard simplicial identities ($d_i d_j = d_{j-1} d_i$ for $i < j$, etc.) by the monad axioms: associativity of $\mu$ and the unit laws for $\eta$.
+
+---
+
+### 19.3 The Simplicial Bar Construction in C^T
+
+The bar resolution lives in the underlying category $\mathcal{C}$, but it lifts to a simplicial object in the category of T-algebras $\mathcal{C}^T$.
+
+**Definition (Simplicial Bar Construction).** The *simplicial bar construction* $B_\bullet(T, A)$ is the simplicial object in $\mathcal{C}^T$ defined by:
+- Level $n$: the free T-algebra $(T^{n+1} A,\, \mu_{T^n A})$
+- Face maps: $d_i = T^i(\mu_{T^{n-i-1} A}) \colon (T^{n+1} A, \mu_{T^n A}) \to (T^n A, \mu_{T^{n-1} A})$ (these are T-algebra maps because $\mu$ is natural)
+- Degeneracy maps: $s_i = T^i(\eta_{T^{n-i} A}) \colon (T^n A, \mu_{T^{n-1} A}) \to (T^{n+1} A, \mu_{T^n A})$
+- Augmentation: the algebra map $a \colon (TA, \mu_A) \to (A, a)$
+
+Each level $B_n(T, A) = (T^{n+1} A, \mu_{T^n A})$ is the *free* T-algebra on $T^n A$. **The bar construction resolves every T-algebra by free algebras.**
+
+> [!NOTE] The forgetful functor and the resolution
+> The forgetful functor $U \colon \mathcal{C}^T \to \mathcal{C}$ sends $B_\bullet(T, A)$ to the bar resolution in $\mathcal{C}$. Importantly, the bar construction is *functorial* in the algebra map: a T-algebra map $f \colon (A, a) \to (B, b)$ induces a simplicial map $B_\bullet(T, A) \to B_\bullet(T, B)$ at level $n$ given by $T^{n+1} f$.
+
+---
+
+### 19.4 Geometric Realization and the Coequalizer
+
+The geometric realization of the bar construction (i.e., the colimit of the simplicial diagram) recovers the original algebra $(A, a)$.
+
+**Theorem (Realization of B_bullet).** The coequalizer of $d_0, d_1 \colon T^2 A \rightrightarrows TA$ in $\mathcal{C}^T$ is $(A, a)$. Moreover, if $\mathcal{C}^T$ has all coequalizers of reflexive pairs (which it does when $\mathcal{C}$ does, by the creation theorem from §11), then the *geometric realization* (homotopy colimit) of the entire simplicial object $B_\bullet(T, A)$ is again $(A, a)$.
+
+*Proof sketch for the coequalizer step.* We need:
+1. $a \circ d_0 = a \circ d_1$ (i.e., $a \circ \mu_A = a \circ Ta$): this is the T-algebra associativity law.
+2. $(A, a)$ is the universal such coequalizer: given any T-algebra map $h \colon (TA, \mu_A) \to (B, b)$ with $h \circ d_0 = h \circ d_1$, there is a unique T-algebra map $\bar{h} \colon (A, a) \to (B, b)$ with $\bar{h} \circ a = h$. Setting $\bar{h} = h \circ \eta_A$ works: one checks $\bar{h}$ is a T-algebra map using the split structure.
+
+**The key observation** is that the pair $(d_0, d_1)$ is *split* (not merely reflexive): the maps $s_{-1} = \eta_A \colon A \to TA$ and $s_0 = \eta_{TA} \colon TA \to T^2 A$ provide an explicit splitting. This makes the coequalizer *absolute* — preserved by every functor.
+
+---
+
+### 19.5 Contractibility and Splitting
+
+🔑 **The splitting maps** are the heart of why the bar construction works. Define the *extra degeneracy* maps:
+$$s_{-1}^{(n)} \colon T^n A \to T^{n+1} A, \quad s_{-1}^{(n)} = \eta_{T^n A}.$$
+These are not natural transformations of the simplicial structure (they go in the "wrong" direction with respect to the augmentation), but they provide a *contraction* of the augmented simplicial object $A \leftarrow TA \leftarrow T^2 A \leftarrow \cdots$ in $\mathcal{C}$.
+
+**Definition (Contractible augmented simplicial object).** An augmented simplicial object $X_{-1} \leftarrow X_0 \leftarrow X_1 \leftarrow \cdots$ is *contractible* (or *split*) if there exist maps $s_{-1}^{(n)} \colon X_n \to X_{n+1}$ (not required to be natural) such that:
+$$d_0 \circ s_{-1}^{(n)} = \mathrm{id}_{X_n}, \quad d_{i+1} \circ s_{-1}^{(n)} = s_{-1}^{(n-1)} \circ d_i \text{ for } i \geq 0.$$
+
+**Proposition.** The augmented bar resolution $A \leftarrow TA \leftarrow T^2 A \leftarrow \cdots$ (in $\mathcal{C}$) is contractible, with contraction given by $s_{-1}^{(n)} = \eta_{T^n A}$.
+
+*Proof.* Check: $d_0 \circ s_{-1}^{(n)} = \mu_{T^{n-1} A} \circ \eta_{T^n A} = \mathrm{id}_{T^n A}$ by the right unit law for $\mu$.
+
+> [!WARNING] Contractibility in C^T vs. in C
+> The contractibility of the bar resolution is a property of the underlying simplicial object in $\mathcal{C}$, not in $\mathcal{C}^T$. The extra degeneracy maps $\eta_{T^n A}$ are T-algebra maps only when their codomain carries the free algebra structure — and indeed each $T^{n+1} A$ does. So the contraction lifts to $\mathcal{C}^T$ at all positive levels, but the augmentation step $\eta_A \colon A \to TA$ is a T-algebra map only when $(A, a)$ is a free algebra (i.e., when $a = \mu_A$ for some T-algebra structure). For general $(A, a)$, the contraction exists in $\mathcal{C}$ but not in $\mathcal{C}^T$.
+
+---
+
+### 19.6 Universal Property: Canonical Presentation
+
+**Theorem (Canonical Presentation).** For any T-algebra $(A, a)$, the diagram
+$$\bigl(T^2 A,\, \mu_{TA},\, d_0 = \mu_A,\, d_1 = Ta,\, s_0 = \eta_{TA}\bigr) \underset{d_1}{\overset{d_0}{\rightrightarrows}} \bigl(TA,\, \mu_A\bigr) \xrightarrow{a} (A, a)$$
+is a *reflexive split coequalizer* diagram in $\mathcal{C}^T$, functorial in $(A, a)$.
+
+**Corollary.** The functor $F^T U^T \colon \mathcal{C}^T \to \mathcal{C}^T$ (where $F^T$ is the free algebra functor and $U^T$ the forgetful functor) comes with a canonical *augmented simplicial resolution*: for every $(A, a)$, the bar construction provides a functorial simplicial object $B_\bullet(T, A)$ in $\mathcal{C}^T$ whose geometric realization is $(A, a)$.
+
+*This is the sense in which every algebra is* ***canonically*** *presented by free algebras.*
+
+---
+
+### 19.7 Applications
+
+The bar construction appears throughout mathematics:
+
+1. **Homological algebra.** 💡 For the monad $T = A \otimes_k (-)$ on $k$-**Mod** (for a $k$-algebra $A$), the bar resolution of an $A$-module $M$ is the *bar resolution*:
+   $$\cdots \to A^{\otimes 3} \otimes M \to A^{\otimes 2} \otimes M \to A \otimes M \to M \to 0$$
+   with face maps given by the multiplication in $A$. This is precisely the standard resolution used to compute $\mathrm{Tor}_*^A(-, M)$ and $\mathrm{Ext}_A^*(-, M)$.
+
+2. **Algebraic topology.** For the monad $T = \Sigma^\infty \Omega^\infty$ on spectra, the bar construction produces the *Adams resolution*, used to compute stable homotopy groups via the Adams spectral sequence.
+
+3. **Classifying spaces.** For a discrete group $G$ viewed as a one-object groupoid, the bar construction on the monad associated to the free-forgetful adjunction $\mathbf{Set} \rightleftharpoons \mathbf{Grp}$ produces $B_n G = G^n$. The geometric realization $|B_\bullet G|$ is the classifying space $BG$ of $G$.
+
+4. **$\infty$-category theory.** The bar construction is a fundamental tool in $(\infty, 1)$-category theory, where it provides the *two-sided bar construction* $B(M, A, N)$ computing derived tensor products in the $\infty$-categorical sense.
+
+> [!INFO] Historical note
+> The bar construction originated in the work of Eilenberg and Mac Lane in the 1950s as a tool for computing group cohomology. The name comes from the original notation $[\bar{g}_1 | \bar{g}_2 | \cdots | \bar{g}_n]$ for elements of $G^n$. The abstract monad-theoretic formulation is due to Beck (1967) and was developed further by Barr and Wells in *Toposes, Triples and Theories*.
+
+---
+
+### 19.8 The Cobar Construction
+
+The *cobar construction* is the dual of the bar construction, defined for *comonads* rather than monads.
+
+**Definition (Cobar Construction).** Let $(G, \varepsilon, \delta)$ be a comonad on $\mathcal{C}$ and let $(A, \alpha \colon A \to GA)$ be a G-coalgebra. The *cobar construction* $\Omega^\bullet(G, A)$ is the cosimplicial object in $\mathcal{C}_G$ (the Eilenberg-Moore category of G-coalgebras) defined by:
+- Level $n$: the cofree G-coalgebra $(G^{n+1} A,\, \delta_{G^n A})$
+- Coface maps: $\delta^i = G^i(\delta_{G^{n-i} A}) \colon G^n A \to G^{n+1} A$ for $0 \leq i \leq n$
+- Codegeneracy maps: $\varepsilon^i = G^i(\varepsilon_{G^{n-i} A}) \colon G^{n+1} A \to G^n A$ for $0 \leq i \leq n$
+- Augmentation: the coalgebra map $\alpha \colon A \to GA$
+
+**Theorem (Dual Splitting).** The augmented cosimplicial object $A \to GA \to G^2 A \to \cdots$ is cosplit by the extra codegeneracy maps $\varepsilon_{G^n A} \colon G^{n+1} A \to G^n A$. The equalizer of $\varepsilon^0, \varepsilon^1 \colon GA \rightrightarrows A$ (in $\mathcal{C}_G$) is $(A, \alpha)$.
+
+> [!TIP] Bar vs. cobar
+> The symmetry is exact: swap monad $\leftrightarrow$ comonad, algebra $\leftrightarrow$ coalgebra, free $\leftrightarrow$ cofree, coequalizer $\leftrightarrow$ equalizer, and simplicial $\leftrightarrow$ cosimplicial. Every theorem about the bar construction has a dual theorem about the cobar construction.
+
+---
+
+> [!NOTE] Riehl Exercise: Bar Construction
+> *(i)* For the monad $T$ arising from the free-forgetful adjunction $\mathbf{Set} \rightleftharpoons \mathbf{Grp}$, describe the bar construction $B_\bullet(T, G)$ for a group $G$. What are the sets $T^n G$ (as sets) and what are the face and degeneracy maps concretely? What is $B_0(T,G)$, $B_1(T,G)$, and $B_2(T,G)$ as sets?
+>
+> *(ii)* Show that the augmented simplicial object $A \leftarrow TA \leftarrow T^2 A \leftarrow \cdots$ is *split* in the underlying category $\mathcal{C}$ (not in $\mathcal{C}^T$): exhibit explicit splitting maps making it a split augmented simplicial object. (Hint: the extra degeneracy $s_{-1}^{(n)} = \eta_{T^n A}$; verify the two splitting identities.)
+>
+> *(iii)* Let $T$ be the "free commutative monoid" monad on $\mathbf{Set}$ (so $TA$ = the set of finite multisets on $A$). Describe the bar construction for a commutative monoid $M$, and identify the face maps $d_0$ and $d_1$ of $B_1(T, M) \rightrightarrows B_0(T, M)$ concretely in terms of the monoid multiplication $m \colon M \times M \to M$ and unit $e \in M$.
 
 ---
 
