@@ -535,6 +535,25 @@ The *coslice* $A/\mathcal{C}$ is dual. Taking $\mathcal{A} = \mathbf{1}$ (the te
 >
 > (ii) Define an equivalence of categories precisely. Prove that $\mathbf{Set}_*$ is equivalent to $\mathbf{Par}$, the category whose objects are sets and whose morphisms $X \to Y$ are *partial functions* from $X$ to $Y$ (functions defined on some subset of $X$).
 
+> [!NOTE]- Solution to Exercise 8
+> **Part (i).** We construct an isomorphism of categories $\mathbf{Set}_* \cong (\mathbf{1} \downarrow \mathbf{Set})$.
+>
+> Let $* \to \mathbf{Set}$ be the functor picking out the one-element set $\{*\}$, and let $\mathrm{id}: \mathbf{Set} \to \mathbf{Set}$ be the identity. Objects of the comma category $(\mathbf{1} \downarrow \mathrm{id})$ are triples $(\mathbf{1}, X, f)$ where $X \in \mathbf{Set}$ and $f: \{*\} \to X$ — i.e., a set $X$ together with a chosen element $f(*) \in X$. This is exactly a pointed set. A morphism $(\mathbf{1}, X, f) \to (\mathbf{1}, Y, g)$ in the comma category is a pair $(\mathrm{id}_\mathbf{1}, h: X \to Y)$ such that $h \circ f = g$, i.e., $h(f(*)) = g(*)$ — exactly a basepoint-preserving function. So the two categories have the same objects and morphisms; the functors $\mathbf{Set}_* \to (\mathbf{1} \downarrow \mathrm{id})$ and back are mutually inverse and the isomorphism is immediate. $\square$
+>
+> **Part (ii).** We construct an equivalence $F: \mathbf{Set}_* \to \mathbf{Par}$.
+>
+> *Definition.* For a pointed set $(X, x_0)$, let $F(X, x_0) = X \setminus \{x_0\}$ (remove the basepoint). For a basepoint-preserving map $\phi: (X, x_0) \to (Y, y_0)$, define $F(\phi): X \setminus \{x_0\} \to Y \setminus \{y_0\}$ to be the restriction of $\phi$ to the domain where $\phi(x) \neq y_0$; this is a partial function since $\phi$ might send non-basepoint elements to the basepoint.
+>
+> Conversely, define $G: \mathbf{Par} \to \mathbf{Set}_*$ by $G(X) = X_+ = X \sqcup \{*\}$ (adjoin a disjoint basepoint $*$), and for a partial function $p: X \to Y$ define $G(p): X_+ \to Y_+$ by
+> $$G(p)(x) = \begin{cases} p(x) & \text{if } x \in \mathrm{dom}(p), \\ * & \text{if } x \notin \mathrm{dom}(p) \text{ or } x = *. \end{cases}$$
+> This sends undefined values to the basepoint, making $G(p)$ a well-defined basepoint-preserving function.
+>
+> *Verification that $F$ and $G$ are functors* is straightforward from the definitions: $F$ respects composition since restricting a composite to where it lands away from the basepoint is the composite of the restrictions; similarly for $G$.
+>
+> *Natural isomorphism $\eta: \mathrm{id}_{\mathbf{Set}_*} \xrightarrow{\sim} GF$.* For a pointed set $(X, x_0)$, we have $GF(X, x_0) = (X \setminus \{x_0\})_+ = (X \setminus \{x_0\}) \sqcup \{*\}$. Define $\eta_{(X,x_0)}: X \to (X \setminus \{x_0\}) \sqcup \{*\}$ by sending $x_0 \mapsto *$ and $x \mapsto x$ for $x \neq x_0$. This is a bijection, hence an isomorphism in $\mathbf{Set}_*$, and naturality in $(X, x_0)$ is immediate.
+>
+> *Natural isomorphism $\varepsilon: FG \xrightarrow{\sim} \mathrm{id}_{\mathbf{Par}}$.* For a set $X$, $FG(X) = (X \sqcup \{*\}) \setminus \{*\} = X$. So $\varepsilon_X = \mathrm{id}_X$, which is a bijection (in $\mathbf{Par}$, a total bijection is an isomorphism), and naturality is immediate. $\square$
+
 > [!NOTE] Exercise 9
 > Fix a field $k$. Let $\mathbf{Mat}_k$ be the category whose objects are the natural numbers $0, 1, 2, \ldots$ and whose hom-set $\mathbf{Mat}_k(m, n)$ is the set of $n \times m$ matrices over $k$ (equivalently, $k$-linear maps $k^m \to k^n$), with composition given by matrix multiplication. Prove that $\mathbf{Mat}_k \simeq \mathbf{FDVect}_k$ (the category of finite-dimensional $k$-vector spaces and $k$-linear maps).
 
