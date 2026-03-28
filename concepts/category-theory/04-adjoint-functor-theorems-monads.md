@@ -102,26 +102,26 @@ subject to the following two axioms, expressed as commutative diagrams:
 
 **Associativity:**
 
-```mermaid
-graph TD
-    T3["T³"] -->|"T\u03bc"| T2a["T²"]
-    T3 -->|"\u03bcT"| T2b["T²"]
-    T2a -->|"\u03bc"| T1a["T"]
-    T2b -->|"\u03bc"| T1b["T"]
+```tikz
+\begin{document}
+\begin{tikzcd}
+T^3 \arrow[r, "T\mu"] \arrow[d, "\mu T"'] & T^2 \arrow[d, "\mu"] \\
+T^2 \arrow[r, "\mu"'] & T
+\end{tikzcd}
+\end{document}
 ```
 
 That is: $\mu \circ T\mu = \mu \circ \mu T$ as natural transformations $T^3 \Rightarrow T$.
 
 **Unit laws:**
 
-```mermaid
-graph LR
-    T1["T"] -->|"\u03b7T"| T2a["T²"]
-    T2a -->|"\u03bc"| T3["T"]
-    T1 -->|"id"| T3
-    T1b["T"] -->|"T\u03b7"| T2b["T²"]
-    T2b -->|"\u03bc"| T3b["T"]
-    T1b -->|"id"| T3b
+```tikz
+\begin{document}
+\begin{tikzcd}
+T \arrow[r, "\eta T"] \arrow[dr, "\mathrm{id}_T"'] & T^2 \arrow[d, "\mu"] & T \arrow[l, "T\eta"'] \arrow[dl, "\mathrm{id}_T"] \\
+& T &
+\end{tikzcd}
+\end{document}
 ```
 
 That is: $\mu \circ \eta T = \mathrm{id}_T = \mu \circ T\eta$.
@@ -173,19 +173,22 @@ The Kleisli adjunction is the *initial* adjunction giving rise to $(T, \eta, \mu
 
 As commutative diagrams:
 
-```mermaid
-graph LR
-    A -->|"η_A"| TA
-    TA -->|"a"| A2["A"]
-    A -->|"id"| A2
+```tikz
+\begin{document}
+\begin{tikzcd}
+A \arrow[r, "\eta_A"] \arrow[dr, "\mathrm{id}_A"'] & TA \arrow[d, "a"] \\
+& A
+\end{tikzcd}
+\end{document}
 ```
 
-```mermaid
-graph LR
-    T2A["T²A"] -->|"μ_A"| TA1["TA"]
-    T2A -->|"Ta"| TA2["TA"]
-    TA1 -->|"a"| A1["A"]
-    TA2 -->|"a"| A2["A"]
+```tikz
+\begin{document}
+\begin{tikzcd}
+T^2A \arrow[r, "\mu_A"] \arrow[d, "Ta"'] & TA \arrow[d, "a"] \\
+TA \arrow[r, "a"'] & A
+\end{tikzcd}
+\end{document}
 ```
 
 > [!EXAMPLE] T-algebras for the list monad
@@ -193,12 +196,13 @@ graph LR
 
 **Definition (T-Algebra Morphism).** A *morphism of $T$-algebras* $f \colon (A, a) \to (B, b)$ is a morphism $f \colon A \to B$ in $\mathcal{C}$ such that $f \circ a = b \circ Tf$.
 
-```mermaid
-graph LR
-    TA -->|"Tf"| TB
-    TA -->|"a"| A
-    TB -->|"b"| B
-    A -->|"f"| B
+```tikz
+\begin{document}
+\begin{tikzcd}
+TA \arrow[r, "Tf"] \arrow[d, "a"'] & TB \arrow[d, "b"] \\
+A \arrow[r, "f"'] & B
+\end{tikzcd}
+\end{document}
 ```
 
 ### 4.2 The Eilenberg-Moore Category
@@ -252,13 +256,12 @@ is a *split coequalizer* (or *absolute coequalizer*) if there exist morphisms $s
 3. $q \circ t = \mathrm{id}_C$,
 4. $g \circ s = t \circ q$.
 
-```mermaid
-graph LR
-    A -->|"f"| B
-    A -->|"g"| B
-    B -->|"q"| C
-    B -->|"s"| A
-    C -->|"t"| B
+```tikz
+\begin{document}
+\begin{tikzcd}
+A \arrow[r, "f", shift left=2] \arrow[r, "g"', shift right=2] & B \arrow[r, "q"] \arrow[l, "s", bend right=40] & C \arrow[l, "t", bend right=40]
+\end{tikzcd}
+\end{document}
 ```
 
 *Conditions 1–4 together imply $q$ is a coequalizer of $f$ and $g$.*

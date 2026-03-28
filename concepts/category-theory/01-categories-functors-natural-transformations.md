@@ -339,12 +339,13 @@ Natural transformations are the morphisms between functors. They encode the noti
 $$\alpha_A: FA \to GA \quad \text{(for each } A \in \mathrm{ob}(\mathcal{C})\text{)},$$
 called the *components* of $\alpha$, such that for every morphism $f: A \to B$ in $\mathcal{C}$, the following *naturality square* commutes:
 
-```mermaid
-graph TD
-    FA["FA"] -- "Ff" --> FB["FB"]
-    FA -- "alpha_A" --> GA["GA"]
-    FB -- "alpha_B" --> GB["GB"]
-    GA -- "Gf" --> GB
+```tikz
+\begin{document}
+\begin{tikzcd}
+FA \arrow[r, "Ff"] \arrow[d, "\alpha_A"'] & FB \arrow[d, "\alpha_B"] \\
+GA \arrow[r, "Gf"'] & GB
+\end{tikzcd}
+\end{document}
 ```
 
 That is: $\alpha_B \circ Ff = Gf \circ \alpha_A$ for every $f: A \to B$.
@@ -513,18 +514,22 @@ These are natural because $\phi$ is natural. Every morphism $h \in \mathcal{D}(F
 
 **Theorem (Triangle identities).** Given an adjunction $F \dashv G$ with unit $\eta$ and counit $\varepsilon$, the following diagrams commute:
 
-```mermaid
-graph LR
-    F["F"] -- "F eta" --> FGF["FGF"]
-    F -- "id_F" --> F2["F"]
-    FGF -- "eps F" --> F2
+```tikz
+\begin{document}
+\begin{tikzcd}
+F \arrow[r, "F\eta"] \arrow[dr, "\mathrm{id}_F"'] & FGF \arrow[d, "\varepsilon F"] \\
+& F
+\end{tikzcd}
+\end{document}
 ```
 
-```mermaid
-graph LR
-    G["G"] -- "eta G" --> GFG["GFG"]
-    G -- "id_G" --> G2["G"]
-    GFG -- "G eps" --> G2
+```tikz
+\begin{document}
+\begin{tikzcd}
+G \arrow[r, "\eta G"] \arrow[dr, "\mathrm{id}_G"'] & GFG \arrow[d, "G\varepsilon"] \\
+& G
+\end{tikzcd}
+\end{document}
 ```
 
 That is:

@@ -56,22 +56,24 @@ indexed by $A \in \mathbf{D}$ and $B \in \mathbf{C}$, that is *natural* in both 
 
 Naturality in $B$ means: for every morphism $g \colon B \to B'$ in $\mathbf{C}$, the square
 
-```mermaid
-graph LR
-  A["C(FA, B)"] -->|"φ_{A,B}"| B0["D(A, GB)"]
-  A -->|"g ∘ −"| C["C(FA, B')"]
-  B0 -->|"Gg ∘ −"| D["D(A, GB')"]
-  C -->|"φ_{A,B'}"| D
+```tikz
+\begin{document}
+\begin{tikzcd}
+\mathcal{C}(FA, B) \arrow[r, "\varphi_{A,B}"] \arrow[d, "g \circ {-}"'] & \mathcal{D}(A, GB) \arrow[d, "Gg \circ {-}"] \\
+\mathcal{C}(FA, B') \arrow[r, "\varphi_{A,B'}"'] & \mathcal{D}(A, GB')
+\end{tikzcd}
+\end{document}
 ```
 
 commutes. Naturality in $A$ means: for every morphism $h \colon A' \to A$ in $\mathbf{D}$, the square
 
-```mermaid
-graph LR
-  A["C(FA, B)"] -->|"φ_{A,B}"| B0["D(A, GB)"]
-  A -->|"− ∘ Fh"| C["C(FA', B)"]
-  B0 -->|"− ∘ h"| D["D(A', GB)"]
-  C -->|"φ_{A',B}"| D
+```tikz
+\begin{document}
+\begin{tikzcd}
+\mathcal{C}(FA, B) \arrow[r, "\varphi_{A,B}"] \arrow[d, "{-} \circ Fh"'] & \mathcal{D}(A, GB) \arrow[d, "{-} \circ h"] \\
+\mathcal{C}(FA', B) \arrow[r, "\varphi_{A',B}"'] & \mathcal{D}(A', GB)
+\end{tikzcd}
+\end{document}
 ```
 
 commutes.
@@ -93,10 +95,13 @@ $$(\varepsilon F) \circ (F\eta) = \mathrm{id}_F \qquad \text{and} \qquad (G\vare
 
 Here $\varepsilon F$ denotes the natural transformation with components $\varepsilon_{FA} \colon FGF A \to FA$, and $F\eta$ denotes the natural transformation with components $F(\eta_A) \colon FA \to FGFA$. Written as commutative diagrams for each $A \in \mathbf{D}$ and $B \in \mathbf{C}$:
 
-```mermaid
-graph LR
-  FA["FA"] -->|"Fη_A"| FGFA["FGFA"]
-  FGFA -->|"ε_{FA}"| FA2["FA"]
+```tikz
+\begin{document}
+\begin{tikzcd}
+FA \arrow[r, "F\eta_A"] \arrow[dr, "\mathrm{id}_{FA}"'] & FGFA \arrow[d, "\varepsilon_{FA}"] \\
+& FA
+\end{tikzcd}
+\end{document}
 ```
 
 $$F A \xrightarrow{F\eta_A} FGFA \xrightarrow{\varepsilon_{FA}} FA = \mathrm{id}_{FA}$$
@@ -214,12 +219,13 @@ i.e., $Gk \circ f = f' \circ Fh$ in $\mathbf{C}$.
 - **Composition** is componentwise: $(h', k') \circ (h, k) = (h' \circ h, k' \circ k)$.
 - **Identities:** $\mathrm{id}_{(a,b,f)} = (\mathrm{id}_a, \mathrm{id}_b)$.
 
-```mermaid
-graph LR
-  Fa["Fa"] -->|"f"| Gb["Gb"]
-  Fa -->|"Fh"| Fa2["Fa'"]
-  Gb -->|"Gk"| Gb2["Gb'"]
-  Fa2 -->|"f'"| Gb2
+```tikz
+\begin{document}
+\begin{tikzcd}
+Fa \arrow[r, "f"] \arrow[d, "Fh"'] & Gb \arrow[d, "Gk"] \\
+Fa' \arrow[r, "f'"'] & Gb'
+\end{tikzcd}
+\end{document}
 ```
 
 The commutativity condition is $Gk \circ f = f' \circ Fh$.
@@ -434,11 +440,13 @@ More explicitly:
 - A morphism $(X, f) \to (X', f')$ is a morphism $h \colon X \to X'$ in $\mathbf{C}$ such that $Gh \circ f = f'$.
 - An initial object in $(B \downarrow G)$ is a pair $(FB, \eta_B)$ with $\eta_B \colon B \to GFB$ such that for any $(X, f)$, there is a unique $h \colon FB \to X$ with $Gh \circ \eta_B = f$.
 
-```mermaid
-graph LR
-  B["B"] -->|"η_B"| GFB["GFB"]
-  B -->|"f"| GX["GX"]
-  GFB -->|"Gh"| GX
+```tikz
+\begin{document}
+\begin{tikzcd}
+B \arrow[r, "\eta_B"] \arrow[dr, "f"'] & GFB \arrow[d, "Gh"] \\
+& GX
+\end{tikzcd}
+\end{document}
 ```
 
 *Proof.* Given an adjunction $F \dashv G$ with unit $\eta$, the pair $(FB, \eta_B)$ is initial in $(B \downarrow G)$: the unique morphism to any $(X, f)$ is $\hat{f} = \phi_{B,X}^{-1}(f) \colon FB \to X$ (the transpose of $f$), and $G\hat{f} \circ \eta_B = f$ holds by definition of $\phi$ (since $\phi_{B,X}(\hat{f}) = G\hat{f} \circ \eta_B = f$). Uniqueness follows from bijectivity of $\phi$.
@@ -588,12 +596,13 @@ The mate correspondence is due to Kelly and Street (1974) and is a fundamental t
 - **Morphisms:** from $f \colon A \to B$ to $g \colon C \to D$, a *commutative square*, i.e., a pair $(u \colon A \to C,\; v \colon B \to D)$ such that $v \circ f = g \circ u$.
 - **Composition:** componentwise.
 
-```mermaid
-graph LR
-  A["A"] -->|"f"| B["B"]
-  A -->|"u"| C["C"]
-  B -->|"v"| D["D"]
-  C -->|"g"| D
+```tikz
+\begin{document}
+\begin{tikzcd}
+A \arrow[r, "f"] \arrow[d, "u"'] & B \arrow[d, "v"] \\
+C \arrow[r, "g"'] & D
+\end{tikzcd}
+\end{document}
 ```
 
 $\mathbf{C}^{\to}$ is the functor category $[\mathbf{2}, \mathbf{C}]$, where $\mathbf{2}$ is the category $\{0 \to 1\}$ with two objects and one non-identity morphism.

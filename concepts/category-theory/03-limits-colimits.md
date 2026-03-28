@@ -66,14 +66,13 @@ $$D(u) \circ \pi_i = \pi_j.$$
 
 Equivalently, in terms of the *constant functor* $\Delta_N : \mathcal{I} \to \mathcal{C}$ (which sends every object to $N$ and every morphism to $\mathrm{id}_N$), a cone $(N, (\pi_i))$ is precisely a natural transformation $\pi : \Delta_N \Rightarrow D$.
 
-```mermaid
-graph TD
-    N["N (apex)"]
-    Di["Di"]
-    Dj["Dj"]
-    N -->|"π_i"| Di
-    N -->|"π_j"| Dj
-    Di -->|"D(u)"| Dj
+```tikz
+\begin{document}
+\begin{tikzcd}
+& N \arrow[dl, "\pi_i"'] \arrow[dr, "\pi_j"] & \\
+Di \arrow[rr, "D(u)"'] & & Dj
+\end{tikzcd}
+\end{document}
 ```
 
 **Definition (Cocone).** A *cocone under $D$* is a pair $(N, (\iota_i)_{i \in \mathcal{I}})$ where $\iota_i : Di \to N$ for each $i \in \mathcal{I}$, subject to the *cocommutativity condition*: for every $u : i \to j$ in $\mathcal{I}$,
@@ -95,14 +94,13 @@ $$\pi_i \circ \, ! \;= \phi_i \quad \text{for all } i \in \mathcal{I}.$$
 
 We denote the apex $L$ by $\varprojlim D$ or $\lim_{\mathcal{I}} D$ or simply $\lim D$.
 
-```mermaid
-graph TD
-    N["N (any cone apex)"]
-    L["L = lim D"]
-    Di["Di"]
-    N -->|"! (unique)"| L
-    N -->|"φ_i"| Di
-    L -->|"π_i"| Di
+```tikz
+\begin{document}
+\begin{tikzcd}
+N \arrow[dr, "\varphi_i"'] \arrow[r, "!", dashed] & {L = \lim D} \arrow[d, "\pi_i"] \\
+& Di
+\end{tikzcd}
+\end{document}
 ```
 
 **Definition (Colimit).** A *colimit of $D$* is a cocone $(L, (\iota_i)_{i \in \mathcal{I}})$ under $D$ that is *initial* among cocones: for every cocone $(N, (\psi_i)_{i \in \mathcal{I}})$ under $D$, there exists a unique morphism $! : L \to N$ such that
@@ -228,14 +226,13 @@ Let $F : \mathcal{C} \to \mathcal{D}$ be a functor and $\mathcal{I}$ a small cat
 
 **Definition (Projective object).** An object $P \in \mathcal{C}$ is *projective* if the representable functor $\mathcal{C}(P, -) : \mathcal{C} \to \mathbf{Set}$ preserves epimorphisms: for every epimorphism $e : A \twoheadrightarrow B$ and every morphism $f : P \to B$, there exists a morphism $g : P \to A$ with $e \circ g = f$.
 
-```mermaid
-graph TD
-    P["P"]
-    A["A"]
-    B["B"]
-    P -->|"f"| B
-    A -->|"e (epi)"| B
-    P -.->|"g (lift)"| A
+```tikz
+\begin{document}
+\begin{tikzcd}
+& P \arrow[d, "f"] \arrow[dl, dashed, "\exists g"'] \\
+A \arrow[r, "e"', two heads] & B
+\end{tikzcd}
+\end{document}
 ```
 
 > [!EXAMPLE] Free modules are projective
@@ -356,13 +353,13 @@ Define two maps $s, t : P \to Q$: the $u$-component of $s$ is $\pi_j : P \to Dj$
 
 *Proof.* Equalizers can be built from pullbacks: the equalizer of $f, g : A \rightrightarrows B$ is the pullback of $\langle f, g \rangle : A \to B \times B$ along the diagonal $\Delta : B \to B \times B$. $\square$
 
-```mermaid
-graph LR
-    A["A"]
-    BxB["B × B"]
-    B["B"]
-    A -->|"⟨f, g⟩"| BxB
-    B -->|"Δ = ⟨id, id⟩"| BxB
+```tikz
+\begin{document}
+\begin{tikzcd}
+A \arrow[dr, "\langle f{,}g\rangle"] & \\
+B \arrow[r, "\Delta"'] & B \times B
+\end{tikzcd}
+\end{document}
 ```
 
 The equalizer of $f, g$ is the pullback of this cospan. In particular, categories with terminal objects and pullbacks have all finite limits.
