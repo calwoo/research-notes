@@ -108,6 +108,34 @@ Apply these consistently in all note files:
 
 Do NOT italicize terms after their first use. Do NOT bold entire sentences except for genuine key conclusions.
 
+### Obsidian Callouts
+
+Use Obsidian callouts often to inject supplementary information without breaking the main narrative flow. Callouts are ideal for asides, worked examples, caveats, and historical context that would disrupt a derivation if placed inline.
+
+Syntax:
+```
+> [!TYPE] Optional custom title
+> Content here.
+
+> [!TYPE]- Collapsible callout (collapsed by default)
+> Content here.
+```
+
+Use these types consistently:
+
+| Type | Color | When to use |
+|------|-------|-------------|
+| `NOTE` | blue | Clarifications, definitions that don't fit inline |
+| `INFO` | blue | Background context, historical notes |
+| `TIP` | green | Practical advice, implementation hints |
+| `EXAMPLE` | purple | Worked examples, concrete instantiations |
+| `WARNING` | orange | Caveats, conditions where a result breaks down |
+| `DANGER` | red | Common misconceptions, hard failure modes |
+| `QUESTION` | yellow | Open problems, unresolved debates |
+| `QUOTE` | grey | Verbatim excerpts worth preserving |
+
+**Guidance:** Prefer callouts over parenthetical asides or footnotes. Use collapsible callouts (`-`) for lengthy digressions or full worked examples that only some readers will want. Place at least one callout per major section (`##`) where supplementary information exists.
+
 ### Emoji Usage
 
 Use emojis throughout notes to add visual color to the exposition. Sprinkle them at section headings, before key definitions, and to signal tone (e.g. ⚠️ for warnings, 💡 for insights, 📐 for derivations, 🔑 for key results). Do not overuse — one per paragraph at most.
@@ -136,9 +164,25 @@ This differs from intra-document TOC links (`[[#Exact Heading Text|Display Text]
 
 ### Mermaid Diagram Conventions
 
+- **Always use Python for pseudocode.** Never use generic pseudocode syntax or algorithm-block notation — write executable (or near-executable) Python instead.
+- **Always prefer Mermaid diagrams over ASCII art.** Never use ASCII diagrams (e.g., box-and-arrow art made with `─`, `│`, `→`, etc.) — use a `mermaid` fenced code block instead.
 - **Line breaks in node labels:** use `<br/>`, not `\n`. Obsidian's Mermaid renderer does not interpret `\n` as a newline inside node label strings.
+- **No `&` multi-edge shorthand:** `A & B --> C` is not supported in Obsidian's bundled Mermaid — write individual edges instead (`A --> C` and `B --> C` on separate lines).
+- **No em-dashes in edge labels:** `-->|yes — label|` causes parse errors — use plain text instead (`-->|yes|`). Avoid colons in edge labels too.
+- **No unicode in diamond labels:** special characters like `≠`, `∅`, `→` inside `{...}` diamond nodes cause parse errors — use plain ASCII words instead (e.g., `{"gaps remain?"}` not `{"G ≠ ∅?"}`). Unicode is safe inside regular `["..."]` node labels.
   - Correct: `kI["k_s^I ∈ ℝ^d<br/>indexer key"]`
   - Wrong: `kI["k_s^I ∈ ℝ^d\nindexer key"]`
+
+## Reading PDFs
+
+When a URL points to a PDF and `WebFetch` returns binary content, download and convert with pandoc first:
+
+```bash
+curl -sL <url> -o /tmp/paper.pdf
+pandoc /tmp/paper.pdf -t markdown -o /tmp/paper.md
+```
+
+Then read `/tmp/paper.md`. This applies to arXiv PDFs, textbooks, and any other PDF source.
 
 ## Project Agents
 
