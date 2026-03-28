@@ -46,6 +46,21 @@
   - [[#9.1 Abelianisation as an Adjunction|9.1 Abelianisation as an Adjunction]]
   - [[#9.2 Stone-Cech Compactification|9.2 Stone-Cech Compactification]]
   - [[#9.3 What Category Theory Is About|9.3 What Category Theory Is About]]
+- [[#10. Size Matters 📏|10. Size Matters 📏]]
+  - [[#10.1 Small and Large Categories|10.1 Small and Large Categories]]
+  - [[#10.2 Locally Small Categories|10.2 Locally Small Categories]]
+  - [[#10.3 Essentially Small Categories|10.3 Essentially Small Categories]]
+  - [[#10.4 Why Size Matters: Russell's Paradox and Adjunctions|10.4 Why Size Matters: Russell's Paradox and Adjunctions]]
+  - [[#10.5 Grothendieck Universes|10.5 Grothendieck Universes]]
+  - [[#10.6 The Local Smallness Convention|10.6 The Local Smallness Convention]]
+- [[#11. The 2-Category of Categories 🔷|11. The 2-Category of Categories 🔷]]
+  - [[#11.1 Motivation|11.1 Motivation]]
+  - [[#11.2 Definition of a 2-Category|11.2 Definition of a 2-Category]]
+  - [[#11.3 Cat as a 2-Category|11.3 Cat as a 2-Category]]
+  - [[#11.4 2-Functors and 2-Natural Transformations|11.4 2-Functors and 2-Natural Transformations]]
+  - [[#11.5 Adjunctions in a 2-Category|11.5 Adjunctions in a 2-Category]]
+  - [[#11.6 Modifications|11.6 Modifications]]
+  - [[#11.7 The Godement Product|11.7 The Godement Product]]
 - [[#References|References]]
 
 ---
@@ -703,6 +718,220 @@ This section collects key examples and philosophical remarks from Leinster's *Ba
 > 3. **Functoriality:** The distinction between "functorial" and "non-functorial" constructions is deep. A construction that cannot be made into a functor (e.g., choosing a basis for a vector space) is fundamentally different from one that can.
 >
 > Leinster's book deliberately keeps the scope narrow — categories, functors, natural transformations, adjunctions, representables, and limits — to present these ideas in their cleanest form.
+
+---
+
+## 10. Size Matters 📏
+
+Set-theoretic size is not a bureaucratic afterthought in category theory — it is the boundary condition that determines which theorems are even *statable*. This section makes precise what it means for a category to be small, locally small, or essentially small, and explains why each condition appears as a hypothesis in the major theorems.
+
+### 10.1 Small and Large Categories
+
+**Definition (Small and large categories).** A category $\mathcal{C}$ is *small* if both $\mathrm{ob}(\mathcal{C})$ and $\mathrm{mor}(\mathcal{C}) = \coprod_{A,B \in \mathcal{C}} \mathcal{C}(A,B)$ are *sets* (i.e., elements of a fixed set-theoretic universe, not proper classes). A category is *large* if either collection is a proper class.
+
+> [!INFO] Examples of small and large categories
+> **Large categories:** $\mathbf{Set}$, $\mathbf{Grp}$, $\mathbf{Top}$, $\mathbf{Vect}_k$, $\mathbf{Ring}$, $\mathbf{Ab}$ — their object collections are proper classes (there is no set of all sets, no set of all groups, etc.).
+>
+> **Small categories:** Any poset $(P, \leq)$ viewed as a category (when $P$ is a set); any monoid $M$ viewed as a one-object category $\mathbf{B}M$; the *ordinal categories* $\mathbf{n} = \{0 \to 1 \to \cdots \to n\}$ for $n \geq 0$; the *empty category* $\mathbf{0}$; the *terminal category* $\mathbf{1}$.
+>
+> 💡 Smallness is an absolute condition on the collection of objects and morphisms, whereas local smallness (§10.2) is a condition on each individual hom-collection.
+
+### 10.2 Locally Small Categories
+
+**Definition (Locally small).** A category $\mathcal{C}$ is *locally small* if for every pair of objects $A, B \in \mathcal{C}$, the hom-collection $\mathcal{C}(A, B)$ is a set.
+
+Every small category is locally small. Among large categories, all the named examples — $\mathbf{Set}$, $\mathbf{Grp}$, $\mathbf{Top}$, $\mathbf{Vect}_k$ — are locally small, since morphisms between any two fixed objects form a set (e.g., the set of all functions between two sets, the set of all group homomorphisms, etc.).
+
+> [!WARNING] Local smallness is needed for the Yoneda lemma
+> The Yoneda lemma asserts that for $F: \mathcal{C} \to \mathbf{Set}$ and $A \in \mathcal{C}$, natural transformations $\mathcal{C}(A, -) \Rightarrow F$ are in bijection with $FA$. The domain functor $\mathcal{C}(A, -)$ is only well-defined as a functor to $\mathbf{Set}$ if $\mathcal{C}(A, B)$ is a *set* for each $B$ — i.e., if $\mathcal{C}$ is locally small. Without this, $\mathcal{C}(A, B)$ could be a proper class, and it would not be an object of $\mathbf{Set}$.
+
+### 10.3 Essentially Small Categories
+
+**Definition (Essentially small).** A category $\mathcal{C}$ is *essentially small* if it is *equivalent* (in the sense of §6) to a small category. Equivalently, $\mathcal{C}$ has a *small skeleton* — a full subcategory containing exactly one object from each isomorphism class.
+
+> [!EXAMPLE] The category of finite sets
+> The category $\mathbf{FinSet}$ of all finite sets is *not* small: there are class-many finite sets (e.g., $\{0\}, \{1\}, \{2\}, \ldots$ are all distinct one-element sets in ZFC). However, $\mathbf{FinSet}$ is essentially small: it is equivalent to the full subcategory $\{\mathbf{0}, \mathbf{1}, \mathbf{2}, \ldots\}$ where $\mathbf{n} = \{0, 1, \ldots, n-1\}$, which is a small category.
+>
+> This illustrates that essential smallness is the invariant notion of smallness under categorical equivalence.
+
+### 10.4 Why Size Matters: Russell's Paradox and Adjunctions
+
+📐 The need for size distinctions is not philosophical — it is forced by set theory.
+
+**Russell's paradox and $\mathbf{Set}$.** There is no set of all sets: the collection $\{X : X \notin X\}$ leads to a contradiction. Thus $\mathrm{ob}(\mathbf{Set})$ is a proper class, and $\mathbf{Set}$ is large but not small.
+
+**Adjunctions require sets.** The hom-set bijection in an adjunction,
+$$\mathcal{D}(FA, B) \cong \mathcal{C}(A, GB),$$
+is a natural bijection of *sets*. If $\mathcal{C}$ and $\mathcal{D}$ are not locally small, neither side is a set, and the statement is not well-formed. **Local smallness of $\mathcal{C}$ and $\mathcal{D}$ is a standing hypothesis in the definition of adjunction via hom-sets.**
+
+> [!WARNING] The General Adjoint Functor Theorem and the solution set condition
+> The *General Adjoint Functor Theorem* (Freyd's theorem) states: a functor $G: \mathcal{D} \to \mathcal{C}$ has a left adjoint if and only if it preserves all small limits and satisfies the *solution set condition* — for each $A \in \mathcal{C}$, there exists a *set* (not a proper class) of morphisms $A \to GB$ that "generates" all morphisms from $A$ to the image of $G$.
+>
+> The solution set condition is precisely a smallness hypothesis. Without it, one would need to take an initial object in a category of potentially class-many candidates, which ZFC set theory does not permit. This is why the theorem is not vacuous: most functors satisfy limit preservation, but fail the solution set condition in pathological cases.
+
+### 10.5 Grothendieck Universes
+
+One clean resolution of the size problem is via *Grothendieck universes*.
+
+**Definition (Grothendieck universe).** A *Grothendieck universe* $\mathcal{U}$ is a set satisfying:
+1. If $x \in \mathcal{U}$ and $y \in x$, then $y \in \mathcal{U}$ (transitivity).
+2. If $x \in \mathcal{U}$, then $\mathcal{P}(x) \in \mathcal{U}$ (power sets).
+3. If $I \in \mathcal{U}$ and $\{x_i\}_{i \in I} \subseteq \mathcal{U}$, then $\bigcup_{i \in I} x_i \in \mathcal{U}$ (unions).
+4. $\mathbb{N} \in \mathcal{U}$ (contains the natural numbers).
+
+> [!INFO] How Grothendieck universes resolve size issues
+> Fix a universe $\mathcal{U}$. Call a set *$\mathcal{U}$-small* if it is an element of $\mathcal{U}$. Then:
+> - "$\mathcal{U}$-sets" play the role of "small sets."
+> - "$\mathcal{U}$-classes" (collections of $\mathcal{U}$-small sets) play the role of "large sets" / "proper classes."
+> - The category $\mathbf{Set}_{\mathcal{U}}$ of all $\mathcal{U}$-small sets is an honest *set* from the perspective of a larger universe $\mathcal{U}'$, allowing us to form functor categories, slice categories, and presheaf categories without set-theoretic illegality.
+>
+> The existence of arbitrarily large Grothendieck universes is not provable in ZFC alone; it requires an additional axiom (the *universe axiom*, equivalent to the existence of inaccessible cardinals in ZFC). SGA and much of Grothendieck's algebraic geometry is written in this framework.
+
+### 10.6 The Local Smallness Convention
+
+🔑 **Throughout category theory, local smallness is the default standing hypothesis.** The major theorems — the Yoneda lemma (File 2), the adjoint functor theorems (File 4), representability criteria, and limits (File 3) — all require at minimum that the relevant categories be locally small. This hypothesis is frequently left implicit in the literature, but it is never vacuous.
+
+**The practical upshot:** when defining a new category, one should immediately verify local smallness. For most naturally occurring categories this is immediate (morphisms are functions, homomorphisms, or homotopy classes, all of which form sets). The exceptions — such as functor categories $[\mathcal{C}, \mathcal{D}]$ where $\mathcal{C}$ is large — require more care.
+
+> [!NOTE] Riehl Exercise: Size
+> **(i)** Show that the category of all small categories $\mathbf{Cat}$ is large but locally small.
+> *(Hint: the collection of all small categories is not a set by a cardinality argument, but for any two small categories $\mathcal{C}$ and $\mathcal{D}$, the collection of functors $\mathcal{C} \to \mathcal{D}$ is a set.)*
+>
+> **(ii)** Let $\mathcal{C}$ be a locally small category and fix $A \in \mathcal{C}$. Show that the functor $\mathcal{C}(A, -): \mathcal{C} \to \mathbf{Set}$ is well-defined — i.e., that it sends each object $B$ to an element of $\mathrm{ob}(\mathbf{Set})$ (a genuine set, not a proper class).
+>
+> **(iii)** Give an example of a category that is locally small but not essentially small.
+> *(Hint: consider $\mathbf{Set}$ itself — it is locally small, but its isomorphism classes are not a set, since for each cardinality $\kappa$ there is a proper class of sets of cardinality $\kappa$.)*
+
+---
+
+## 11. The 2-Category of Categories 🔷
+
+The structure of $\mathbf{Cat}$ — categories, functors, and natural transformations — exhibits a strict hierarchy: there are morphisms (functors) between objects (categories), and morphisms between morphisms (natural transformations). This is the prototype of a *2-category*, a structure with three levels of data.
+
+### 11.1 Motivation
+
+In §5, we defined functor categories $[\mathcal{C}, \mathcal{D}]$ whose objects are functors and whose morphisms are natural transformations. We found two composition operations:
+
+- **Vertical composition** (§5.2): given $\alpha: F \Rightarrow G$ and $\beta: G \Rightarrow H$ in $[\mathcal{C}, \mathcal{D}]$, the composite $\beta \circ \alpha: F \Rightarrow H$ has components $(\beta \circ \alpha)_A = \beta_A \circ \alpha_A$.
+- **Horizontal composition** (§5.4): given $\alpha: F \Rightarrow G: \mathcal{C} \to \mathcal{D}$ and $\beta: H \Rightarrow K: \mathcal{D} \to \mathcal{E}$, the *Godement product* $\beta * \alpha: HF \Rightarrow KG: \mathcal{C} \to \mathcal{E}$.
+
+💡 The existence of two interacting composition operations, together with an interchange law relating them, is precisely the data of a *2-category*. The category $\mathbf{Cat}$ is the canonical example.
+
+### 11.2 Definition of a 2-Category
+
+**Definition (2-category).** A *2-category* $\mathcal{K}$ consists of:
+
+- **0-cells** (objects): a collection $\mathrm{ob}(\mathcal{K})$, typically denoted $A, B, C, \ldots$
+- **1-cells** (morphisms between 0-cells): for each pair $A, B$, a collection $\mathcal{K}(A, B)$ of 1-cells $f: A \to B$.
+- **2-cells** (morphisms between 1-cells): for each pair of parallel 1-cells $f, g: A \to B$, a collection $\mathcal{K}(f, g)$ of 2-cells $\alpha: f \Rightarrow g$.
+- **Vertical composition of 2-cells**: for $\alpha: f \Rightarrow g$ and $\beta: g \Rightarrow h$ (same 0-cell boundaries), a 2-cell $\beta \circ_v \alpha: f \Rightarrow h$, satisfying associativity and unit laws with respect to *identity 2-cells* $\mathrm{id}_f: f \Rightarrow f$.
+- **Horizontal composition of 2-cells** (Godement product): for $\alpha: f \Rightarrow g: A \to B$ and $\beta: h \Rightarrow k: B \to C$, a 2-cell $\beta *\alpha: h \circ f \Rightarrow k \circ g: A \to C$.
+- **Composition and identities for 1-cells**: as in an ordinary category.
+
+These data must satisfy the **interchange law**:
+$$(\beta' \circ_v \beta) * (\alpha' \circ_v \alpha) = (\beta' * \alpha') \circ_v (\beta * \alpha),$$
+for composable pairs $(\alpha, \alpha')$ of 2-cells with $f \xRightarrow{\alpha} g \xRightarrow{\alpha'} h: A \to B$ and $k \xRightarrow{\beta} l \xRightarrow{\beta'} m: B \to C$.
+
+> [!INFO] The interchange law visualized
+> The interchange law says that two different ways of composing a $2 \times 2$ grid of 2-cells give the same result:
+>
+> $$\begin{array}{ccc} A & \xrightarrow{f} & B & \xrightarrow{h} & C \\ & \Downarrow\!\alpha & & \Downarrow\!\beta & \\ A & \xrightarrow{g} & B & \xrightarrow{k} & C \\ & \Downarrow\!\alpha' & & \Downarrow\!\beta' & \\ A & \xrightarrow{h'} & B & \xrightarrow{m} & C \end{array}$$
+>
+> One can first compose vertically in each column (getting $\alpha' \circ_v \alpha$ and $\beta' \circ_v \beta$) and then compose horizontally, or first compose horizontally in each row (getting $\beta * \alpha$ and $\beta' * \alpha'$) and then compose vertically. The law asserts these are equal.
+
+> [!WARNING] Strict vs. weak 2-categories
+> The definition above is for a *strict* 2-category, where all associativity and unit laws hold on the nose (as equations). A *bicategory* (also called a *weak 2-category*) relaxes these to coherent isomorphisms — 2-cells asserting that $f \circ (g \circ h) \cong (f \circ g) \circ h$, etc. Most naturally occurring examples ($\mathbf{Cat}$, the 2-category of rings and bimodules) are strict, but higher-dimensional analogues typically require weak structures.
+
+### 11.3 Cat as a 2-Category
+
+**Theorem.** $\mathbf{Cat}$ is a strict 2-category with:
+- **0-cells:** (small) categories.
+- **1-cells:** functors $F: \mathcal{C} \to \mathcal{D}$.
+- **2-cells:** natural transformations $\alpha: F \Rightarrow G$.
+- **Vertical composition:** $(\beta \circ_v \alpha)_A = \beta_A \circ \alpha_A$ (componentwise composition in $\mathcal{D}$).
+- **Horizontal composition (Godement product):** $(\beta * \alpha)_A = \beta_{GA} \circ H(\alpha_A) = K(\alpha_A) \circ \beta_{FA}$ (both expressions agree by naturality of $\beta$).
+- **Composition of 1-cells:** functor composition.
+
+🔑 **The two expressions for horizontal composition are equal precisely because naturality of $\beta$ gives a commutative square.** This is the content of §11.7.
+
+> [!TIP] Working with 2-cells in Cat
+> When computing in $\mathbf{Cat}$, remember:
+> - Vertical composition is just pointwise composition of natural transformation components.
+> - Horizontal composition (whiskering) requires choosing whether to "whisk" with the left or right functor first — but naturality guarantees both choices coincide.
+> - The identity 2-cell on a functor $F$ is the natural transformation $\mathrm{id}_F$ with $(\mathrm{id}_F)_A = \mathrm{id}_{FA}$.
+
+### 11.4 2-Functors and 2-Natural Transformations
+
+**Definition (2-functor).** A *strict 2-functor* $\Phi: \mathcal{K} \to \mathcal{L}$ between 2-categories assigns:
+- To each 0-cell $A \in \mathcal{K}$, a 0-cell $\Phi A \in \mathcal{L}$.
+- To each 1-cell $f: A \to B$, a 1-cell $\Phi f: \Phi A \to \Phi B$.
+- To each 2-cell $\alpha: f \Rightarrow g$, a 2-cell $\Phi \alpha: \Phi f \Rightarrow \Phi g$.
+
+preserving all compositions (vertical and horizontal) and all identities (for 0-cells, 1-cells, and 2-cells) strictly.
+
+> [!EXAMPLE]- The presheaf 2-functor
+> The assignment $\mathcal{C} \mapsto [\mathcal{C}^{\mathrm{op}}, \mathbf{Set}]$ (sending a small category to its presheaf category) extends to a 2-functor $\mathbf{Cat}^{\mathrm{op}} \to \mathbf{CAT}$ (where $\mathbf{CAT}$ is the very large 2-category of all locally small categories):
+>
+> - A functor $F: \mathcal{C} \to \mathcal{D}$ is sent to the *precomposition functor* $F^*: [\mathcal{D}^{\mathrm{op}}, \mathbf{Set}] \to [\mathcal{C}^{\mathrm{op}}, \mathbf{Set}]$, $P \mapsto P \circ F^{\mathrm{op}}$.
+> - A natural transformation $\alpha: F \Rightarrow G$ is sent to a natural transformation $\alpha^*: G^* \Rightarrow F^*$ whose component at $P \in [\mathcal{D}^{\mathrm{op}}, \mathbf{Set}]$ is post-composition with $\alpha$.
+>
+> This is contravariant in 1-cells (hence $\mathbf{Cat}^{\mathrm{op}}$) and covariant in 2-cells. Preservation of compositions follows from associativity of functor composition.
+
+**Definition (2-natural transformation).** A *2-natural transformation* $\Gamma: \Phi \Rightarrow \Psi$ between 2-functors $\Phi, \Psi: \mathcal{K} \to \mathcal{L}$ assigns to each 0-cell $A \in \mathcal{K}$ a 1-cell $\Gamma_A: \Phi A \to \Psi A$ in $\mathcal{L}$, such that for each 1-cell $f: A \to B$, there is a *specified 2-cell* $\Gamma_f: \Gamma_B \circ \Phi f \Rightarrow \Psi f \circ \Gamma_A$ (the 2-dimensional naturality condition), satisfying coherence conditions for 2-cell composition.
+
+*Remark.* Unlike ordinary natural transformations — whose components are 0-cells (objects) — the components of a 2-natural transformation are 1-cells, and naturality is expressed by a 2-cell filling a square rather than an equation.
+
+### 11.5 Adjunctions in a 2-Category
+
+The notion of adjunction generalizes from $\mathbf{Cat}$ to any 2-category.
+
+**Definition (Adjunction in a 2-category).** An *adjunction* $F \dashv G$ in a 2-category $\mathcal{K}$ consists of:
+- 0-cells $A, B$.
+- 1-cells $F: A \to B$ (the *left adjoint*) and $G: B \to A$ (the *right adjoint*).
+- 2-cells $\eta: \mathrm{id}_A \Rightarrow G \circ F$ (the *unit*) and $\varepsilon: F \circ G \Rightarrow \mathrm{id}_B$ (the *counit*).
+
+satisfying the *triangle identities* (expressed as equalities of 2-cells):
+$$(\varepsilon * \mathrm{id}_F) \circ_v (\mathrm{id}_F * \eta) = \mathrm{id}_F, \qquad (\mathrm{id}_G * \varepsilon) \circ_v (\eta * \mathrm{id}_G) = \mathrm{id}_G.$$
+
+When $\mathcal{K} = \mathbf{Cat}$, this recovers the usual definition: $F: \mathcal{C} \to \mathcal{D}$, $G: \mathcal{D} \to \mathcal{C}$, with unit $\eta: \mathrm{id}_{\mathcal{C}} \Rightarrow GF$ and counit $\varepsilon: FG \Rightarrow \mathrm{id}_{\mathcal{D}}$ satisfying the triangle identities of §8.4.
+
+> [!TIP] Adjunctions in 2-categories: what generalizes and what does not
+> In $\mathbf{Cat}$, an adjunction $F \dashv G$ is equivalently described by either the unit-counit data or the hom-set bijection $\mathcal{D}(FA, B) \cong \mathcal{C}(A, GB)$. In a general 2-category, only the unit-counit formulation generalizes directly (since there are no "hom-sets" for 1-cells in an abstract 2-category). The hom-set bijection requires the 2-category to be *locally small* (i.e., each hom-category $\mathcal{K}(A, B)$ must be a genuine category with a set of objects).
+
+### 11.6 Modifications
+
+Having natural transformations between functors and 2-natural transformations between 2-functors, one can go one level higher.
+
+**Definition (Modification).** Given 2-functors $\Phi, \Psi: \mathcal{K} \to \mathcal{L}$ and 2-natural transformations $\Gamma, \Delta: \Phi \Rightarrow \Psi$, a *modification* $\Sigma: \Gamma \Rrightarrow \Delta$ assigns to each 0-cell $A \in \mathcal{K}$ a 2-cell $\Sigma_A: \Gamma_A \Rightarrow \Delta_A$ in $\mathcal{L}$, satisfying a 3-dimensional coherence condition.
+
+*Remark.* Modifications are the 3-cells of the (strict) 3-category $\mathbf{2CAT}$ of 2-categories, 2-functors, 2-natural transformations, and modifications. This hierarchy — categories, 2-categories, 3-categories, ... — is the beginning of the theory of *$(\infty, n)$-categories*, where morphisms exist at all dimensions and become invertible above dimension $n$.
+
+> [!QUESTION] Higher category theory and homotopy
+> The relationship between $(\infty, 1)$-categories (where all $k$-morphisms for $k \geq 2$ are invertible) and homotopy theory is one of the deepest insights of modern mathematics: the homotopy hypothesis asserts that $(\infty, 1)$-categories are equivalent to *homotopy types* (Kan complexes / $\infty$-groupoids). This is the foundation of Lurie's *Higher Topos Theory* and the work of Voevodsky, Riehl, Verity, and others on homotopy type theory.
+
+### 11.7 The Godement Product
+
+📐 We make explicit the calculation that defines horizontal composition of natural transformations.
+
+**Proposition (Godement product).** Let $\alpha: F \Rightarrow G: \mathcal{C} \to \mathcal{D}$ and $\beta: H \Rightarrow K: \mathcal{D} \to \mathcal{E}$ be natural transformations. The *Godement product* (horizontal composite) $\beta * \alpha: HF \Rightarrow KG: \mathcal{C} \to \mathcal{E}$ has components at $A \in \mathcal{C}$ given by either of the two equal expressions:
+$$(\beta * \alpha)_A \;=\; K(\alpha_A) \circ \beta_{FA} \;=\; \beta_{GA} \circ H(\alpha_A).$$
+
+*Proof that both expressions agree.* Naturality of $\beta: H \Rightarrow K$ applied to the morphism $\alpha_A: FA \to GA$ in $\mathcal{D}$ gives the commutative square:
+$$K(\alpha_A) \circ \beta_{FA} = \beta_{GA} \circ H(\alpha_A). \qquad \square$$
+
+**Corollary (Interchange law in Cat).** For composable pairs of 2-cells $\alpha: F \Rightarrow G \Rightarrow H: \mathcal{C} \to \mathcal{D}$ and $\beta: K \Rightarrow L \Rightarrow M: \mathcal{D} \to \mathcal{E}$, denoting vertical composites as $\alpha' \circ \alpha$ and $\beta' \circ \beta$,
+$$(\beta' \circ \beta) * (\alpha' \circ \alpha) = (\beta' * \alpha') \circ (\beta * \alpha).$$
+
+🔑 **The interchange law is not an additional axiom in $\mathbf{Cat}$ — it is a consequence of the definition of the Godement product via naturality squares.** It becomes an axiom only when defining abstract 2-categories.
+
+> [!NOTE] Riehl Exercise: 2-Categories
+> **(i)** Verify the interchange law for $\mathbf{Cat}$: for composable 2-cells
+> $$F \xRightarrow{\alpha} G \xRightarrow{\alpha'} H : \mathcal{C} \to \mathcal{D}, \qquad K \xRightarrow{\beta} L \xRightarrow{\beta'} M : \mathcal{D} \to \mathcal{E},$$
+> show that $(\beta' \circ \beta) * (\alpha' \circ \alpha) = (\beta' * \alpha') \circ (\beta * \alpha)$ by computing both sides componentwise using the Godement product formula.
+>
+> **(ii)** Define a strict 2-functor $\Phi: \mathbf{Cat}^{\mathrm{op}} \to \mathbf{CAT}$. Show that the assignment $\mathcal{C} \mapsto [\mathcal{C}^{\mathrm{op}}, \mathbf{Set}]$ (taking the presheaf category) extends to such a 2-functor, specifying the action on functors and natural transformations explicitly.
+>
+> **(iii)** Show that an adjunction $F \dashv G: \mathcal{C} \rightleftharpoons \mathcal{D}$, when viewed in the 2-category $\mathbf{Cat}$, satisfies the 2-categorical triangle identities as stated in §11.5. Conversely, verify that the definition of adjunction in any 2-category (via unit and counit 2-cells) implies that the unit $\eta$ and counit $\varepsilon$ are unique given the other, in the sense that a left adjoint $F$ has at most one right adjoint $G$ up to unique isomorphism.
 
 ---
 
