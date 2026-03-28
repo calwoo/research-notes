@@ -535,7 +535,7 @@ The *coslice* $A/\mathcal{C}$ is dual. Taking $\mathcal{A} = \mathbf{1}$ (the te
 >
 > (ii) Define an equivalence of categories precisely. Prove that $\mathbf{Set}_*$ is equivalent to $\mathbf{Par}$, the category whose objects are sets and whose morphisms $X \to Y$ are *partial functions* from $X$ to $Y$ (functions defined on some subset of $X$).
 
-> [!NOTE]- Solution to Exercise 8
+> [!TIP]- Solution to Exercise 8
 > **Part (i).** We construct an isomorphism of categories $\mathbf{Set}_* \cong (\mathbf{1} \downarrow \mathbf{Set})$.
 >
 > Let $* \to \mathbf{Set}$ be the functor picking out the one-element set $\{*\}$, and let $\mathrm{id}: \mathbf{Set} \to \mathbf{Set}$ be the identity. Objects of the comma category $(\mathbf{1} \downarrow \mathrm{id})$ are triples $(\mathbf{1}, X, f)$ where $X \in \mathbf{Set}$ and $f: \{*\} \to X$ — i.e., a set $X$ together with a chosen element $f(*) \in X$. This is exactly a pointed set. A morphism $(\mathbf{1}, X, f) \to (\mathbf{1}, Y, g)$ in the comma category is a pair $(\mathrm{id}_\mathbf{1}, h: X \to Y)$ such that $h \circ f = g$, i.e., $h(f(*)) = g(*)$ — exactly a basepoint-preserving function. So the two categories have the same objects and morphisms; the functors $\mathbf{Set}_* \to (\mathbf{1} \downarrow \mathrm{id})$ and back are mutually inverse and the isomorphism is immediate. $\square$
