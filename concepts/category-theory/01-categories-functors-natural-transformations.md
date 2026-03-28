@@ -98,10 +98,22 @@ The following are the canonical examples appearing throughout mathematics.
 
 In each case, composition is ordinary function composition, and identities are identity functions. Verification of the axioms is routine.
 
+> [!EXAMPLE] The matrix category Mat_k
+> 💡 Leinster uses this example to illustrate that objects need not be "sets with structure." Fix a field $k$. Define the category $\mathbf{Mat}_k$ by:
+> - Objects: the natural numbers $0, 1, 2, \ldots$
+> - Morphisms: $\mathbf{Mat}_k(m, n)$ is the set of $n \times m$ matrices over $k$.
+> - Composition: matrix multiplication — if $A \in \mathbf{Mat}_k(m,n)$ and $B \in \mathbf{Mat}_k(n,p)$, then $B \circ A$ is the $p \times m$ matrix $BA$.
+> - Identities: $\mathrm{id}_n$ is the $n \times n$ identity matrix $I_n$.
+>
+> Associativity follows from associativity of matrix multiplication. This category is equivalent to $\mathbf{FDVect}_k$ (Exercise 9), but the two are not *isomorphic* as categories — they differ in how many objects they have.
+
 > [!EXAMPLE] The homotopy category Hty
 > The *homotopy category* $\mathbf{Hty}$ has topological spaces as objects but takes as morphisms the *homotopy classes* $[f]$ of continuous maps $f: X \to Y$. Two maps $f, g: X \to Y$ are *homotopic* if there exists a continuous $H: X \times [0,1] \to Y$ with $H(-,0) = f$ and $H(-,1) = g$.
 >
 > Composition is well-defined on homotopy classes: if $f_0 \simeq f_1: X \to Y$ and $g_0 \simeq g_1: Y \to Z$, then $g_0 \circ f_0 \simeq g_1 \circ f_1$. Associativity and unit laws are inherited from $\mathbf{Top}$. This is a genuinely important example because it is **not** concretely realizable: morphisms are equivalence classes, not functions between the underlying sets.
+
+> [!INFO] Leinster's notation
+> Leinster consistently writes $\mathcal{C}(A, B)$ for hom-sets (rather than $\mathrm{Hom}_{\mathcal{C}}(A, B)$), and uses $\mathbf{A}, \mathbf{B}$ (bold) for named categories and $\mathcal{A}, \mathcal{B}$ (calligraphic) for variable categories. These notes follow his convention. When Leinster writes $\mathbf{C}(A, B) = \{f : A \to B\}$, he always means a *set* (assuming local smallness), not a proper class. This is why local smallness is silently assumed in most results.
 
 ### 1.4 Categorical Structures as Categories
 
