@@ -277,6 +277,21 @@ i.e., $(BA)(S)$ is the *realization* of the Γ-space $T \mapsto A(S \times T)$.
 
 The validation that $BA$ is again a Γ-space rests on the homotopy equivalence $A(\mathbf{n} \times \mathbf{m}) \simeq A(\mathbf{m})^n$, which follows from the Segal condition applied twice.
 
+> [!INFO] Why this is the right definition of a classifying space
+> The formula $(BA)(S) = \lvert T \mapsto A(S \times T)\rvert$ looks unmotivated at first. Here are four interlocking reasons it is forced.
+>
+> **1. It is the only formula that makes $BA$ a Γ-space.** For $BA$ to satisfy the Segal condition, we need $(BA)(\mathbf{n}) \simeq (BA)(\mathbf{1})^n$. Substituting the definition:
+> $$(BA)(\mathbf{n}) = \lvert T \mapsto A(\mathbf{n} \times T)\rvert.$$
+> By the Segal condition on $A$ applied in the $\mathbf{n}$-variable, $A(\mathbf{n} \times T) \simeq A(T)^n$, so the realization splits as $\lvert T \mapsto A(T)^n\rvert \simeq \lvert T \mapsto A(T)\rvert^n = (BA)(\mathbf{1})^n$. The product $S \times T$ is therefore the unique choice that makes the Segal condition propagate from $A$ to $BA$.
+>
+> **2. At $S = \mathbf{1}$, it is the classical bar construction.** Setting $S = \mathbf{1}$:
+> $$(BA)(\mathbf{1}) = \lvert T \mapsto A(T)\rvert = \lvert A\rvert,$$
+> the geometric realization of $A$ itself as a simplicial space (via the functor $\Delta \to \Gamma$ of §2.3). For a discrete abelian group $G$ viewed as a strict Γ-space $\hat{G}$ with $\hat{G}(\mathbf{n}) = G^n$, this gives $B\hat{G}(\mathbf{1}) = \lvert[n] \mapsto G^n\rvert$, which is the standard bar construction $BG = K(G, 1)$. *The definition is precisely the generalization of the bar construction from groups to Γ-spaces.*
+>
+> **3. It encodes the suspension-loop adjunction.** The 1-skeleton of $\lvert A\rvert$ is homotopy equivalent to $\Sigma A(\mathbf{1})$ (the suspension), giving a canonical map $\Sigma A(\mathbf{1}) \to BA(\mathbf{1})$ and adjointly $A(\mathbf{1}) \to \Omega BA(\mathbf{1})$. This is the structure map of the spectrum. The definition is therefore designed so that the spaces $A(\mathbf{1}), BA(\mathbf{1}), B^2 A(\mathbf{1}), \ldots$ are related by loop-space maps — which is exactly what a spectrum is.
+>
+> **4. It is the internal hom in Γ-spaces.** In the symmetric monoidal structure on Γ-spaces given by Day convolution (with monoidal product corresponding to the Cartesian product in $\Gamma$), the formula $(BA)(S) = \lvert T \mapsto A(S \times T)\rvert$ expresses $BA$ as the *internal hom* from the "sphere Γ-space" $\mathbf{S}^1_\Gamma$ (the Γ-space representing $S \mapsto S^{\lvert S\rvert}$) into $A$. Delooping is, in this sense, an adjunction at the level of Γ-spaces themselves — not just at the level of individual spaces.
+
 **The spectrum.** If $A$ is a Γ-space, the sequence of spaces
 $$A(\mathbf{1}), \quad BA(\mathbf{1}), \quad B^2A(\mathbf{1}), \quad \ldots$$
 forms a *spectrum*, denoted $\mathbf{B}A$. The structure maps arise as follows: the realization $|A|$ contains a canonical subspace (its 1-skeleton) homotopy equivalent to $\Sigma A(\mathbf{1})$, giving (up to homotopy) a map
