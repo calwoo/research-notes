@@ -109,6 +109,9 @@ For each $b \in \mathcal{B}$, the *fiber* is $\mathcal{E}_b = p^{-1}(b)$. Given 
 
 The category of *pseudofunctors* $\mathcal{B}^{\mathrm{op}} \to \mathbf{Cat}$ is equivalent to the category of fibrations over $\mathcal{B}$ (the Grothendieck construction). Thus, a fibration encodes a "family of categories parameterized by $\mathcal{B}$."
 
+> [!NOTE] From Single Morphisms to Stacks
+> Descent can be studied *along one fixed morphism* $f : Y \to X$, or *for all morphisms in a topology simultaneously*. A fibered category $p : \mathcal{E} \to \mathcal{B}$ is a **stack** in a Grothendieck topology $\tau$ on $\mathcal{B}$ if for *every* covering morphism $f : Y \to X$ in $\tau$, the comparison functor $\Phi_f : \mathcal{E}_X \to \mathrm{Des}(f)$ is an equivalence. In other words, the stack condition is precisely the condition that every cover is an effective descent morphism for the given fibration. This is why "descent theory" and "the theory of stacks" are essentially the same subject viewed from different angles: one morphism at a time vs. all morphisms in a topology.
+
 ### 2.2 Descent Data and the Cocycle Condition
 
 Fix a fibration $p : \mathcal{E} \to \mathcal{B}$ and a morphism $f : Y \to X$ in $\mathcal{B}$. The fiber products $Y \times_X Y$ and $Y \times_X Y \times_X Y$ (assumed to exist) give the *Cech nerve* diagram:
@@ -163,6 +166,14 @@ where $\mathrm{can} : \pi_1^* f^* F \xrightarrow{\sim} \pi_2^* f^* F$ is the can
 
 Intuitively: $f$ is an effective descent morphism if every descent datum along $f$ actually comes from an object on $X$. The data "glues."
 
+> [!INFO] The Two Fundamental Questions of Descent
+> Descent theory is organized around two problems, both asking about the fibers of $f^* : C_X \to C_Y$:
+>
+> 1. **Image problem.** When is an object $G \in C_Y$ isomorphic to $f^*(E)$ for some $E \in C_X$? That is, when does $G$ *come from* the base?
+> 2. **Forms problem.** Given $G \in C_Y$ that is in the image, classify all $E \in C_X$ with $f^*(E) \cong G$. These are called the *$f$-forms* of $G$.
+>
+> Effective descent answers question 1 completely: if $f$ is of effective descent, every $G$ *equipped with a descent datum* comes from $X$. The forms problem is answered by $H^1$: the set of isomorphism classes of $X$-objects descending to $G$ is a torsor under $\mathrm{Aut}(G)$-cohomology. This two-question framing, due to Grothendieck, is the engine behind Galois cohomology and the theory of algebraic forms.
+
 > [!EXAMPLE] Effective Descent in Algebraic Geometry
 > In the fibration of quasi-coherent sheaves over $\mathbf{Sch}$, a key theorem (Grothendieck, SGA 1) states:
 > - Any *faithfully flat quasi-compact* (fpqc) morphism $f : Y \to X$ is an effective descent morphism.
@@ -170,11 +181,35 @@ Intuitively: $f$ is an effective descent morphism if every descent datum along $
 >
 > This generalizes the patching of modules from commutative algebra: if $A \to B$ is faithfully flat, then $A$-modules can be reconstructed from $B$-modules equipped with descent data.
 
+> [!NOTE] Pure Morphisms: Sharp Characterization
+> Grothendieck's theorem identifies *faithfully flat* maps as effective descent morphisms, but this is not optimal. A deeper result in commutative algebra (Joyal–Tierney, Mesablishvili) shows:
+>
+> **Effective descent morphisms for modules are precisely the *pure* ring maps** $A \to B$ — those for which $M \to M \otimes_A B$ is injective for every $A$-module $M$.
+>
+> Every faithfully flat map is pure, but pure maps need not be flat (e.g., $\mathbb{Z} \to \prod_p \mathbb{Z}/p\mathbb{Z}$ is pure but not flat). The pure morphism characterization is the "right" answer to the question: which ring maps permit reconstructing $A$-modules from their base changes?
+
 ---
 
 ## 3. The Monad Connection 🔗
 
 The profound insight, due to Beck (unpublished, 1960s) and formalized by Bénabou–Roubaud (1970), is that descent theory is secretly monadic. Every morphism gives rise to a monad, and descent data are precisely algebras over this monad.
+
+> [!INFO] Genealogy: From Beck to Lurie
+> The monadic viewpoint on descent has a rich intellectual lineage. The key contributors and their roles:
+>
+> | Contributor | Contribution |
+> |---|---|
+> | Beck (1960s, unpublished) | Monadicity theorem; comonadicity = descent |
+> | Bénabou–Roubaud (1970) | Formalized Des$(f) \cong$ Alg$(\mathbb{T}_f)$ under Beck-Chevalley |
+> | Giraud (1971) | Non-abelian $H^2$, gerbes, stacks |
+> | Breen (1980s–90s) | Non-abelian cohomology, higher gerbes |
+> | Street (1980s) | Formal theory of monads in 2-categories; descent in bicategories |
+> | K. Brown, Joyal, Jardine (1980s–90s) | Homotopy-theoretic descent, simplicial presheaves |
+> | Simpson, Mauri–Tierney (1990s) | Higher stacks and $n$-stacks |
+> | Kontsevich–Rosenberg (2004) | Descent for $A_\infty$-categories and Karoubian triangulated categories |
+> | Lurie (2006–) | $(\infty,1)$-Beck theorem; descent in $\infty$-topoi (HTT, HA) |
+>
+> The common thread: each generalization replaces strict equalities in the cocycle condition with coherent homotopies, requiring progressively richer algebraic structures (monads → $A_\infty$-monads → $\infty$-monads) to encode the data.
 
 ### 3.1 The Descent Monad of a Morphism
 
@@ -415,6 +450,13 @@ is a quasi-isomorphism (Conrad, SGA 4).
 > [!WARNING] Cohomological vs. Categorical Descent
 > Cohomological descent is *weaker* than categorical descent. Categorical (or "effective") descent says the comparison functor on sheaves is an equivalence; cohomological descent says only that cohomology is preserved. A morphism can be of cohomological descent without being an effective descent morphism for the fibration of all sheaves (though for many naturally occurring topologies and sheaves, both hold simultaneously).
 
+> [!INFO] Cohomological Descent as the Unit of a Derived Monad
+> There is a clean monad-theoretic interpretation of cohomological descent. Consider the adjunction $(f^{-1} \dashv Rf_*)$ on derived categories of sheaves. This adjunction induces a monad $\mathbb{T} = Rf_* \circ f^{-1}$ on $D(X)$. The unit of this monad is the canonical map
+>
+> $$\eta : \mathrm{Id} \to Rf_* \circ f^{-1}.$$
+>
+> Cohomological descent for $f$ is exactly the statement that $\eta_\mathcal{F} : \mathcal{F} \xrightarrow{\sim} Rf_*(f^{-1}\mathcal{F})$ is an isomorphism (in $D(X)$). In other words, *cohomological descent = the unit of the derived monad is an isomorphism*. The full $\infty$-categorical version — where the unit of the associated $(\infty,1)$-monad is an equivalence — recovers both sheaf-theoretic and homotopy-theoretic descent simultaneously (Lurie, "Noncommutative Algebra"; Kontsevich–Rosenberg for $A_\infty$-categories and Karoubian triangulated categories).
+
 ### 5.4 The Bar Construction for Monads
 
 The bar construction for the monad $\mathbb{T}_f$ on $\mathcal{C}/X$ is the simplicial object
@@ -476,6 +518,14 @@ The descent perspective: a finite etale $X$-scheme $Y$ descends from $\mathrm{Sp
 
 > [!INFO] Descent and Galois Cohomology
 > The *failure* of descent — the obstruction to descending a $k^s$-object to a $k$-object — is measured by Galois cohomology. Specifically, the set of isomorphism classes of $k$-forms of a given $k^s$-object $X_0$ is in bijection with the pointed set $H^1(\mathrm{Gal}(k^s/k), \mathrm{Aut}(X_0))$. This is the beginning of non-abelian cohomology and the theory of torsors.
+
+> [!EXAMPLE] Non-Abelian $H^1$ and Twisted Forms
+> The forms problem is where descent meets non-abelian cohomology concretely. Over $k = \mathbb{R}$, $G = \mathbb{Z}/2$ acting via complex conjugation:
+>
+> - The $\mathbb{R}$-forms of the $\mathbb{C}$-algebra $M_n(\mathbb{C})$ are classified by $H^1(\mathbb{Z}/2, \mathrm{PGL}_n(\mathbb{C}))$. For $n = 2$, this gives two forms: $M_2(\mathbb{R})$ itself and the *Hamilton quaternions* $\mathbb{H}$. Both become isomorphic to $M_2(\mathbb{C})$ after base change to $\mathbb{C}$.
+> - The $\mathbb{R}$-forms of the quadratic space $(\mathbb{C}^n, \text{standard form})$ are classified by $H^1(\mathbb{Z}/2, O_n(\mathbb{C}))$, recovering the real quadratic forms of signature $(p,q)$ with $p + q = n$.
+>
+> The Cech 1-cocycle $\sigma \mapsto \varphi_\sigma \in \mathrm{Aut}(X_0)(k^s)$ (satisfying $\varphi_{\sigma\tau} = \varphi_\sigma \cdot \sigma(\varphi_\tau)$) is precisely a descent datum, confirming that the descent category for Galois covers is $H^1$ in the non-abelian sense. When $\mathrm{Aut}(X_0)$ is abelian, the pointed set $H^1$ is a group and coincides with the usual Galois cohomology group.
 
 ### 6.3 Tannakian Formalism
 
@@ -576,3 +626,5 @@ Condition (3) is literally the $\infty$-categorical descent condition built into
 | [Hedonistic Learning, "Beck-Chevalley"](https://www.hedonisticlearning.com/posts/beck-chevalley.html) | Expository post on the Beck-Chevalley condition, mates, and indexed adjoints | [blog post](https://www.hedonisticlearning.com/posts/beck-chevalley.html) |
 | [Golem Café, "On the Bar Construction" (2007)](https://golem.ph.utexas.edu/category/2007/05/on_the_bar_construction.html) | n-Category Café post on the bar construction, its universal property, and monad connections | [n-Cat Café](https://golem.ph.utexas.edu/category/2007/05/on_the_bar_construction.html) |
 | [Deligne & Milne, "Tannakian Categories" (2022)](https://www.jmilne.org/math/xnotes/tc2022.pdf) | Definitive reference for Tannakian formalism, fiber functors, and reconstruction theorems | [jmilne.org](https://www.jmilne.org/math/xnotes/tc2022.pdf) |
+| [Fantechi et al., "Fundamental Algebraic Geometry: Grothendieck's FGA Explained" (2005)](https://arxiv.org/abs/math/0412512) | Self-contained introductory treatment of Grothendieck topologies, fibered categories, descent, and stacks; recommended entry point for algebraic geometry | [arXiv:math/0412512](https://arxiv.org/abs/math/0412512) |
+| [Bosch, Lütkebohmert & Raynaud, "Néron Models" Chapter 6 (1990)](https://link.springer.com/book/10.1007/978-3-642-51438-8) | Chapter 6 (§6.1–6.2) contains a detailed and highly concrete treatment of descent theory with worked examples linking Galois descent to the general formalism | [Springer](https://link.springer.com/book/10.1007/978-3-642-51438-8) |
