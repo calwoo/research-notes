@@ -10,3 +10,6 @@
 # OS files
 .DS_Store
 Thumbs.db
+
+# Helper scripts (not part of the vault)
+*.sh
