@@ -117,6 +117,19 @@ $$\psi(\alpha) = \bigcup_{\beta \in \theta(\alpha)} \phi(\beta).$$
 >
 > > **Prerequisites:** [[#1. The Category Γ|§1]]
 
+> [!TIP]- Solution to Exercise 1
+> **(a)** Morphisms $\mathbf{1} \to \mathbf{2}$: a morphism is $\theta: \{1\} \to \mathcal{P}(\{1,2\})$. The value $\theta(1)$ can be any subset of $\{1,2\}$: namely $\emptyset$, $\{1\}$, $\{2\}$, or $\{1,2\}$ — giving **four** morphisms. (The disjointness condition on distinct inputs is vacuous since $|\mathbf{1}| = 1$.)
+>
+> Morphisms $\mathbf{2} \to \mathbf{1}$: a morphism is $\theta: \{1,2\} \to \mathcal{P}(\{1\})$. The disjointness condition requires $\theta(1) \cap \theta(2) = \emptyset$. Since $\mathcal{P}(\{1\}) = \{\emptyset, \{1\}\}$, the possible assignments are:
+>
+> $$(\theta(1),\theta(2)) \in \{(\emptyset,\emptyset),\,(\{1\},\emptyset),\,(\emptyset,\{1\}),\,(\{1\},\{1\})\}.$$
+>
+> Wait — $(\{1\},\{1\})$ violates disjointness. So there are exactly **three** valid morphisms: $(\emptyset,\emptyset)$, $(\{1\},\emptyset)$, $(\emptyset,\{1\})$.
+>
+> **(b)** Suppose $\theta: S \to \mathcal{P}(T)$ is an isomorphism, with inverse $\phi: T \to \mathcal{P}(S)$. The composition $\psi = \phi \circ \theta: S \to \mathcal{P}(S)$ must equal the identity, meaning $\psi(s) = \{s\}$ for all $s$. Expanding: $\psi(s) = \bigcup_{t \in \theta(s)} \phi(t)$. For this to equal $\{s\}$, each $\theta(s)$ must be non-empty (otherwise $\psi(s) = \emptyset$), and the union of $\phi(t)$ over $t \in \theta(s)$ collapses to $\{s\}$. A clean sufficient condition is $|\theta(s)| = 1$ for all $s$ and the singletons $\theta(s) = \{t_s\}$ are pairwise distinct (so they partition $T$). Then $\phi(t_s) = \{s\}$ defines the inverse and all conditions are satisfied. Conversely if any $\theta(s)$ has $|\theta(s)| \geq 2$ or the $\theta(s)$ are not disjoint singletons, the inverse $\phi$ cannot recover $s$ uniquely.
+>
+> **(c)** By (b), $\mathrm{Aut}_\Gamma(\mathbf{n})$ consists of maps $\theta: \{1,\ldots,n\} \to \mathcal{P}(\{1,\ldots,n\})$ where each $\theta(i) = \{\sigma(i)\}$ for a bijection $\sigma: \{1,\ldots,n\} \to \{1,\ldots,n\}$. The correspondence $\theta \leftrightarrow \sigma$ is a bijection, and composition of morphisms in $\Gamma$ corresponds exactly to composition of permutations. Hence $\mathrm{Aut}_\Gamma(\mathbf{n}) \cong \Sigma_n$. $\square$
+
 > [!NOTE] Finite pointed sets
 > In modern treatments (and in Segal's own later conventions), $\Gamma^{\mathrm{op}}$ is replaced by $\Gamma_* = \mathbf{Fin}_*$, the skeleton of finite *pointed* sets. The objects are $\mathbf{n}^+ = \{0, 1, \ldots, n\}$ with $0$ as the distinguished basepoint, and morphisms are basepoint-preserving functions. This is the now-standard formulation: a Γ-space is a functor $A: \Gamma^{\mathrm{op}} \to \mathbf{Top}$ (equivalently a functor $\mathbf{Fin}_* \to \mathbf{Top}_*$). Segal's original paper uses the contravariant functor convention from his $\Gamma$.
 
@@ -131,6 +144,15 @@ The key morphisms to single out are the projections $i_k: \mathbf{1} \to \mathbf
 > (a) Show that disjoint union of finite sets extends to a symmetric monoidal structure on Γ, with unit $\mathbf{0} = \emptyset$. (Hint: for morphisms $\theta: S \to \mathcal{P}(T)$ and $\theta': S' \to \mathcal{P}(T')$ with $S \cap S' = T \cap T' = \emptyset$, define $\theta \sqcup \theta': S \sqcup S' \to \mathcal{P}(T \sqcup T')$ in the obvious way and verify functoriality.) (b) Show that $\mathbf{0}$ is an initial object in Γ. (c) Show that Γ has no terminal object. (d) Conclude that Γ is *not* a category with finite products, yet a Γ-space $A$ with $A(\mathbf{0}) \simeq *$ behaves as though $A$ "preserves" the monoidal structure in a homotopy-coherent sense.
 >
 > > **Prerequisites:** [[#1. The Category Γ|§1]], [[concepts/category-theory/foundations/03-limits-colimits|Limits and Colimits §2]]
+
+> [!TIP]- Solution to Exercise 2
+> **(a)** Given $\theta: S \to \mathcal{P}(T)$ and $\theta': S' \to \mathcal{P}(T')$ with $S \cap S' = T \cap T' = \emptyset$, define $(\theta \sqcup \theta'): S \sqcup S' \to \mathcal{P}(T \sqcup T')$ by $(\theta \sqcup \theta')(s) = \theta(s)$ for $s \in S$ and $(\theta \sqcup \theta')(s') = \theta'(s')$ for $s' \in S'$. The disjointness condition is preserved since the two components live in disjoint subsets of $T \sqcup T'$. Functoriality: for composable pairs $(\theta,\phi)$ and $(\theta',\phi')$, the composition distributes over $\sqcup$ because the two summands do not interact. The symmetry isomorphism $S \sqcup S' \xrightarrow{\sim} S' \sqcup S$ is the evident relabeling, and the unit axiom holds since $\theta \sqcup \emptyset_\emptyset = \theta$ where $\emptyset_\emptyset: \emptyset \to \mathcal{P}(T)$ is the empty function.
+>
+> **(b)** For any $S$, the unique morphism $\emptyset \to S$ is the empty function $\theta: \emptyset \to \mathcal{P}(S)$, which is vacuously a valid Γ-morphism. Hence $\mathbf{0} = \emptyset$ is an initial object.
+>
+> **(c)** A terminal object $T$ would require a unique morphism $\mathbf{n} \to T$ for every $n$. A morphism $\mathbf{n} \to T$ is $\theta: \{1,\ldots,n\} \to \mathcal{P}(T)$ satisfying pairwise disjointness. From $\mathbf{n}$ to $\mathbf{0} = \emptyset$, the only map sends every element to $\emptyset \in \mathcal{P}(\emptyset)$ — exactly one such map exists for every $n$. So $\mathbf{0}$ **is** in fact the terminal object. *Surprisingly,* $\mathbf{0}$ is both initial and terminal, making it a **zero object** in $\Gamma$. The problem statement's claim of "no terminal object" is incorrect: $\mathbf{0}$ serves as both.
+>
+> **(d)** Since $\mathbf{0}$ is terminal, any Γ-space $A$ with $A(\mathbf{0}) \simeq *$ is asking that $A$ send the terminal object to the terminal space — the normalization condition. Although $\Gamma$ is not a category with finite products (the coproduct $\sqcup$ plays the role of both), the condition $A(\mathbf{0}) \simeq *$ ensures that $A$ "preserves" the zero object in a homotopy-coherent sense, providing the unit for the H-space structure on $A(\mathbf{1})$. $\square$
 
 ---
 
@@ -158,6 +180,17 @@ Condition (2) is the *Segal condition* (also called the *Segal map condition*). 
 >
 > > **Prerequisites:** [[#2. Γ-Spaces: Definition and the Segal Condition|§2.1]], [[#1. The Category Γ|§1]]
 
+> [!TIP]- Solution to Exercise 3
+> **(a)** For $\theta: \mathbf{m} \to \mathcal{P}(\mathbf{n})$ and $\phi: \mathbf{k} \to \mathcal{P}(\mathbf{m})$, the composed morphism in $\Gamma$ is $\psi(i) = \bigcup_{j \in \phi(i)} \theta(j)$. We compute:
+>
+> $$\hat{G}(\psi)(g_1,\ldots,g_n)_i = \sum_{k \in \psi(i)} g_k = \sum_{k \in \bigcup_{j \in \phi(i)}\theta(j)} g_k = \sum_{j \in \phi(i)} \sum_{k \in \theta(j)} g_k$$
+>
+> where the last step uses the fact that the $\theta(j)$ are pairwise disjoint (so the double union is a disjoint union and commutativity of $+$ in $G$ allows regrouping). The right-hand side is $\hat{G}(\phi)\bigl(\hat{G}(\theta)(g_1,\ldots,g_n)\bigr)_i$. Hence $\hat{G}(\psi) = \hat{G}(\phi) \circ \hat{G}(\theta)$, confirming functoriality.
+>
+> **(b)** The Segal map $\varphi_n: G^n \to G^n$ sends $(g_1,\ldots,g_n) \mapsto (i_1^*(g_1,\ldots,g_n),\ldots,i_n^*(g_1,\ldots,g_n))$ where $i_k: \mathbf{1} \to \mathbf{n}$ with $i_k(1) = \{k\}$. Then $i_k^*(g_1,\ldots,g_n) = \sum_{j \in \{k\}} g_j = g_k$. So $\varphi_n(g_1,\ldots,g_n) = (g_1,\ldots,g_n)$, the identity map on $G^n$. This is trivially a homeomorphism.
+>
+> **(c)** The map $m_2: \mathbf{1} \to \mathbf{2}$ sends $1 \mapsto \{1,2\}$. Then $\hat{G}(m_2): G^2 \to G^1$ is $\hat{G}(m_2)(g_1,g_2) = \sum_{j \in \{1,2\}} g_j = g_1 + g_2$. Via the Segal isomorphism (which is the identity), the induced binary operation on $G \times G$ sends $(g_1,g_2) \mapsto g_1 + g_2$, which is exactly the original group operation $+$ on $G$. $\square$
+
 ### 2.2 Special and Very Special Γ-Spaces
 
 The distinction between several levels of the Segal condition governs exactly what algebraic structure $A(\mathbf{1})$ carries.
@@ -181,6 +214,13 @@ A topological abelian monoid $M$ defines a Γ-space $A$ with $A(\mathbf{n}) = M^
 >
 > > **Prerequisites:** [[#2.2 Special and Very Special Γ-Spaces|§2.2]], [[concepts/category-theory/foundations/01-categories-functors-natural-transformations|§01 §2]]
 
+> [!TIP]- Solution to Exercise 4
+> **(a)** If $A$ is discrete and special, then $A(\mathbf{n}) \cong A(\mathbf{1})^n$ as sets (the Segal condition becomes a bijection). The binary operation $\mu: A(\mathbf{1}) \times A(\mathbf{1}) \cong A(\mathbf{2}) \xrightarrow{m_2^*} A(\mathbf{1})$ is defined by the unique Γ-morphism $m_2: \mathbf{1} \to \mathbf{2}$ sending $1 \mapsto \{1,2\}$. The unit is the image of the unique element of $A(\mathbf{0}) \cong \{*\}$ under the map induced by $\mathbf{0} \hookrightarrow \mathbf{1}$. Associativity follows from the Γ-morphism $\mathbf{1} \to \mathbf{3}$ sending $1 \mapsto \{1,2,3\}$ — both bracketings factor through $A(\mathbf{3}) \cong A(\mathbf{1})^3$ by functoriality and must agree. Commutativity: the swap $\sigma: \mathbf{2} \to \mathbf{2}$ with $\sigma(1) = \{2\}$ and $\sigma(2) = \{1\}$ is a Γ-isomorphism. Since $m_2 \circ \sigma = m_2$ (as $m_2: \mathbf{1} \to \mathbf{2}$ sends $1 \mapsto \{1,2\} = \{2,1\}$ — sets are unordered), functoriality gives $\mu(a,b) = A(m_2)(a,b) = A(m_2 \circ \sigma)(a,b) = A(m_2)(b,a) = \mu(b,a)$.
+>
+> **(b)** Very special adds the condition that $\pi_0(A(\mathbf{1})) = A(\mathbf{1})$ (discrete) is a group. The *shear map* $A(\mathbf{2}) \to A(\mathbf{1}) \times A(\mathbf{1})$ sending $(a,b) \mapsto (a, \mu(a,b))$ must be a bijection. This means: for every $a, c \in A(\mathbf{1})$ there is a unique $b$ with $\mu(a,b) = c$, i.e., every element has a right-inverse. Combined with the monoid structure from (a), $A(\mathbf{1})$ is a group — and since it is commutative, an abelian group.
+>
+> **(c)** The functor sending a discrete very special Γ-space $A$ to the abelian group $A(\mathbf{1})$ (with operation $\mu$) is well-defined and sends Γ-space maps to group homomorphisms. The inverse sends an abelian group $G$ to the discrete Γ-space $\hat{G}$ from Exercise 3. These functors are mutually inverse, establishing the equivalence of categories. $\square$
+
 ### 2.3 Γ-Spaces as Simplicial Spaces
 
 There is a covariant functor $\Delta \to \Gamma$ taking $[m] \mapsto \mathbf{m}$ and a non-decreasing map $f: [m] \to [n]$ to the morphism $\theta_f: \mathbf{m} \to \mathcal{P}(\mathbf{n})$ defined by
@@ -193,6 +233,25 @@ Using this functor, every Γ-space $A$ can be *regarded* as a simplicial space. 
 > Let $d^0: [1] \to [2]$ be the face map $d^0(0) = 1$, $d^0(1) = 2$, and let $s^0: [1] \to [0]$ be the unique degeneracy $s^0(0) = s^0(1) = 0$. (a) Compute $\theta_{d^0}: \mathbf{1} \to \mathcal{P}(\mathbf{2})$ using the formula above. (b) Compute $\theta_{s^0}: \mathbf{1} \to \mathcal{P}(\mathbf{0})$. (c) For a Γ-space $A$, describe the induced maps $A(\theta_{d^0}): A(\mathbf{2}) \to A(\mathbf{1})$ and $A(\theta_{s^0}): A(\mathbf{0}) \to A(\mathbf{1})$ in the simplicial space $[n] \mapsto A(\mathbf{n})$. (d) Using that $A(\mathbf{0}) \simeq *$, show that the degeneracy $s^0$ supplies the simplicial unit — the basepoint of $A(\mathbf{1})$.
 >
 > > **Prerequisites:** [[#2.3 Γ-Spaces as Simplicial Spaces|§2.3]], [[#1. The Category Γ|§1]]
+
+> [!TIP]- Solution to Exercise 5
+> **(a)** Apply the formula $\theta_f(i) = \{j \in \mathbf{n} : f(i-1) < j \leq f(i)\}$ with $f = d^0: [1] \to [2]$, $d^0(0)=1$, $d^0(1)=2$, and $\mathbf{n} = \mathbf{2}$. For $i = 1$:
+>
+> $$\theta_{d^0}(1) = \{j \in \{1,2\} : d^0(0) < j \leq d^0(1)\} = \{j : 1 < j \leq 2\} = \{2\}.$$
+>
+> So $\theta_{d^0}: \mathbf{1} \to \mathcal{P}(\mathbf{2})$ sends $1 \mapsto \{2\}$.
+>
+> **(b)** For $f = s^0: [1] \to [0]$, $s^0(0) = s^0(1) = 0$, and $\mathbf{n} = \mathbf{0} = \emptyset$. For $i = 1$:
+>
+> $$\theta_{s^0}(1) = \{j \in \emptyset : s^0(0) < j \leq s^0(1)\} = \{j \in \emptyset : 0 < j \leq 0\} = \emptyset.$$
+>
+> So $\theta_{s^0}: \mathbf{1} \to \mathcal{P}(\mathbf{0})$ sends $1 \mapsto \emptyset$.
+>
+> **(c)** The map $A(\theta_{d^0}): A(\mathbf{2}) \to A(\mathbf{1})$ is induced by the Γ-morphism $1 \mapsto \{2\}$. Via the Segal equivalence $A(\mathbf{2}) \simeq A(\mathbf{1}) \times A(\mathbf{1})$, this projects onto the second factor (the one indexed by $\{2\} \subseteq \mathbf{2}$) — it is the face map $d_0: A_2 \to A_1$ in the associated simplicial space.
+>
+> The map $A(\theta_{s^0}): A(\mathbf{0}) \to A(\mathbf{1})$ is induced by $1 \mapsto \emptyset$: it sends the unique point of $A(\mathbf{0}) \simeq *$ to the element of $A(\mathbf{1})$ corresponding to the "empty sum," which is the unit/basepoint.
+>
+> **(d)** Since $A(\mathbf{0}) \simeq *$, the degeneracy $A(\theta_{s^0}): A(\mathbf{0}) \to A(\mathbf{1})$ selects a canonical basepoint in $A(\mathbf{1})$ — the image of the unique element of $A(\mathbf{0})$. This is the simplicial unit: the degeneracy $s^0$ in the simplicial space $[n] \mapsto A(\mathbf{n})$ supplies the basepoint, confirming that $A(\mathbf{0}) \simeq *$ encodes the unit element for the H-space structure on $A(\mathbf{1})$. $\square$
 
 **Proposition 1.5 (Segal).** Let $[n] \mapsto A_n$ be a simplicial space such that:
 1. $A_0$ is contractible,
@@ -240,6 +299,19 @@ which is homotopy-Cartesian if and only if the composition law (arising from the
 >
 > > **Prerequisites:** [[#3.2 Proposition 1.4 and Its Significance|§3.2]], [[#2.2 Special and Very Special Γ-Spaces|§2.2]]
 
+> [!TIP]- Solution to Exercise 6
+> **(a)** $A(\mathbf{n}) = \mathbb{Z}^n$ is discrete, and the Segal map $\varphi_n$ is the identity homeomorphism (by Exercise 3(b)), so $A$ is special. The monoid $\pi_0(A(\mathbf{1})) = \mathbb{Z}$ is a group under addition, so $A$ is very special. ✓
+>
+> **(b)** $A(\mathbf{1}) = \mathbb{Z}$ is discrete. Its classifying space $BA(\mathbf{1})$ is the classifying space of $\mathbb{Z}$ viewed as a discrete group. Since $\pi_1(B\mathbb{Z}) = \mathbb{Z}$ and $\pi_k(B\mathbb{Z}) = 0$ for $k \neq 1$ (a discrete group has no higher homotopy), $B\mathbb{Z} = K(\mathbb{Z},1)$. Recall $S^1 = K(\mathbb{Z},1)$ (the circle has $\pi_1 = \mathbb{Z}$ and higher homotopy groups trivial after the universal cover). Hence $BA(\mathbf{1}) \simeq S^1$.
+>
+> **(c)** By Proposition 1.4, since $A$ is very special and $A(\mathbf{1}) = \mathbb{Z}$ is discrete (hence $(-1)$-connected), $BA(\mathbf{1}) \simeq S^1$ is $0$-connected, and iterating: $B^k A(\mathbf{1}) \simeq K(\mathbb{Z},k)$ for all $k \geq 0$. Concretely: $B^2 A(\mathbf{1}) = B(S^1) = BS^1$. The classifying space of $S^1$ as a topological group is $\mathbb{CP}^\infty = K(\mathbb{Z},2)$. By induction and the loop-space identification $B^k A(\mathbf{1}) \simeq \Omega B^{k+1} A(\mathbf{1})$, we get $B^n A(\mathbf{1}) \simeq K(\mathbb{Z},n)$ for all $n$.
+>
+> **(d)** The spectrum $\mathbf{B}A = (B^n A(\mathbf{1}))_{n \geq 0} = (K(\mathbb{Z},n))_{n \geq 0}$ is by definition the *Eilenberg–Mac Lane spectrum* $H\mathbb{Z}$. The cohomology theory it represents is:
+>
+> $$[X, H\mathbb{Z}]^n = [X, K(\mathbb{Z},n)] = H^n(X;\mathbb{Z}),$$
+>
+> ordinary singular cohomology with $\mathbb{Z}$ coefficients. $\square$
+
 > [!WARNING] Connectivity at level 0
 > For $k \geq 1$ the spaces $B_k = B^k A(\mathbf{1})$ are connected H-spaces, hence automatically grouplike, and $B_k \simeq \Omega B_{k+1}$. The issue is only at $k = 0$: $A(\mathbf{1})$ itself need not be connected, and $A(\mathbf{1}) \simeq \Omega B_1$ requires the grouplike condition on $\pi_0$.
 
@@ -278,6 +350,19 @@ Concretely, an object of $\hat{\mathcal{C}}(\mathbf{2})$ is a diagram $A_1 \to A
 > Let $\mathcal{C} = \mathbf{FDVect}_\mathbb{R}$ with $\oplus$ as the monoidal structure. (a) Describe the objects of $\hat{\mathcal{C}}(\mathbf{2})$ explicitly: an object is a diagram $V_1 \xrightarrow{i_1} V_{12} \xleftarrow{i_2} V_2$ in $\mathbf{FDVect}_\mathbb{R}$ satisfying a certain condition — state it. Describe the morphisms of $\hat{\mathcal{C}}(\mathbf{2})$. (b) Show that $|\hat{\mathcal{C}}(\mathbf{1})| = \bigsqcup_{n \geq 0} BGL_n(\mathbb{R})$, where $BGL_n(\mathbb{R})$ is the classifying space of $GL_n(\mathbb{R})$. (Hint: $\pi_0|\hat{\mathcal{C}}(\mathbf{1})| = \mathbb{N}$ via dimension, and the automorphisms of an $n$-dimensional space form $GL_n(\mathbb{R})$.) (c) State why $\pi_0|\hat{\mathcal{C}}(\mathbf{1})|$ is not a group, and identify the group completion $K_0(\mathbf{FDVect}_\mathbb{R})$.
 >
 > > **Prerequisites:** [[#4.2 Construction from Sums|§4.2]], [[#4.1 Definition of a Γ-Category|§4.1]]
+
+> [!TIP]- Solution to Exercise 7
+> **(a)** An object of $\hat{\mathcal{C}}(\mathbf{2})$ is an assignment of a vector space $V_T$ to each subset $T \subseteq \{1,2\}$ such that for disjoint $T, T'$ the canonical map $V_T \oplus V_{T'} \xrightarrow{\sim} V_{T \cup T'}$ is an isomorphism. Concretely this is a diagram
+>
+> $$V_1 \xrightarrow{i_1} V_{12} \xleftarrow{i_2} V_2$$
+>
+> where $i_j$ are linear inclusions with projections $p_j: V_{12} \to V_j$ satisfying $p_j \circ i_j = \mathrm{id}_{V_j}$ and $i_1 p_1 + i_2 p_2 = \mathrm{id}_{V_{12}}$ — i.e., $V_{12} \cong V_1 \oplus V_2$ via the canonical splitting. Morphisms are triples $(f_1, f_{12}, f_2)$ of linear maps making the evident squares commute.
+>
+> **(b)** $\lvert\hat{\mathcal{C}}(\mathbf{1})\rvert$: objects are finite-dimensional real vector spaces; two objects are isomorphic iff they have the same dimension, so $\pi_0 = \mathbb{N}$ indexed by $n = \dim V$. The automorphism group of $\mathbb{R}^n$ is $GL_n(\mathbb{R})$, and there are no morphisms between spaces of different dimensions. Realizing the nerve of this groupoid gives a classifying space for each isomorphism class:
+>
+> $$\lvert\hat{\mathcal{C}}(\mathbf{1})\rvert \simeq \bigsqcup_{n \geq 0} BGL_n(\mathbb{R}).$$
+>
+> **(c)** $\pi_0\lvert\hat{\mathcal{C}}(\mathbf{1})\rvert = \mathbb{N}$ under the monoid operation $[m] + [n] = [m+n]$ (direct sum adds dimensions). This is not a group: there is no $k \in \mathbb{N}$ with $n + k = 0$ for $n \geq 1$. The Grothendieck group completion formally adds inverses: $K_0(\mathbf{FDVect}_\mathbb{R}) = \mathbb{N}^{\mathrm{gp}} \cong \mathbb{Z}$, generated by $[\mathbb{R}^1]$, with every class of the form $[\mathbb{R}^m] - [\mathbb{R}^n] = m - n \in \mathbb{Z}$. $\square$
 
 ### 4.3 Key Examples
 
@@ -456,6 +541,15 @@ For strongly homotopy-associative and commutative ring spectra, one needs a sequ
 > (a) Show that $\mathbf{FinSet}$ carries two symmetric monoidal structures $(\sqcup, \emptyset)$ and $(\times, \{*\})$, and that Cartesian product distributes over disjoint union: $X \times (Y \sqcup Z) \cong (X \times Y) \sqcup (X \times Z)$. (b) Explain how this distributivity gives the Γ-space $\mathbf{B}\Sigma$ a multiplication in the sense of Definition 5.1, making the spectrum $\mathbb{S} = B(\mathbf{B}\Sigma)$ into a ring spectrum. (c) Show that $\mathbf{FinSet}$ is the *initial rig category* (a category with two compatible symmetric monoidal structures related by distributivity, with $\emptyset$ absorbing under $\times$): for any rig category $\mathcal{R}$, there is a unique symmetric monoidal functor $\mathbf{FinSet} \to \mathcal{R}$ respecting both structures. (d) Conclude that $\mathbb{S}$ is the initial ring spectrum: for any ring spectrum $E$, there is a unique ring map $\mathbb{S} \to E$.
 >
 > > **Prerequisites:** [[#8. Ring Spectra|§8]], [[#6. The Barratt–Priddy–Quillen Theorem|§6]], [[concepts/category-theory/foundations/01-categories-functors-natural-transformations|§01 §8 (Adjunctions)]]
+
+> [!TIP]- Solution to Exercise 10
+> **(a)** The two symmetric monoidal structures on $\mathbf{FinSet}$ are $(\sqcup, \emptyset)$ (disjoint union, unit the empty set) and $(\times, \{*\})$ (Cartesian product, unit a one-element set). Distributivity is the standard set-theoretic identity: each element of $X \times (Y \sqcup Z)$ is a pair $(x, y_{\sqcup z})$ lying in either $X \times Y$ or $X \times Z$ (depending on which summand the second component comes from), giving a canonical bijection $X \times (Y \sqcup Z) \xrightarrow{\sim} (X \times Y) \sqcup (X \times Z)$. The absorbing element: $X \times \emptyset = \emptyset$ for all $X$, since there are no pairs $(x, -)$ with second component in $\emptyset$.
+>
+> **(b)** The distributivity $X \times (Y \sqcup Z) \cong (X \times Y) \sqcup (X \times Z)$ gives a Γ-morphism pairing. On the Γ-space level: the Cartesian product provides a functor $\tilde{A}: \Gamma \times \Gamma \to \mathbf{Top}$ with $\tilde{A}(S,T) = \mathbf{B}\Sigma(S \times T)$. The natural transformations $i_1, i_2, m$ required by Definition 5.1 come from the projections and the product map on finite sets. On the spectrum level, this gives the ring spectrum pairing $\mathbb{S} \wedge \mathbb{S} \to \mathbb{S}$ — the multiplication on $\mathbb{S} = B(\mathbf{B}\Sigma)$.
+>
+> **(c)** A *rig category* $\mathcal{R}$ has two symmetric monoidal structures $(\oplus, 0_\mathcal{R})$ and $(\otimes, 1_\mathcal{R})$ with distributivity $A \otimes (B \oplus C) \cong (A \otimes B) \oplus (A \otimes C)$ and $A \otimes 0_\mathcal{R} \cong 0_\mathcal{R}$ (coherently). Define $F: \mathbf{FinSet} \to \mathcal{R}$ by $F(\{1,\ldots,n\}) = 1_\mathcal{R}^{\oplus n}$ (the $n$-fold $\oplus$ of the monoidal unit), with $F(\emptyset) = 0_\mathcal{R}$. This is the unique rig functor, since $\mathbf{FinSet}$ is freely generated as a rig category by a single object $\{*\}$: every finite set $\{1,\ldots,n\}$ is $\{*\}^{\sqcup n}$, so $F$ is forced. Any two rig functors from $\mathbf{FinSet}$ agreeing on $\{*\}$ must agree everywhere by the free property.
+>
+> **(d)** The Γ-category construction is functorial: a rig functor $F: \mathbf{FinSet} \to \mathcal{R}$ induces a map of Γ-spaces $\mathbf{B}\Sigma \to A_\mathcal{R}$ and hence a map of ring spectra $\mathbb{S} = B(\mathbf{B}\Sigma) \to B(A_\mathcal{R})$. By part (c) this map is unique (up to coherent isomorphism). Hence for any ring spectrum $E$, there is a unique ring map $\mathbb{S} \to E$ — $\mathbb{S}$ is the initial ring spectrum. $\square$
 
 ---
 
