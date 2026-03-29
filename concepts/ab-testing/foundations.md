@@ -187,6 +187,8 @@ $$\mathbb{E}[\hat{\tau}] = \mathbb{E}[Y_i(1)] - \mathbb{E}[Y_i(0)] = \tau \qquad
 
 **The difference-in-means estimator is unbiased for the ATE under any random assignment mechanism.**
 
+> **TL;DR (Sections 1–2).** We want to measure a causal effect $\tau = \mathbb{E}[Y_i(1)] - \mathbb{E}[Y_i(0)]$, but can never observe both potential outcomes for the same unit. Observational data fails because selection bias contaminates the difference-in-means with pre-existing group differences. Random assignment fixes this: it makes treatment $T_i$ independent of all potential outcomes ($T_i \perp\!\!\!\perp (Y_i(0), Y_i(1))$), collapsing the selection bias term to zero and making $\hat{\tau} = \bar{Y}_1 - \bar{Y}_0$ an unbiased estimator of $\tau$. Two assumptions must hold for this to work cleanly: SUTVA (no interference between units, no hidden treatment versions) and complete randomization. When SUTVA fails — e.g. network effects, marketplace competition — $\tau$ is no longer well-defined without the full assignment vector.
+
 ---
 
 ## 3. Statistical Hypotheses 🔬
@@ -371,12 +373,12 @@ Three properties of $\pi(\delta)$ follow directly:
 
 From the expression $\lambda = \delta\sqrt{n/(2\sigma^2)}$, power increases monotonically in $\lambda$. We can read off the dependence on each design parameter:
 
-| Parameter | Direction | Mechanism |
-|-----------|-----------|-----------|
-| $n$ (sample size) | $n \uparrow \Rightarrow \pi(\delta) \uparrow$ | Larger $n$ shrinks $\text{SE}(\hat{\tau})$, increasing the signal-to-noise ratio $\lambda$ |
-| $|\delta|$ (effect size) | $|\delta| \uparrow \Rightarrow \pi(\delta) \uparrow$ | Larger true effect makes the departure from $H_0$ easier to detect |
-| $\alpha$ (significance level) | $\alpha \uparrow \Rightarrow \pi(\delta) \uparrow$ | A laxer threshold makes rejection easier, at the cost of more Type I errors |
-| $\sigma^2$ (outcome variance) | $\sigma^2 \uparrow \Rightarrow \pi(\delta) \downarrow$ | More noise in $Y$ inflates $\text{SE}(\hat{\tau})$ and reduces signal-to-noise |
+| Parameter | Effect on $\pi(\delta)$ | Mechanism |
+|-----------|------------------------|-----------|
+| $n$ (sample size) | ↑ increases | Larger $n$ shrinks $\text{SE}(\hat{\tau})$, increasing the signal-to-noise ratio $\lambda$ |
+| $|\delta|$ (effect size) | ↑ increases | Larger true effect makes the departure from $H_0$ easier to detect |
+| $\alpha$ (significance level) | ↑ increases | A laxer threshold makes rejection easier, at the cost of more Type I errors |
+| $\sigma^2$ (outcome variance) | ↓ decreases | More noise in $Y$ inflates $\text{SE}(\hat{\tau})$ and reduces signal-to-noise |
 
 💡 *Reducing $\sigma^2$ through variance reduction techniques — stratification, [CUPED](https://dl.acm.org/doi/10.1145/2487575.2488217), regression adjustment — is often more practical than increasing $n$, especially when sample acquisition is costly.*
 
