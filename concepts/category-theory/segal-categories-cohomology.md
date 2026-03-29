@@ -110,6 +110,9 @@ The central organizing object of Segal's theory is a small category $\Gamma$ who
 Composition of $\theta: S \to \mathcal{P}(T)$ and $\phi: T \to \mathcal{P}(U)$ is $\psi: S \to \mathcal{P}(U)$ defined by
 $$\psi(\alpha) = \bigcup_{\beta \in \theta(\alpha)} \phi(\beta).$$
 
+![[concepts/category-theory/figures/segal-categories-cohomology/blog-fig2-gamma-morphism-example.png]]
+*A concrete Γ-morphism $\phi: \mathbf{3} \to \mathbf{6}$ (left): each element of $\mathbf{3}$ maps to a disjoint subset of $\mathbf{6}$, here $1 \mapsto \{1\}$, $2 \mapsto \{3,6\}$, $3 \mapsto \{4,5\}$. On the right, the same data is redrawn as the dual morphism $\phi^{\mathrm{op}}: \mathbf{6}^+ \to \mathbf{3}^+$ in $\Gamma^{\mathrm{op}} \simeq \mathbf{Fin}_*$, the category of finite pointed sets, where each element of $\mathbf{6}^+$ is sent to the unique element of $\mathbf{3}^+$ whose fiber contains it (or to the basepoint $0$ if it is in no fiber). (From the [Machine Appreciation blog, 2021](https://machineappreciation.wordpress.com/2021/06/21/%CE%B3-spaces-the-sphere-spectrum/).)*
+
 > [!NOTE] Exercise 1
 > *Morphisms in Γ generalize both functions and relations; understanding their explicit combinatorics is essential before applying the Segal condition.*
 >
