@@ -43,7 +43,8 @@ $$\mathbb{E}[X] = p \cdot 1 + (1-p)(1 + \mathbb{E}[X]) \implies \mathbb{E}[X] = 
 
 ---
 
-> **Exercise 1.** *This exercise develops the indicator random variable technique, the primary way linearity of expectation is applied in algorithm analysis.*
+> [!INFO] Exercise 1
+> *This exercise develops the indicator random variable technique, the primary way linearity of expectation is applied in algorithm analysis.*
 >
 > > **Prerequisites:** [[#1.1 Statement and Basic Examples]]
 >
@@ -80,7 +81,8 @@ where $H_n$ is the $n$-th harmonic number.
 
 ---
 
-> **Exercise 2.** *This problem establishes the coupon collector bound tightly and derives a tail bound via Markov's inequality.*
+> [!INFO] Exercise 2
+> *This problem establishes the coupon collector bound tightly and derives a tail bound via Markov's inequality.*
 >
 > > **Prerequisites:** [[#1.2 Coupon Collector Problem]]
 >
@@ -183,7 +185,8 @@ $$\Pr[\text{output }C] \geq \frac{(n-2)!/(n(n-1))\cdot \ldots}{} = \frac{2}{n(n-
 
 ---
 
-> **Exercise 3.** *This problem works out the telescoping product explicitly and derives the min-cut count bound.*
+> [!INFO] Exercise 3
+> *This problem works out the telescoping product explicitly and derives the min-cut count bound.*
 >
 > > **Prerequisites:** [[#2.3 Analysis: Probability of Success]]
 >
@@ -253,7 +256,8 @@ $$\Pr[\text{fail}] \leq \underbrace{\left(1 - \frac{m(m-1)}{n(n-1)}\right)}_{\te
 
 ---
 
-> **Exercise 4.** *This problem derives the optimal parameters for Modified-Karger and shows the improvement over vanilla Karger.*
+> [!INFO] Exercise 4
+> *This problem derives the optimal parameters for Modified-Karger and shows the improvement over vanilla Karger.*
 >
 > > **Prerequisites:** [[#3.3 Analysis]]
 >
@@ -302,7 +306,8 @@ $$a^{n-1} \equiv 1 \pmod{n}.$$
 
 ---
 
-> **Exercise 5.** *This problem develops properties of $\mathbb{Z}_n^*$ needed for the primality tests.*
+> [!INFO] Exercise 5
+> *This problem develops properties of $\mathbb{Z}_n^*$ needed for the primality tests.*
 >
 > > **Prerequisites:** [[#4.1 Algebra Background]]
 >
@@ -390,7 +395,8 @@ def miller_rabin(n, trials=20):
 
 ---
 
-> **Exercise 6.** *This problem traces through the Miller-Rabin witness-checking on a Carmichael number.*
+> [!INFO] Exercise 6
+> *This problem traces through the Miller-Rabin witness-checking on a Carmichael number.*
 >
 > > **Prerequisites:** [[#4.3 Miller-Rabin Algorithm]]
 >
@@ -411,7 +417,8 @@ def miller_rabin(n, trials=20):
 
 ---
 
-> **Exercise 7.** *This problem completes the proof of correctness for Miller-Rabin by proving the key subgroup claim.*
+> [!INFO] Exercise 7
+> *This problem completes the proof of correctness for Miller-Rabin by proving the key subgroup claim.*
 >
 > > **Prerequisites:** [[#4.3 Miller-Rabin Algorithm]], [[#4.1 Algebra Background]]
 >
@@ -473,7 +480,8 @@ $$\mathbb{E}[\text{comparisons}] = \sum_{i < j} \frac{2}{j-i+1} = \sum_{k=2}^{n}
 
 ---
 
-> **Exercise 8.** *This problem connects the QuickSort analysis to the coupon-collector calculation and derives a tail bound on QuickSort's runtime.*
+> [!INFO] Exercise 8
+> *This problem connects the QuickSort analysis to the coupon-collector calculation and derives a tail bound on QuickSort's runtime.*
 >
 > > **Prerequisites:** [[#5. QuickSort Analysis via Linearity of Expectation]], [[#1.2 Coupon Collector Problem]]
 >

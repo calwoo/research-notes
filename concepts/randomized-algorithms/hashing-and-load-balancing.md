@@ -386,20 +386,20 @@ with high probability.
 
 ## 5. Exercises 📝
 
-**Exercise 1.**
-
-*This exercise develops the birthday paradox threshold more precisely by computing the exact crossover point.*
-
-Show that $\Pr[\text{collision after } n \text{ tosses into } m \text{ bins}] \geq 1/2$ if and only if $n \geq n^*$ where $n^* \sim \sqrt{2m\ln 2}$ as $m \to \infty$. Specifically:
-
-(a) Show $\Pr[\text{no collision}] = \prod_{i=0}^{n-1}(1-i/m)$.
-
-(b) Using $\ln(1-x) \geq -x - x^2$ for $x \in [0,1/2]$, derive a matching lower bound showing $\Pr[\text{no collision}] \geq \exp(-n(n-1)/(2m) - n^2/(2m^2) \cdot n)$ for appropriate range of $n$.
-
-(c) Conclude that the threshold $n^*$ satisfies $n^* = \sqrt{2m\ln 2}(1 + O(m^{-1/2}))$.
-
-> **Prerequisites:** [[#1.2 The Birthday Paradox|Section 1.2 (Birthday Paradox)]]
-
+> [!INFO] Exercise 1
+>
+> *This exercise develops the birthday paradox threshold more precisely by computing the exact crossover point.*
+>
+> Show that $\Pr[\text{collision after } n \text{ tosses into } m \text{ bins}] \geq 1/2$ if and only if $n \geq n^*$ where $n^* \sim \sqrt{2m\ln 2}$ as $m \to \infty$. Specifically:
+>
+> (a) Show $\Pr[\text{no collision}] = \prod_{i=0}^{n-1}(1-i/m)$.
+>
+> (b) Using $\ln(1-x) \geq -x - x^2$ for $x \in [0,1/2]$, derive a matching lower bound showing $\Pr[\text{no collision}] \geq \exp(-n(n-1)/(2m) - n^2/(2m^2) \cdot n)$ for appropriate range of $n$.
+>
+> (c) Conclude that the threshold $n^*$ satisfies $n^* = \sqrt{2m\ln 2}(1 + O(m^{-1/2}))$.
+>
+> > **Prerequisites:** [[#1.2 The Birthday Paradox|Section 1.2 (Birthday Paradox)]]
+>
 > [!TIP]- Solution to Exercise 1
 > **Key insight:** The upper and lower bounds on $\ln(1-x)$ bracket $\Pr[\text{no collision}]$ tightly enough to locate the threshold up to lower-order terms.
 >
@@ -412,20 +412,20 @@ Show that $\Pr[\text{collision after } n \text{ tosses into } m \text{ bins}] \g
 
 ---
 
-**Exercise 2.**
-
-*This exercise derives the moment generating function of the Poisson distribution and uses it to prove the tail bound stated in Section 3.1.*
-
-Let $X \sim \text{Poi}(\lambda)$.
-
-(a) Compute $\mathbb{E}[e^{tX}]$ for all $t \in \mathbb{R}$.
-
-(b) Using the Chernoff method (optimize over $t > 0$), show $\Pr[X \geq \lambda + c] \leq e^{-c^2/(2(\lambda+c))}$ for all $c > 0$.
-
-(c) By symmetry or a direct calculation, show $\Pr[X \leq \lambda - c] \leq e^{-c^2/(2\lambda)}$ for $0 < c < \lambda$.
-
-> **Prerequisites:** [[#3.1 The Poisson Distribution|Section 3.1 (Poisson Distribution)]]
-
+> [!INFO] Exercise 2
+>
+> *This exercise derives the moment generating function of the Poisson distribution and uses it to prove the tail bound stated in Section 3.1.*
+>
+> Let $X \sim \text{Poi}(\lambda)$.
+>
+> (a) Compute $\mathbb{E}[e^{tX}]$ for all $t \in \mathbb{R}$.
+>
+> (b) Using the Chernoff method (optimize over $t > 0$), show $\Pr[X \geq \lambda + c] \leq e^{-c^2/(2(\lambda+c))}$ for all $c > 0$.
+>
+> (c) By symmetry or a direct calculation, show $\Pr[X \leq \lambda - c] \leq e^{-c^2/(2\lambda)}$ for $0 < c < \lambda$.
+>
+> > **Prerequisites:** [[#3.1 The Poisson Distribution|Section 3.1 (Poisson Distribution)]]
+>
 > [!TIP]- Solution to Exercise 2
 > **Key insight:** The Poisson MGF $e^{\lambda(e^t-1)}$ is a clean exponential, making the Chernoff optimization straightforward.
 >
@@ -438,18 +438,18 @@ Let $X \sim \text{Poi}(\lambda)$.
 
 ---
 
-**Exercise 3.**
-
-*This exercise proves the key step in Theorem 1: that Poissonization makes bin loads independent by an explicit factorization of the joint PMF.*
-
-Verify the algebraic identity used in the proof of Theorem 1: show that
-
-$$e^{-n}\frac{n^N}{N!}\cdot\frac{N!}{k_1!\cdots k_m!}\cdot\frac{1}{m^N} = \prod_{j=1}^{m}\left(e^{-n/m}\frac{(n/m)^{k_j}}{k_j!}\right)$$
-
-where $N = k_1 + \cdots + k_m$. Then explain precisely why this implies the $B_j$ are mutually independent, each $\text{Poi}(n/m)$.
-
-> **Prerequisites:** [[#3.2 The Poissonization Theorem|Section 3.2 (Poissonization Theorem)]]
-
+> [!INFO] Exercise 3
+>
+> *This exercise proves the key step in Theorem 1: that Poissonization makes bin loads independent by an explicit factorization of the joint PMF.*
+>
+> Verify the algebraic identity used in the proof of Theorem 1: show that
+>
+> $$e^{-n}\frac{n^N}{N!}\cdot\frac{N!}{k_1!\cdots k_m!}\cdot\frac{1}{m^N} = \prod_{j=1}^{m}\left(e^{-n/m}\frac{(n/m)^{k_j}}{k_j!}\right)$$
+>
+> where $N = k_1 + \cdots + k_m$. Then explain precisely why this implies the $B_j$ are mutually independent, each $\text{Poi}(n/m)$.
+>
+> > **Prerequisites:** [[#3.2 The Poissonization Theorem|Section 3.2 (Poissonization Theorem)]]
+>
 > [!TIP]- Solution to Exercise 3
 > **Key insight:** The factorization of the joint PMF into a product indexed by $j$ is both necessary and sufficient for mutual independence.
 >
@@ -462,18 +462,18 @@ where $N = k_1 + \cdots + k_m$. Then explain precisely why this implies the $B_j
 
 ---
 
-**Exercise 4.**
-
-*This exercise makes the upper bound proof quantitatively precise and shows the threshold is tight up to the constant $c$.*
-
-(a) Show that for $k = c\ln n / \ln\ln n$ and $n$ large, $k! \geq n^{c - \epsilon}$ for any $\epsilon > 0$ (with $n$ large enough depending on $\epsilon$). Conclude $\Pr[\text{load}(1) \geq k] \leq n^{-c+\epsilon}$.
-
-(b) Explain why the union bound over $n$ bins then gives $\Pr[\max \text{ load} \geq k] \leq n^{-c+1+\epsilon}$, which is $o(1)$ for $c > 1 + \epsilon$.
-
-(c) What goes wrong if you try to set $k = c\ln n$ (without the $\ln\ln n$ denominator)? Specifically, what bound do you get on $1/k!$?
-
-> **Prerequisites:** [[#2.1 Upper Bound|Section 2.1 (Upper Bound)]], [[#3.1 The Poisson Distribution|Section 3.1 (Tail Bound)]]
-
+> [!INFO] Exercise 4
+>
+> *This exercise makes the upper bound proof quantitatively precise and shows the threshold is tight up to the constant $c$.*
+>
+> (a) Show that for $k = c\ln n / \ln\ln n$ and $n$ large, $k! \geq n^{c - \epsilon}$ for any $\epsilon > 0$ (with $n$ large enough depending on $\epsilon$). Conclude $\Pr[\text{load}(1) \geq k] \leq n^{-c+\epsilon}$.
+>
+> (b) Explain why the union bound over $n$ bins then gives $\Pr[\max \text{ load} \geq k] \leq n^{-c+1+\epsilon}$, which is $o(1)$ for $c > 1 + \epsilon$.
+>
+> (c) What goes wrong if you try to set $k = c\ln n$ (without the $\ln\ln n$ denominator)? Specifically, what bound do you get on $1/k!$?
+>
+> > **Prerequisites:** [[#2.1 Upper Bound|Section 2.1 (Upper Bound)]], [[#3.1 The Poisson Distribution|Section 3.1 (Tail Bound)]]
+>
 > [!TIP]- Solution to Exercise 4
 > **Key insight:** The $\ln\ln n$ denominator is chosen precisely to make $(e/k)^k \approx 1/n^c$; without it, the bound is much weaker.
 >
@@ -486,20 +486,20 @@ where $N = k_1 + \cdots + k_m$. Then explain precisely why this implies the $B_j
 
 ---
 
-**Exercise 5.**
-
-*This exercise analyzes the load-level recursion for the power of two choices and shows the doubly-exponential decay is exact.*
-
-Define the sequence $a_i = B_i/n$ (the fraction of bins with load $\geq i$) and suppose $a_2 = 1/2$.
-
-(a) If $a_{i+1} = a_i^2$, solve the recursion exactly and show $a_i = 2^{-2^{i-2}}$ for $i \geq 2$.
-
-(b) Find the smallest $i^*$ such that $a_{i^*} < 1/n$ (meaning fewer than 1 bin has load $\geq i^*$ in expectation). Show $i^* = \lfloor \log_2\log_2 n \rfloor + 3$.
-
-(c) Generalize: for $d$ choices, the recursion is $a_{i+1} = a_i^d / 1 = a_i^d$ (appropriately normalized). Solve this and find the corresponding $i^*$.
-
-> **Prerequisites:** [[#4.2 Proof via Load-Level Recursion|Section 4.2 (Load-Level Recursion)]], [[#4.4 Extension to d Choices|Section 4.4 (d Choices)]]
-
+> [!INFO] Exercise 5
+>
+> *This exercise analyzes the load-level recursion for the power of two choices and shows the doubly-exponential decay is exact.*
+>
+> Define the sequence $a_i = B_i/n$ (the fraction of bins with load $\geq i$) and suppose $a_2 = 1/2$.
+>
+> (a) If $a_{i+1} = a_i^2$, solve the recursion exactly and show $a_i = 2^{-2^{i-2}}$ for $i \geq 2$.
+>
+> (b) Find the smallest $i^*$ such that $a_{i^*} < 1/n$ (meaning fewer than 1 bin has load $\geq i^*$ in expectation). Show $i^* = \lfloor \log_2\log_2 n \rfloor + 3$.
+>
+> (c) Generalize: for $d$ choices, the recursion is $a_{i+1} = a_i^d / 1 = a_i^d$ (appropriately normalized). Solve this and find the corresponding $i^*$.
+>
+> > **Prerequisites:** [[#4.2 Proof via Load-Level Recursion|Section 4.2 (Load-Level Recursion)]], [[#4.4 Extension to d Choices|Section 4.4 (d Choices)]]
+>
 > [!TIP]- Solution to Exercise 5
 > **Key insight:** The recursion $a_{i+1} = a_i^2$ produces a tower of exponentials, which is exactly what gives doubly-logarithmic depth.
 >
@@ -512,22 +512,22 @@ Define the sequence $a_i = B_i/n$ (the fraction of bins with load $\geq i$) and 
 
 ---
 
-**Exercise 6.**
-
-*This exercise verifies the Coupon Collector limit theorem by computing the limiting distribution of empty bins under Poissonization.*
-
-Fix a constant $c \in \mathbb{R}$. Let $K \sim \text{Poi}(n\ln n + cn)$ balls be placed into $n$ bins.
-
-(a) Show each bin is empty with probability $e^{-c}/n + o(1/n)$.
-
-(b) Letting $Z_j = \mathbf{1}[\text{bin } j \text{ is empty}]$, show that $Z_1, \ldots, Z_n$ are independent under the Poissonized model.
-
-(c) Show $Z = \sum_j Z_j$ converges in distribution to $\text{Poi}(e^{-c})$ and conclude $\Pr[Z = 0] \to e^{-e^{-c}}$.
-
-(d) Explain the de-Poissonization step: why does the result for fixed $n\ln n + cn$ balls follow from the Poisson result?
-
-> **Prerequisites:** [[#3.3 Application: Coupon Collector Exact Limit|Section 3.3 (Coupon Collector Limit)]], [[#3.2 The Poissonization Theorem|Section 3.2 (Poissonization Theorem)]]
-
+> [!INFO] Exercise 6
+>
+> *This exercise verifies the Coupon Collector limit theorem by computing the limiting distribution of empty bins under Poissonization.*
+>
+> Fix a constant $c \in \mathbb{R}$. Let $K \sim \text{Poi}(n\ln n + cn)$ balls be placed into $n$ bins.
+>
+> (a) Show each bin is empty with probability $e^{-c}/n + o(1/n)$.
+>
+> (b) Letting $Z_j = \mathbf{1}[\text{bin } j \text{ is empty}]$, show that $Z_1, \ldots, Z_n$ are independent under the Poissonized model.
+>
+> (c) Show $Z = \sum_j Z_j$ converges in distribution to $\text{Poi}(e^{-c})$ and conclude $\Pr[Z = 0] \to e^{-e^{-c}}$.
+>
+> (d) Explain the de-Poissonization step: why does the result for fixed $n\ln n + cn$ balls follow from the Poisson result?
+>
+> > **Prerequisites:** [[#3.3 Application: Coupon Collector Exact Limit|Section 3.3 (Coupon Collector Limit)]], [[#3.2 The Poissonization Theorem|Section 3.2 (Poissonization Theorem)]]
+>
 > [!TIP]- Solution to Exercise 6
 > **Key insight:** The convergence $\text{Bin}(n,p) \to \text{Poi}(np)$ when $np \to \lambda$ is the core of the calculation; Poissonization provides the independence needed to apply it.
 >
@@ -542,20 +542,20 @@ Fix a constant $c \in \mathbb{R}$. Let $K \sim \text{Poi}(n\ln n + cn)$ balls be
 
 ---
 
-**Exercise 7.**
-
-*This exercise proves the stochastic dominance lemma and explains why the formal power-of-two-choices argument goes through despite dependencies.*
-
-Let $X_1, \ldots, X_n$ be $\{0,1\}$-valued random variables such that $\Pr[X_j = 1 \mid X_1, \ldots, X_{j-1}] \leq p$ almost surely for each $j$.
-
-(a) Show by induction on $n$ that $\Pr[X_1 = x_1, \ldots, X_n = x_n] \leq p^{\sum x_i}(1-p)^{n - \sum x_i}$ for all $(x_1,\ldots,x_n) \in \{0,1\}^n$.
-
-(b) Conclude that $S = \sum_j X_j$ is stochastically dominated by $\text{Bin}(n,p)$: $\Pr[S \geq k] \leq \Pr[Y \geq k]$ where $Y \sim \text{Bin}(n,p)$.
-
-(c) Apply this with $p = (B_i/n)^2$ and $n$ balls to bound $\mathbb{E}[B_{i+1}]$ and $\Pr[B_{i+1} > 2n(B_i/n)^2]$ via a Chernoff bound on $\text{Bin}(n,p)$.
-
-> **Prerequisites:** [[#4.3 Stochastic Dominance and Formal Justification|Section 4.3 (Stochastic Dominance)]], [[#4.2 Proof via Load-Level Recursion|Section 4.2]]
-
+> [!INFO] Exercise 7
+>
+> *This exercise proves the stochastic dominance lemma and explains why the formal power-of-two-choices argument goes through despite dependencies.*
+>
+> Let $X_1, \ldots, X_n$ be $\{0,1\}$-valued random variables such that $\Pr[X_j = 1 \mid X_1, \ldots, X_{j-1}] \leq p$ almost surely for each $j$.
+>
+> (a) Show by induction on $n$ that $\Pr[X_1 = x_1, \ldots, X_n = x_n] \leq p^{\sum x_i}(1-p)^{n - \sum x_i}$ for all $(x_1,\ldots,x_n) \in \{0,1\}^n$.
+>
+> (b) Conclude that $S = \sum_j X_j$ is stochastically dominated by $\text{Bin}(n,p)$: $\Pr[S \geq k] \leq \Pr[Y \geq k]$ where $Y \sim \text{Bin}(n,p)$.
+>
+> (c) Apply this with $p = (B_i/n)^2$ and $n$ balls to bound $\mathbb{E}[B_{i+1}]$ and $\Pr[B_{i+1} > 2n(B_i/n)^2]$ via a Chernoff bound on $\text{Bin}(n,p)$.
+>
+> > **Prerequisites:** [[#4.3 Stochastic Dominance and Formal Justification|Section 4.3 (Stochastic Dominance)]], [[#4.2 Proof via Load-Level Recursion|Section 4.2]]
+>
 > [!TIP]- Solution to Exercise 7
 > **Key insight:** The conditional probability bound $\Pr[X_j=1|\text{history}] \leq p$ is exactly what's needed to dominate by an i.i.d. sequence; the inductive factorization of joint probabilities makes this precise.
 >

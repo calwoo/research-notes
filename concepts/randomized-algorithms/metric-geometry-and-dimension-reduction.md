@@ -53,12 +53,12 @@ A second important family is *graph metrics*. Given an unweighted graph $G = (V,
 
 ---
 
-*Exercise 1.* The $\ell_p$ "metric" with $p < 1$ is not actually a metric.
-
-*Show that for $p \in (0,1)$ and $n \geq 2$, $d_p$ violates the triangle inequality. Construct an explicit counterexample in $\mathbb{R}^2$ and identify which step in Minkowski's proof breaks.*
-
-> **Prerequisites:** [[#1.1 Definitions and Examples|Metric space definition]], basic real analysis.
-
+> [!INFO] Exercise 1
+>
+> *Show that for $p \in (0,1)$ and $n \geq 2$, $d_p$ violates the triangle inequality. Construct an explicit counterexample in $\mathbb{R}^2$ and identify which step in Minkowski's proof breaks.*
+>
+> > **Prerequisites:** [[#1.1 Definitions and Examples|Metric space definition]], basic real analysis.
+>
 > [!TIP]- Solution to Exercise 1
 > **Key insight:** Minkowski's inequality $\|u + v\|_p \leq \|u\|_p + \|v\|_p$ is equivalent to the triangle inequality and holds iff $p \geq 1$. For $p < 1$, the function $t \mapsto t^p$ is *concave* rather than convex, reversing the direction of Jensen's inequality that powers the proof.
 >
@@ -147,12 +147,12 @@ Dividing by the number of coordinates $k = O(\log^2 n)$ recovers that the *avera
 
 ---
 
-*Exercise 2.* The per-coordinate Lipschitz bound in the Bourgain upper bound.
-
-*Prove rigorously that for any set $S \subseteq X$ and any metric $(X, d)$, the function $x \mapsto d(x, S)$ is $1$-Lipschitz with respect to $d$. Why does this immediately give the upper bound $\|f(x) - f(y)\|_1 \leq k \cdot d(x, y)$?*
-
-> **Prerequisites:** [[#2.2 Upper Bound Proof|Upper bound proof]], [[#1.2 Isometric Embeddings and Distortion|distortion definition]].
-
+> [!INFO] Exercise 2
+>
+> *Prove rigorously that for any set $S \subseteq X$ and any metric $(X, d)$, the function $x \mapsto d(x, S)$ is $1$-Lipschitz with respect to $d$. Why does this immediately give the upper bound $\|f(x) - f(y)\|_1 \leq k \cdot d(x, y)$?*
+>
+> > **Prerequisites:** [[#2.2 Upper Bound Proof|Upper bound proof]], [[#1.2 Isometric Embeddings and Distortion|distortion definition]].
+>
 > [!TIP]- Solution to Exercise 2
 > **Key insight:** The distance-to-set function $d(\cdot, S)$ is the infimum of a family of 1-Lipschitz functions.
 >
@@ -259,12 +259,12 @@ def verify_distortion(X: np.ndarray, Y: np.ndarray, eps: float) -> float:
 
 ---
 
-*Exercise 3.* MGF computation and tail bound.
-
-*Verify the MGF calculation $\mathbb{E}[e^{tZ^2}] = (1-2t)^{-1/2}$ for $Z \sim \mathcal{N}(0,1)$ by completing the square in the exponent. Then derive the upper tail bound $\Pr[\sum_{i=1}^m Z_i^2 > (1+\varepsilon)m] \leq e^{-m\varepsilon^2/8}$ by optimizing the Markov inequality over $t$.*
-
-> **Prerequisites:** [[#3.2 Full Proof|JL proof]], [[concepts/randomized-algorithms/concentration-inequalities|Chernoff bounds]].
-
+> [!INFO] Exercise 3
+>
+> *Verify the MGF calculation $\mathbb{E}[e^{tZ^2}] = (1-2t)^{-1/2}$ for $Z \sim \mathcal{N}(0,1)$ by completing the square in the exponent. Then derive the upper tail bound $\Pr[\sum_{i=1}^m Z_i^2 > (1+\varepsilon)m] \leq e^{-m\varepsilon^2/8}$ by optimizing the Markov inequality over $t$.*
+>
+> > **Prerequisites:** [[#3.2 Full Proof|JL proof]], [[concepts/randomized-algorithms/concentration-inequalities|Chernoff bounds]].
+>
 > [!TIP]- Solution to Exercise 3
 > **Key insight:** Completing the square reduces the MGF integral to a standard Gaussian integral; the Chernoff bound then replaces the non-standard $\chi^2$ tail with an exponential.
 >
@@ -272,12 +272,12 @@ def verify_distortion(X: np.ndarray, Y: np.ndarray, eps: float) -> float:
 >
 > **Sketch (tail bound):** Let $W = \sum Z_i^2$. $\Pr[W > (1+\varepsilon)m] \leq e^{-t(1+\varepsilon)m} (1-2t)^{-m/2}$. Taking $\log$ and minimizing over $t$: set $\partial/\partial t[\cdots] = 0$, get $t^* = \varepsilon/(2(1+\varepsilon))$. Substitute and use $\ln(1+\varepsilon) - \varepsilon/(1+\varepsilon) \geq \varepsilon^2/4$ for small $\varepsilon$ to get the bound $\leq e^{-m\varepsilon^2/8}$.
 
-*Exercise 4.* JL lower bound.
-
-*Prove that for any linear map $f : \mathbb{R}^d \to \mathbb{R}^m$ with $m < \lfloor \log_2 n \rfloor$, there exist $n$ unit vectors in $\mathbb{R}^d$ such that $f$ fails to preserve at least one pairwise distance up to $(1\pm\varepsilon)$ for $\varepsilon = 1/2$. (Hint: use a dimension-counting argument on the kernel.)*
-
-> **Prerequisites:** [[#3.1 Statement and Construction|JL statement]], linear algebra (rank-nullity theorem).
-
+> [!INFO] Exercise 4
+>
+> *Prove that for any linear map $f : \mathbb{R}^d \to \mathbb{R}^m$ with $m < \lfloor \log_2 n \rfloor$, there exist $n$ unit vectors in $\mathbb{R}^d$ such that $f$ fails to preserve at least one pairwise distance up to $(1\pm\varepsilon)$ for $\varepsilon = 1/2$. (Hint: use a dimension-counting argument on the kernel.)*
+>
+> > **Prerequisites:** [[#3.1 Statement and Construction|JL statement]], linear algebra (rank-nullity theorem).
+>
 > [!TIP]- Solution to Exercise 4
 > **Key insight:** A linear map with $m < \log_2 n$ has an $(d - m)$-dimensional kernel that must intersect any sufficiently large collection of subspaces.
 >
@@ -358,12 +358,12 @@ flowchart LR
 
 ---
 
-*Exercise 5.* LSH false positive and false negative calculation.
-
-*Using the collision probability formula from Claim 2, compute the probability that a near pair (angle $\leq \varepsilon$) is missed by all $s = \sqrt{n}$ hash tables, and the expected number of far-pair (angle $\geq 5\varepsilon$) false positives per query. Use the parameter $k = \pi\sqrt{\log n}/\varepsilon$ and verify the claims in the table above.*
-
-> **Prerequisites:** [[#4.2 Random Hyperplane LSH|LSH construction and collision probability]].
-
+> [!INFO] Exercise 5
+>
+> *Using the collision probability formula from Claim 2, compute the probability that a near pair (angle $\leq \varepsilon$) is missed by all $s = \sqrt{n}$ hash tables, and the expected number of far-pair (angle $\geq 5\varepsilon$) false positives per query. Use the parameter $k = \pi\sqrt{\log n}/\varepsilon$ and verify the claims in the table above.*
+>
+> > **Prerequisites:** [[#4.2 Random Hyperplane LSH|LSH construction and collision probability]].
+>
 > [!TIP]- Solution to Exercise 5
 > **Key insight:** Near pairs collide per-table with probability $\geq 1/2$; far pairs with probability $\leq n^{-2}$; multiple tables boost recall while keeping false positives small.
 >
@@ -415,12 +415,12 @@ flowchart TD
 
 ---
 
-*Exercise 6.* RIP implies injectivity on sparse vectors.
-
-*Show that if $A$ satisfies $\text{RIP}(2k, \varepsilon)$ with $\varepsilon < 1$, then the map $x \mapsto Ax$ is injective on the set of $k$-sparse vectors. Conclude that the sparse recovery problem has a unique solution.*
-
-> **Prerequisites:** [[#5.2 The Restricted Isometry Property|RIP definition]].
-
+> [!INFO] Exercise 6
+>
+> *Show that if $A$ satisfies $\text{RIP}(2k, \varepsilon)$ with $\varepsilon < 1$, then the map $x \mapsto Ax$ is injective on the set of $k$-sparse vectors. Conclude that the sparse recovery problem has a unique solution.*
+>
+> > **Prerequisites:** [[#5.2 The Restricted Isometry Property|RIP definition]].
+>
 > [!TIP]- Solution to Exercise 6
 > **Key insight:** The difference of two $k$-sparse vectors is $2k$-sparse, so RIP$(2k)$ applies directly.
 >
@@ -524,34 +524,34 @@ for $\delta \leq 1/2$. **Hence $\delta^* \leq \delta$**, and the RIP holds for a
 
 ---
 
-*Exercise 7.* ε-net size bound.
-
-*Prove rigorously that the unit sphere $\mathbb{S}^{k-1}$ has an $\varepsilon$-net of size at most $(1 + 2/\varepsilon)^k$ using the volume comparison argument. Then conclude the bound $(3/\varepsilon)^k$ for $\varepsilon \leq 1$.*
-
-> **Prerequisites:** [[#5.4 Gaussian Matrices Satisfy RIP: ε-Net Proof|ε-net construction]].
-
+> [!INFO] Exercise 7
+>
+> *Prove rigorously that the unit sphere $\mathbb{S}^{k-1}$ has an $\varepsilon$-net of size at most $(1 + 2/\varepsilon)^k$ using the volume comparison argument. Then conclude the bound $(3/\varepsilon)^k$ for $\varepsilon \leq 1$.*
+>
+> > **Prerequisites:** [[#5.4 Gaussian Matrices Satisfy RIP: ε-Net Proof|ε-net construction]].
+>
 > [!TIP]- Solution to Exercise 7
 > **Key insight:** Disjoint balls of radius $\varepsilon/2$ centered at net points are all contained in a ball of radius $1 + \varepsilon/2$; volume comparison bounds the count.
 >
 > **Sketch:** Net points $\{y_i\}$ satisfy $\|y_i - y_j\|_2 > \varepsilon$ for $i \neq j$. Balls $B(y_i, \varepsilon/2)$ are pairwise disjoint and all lie inside $B(0, 1) \oplus B(0, \varepsilon/2) = B(0, 1 + \varepsilon/2)$. By volume: $|\mathcal{N}| \cdot (\varepsilon/2)^k \omega_k \leq (1+\varepsilon/2)^k \omega_k$, where $\omega_k$ is the volume of the unit ball. Hence $|\mathcal{N}| \leq (1 + 2/\varepsilon)^k \leq (3/\varepsilon)^k$ for $\varepsilon \leq 1$ (since $1 + 2/\varepsilon \leq 3/\varepsilon$ when $\varepsilon \leq 1$).
 
-*Exercise 8.* RIP self-improvement step.
-
-*Formalize the self-improvement argument in Step 4. Specifically, suppose $A$ satisfies $\|Ax\|_2^2 \in [1 \pm \delta/2]$ for all $x$ in an $\varepsilon$-net of $\Sigma_k^1$, and that $\|Ax\|_2 \leq 1 + \delta^*$ for all $x \in \Sigma_k^1$. Derive the bound $\delta^* \leq 4\varepsilon(1 + \delta^*) / (1 - 2\varepsilon) + \delta/2$ and solve for $\delta^*$ in terms of $\varepsilon$ and $\delta$. What value of $\varepsilon$ makes $\delta^* \leq \delta$?*
-
-> **Prerequisites:** [[#5.4 Gaussian Matrices Satisfy RIP: ε-Net Proof|ε-net proof, Step 4]].
-
+> [!INFO] Exercise 8
+>
+> *Formalize the self-improvement argument in Step 4. Specifically, suppose $A$ satisfies $\|Ax\|_2^2 \in [1 \pm \delta/2]$ for all $x$ in an $\varepsilon$-net of $\Sigma_k^1$, and that $\|Ax\|_2 \leq 1 + \delta^*$ for all $x \in \Sigma_k^1$. Derive the bound $\delta^* \leq 4\varepsilon(1 + \delta^*) / (1 - 2\varepsilon) + \delta/2$ and solve for $\delta^*$ in terms of $\varepsilon$ and $\delta$. What value of $\varepsilon$ makes $\delta^* \leq \delta$?*
+>
+> > **Prerequisites:** [[#5.4 Gaussian Matrices Satisfy RIP: ε-Net Proof|ε-net proof, Step 4]].
+>
 > [!TIP]- Solution to Exercise 8
 > **Key insight:** The bound on $\delta^*$ is a fixed-point equation; solving it requires $\varepsilon$ small enough that the fixed-point is below $\delta$.
 >
 > **Sketch:** For $x \in \Sigma_k^1$, choose net point $y$ with $\|x-y\|_2 \leq \varepsilon$. Then $\|Ax\|_2 \leq \|Ay\|_2 + \|A(x-y)\|_2 \leq (1 + \delta/2) + (1+\delta^*)\varepsilon$ (using RIP on the $2k$-sparse vector $(x-y)/\|x-y\|_2$ scaled by $\|x-y\|_2 \leq \varepsilon$). So $\delta^* \leq \delta/2 + \varepsilon(1+\delta^*)$. Solving: $\delta^* \leq (\delta/2 + \varepsilon)/(1-\varepsilon)$. For $\varepsilon = \delta/8$: $\delta^* \leq (\delta/2 + \delta/8)/(1 - \delta/8) = (5\delta/8)/(1-\delta/8) \leq \delta$ for $\delta \leq 1/2$.
 
-*Exercise 9.* ℓ_1 recovery: sparsity is necessary.
-
-*Consider $n = 3$, $k = 1$, $m = 1$, and $A = [1, 1, 0]$. Let $x = (1, 0, 0)$ so $y = Ax = 1$. Show that the $\ell_1$ minimizer subject to $Az = 1$ does not recover $x$, and explain which assumption on $A$ is violated. What goes wrong with the RIP condition?*
-
-> **Prerequisites:** [[#5.3 Recovery via ℓ_1 Minimization|ℓ_1 minimization]], [[#5.2 The Restricted Isometry Property|RIP definition]].
-
+> [!INFO] Exercise 9
+>
+> *Consider $n = 3$, $k = 1$, $m = 1$, and $A = [1, 1, 0]$. Let $x = (1, 0, 0)$ so $y = Ax = 1$. Show that the $\ell_1$ minimizer subject to $Az = 1$ does not recover $x$, and explain which assumption on $A$ is violated. What goes wrong with the RIP condition?*
+>
+> > **Prerequisites:** [[#5.3 Recovery via ℓ_1 Minimization|ℓ_1 minimization]], [[#5.2 The Restricted Isometry Property|RIP definition]].
+>
 > [!TIP]- Solution to Exercise 9
 > **Key insight:** The matrix $A = [1, 1, 0]$ does not separate the 1-sparse vectors $(1,0,0)$ and $(0,1,0)$ — both give measurement $y = 1$ — so no algorithm can distinguish them from measurements alone.
 >

@@ -59,7 +59,8 @@ The bound is *tight*: for any $c > 0$ and any $\mu > 0$ with $\mu \leq c$, consi
 
 ---
 
-**Exercise 1.** *This exercise shows that Markov's inequality is tight in a strong sense: no universal improvement is possible using only mean information.*
+> [!INFO] Exercise 1
+> *This exercise shows that Markov's inequality is tight in a strong sense: no universal improvement is possible using only mean information.*
 
 Let $\mu, c$ be given with $0 < \mu < c$. Show that for any $\varepsilon > 0$, there exists a non-negative random variable $X$ with $\mathbb{E}[X] = \mu$ such that $\Pr[X \geq c] > \mu/c - \varepsilon$.
 
@@ -131,7 +132,8 @@ By Chebyshev, the number of collisions $C$ with $x$ satisfies $\Pr[C \geq k] \le
 
 ---
 
-**Exercise 2.** *This exercise shows that pairwise independence of the hash family $h_{a,b}$ is sufficient to guarantee near-uniform bucket loads, and derives the exact collision probability.*
+> [!INFO] Exercise 2
+> *This exercise shows that pairwise independence of the hash family $h_{a,b}$ is sufficient to guarantee near-uniform bucket loads, and derives the exact collision probability.*
 
 For $h_{a,b}(x) = (ax+b \bmod p) \bmod m$ with $p$ prime and $m \mid p - 1$, show that for distinct $x, y \in \mathbb{Z}_p$, $\Pr_{a,b}[h_{a,b}(x) = h_{a,b}(y)] = 1/m$.
 
@@ -217,7 +219,8 @@ By symmetry, the same bound holds for $b$ failing. By a union bound, the probabi
 
 ---
 
-**Exercise 3.** *This exercise tightens the window-size analysis to show the window contains $O(n^{3/4})$ elements with high probability, completing the correctness proof.*
+> [!INFO] Exercise 3
+> *This exercise tightens the window-size analysis to show the window contains $O(n^{3/4})$ elements with high probability, completing the correctness proof.*
 
 Let $W$ be the number of elements of $S$ falling in the interval $[a, b]$ defined by the algorithm. Show that $\Pr[W > 4n^{3/4}] = O(n^{-1/4})$.
 
@@ -291,7 +294,8 @@ This clean upper bound on $M_X(t)$ is what drives the Chernoff bound derivation.
 
 ---
 
-**Exercise 4.** *This exercise derives the MGF of a Poisson random variable and connects it to the Bernoulli-sum bound above via the Poisson limit theorem.*
+> [!INFO] Exercise 4
+> *This exercise derives the MGF of a Poisson random variable and connects it to the Bernoulli-sum bound above via the Poisson limit theorem.*
 
 Let $X \sim \mathrm{Poisson}(\lambda)$, so $\Pr[X = k] = e^{-\lambda}\lambda^k/k!$.
 
@@ -406,7 +410,8 @@ $$\Pr[X - \mu \geq t] \leq \exp\!\left(-\frac{t^2/2}{\sigma^2 + Mt/3}\right).$$
 
 ---
 
-**Exercise 5.** *This exercise derives the exact Chernoff bound for the Binomial distribution and verifies the small-$\delta$ corollary.*
+> [!INFO] Exercise 5
+> *This exercise derives the exact Chernoff bound for the Binomial distribution and verifies the small-$\delta$ corollary.*
 
 Let $X \sim \mathrm{Binomial}(n, p)$ with $\mu = np$. Show from the general Chernoff bound that $\Pr[X \geq (1+\delta)\mu] \leq (e^\delta/(1+\delta)^{1+\delta})^\mu$, then prove the small-$\delta$ corollary $\Pr[X \geq (1+\delta)\mu] \leq e^{-\mu\delta^2/3}$ for $\delta \in (0,1]$.
 
@@ -419,7 +424,8 @@ Let $X \sim \mathrm{Binomial}(n, p)$ with $\mu = np$. Show from the general Cher
 
 ---
 
-**Exercise 6.** *This exercise shows that Hoeffding's inequality recovers the sub-Gaussian tail for sums of centered Bernoullis, and compares it to the Chernoff bound.*
+> [!INFO] Exercise 6
+> *This exercise shows that Hoeffding's inequality recovers the sub-Gaussian tail for sums of centered Bernoullis, and compares it to the Chernoff bound.*
 
 Let $Z_i = X_i - p$ where $X_i \sim \mathrm{Bernoulli}(p)$ i.i.d. Note $Z_i \in [-p, 1-p]$.
 
@@ -581,7 +587,8 @@ Hence all packets are delivered in $6n = O(\log N)$ steps with probability $\geq
 
 ---
 
-**Exercise 7.** *This exercise shows that dropping the two-phase structure and using direct bit-fixing routing is insufficient: a single bad permutation creates $\Omega(\sqrt{N})$ congestion.*
+> [!INFO] Exercise 7
+> *This exercise shows that dropping the two-phase structure and using direct bit-fixing routing is insufficient: a single bad permutation creates $\Omega(\sqrt{N})$ congestion.*
 
 Consider the *bit-reversal permutation* $\sigma$ on $\{0,1\}^n$: $\sigma(b_1 b_2 \cdots b_n) = b_n b_{n-1} \cdots b_1$. Show that for any deterministic oblivious routing scheme (including bit-fixing), there exists a permutation $\sigma$ and an edge $e$ such that $\Omega(2^{n/2})$ paths pass through $e$.
 
@@ -594,7 +601,8 @@ Consider the *bit-reversal permutation* $\sigma$ on $\{0,1\}^n$: $\sigma(b_1 b_2
 
 ---
 
-**Exercise 8.** *This exercise shows that the $1+x \leq e^x$ bound is tight enough for Chernoff purposes, but quantifies the slack introduced at each step.*
+> [!INFO] Exercise 8
+> *This exercise shows that the $1+x \leq e^x$ bound is tight enough for Chernoff purposes, but quantifies the slack introduced at each step.*
 
 Let $X = \sum_{i=1}^n X_i$ with $X_i \sim \mathrm{Bernoulli}(p)$ i.i.d. and $\mu = np$. Compare the exact MGF $M_X(t) = (1 - p + pe^t)^n$ against the upper bound $e^{\mu(e^t-1)}$ used in Chernoff. Show that $M_X(t) \leq e^{\mu(e^t-1)}$ with equality iff $p \to 0, n \to \infty$ with $np = \mu$ fixed (the Poisson limit).
 
