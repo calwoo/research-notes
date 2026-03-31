@@ -148,6 +148,9 @@ For small bit-widths: $b=1,2,3,4$ gives $D_{\text{mse}} \approx 0.36, 0.117, 0.0
 
 The constant $2\sqrt{3\pi} \approx 6.1$ translates to a factor of $\approx 2.7$ over the lower bound $4^{-b}$.
 
+![Figure 3b from Zandieh et al. (2025): MSE distortion of TurboQuantmse vs theoretical upper and lower bounds across bit-widths 1-5](figures/turboquant/turboquant-fig3b-mse-vs-bounds.png)
+*Figure 3b (Zandieh et al., 2025): MSE distortion $D_{\text{mse}}$ of TurboQuant$_{\text{mse}}$ (solid blue) plotted against the information-theoretic lower bound $4^{-b}$ (green dashed) and the theoretical upper bound $\sqrt{3\pi/2} \cdot 4^{-b}$ (red dashed) on a log scale. All three scale with the same $4^{-b}$ exponent, and the actual distortion stays tightly sandwiched within the $\approx 2.7\times$ gap.*
+
 ---
 
 ## 4. TurboQuantprod: Unbiased Inner Product Quantization
@@ -159,6 +162,12 @@ MSE-optimal quantizers are *not* unbiased for inner products. Consider $b=1$: th
 $$\mathbb{E}[\langle y, Q_{\text{mse}}^{-1}(Q_{\text{mse}}(x))\rangle] = \frac{2}{\pi} \langle y, x\rangle \neq \langle y, x\rangle.$$
 
 **The bias is $2/\pi \approx 0.637$**, a significant multiplicative error. This bias decreases as $b$ increases (the MSE quantizer converges to identity), but is present for all finite $b$.
+
+![Figure 1 from Zandieh et al. (2025): inner product distortion histograms for TurboQuantprod and TurboQuantmse at b=1,2,3,4](figures/turboquant/turboquant-fig1a-inner-product-distortion-prod.png)
+*Figure 1a (Zandieh et al., 2025): Inner product distortion histogram for TurboQuant$_{\text{prod}}$ at bit-widths $b=1,2,3,4$. The distribution is symmetric and centered at zero, confirming the unbiasedness of the two-stage scheme.*
+
+![Figure 1b from Zandieh et al. (2025): inner product distortion histogram for TurboQuantmse at b=1,2,3,4](figures/turboquant/turboquant-fig1b-inner-product-distortion-mse.png)
+*Figure 1b (Zandieh et al., 2025): Inner product distortion histogram for TurboQuant$_{\text{mse}}$ at the same bit-widths. The distribution is visibly skewed with a non-zero mean, showing the systematic bias of the MSE-optimal quantizer when used for inner product estimation.*
 
 > [!DANGER] Why bias matters in applications
 > In nearest-neighbor search, a biased estimator would score all database points systematically low relative to the true inner products, distorting rankings and reducing recall. In KV cache quantization, a multiplicative bias on attention logits directly distorts attention weights and degrades generation quality.
@@ -195,6 +204,12 @@ def inner_product_estimate(y, idx_mse, qjl_bits, gamma, codebook, S):
     return np.dot(y, x_mse) + qjl_estimate             # unbiased!
 ```
 
+![Figure 2 from Zandieh et al. (2025): inner product error variance vs average inner product for TurboQuantprod and TurboQuantmse](figures/turboquant/turboquant-fig2a-variance-vs-inner-product-prod.png)
+*Figure 2a (Zandieh et al., 2025): Inner product error distribution for TurboQuant$_{\text{prod}}$ conditioned on different average inner product values (b=2). The spread remains constant regardless of the average IP, confirming homoskedasticity.*
+
+![Figure 2b from Zandieh et al. (2025): inner product error variance vs average inner product for TurboQuantmse](figures/turboquant/turboquant-fig2b-variance-vs-inner-product-mse.png)
+*Figure 2b (Zandieh et al., 2025): Inner product error distribution for TurboQuant$_{\text{mse}}$ at the same settings. The variance grows with the average inner product — a direct consequence of the multiplicative bias: the error $\langle y,x\rangle(1 - 2/\pi)$ scales with the true inner product.*
+
 ### 4.3 Inner Product Distortion Bound (Theorem 2)
 
 🔑 **Theorem 2.** $Q_{\text{prod}}$ at bit-width $b$ satisfies, for any $x \in S^{d-1}$ and any $y$:
@@ -221,6 +236,9 @@ Averaging over $\tilde{x}_{\text{mse}}$ and applying Theorem 1 at bit-width $b-1
 
 $$D_{\text{prod}} \leq \frac{\pi \|y\|_2^2}{2d} \cdot D_{\text{mse}}(b-1) \leq \frac{\pi \|y\|_2^2}{2d} \cdot \frac{2\sqrt{3\pi}}{4^{b-1}} = \frac{3\pi^2 \|y\|_2^2}{d} \cdot \frac{1}{4^b}. \quad \square$$
 
+![Figure 3a from Zandieh et al. (2025): inner product error D_prod vs bitwidth for TurboQuantprod and TurboQuantmse with theoretical bounds](figures/turboquant/turboquant-fig3a-inner-prod-error-vs-bounds.png)
+*Figure 3a (Zandieh et al., 2025): Inner product error $D_{\text{prod}}$ vs bit-width $b$ for TurboQuant$_{\text{prod}}$ (purple) and TurboQuant$_{\text{mse}}$ (blue), plotted against the information-theoretic lower bound $\frac{1}{d}4^{-b}$ (green dashed) and the theoretical upper bound $\frac{\sqrt{3}\pi^2}{d}4^{-b}$ (red dashed). TurboQuant$_{\text{prod}}$ consistently outperforms the unbiased-but-lossy MSE approach at all bit-widths, and both track the $4^{-b}$ scaling law.*
+
 ---
 
 ## 5. Experiments
@@ -239,6 +257,9 @@ All experiments on a single NVIDIA A100 GPU.
 
 - At the same bit budget, TurboQuant$_{\text{prod}}$ outperforms product quantization (PQ) and ScaNN variants in recall@1.
 - Indexing time is *virtually zero* (no offline $k$-means training required) vs. hours for PQ.
+
+![Figure 5b from Zandieh et al. (2025): Recall@1@k comparison on OpenAI 1536-dim embeddings for TurboQuant, PQ, and RabitQ at 2 and 4 bits](figures/turboquant/turboquant-fig5b-recall-openai-1536.png)
+*Figure 5b (Zandieh et al., 2025): Recall@1 at top-$k$ on OpenAI 1536-dimensional embeddings. TurboQuant at 2 bits matches or exceeds PQ and RabitQ at 2 bits across all values of $k$, and at 4 bits it converges to near-perfect recall at $k=4$. Crucially, TurboQuant requires no offline training while PQ requires expensive $k$-means clustering.*
 
 > [!NOTE] Empirical validation of the Beta distribution
 > The paper verifies that after random rotation, the coordinate histogram of actual LLM key embeddings matches the predicted Beta distribution closely. This confirms that the theoretical analysis — designed for worst-case unit sphere vectors — accurately predicts behavior on real LLM activations.
