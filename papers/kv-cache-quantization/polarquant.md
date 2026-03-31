@@ -106,6 +106,9 @@ def polar_transform(x):
     return r[0], angles  # (scalar radius, list of angle vectors)
 ```
 
+![Figure 1 from Han et al. (2025): overview of the recursive polar transformation procedure](figures/polarquant/polarquant-fig1-recursive-polar-transform.png)
+*Figure 1 (Han et al., 2025): The tree-structured polar transformation applied to a $d$-dimensional input (shown in blue, left). At each level, successive coordinate pairs are replaced by their Euclidean norm (propagated upward, shown in red) and their arctangent angle (stored as output). After $\log_2 d$ levels, the representation consists of $d-1$ angles at varying levels plus a single scalar radius.*
+
 > [!INFO] Information content of the representation
 > The $d-1$ angles plus 1 radius together encode the full $d$-dimensional vector. The radius $\|x\|_2$ is stored in FP16 (16 bits). The angles are quantized with varying bit widths per level, as described in Section 4.
 
@@ -185,7 +188,22 @@ All experiments on a single RTX A6000 GPU (48 GB). Benchmarks: LongBench (long-c
 | **PolarQuant** | **~3.875** | **0.991** |
 | PolarQuant-R (random codebook) | ~3.875 | 0.990 |
 
+![Figure 3 (FP16 exact) from Han et al. (2025): NIAH heatmap for FP16 baseline](figures/polarquant/polarquant-fig3-niah-exact.png)
+*Figure 3, FP16 Exact (Han et al., 2025): Needle-In-A-Haystack recall heatmap for the unquantized FP16 baseline on Llama-3.1-8B-Instruct. Sequence lengths range from 4K to 104K (x-axis) and needle depth from 0–100% (y-axis). Near-perfect recall (solid green) across all depths and lengths, with only a single orange cell at the very long context boundary — the ceiling reference.*
+
+![Figure 3 (KIVI) from Han et al. (2025): NIAH heatmap for KIVI 3-bit quantization](figures/polarquant/polarquant-fig3-niah-kivi.png)
+*Figure 3, KIVI (Han et al., 2025): NIAH recall under KIVI 3-bit Cartesian quantization. Yellow and light-green patches appear at longer contexts (20K–65K) and certain depths, indicating recall failures from quantization errors on outlier key coordinates.*
+
+![Figure 3 (PolarQuant) from Han et al. (2025): NIAH heatmap for PolarQuant at ~3.875 bits/coord](figures/polarquant/polarquant-fig3-niah-adapkvqrndrot.png)
+*Figure 3, PolarQuant (Han et al., 2025): NIAH recall for PolarQuant (~3.875 bits/coord) with random preconditioning. The heatmap closely matches the FP16 baseline — almost entirely solid green — demonstrating that the polar quantization scheme with preconditioning preserves long-context retrieval fidelity with greater than 4× compression over FP16.*
+
 *Surprising result:* PolarQuant's random-preconditioning eliminates the outlier problem that plagues KIVI and requires special handling in QJL. As shown in Figure 2 of the paper, preconditioning "flattens" the angle distribution and removes outliers, allowing a single codebook to work well for all tokens across all layers.
+
+![Figure 2a from Han et al. (2025): angle distributions at each polar transform level without random preconditioning](figures/polarquant/polarquant-fig2a-angle-dist-no-precond.png)
+*Figure 2a (Han et al., 2025): Angle distributions at levels 1–4 of the polar transform **without** random preconditioning, measured on real key embeddings. Level-1 angles are multimodal with pronounced spikes near $\pm\pi$, reflecting the non-isotropic structure of raw key vectors. A single offline codebook tuned to the theoretical $\sin^{d-1}(2\psi)$ density would perform poorly here.*
+
+![Figure 2b from Han et al. (2025): angle distributions at each polar transform level with random preconditioning](figures/polarquant/polarquant-fig2b-angle-dist-with-precond.png)
+*Figure 2b (Han et al., 2025): The same angle distributions **after** random preconditioning. Level-1 angles are now nearly uniform over $[-\pi, \pi]$, and levels 2–4 are well-concentrated bell-shaped distributions centered at $\pi/4$, closely matching the theoretical prediction of Lemma 2. The offline codebook is now optimal for the actual data distribution.*
 
 ---
 
