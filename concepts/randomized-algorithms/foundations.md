@@ -68,7 +68,8 @@ Since $\binom{n}{n/2} \geq 2^{\Omega(n)}$, the naive algorithm takes time $2^{\O
 
 ---
 
-> **Exercise 1.** *This problem establishes that naive expansion of a product of linear factors is superpolynomially expensive.*
+> [!INFO] Exercise 1
+> *This problem establishes that naive expansion of a product of linear factors is superpolynomially expensive.*
 >
 > > **Prerequisites:** [[#1.2 Why Naive Expansion is Expensive]]
 >
@@ -119,7 +120,8 @@ Every randomized algorithm with at most $k$ coin flips traces a path through a c
 
 ---
 
-> **Exercise 2.** *This problem establishes that a $p$-biased coin for irrational $p$ cannot be simulated with a fixed number of fair coin flips, but can be simulated in expected finite time.*
+> [!INFO] Exercise 2
+> *This problem establishes that a $p$-biased coin for irrational $p$ cannot be simulated with a fixed number of fair coin flips, but can be simulated in expected finite time.*
 >
 > > **Prerequisites:** [[#2.1 Binary-Tree View of Computation]]
 >
@@ -159,7 +161,8 @@ The two major classes of randomized algorithms trade correctness against runtime
 
 ---
 
-> **Exercise 3.** *This problem establishes the relationship between Las Vegas and Monte Carlo algorithms.*
+> [!INFO] Exercise 3
+> *This problem establishes the relationship between Las Vegas and Monte Carlo algorithms.*
 >
 > > **Prerequisites:** [[#2.2 Las Vegas vs Monte Carlo Algorithms]]
 >
@@ -200,7 +203,8 @@ $$\Pr[\text{error}] \leq 2^t \cdot e^{-2\epsilon^2 t} \cdot 2^{-t} = e^{-2\epsil
 
 ---
 
-> **Exercise 4.** *This problem sharpens the error amplification analysis using Chernoff bounds.*
+> [!INFO] Exercise 4
+> *This problem sharpens the error amplification analysis using Chernoff bounds.*
 >
 > > **Prerequisites:** [[#2.3 Error Amplification]]
 >
@@ -267,7 +271,8 @@ $$\boxed{\Pr[P(r_1, \ldots, r_n) = 0] \leq \frac{d}{|S|}.}$$
 
 ---
 
-> **Exercise 5.** *This exercise develops intuition for the bound before the formal proof.*
+> [!INFO] Exercise 5
+> *This exercise develops intuition for the bound before the formal proof.*
 >
 > > **Prerequisites:** [[#3.2 Schwartz-Zippel Theorem]]
 >
@@ -330,7 +335,8 @@ $$\Pr[P(\mathbf{r}) = 0] \leq \frac{d-k}{|S|} \cdot 1 + \frac{k}{|S|} \cdot 1 = 
 
 ---
 
-> **Exercise 6.** *This problem reconstructs the key inductive step with explicit algebraic detail.*
+> [!INFO] Exercise 6
+> *This problem reconstructs the key inductive step with explicit algebraic detail.*
 >
 > > **Prerequisites:** [[#3.3 Proof]]
 >
@@ -356,7 +362,8 @@ $$\Pr[P(\mathbf{r}) = 0] \leq \frac{d-k}{|S|} \cdot 1 + \frac{k}{|S|} \cdot 1 = 
 
 ---
 
-> **Exercise 7.** *This problem extends the proof technique to a field of characteristic $p$.*
+> [!INFO] Exercise 7
+> *This problem extends the proof technique to a field of characteristic $p$.*
 >
 > > **Prerequisites:** [[#3.3 Proof]]
 >
@@ -378,7 +385,8 @@ $$\Pr[P(\mathbf{r}) = 0] \leq \frac{d-k}{|S|} \cdot 1 + \frac{k}{|S|} \cdot 1 = 
 
 ---
 
-> **Exercise 8.** *This problem applies Schwartz-Zippel to perfect matching detection.*
+> [!INFO] Exercise 8
+> *This problem applies Schwartz-Zippel to perfect matching detection.*
 >
 > > **Prerequisites:** [[#1.3 Applications]], [[#3.2 Schwartz-Zippel Theorem]]
 >
@@ -422,7 +430,8 @@ In other words: *derandomizing PIT would imply* that we can prove hard circuit l
 
 ---
 
-> **Exercise 9.** *This problem explores why derandomization of PIT is connected to lower bounds.*
+> [!INFO] Exercise 9
+> *This problem explores why derandomization of PIT is connected to lower bounds.*
 >
 > > **Prerequisites:** [[#4. Discussion and Open Problems]]
 >
