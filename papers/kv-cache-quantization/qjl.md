@@ -46,6 +46,9 @@ The natural fix is quantization: store each FP16/BF16 number in fewer bits. But 
 
 QJL sidesteps metadata entirely by replacing the classical quantizer with a *sketching* operation whose output distribution is analytically known from the design of the sketch.
 
+![Figure 1 from Zandieh et al. (2024): Overview of the KV cache quantization pipeline via the QJL transform](figures/qjl/qjl-fig1-overview-pipeline.png)
+*Figure 1 (Zandieh et al., 2024): The QJL pipeline. During prompt encoding (left), key embeddings are projected via a random JL matrix S, sign-quantized to 1 bit, and cached together with the scalar norm. During token generation (right), the query is projected by the same S and its inner product with each cached sign vector is computed, yielding an unbiased estimate of the full-precision attention score — with no stored quantization constants.*
+
 ---
 
 ## 2. The QJL Transform
@@ -139,6 +142,9 @@ The key cache stores: $m$ sign bits + 1 FP16 scalar $\|k\|_2$ per token. Value c
 
 **Outlier channels.** In deeper layers of LLMs like Llama-2, a small number of fixed channels (≈4 out of 128) have much larger magnitudes than the rest. Because Theorem 3.6's distortion scales as $r^2$ (the max embedding norm), these outliers disproportionately increase error. Fix: detect outlier channels during the prefill phase and quantize them with a separate, lower-compression QJL instance.
 
+![Figure 2 from Zandieh et al. (2024): Magnitude of key cache entries across layers of Llama-2](figures/qjl/qjl-fig2-key-cache-outliers.png)
+*Figure 2 (Zandieh et al., 2024): Key cache entry magnitudes for three representative layers of Llama-2. In the early layer (Layer 0), magnitudes are roughly uniform across channels. By Layer 15 and especially Layer 31, a small number of channels (≈4) exhibit magnitudes orders of magnitude larger than the rest — these are the outlier channels whose large $r^2$ would inflate QJL's distortion bound if left unhandled.*
+
 **Orthogonalizing $S$.** Empirically, QR-decomposing the Gaussian matrix $S$ (so its rows are orthonormal) almost always improves performance. This is consistent with results on orthogonal random features and super-bit LSH — orthogonality reduces variance.
 
 > [!INFO] Why orthogonalization helps
@@ -158,6 +164,9 @@ Tested on LongBench (long-range QA) and LM-eval (standard benchmarks) with Llama
 | **QJL** | **3** | **21.83** | **29.44** | **35.62** | **23.60** |
 
 **Key result:** QJL at 3 bits matches or exceeds FP16 on most tasks, while KIVI/KVQuant degrade. KVQuant is significantly slower during prompting, while QJL matches FP16 decoding speed and reduces memory by >5×.
+
+![Figure 3 from Zandieh et al. (2024): Wall-clock time comparison for prompt encoding and token generation](figures/qjl/qjl-fig3-wall-clock-time.png)
+*Figure 3 (Zandieh et al., 2024): Wall-clock time (ms) as a function of input sequence length (1k–128k tokens). Left: prompt encoding time — KVQuant is significantly slower due to preprocessing overhead, while QJL and KIVI match FP16. Middle: token generation time — QJL and KIVI are faster than FP16 due to reduced KV cache size; KVQuant is slower. Right: combined encode-and-generate time on Llama3 — QJL achieves at least 5× memory reduction with no runtime overhead.*
 
 ---
 
