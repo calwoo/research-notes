@@ -38,6 +38,14 @@ Many computational tasks — nearest-neighbor search, clustering, regression —
 
 The *Johnson-Lindenstrauss lemma* (JL lemma) gives a sharp, constructive answer for Euclidean geometry: any $n$-point cloud in $\mathbb{R}^d$ can be linearly embedded into $\mathbb{R}^k$ with $k = O(\varepsilon^{-2} \log n)$ while distorting every pairwise distance by at most a factor of $(1 \pm \varepsilon)$. *Crucially, the target dimension $k$ is independent of the original dimension $d$.* 🔑
 
+The two plots below make the bound concrete. The first shows that $k$ grows only *logarithmically* in $n$: even for $n = 10^9$ observations with $\varepsilon = 0.1$, fewer than $10^4$ dimensions suffice. The second shows how rapidly $k$ decreases as the allowed distortion $\varepsilon$ grows — a factor-of-2 relaxation (from $\varepsilon = 0.1$ to $\varepsilon = 0.3$) roughly halves the required dimension.
+
+![JL bound: minimum number of dimensions k as a function of number of samples n, for several values of epsilon](figures/johnson-lindenstrauss/sklearn-jl-fig1-nsamples-vs-ncomponents.png)
+*The JL bound $k = O(\varepsilon^{-2} \log n)$ plotted on log-log axes. Each curve corresponds to a fixed distortion tolerance $\varepsilon$. The logarithmic growth in $n$ is the central miracle: one million data points require only ~500 dimensions at $\varepsilon = 0.5$. (Reproduced from [scikit-learn JL bounds example](https://scikit-learn.org/stable/auto_examples/miscellaneous/plot_johnson_lindenstrauss_bound.html).)*
+
+![JL bound: minimum number of dimensions k as a function of distortion epsilon, for several dataset sizes](figures/johnson-lindenstrauss/sklearn-jl-fig2-ncomponents-vs-eps.png)
+*The same bound viewed as $k$ versus $\varepsilon$ on a semi-log scale. The steep drop near $\varepsilon = 0$ reflects the $\varepsilon^{-2}$ factor; beyond $\varepsilon \approx 0.3$ the curves flatten. (Reproduced from [scikit-learn JL bounds example](https://scikit-learn.org/stable/auto_examples/miscellaneous/plot_johnson_lindenstrauss_bound.html).)*
+
 ### 1.2 Notation and Problem Statement
 
 Let $\|\cdot\|$ denote the Euclidean norm on $\mathbb{R}^d$. For a map $f : \mathbb{R}^d \to \mathbb{R}^k$ and a set $\mathcal{P} \subset \mathbb{R}^d$ with $|\mathcal{P}| = n$, we say $f$ is an *$(1 \pm \varepsilon)$-isometric embedding* of $\mathcal{P}$ if
@@ -296,6 +304,11 @@ A natural goal is to push sparsity as far as possible: how many non-zeros per co
 **Theorem (Kane-Nelson 2014).** There exist JL matrices with $s = O(\varepsilon^{-1} \log n)$ non-zeros per column that achieve $(1 \pm \varepsilon)$-distortion for $n$ points in $k = O(\varepsilon^{-2} \log n)$ dimensions. This sparsity is asymptotically optimal among all oblivious distributions.
 
 The construction uses a column-sparse matrix where each column has exactly $s$ non-zero entries placed at random positions, with signs drawn uniformly from $\{+1, -1\}$. The proof that this works is significantly more involved than the Gaussian argument, relying on *sparse recovery* tools and careful tail bounds for heavy-tailed distributions.
+
+The figure below illustrates the *block construction* variant of the Kane-Nelson sparse JL matrix. The top row is a $d$-dimensional source vector; the bottom row is the $k$-dimensional target. Each source coordinate hashes to exactly one slot in each of the $s$ contiguous blocks of width $k/s$, guaranteeing exactly $s$ non-zeros per column with no block containing two entries from the same column.
+
+![Kane-Nelson block construction: a d-dimensional source vector (top) with arrows pointing to one slot each within s contiguous blocks of width k/s in the k-dimensional target (bottom)](figures/johnson-lindenstrauss/kane-nelson-fig3-block-construction.png)
+*Figure 1(c) from Kane and Nelson (2014): the block construction for optimal sparse JL matrices. Each source coordinate contributes exactly one non-zero to each of $s$ blocks of size $k/s$ in the target, achieving $s = O(\varepsilon^{-1} \log n)$ non-zeros per column — the information-theoretic minimum.*
 
 > [!QUESTION] Open problem: constants
 > While the asymptotic $k = O(\varepsilon^{-2} \log n)$ and $s = O(\varepsilon^{-1} \log n)$ bounds are known to be tight, the precise leading constants in both bounds remain an active area. Practical implementations often tune these empirically.
