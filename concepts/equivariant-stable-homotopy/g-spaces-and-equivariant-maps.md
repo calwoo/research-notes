@@ -17,6 +17,7 @@
   - [[#3.2 Genuine Weak Equivalences|3.2 Genuine Weak Equivalences]]
   - [[#3.3 The Model Structure on G Top|3.3 The Model Structure on G Top]]
   - [[#3.4 Equivariant Homotopy Groups|3.4 Equivariant Homotopy Groups]]
+  - [[#3.5 The Unstable Distinction in Context|3.5 The Unstable Distinction in Context]]
 - [[#4. G-CW Complexes|4. G-CW Complexes]]
   - [[#4.1 Cells and Skeleta|4.1 Cells and Skeleta]]
   - [[#4.2 Fixed Points of Cells|4.2 Fixed Points of Cells]]
@@ -411,6 +412,45 @@ $$\bigl\{ \pi_n^H(X) \bigr\}_{H \leq G,\, n \geq 0}.$$
 > [!WARNING]
 > *This is not the only natural notion of equivariant homotopy groups.* In the stable setting, one also has homotopy groups indexed by representations $V$ of $G$, giving $\pi_V^H(X) = [S^V, X]^H$. The groups $\pi_n^H$ defined here are the *unstable* equivariant homotopy groups.
 
+### 3.5 The Unstable Distinction in Context 💡
+
+The naive/genuine distinction is worth pausing on, because it is *far less dramatic* in the unstable setting than in the stable one — and this asymmetry explains why it receives comparatively little attention in unstable equivariant homotopy theory.
+
+**Unstable: same objects, different weak equivalences.** Both the naive and genuine theories live on the same category $G\mathbf{Top}$ — spaces with continuous $G$-action. They are two different *model structures* on the same underlying category:
+
+| | Naive model structure | Genuine model structure |
+|---|---|---|
+| Objects | $G$-spaces | $G$-spaces |
+| Weak equivalences | $Uf: UX \xrightarrow{\sim} UY$ (underlying space) | $f^H: X^H \xrightarrow{\sim} Y^H$ for all $H \leq G$ |
+| Homotopy category | $\simeq \mathrm{Ho}(\mathbf{Top}^{BG})$ | $\simeq \mathrm{Ho}(\mathrm{Fun}(\mathcal{O}_G^{\mathrm{op}}, \mathbf{Top}))$ |
+| Classifying data | $G$-action on $\pi_*(X)$ | System $\{\pi_*^H(X)\}_{H \leq G}$ |
+
+The naive homotopy category is equivalent to the homotopy theory of spaces *parametrized over $BG$* — it sees only the total homotopy type and the monodromy action of $\pi_1(BG) = G$ on it. All finer fixed-point information is lost.
+
+**Why genuine is the right answer unstably.** Elmendorf's theorem (§5) makes the genuine theory completely natural: genuine G-spaces *are* presheaves of spaces on $\mathcal{O}_G$, and the weak equivalences are just objectwise equivalences. There is no comparably clean description of the naive homotopy theory in terms of the equivariant structure. The naive theory is a coarsening of the genuine one, obtained by restricting to the single object $G/e \in \mathcal{O}_G$ (the free orbit).
+
+> [!INFO] Smith Theory: The Original Motivation
+> The classical reason genuine equivariant homotopy theory is necessary is **Smith theory** (P.A. Smith, 1930s–40s): if $G = \mathbb{Z}/p$ acts on a mod-$p$ homology sphere $X$ (meaning $H_*(X; \mathbb{F}_p) \cong H_*(S^n; \mathbb{F}_p)$ for some $n$), then the fixed-point set $X^G$ is also a mod-$p$ homology sphere (of possibly lower dimension $d \leq n$).
+>
+> This is a theorem *about fixed-point sets* and is completely invisible to naive equivariant homotopy theory, which cannot distinguish the two $C_2$-spaces in Exercise 9 (both are naively equivalent to $S^1$, but their fixed-point sets are $S^0$ and $\emptyset$ respectively). The genuine theory is precisely the framework that makes such fixed-point phenomena accessible.
+
+**Contrast with the stable world.** In the stable world, naive and genuine $G$-spectra are *different categories*, not just different model structures:
+
+- **Naive $G$-spectra**: ordinary spectra with a $G$-action (i.e., objects of $\mathrm{Sp}^{BG}$, spectra parametrized over $BG$). Homotopy groups $\pi_n^H(X) = \pi_n(X^{hH})$ (homotopy fixed points).
+- **Genuine $G$-spectra**: spectra indexed over a *complete $G$-universe* $\mathcal{U}$ (a countably infinite-dimensional real $G$-representation containing all irreducibles). Homotopy groups are $RO(G)$-graded: $\pi_V^H(X) = [S^V, X]^H$ for $V \in RO(G)$.
+
+The difference is structural: genuine $G$-spectra have *norm maps* $N_H^G: \mathrm{Sp}^H \to \mathrm{Sp}^G$ — multiplicative transfers that have no naive analogue. These norms are essential in the Hill–Hopkins–Ravenel theorem resolving the Kervaire invariant one problem (2009): the key object is the genuine $C_8$-spectrum $\Omega = D^{-1} MU^{((C_8))}$, and the proof relies critically on norm maps and $RO(G)$-graded homotopy groups that are unavailable in the naive stable theory.
+
+> [!NOTE] Summary of the Distinction
+> | | Unstable | Stable |
+> |---|---|---|
+> | Naive vs. genuine | Same category, different model structures | *Different categories* |
+> | Genuine advantage | Sees fixed-point sets; Smith theory | Norm maps, $RO(G)$-grading, transfer |
+> | Elmendorf's role | Makes genuine the "canonical" theory | No direct analogue |
+> | Key example | $C_2 \curvearrowright S^1$: reflection $\neq$ antipodal (genuinely) | HHR theorem requires genuine $C_8$-spectra |
+>
+> *In the unstable world, the genuine theory is so natural that the naive/genuine distinction rarely needs to be made explicit. In the stable world, the distinction is unavoidable.*
+
 ---
 
 ## 4. G-CW Complexes 🏗️
@@ -796,4 +836,5 @@ the group of equivariant homotopy classes of maps, and this recovers Bredon's or
 | [Elmendorf (1983), *Systems of fixed point sets*](https://www.ams.org/journals/tran/1983-277-01/S0002-9947-1983-0690052-0/) | Original proof of Elmendorf's theorem via the bar construction; introduced the orbit category perspective | [AMS Transactions (1983)](https://www.ams.org/journals/tran/1983-277-01/S0002-9947-1983-0690052-0/) |
 | [May, *Equivariant Homotopy and Cohomology Theory* (1996)](https://math.uchicago.edu/~may/BOOKS/alaska.pdf) | Comprehensive reference for equivariant stable homotopy theory; covers G-CW complexes, model structures, and equivariant spectra | [University of Chicago](https://math.uchicago.edu/~may/BOOKS/alaska.pdf) |
 | Bredon, *Equivariant Cohomology Theories* (1967) | Original definition of Bredon cohomology via coefficient systems on the orbit category | (book) |
+| [Hill–Hopkins–Ravenel, *On the non-existence of elements of Kervaire invariant one* (2016)](https://arxiv.org/abs/0908.3724) | Resolves the Kervaire invariant one problem using genuine $C_8$-spectra; the central application of norm maps in genuine equivariant stable homotopy theory | [arXiv:0908.3724](https://arxiv.org/abs/0908.3724) |
 | [Riehl, *Categorical Homotopy Theory* (2014)](https://math.jhu.edu/~eriehl/cathtpy.pdf) | Background on model categories, bar constructions, and Kan extensions used throughout | [Johns Hopkins](https://math.jhu.edu/~eriehl/cathtpy.pdf) |
