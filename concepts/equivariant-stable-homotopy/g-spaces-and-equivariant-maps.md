@@ -76,15 +76,25 @@ $$f(g \cdot x) = g \cdot f(x) \quad \text{for all } g \in G, x \in X,$$
 
 i.e., the following diagram commutes:
 
-```mermaid
-flowchart LR
-    GX["G × X"] -->|"id × f"| GY["G × Y"]
-    GX -->|"mu_X"| X["X"]
-    GY -->|"mu_Y"| Y["Y"]
-    X -->|"f"| Y
+```tikz
+\usepackage{tikz-cd}
+\begin{document}
+\begin{tikzcd}
+G \times X \arrow[r, "{\mathrm{id}_G \times f}"] \arrow[d, "\mu_X"'] & G \times Y \arrow[d, "\mu_Y"] \\
+X \arrow[r, "f"'] & Y
+\end{tikzcd}
+\end{document}
 ```
 
 $G\mathbf{Top}$ denotes the category with objects G-spaces and morphisms G-equivariant maps.
+
+> [!QUESTION] Exercise 1
+> *This exercise characterizes equivariant maps as a limit in $\mathbf{Top}$, connecting the monad algebra description to the equalizer definition.*
+>
+> Show that $\mathrm{Map}_G(X, Y)$ is the equalizer in $\mathbf{Top}$ of the two maps $\mathrm{Map}(X, Y) \rightrightarrows \mathrm{Map}(G \times X, Y)$ given by $f \mapsto \mu_Y \circ (\mathrm{id}_G \times f)$ and $f \mapsto f \circ \mu_X$. Conclude that $\mathrm{Map}_G(X, Y)$ is a closed subspace of $\mathrm{Map}(X, Y)$.
+
+> [!TIP]- Hint for Exercise 1
+> A map $f: X \to Y$ lies in the equalizer exactly when $\mu_Y(g, f(x)) = f(\mu_X(g, x))$ for all $(g, x) \in G \times X$, which is the equivariance condition. Equalizers in $\mathbf{Top}$ are closed inclusions of the underlying sets with the subspace topology.
 
 ### 1.3 Mapping Spaces and Enrichment
 
@@ -120,6 +130,16 @@ $$\mathrm{Map}_G(X, Y) = \bigl(G\mathrm{Map}(X, Y)\bigr)^G.$$
 > $$G\mathbf{Top}(X \times Y, Z) \cong G\mathbf{Top}(X, G\mathrm{Map}(Y, Z)).$$
 > Taking $G$-fixed points on both sides recovers the non-equivariant adjunction at the level of equivariant maps.
 
+> [!QUESTION] Exercise 2
+> *This exercise verifies that the conjugation action is well-defined and establishes the precise relationship between the three mapping spaces.*
+>
+> (a) Verify that $(g \cdot f)(x) = g \cdot f(g^{-1} x)$ defines a genuine group action on $\mathrm{Map}(X, Y)$ — i.e., check $(gh) \cdot f = g \cdot (h \cdot f)$ and $e \cdot f = f$.
+>
+> (b) Prove the key relation $\bigl(G\mathrm{Map}(X, Y)\bigr)^G = \mathrm{Map}_G(X, Y)$ directly: show that $f$ is fixed by all $g \in G$ under conjugation if and only if $f$ is $G$-equivariant.
+
+> [!TIP]- Hint for Exercise 2
+> For (a), compute $(gh) \cdot f$ explicitly and compare with $g \cdot (h \cdot f)$ — both sides simplify to $x \mapsto gh \cdot f(h^{-1}g^{-1}x)$. For (b), write out the fixed-point condition $g \cdot f = f$ pointwise and substitute $x' = g^{-1}x$.
+
 ### 1.4 G-Homotopies
 
 **Definition (G-Homotopy).** A *G-homotopy* between G-maps $f_0, f_1: X \to Y$ is a continuous map
@@ -154,11 +174,32 @@ where $NH = \{ g \in G \mid gHg^{-1} = H \}$ is the *normalizer* of $H$. The Wey
 > [!NOTE] Why WH acts on $X^H$
 > If $x \in X^H$ and $n \in NH$, then for any $h \in H$: $h \cdot (n \cdot x) = n \cdot (n^{-1}hn) \cdot x = n \cdot x$ since $n^{-1}hn \in H$. So $n \cdot x \in X^H$, and the action of $NH$ on $X^H$ factors through $WH = NH/H$.
 
+> [!QUESTION] Exercise 3
+> *This exercise makes the Weyl-group structure explicit for normal subgroups, where it simplifies to a full quotient-group action.*
+>
+> Let $H \unlhd G$ be a normal subgroup. Show that $X^H$ is naturally a $G/H$-space, i.e., that the $G$-action on $X^H$ (by restriction) factors through $G \twoheadrightarrow G/H$.
+
+> [!TIP]- Hint for Exercise 3
+> Since $H \unlhd G$, we have $NH = G$, so $WH = G/H$. The proposed $G/H$-action is $[g] \cdot x := g \cdot x$; check independence of representative: if $g' = gh$ for $h \in H$, then $g' \cdot x = gh \cdot x = g \cdot (h \cdot x) = g \cdot x$ since $x \in X^H$.
+
 **Definition (Isotropy Group).** For $x \in X$, the *isotropy group* (or *stabilizer*) of $x$ is
 
 $$G_x = \{ g \in G \mid g \cdot x = x \} \leq G.$$
 
 The *orbit* of $x$ is $Gx = G/G_x$ as a $G$-set, and the orbit map $G \to Gx$, $g \mapsto gx$, induces a homeomorphism $G/G_x \xrightarrow{\sim} Gx$ when $G$ is compact and $X$ is Hausdorff.
+
+> [!QUESTION] Exercise 4 (Computational)
+> *This exercise builds intuition for how fixed-point sets vary across the lattice of subgroups — the basic data of genuine equivariant homotopy theory.*
+>
+> Let $G = C_4 = \langle r \mid r^4 = 1 \rangle$ act on $S^1 \subset \mathbb{C}$ by $r \cdot z = iz$ (rotation by $\pi/2$). Compute $X^H$ for every subgroup $H \leq C_4$. Also identify the isotropy group $G_z$ for a generic point $z \in S^1$ and for the special points $z = 1, i, -1, -i$.
+
+> [!TIP]- Solution to Exercise 4
+> The subgroups of $C_4$ are $\{e\} \subset C_2 = \langle r^2 \rangle \subset C_4$. Fixed-point sets:
+> - $X^{\{e\}} = S^1$ (nothing is fixed by the trivial subgroup)
+> - $X^{C_2}$: need $r^2 \cdot z = -z = z$, i.e., $z = 0$ — but $0 \notin S^1$. So $X^{C_2} = \emptyset$.
+> - $X^{C_4} \subseteq X^{C_2} = \emptyset$, so $X^{C_4} = \emptyset$.
+>
+> Isotropy: a generic $z \in S^1$ (not a 4th root of unity in a special sense) has $G_z = \{e\}$. The orbit of any $z$ has 4 elements $\{z, iz, -z, -iz\}$, so $|G/G_z| = 4$, confirming $G_z = \{e\}$ for all $z \in S^1$.
 
 ### 2.2 Corepresentability of Fixed Points
 
@@ -172,6 +213,14 @@ $$X^H \cong \mathrm{Map}_G(G/H, X).$$
 
 > [!INFO] Conceptual Significance
 > This says that $G/H$ is the "universal $H$-fixed space" in $G\mathbf{Top}$: maps out of $G/H$ detect $H$-fixed points. This is the key reason orbit spaces appear as the generating objects for the whole theory, and is the seed of Elmendorf's theorem.
+
+> [!QUESTION] Exercise 5
+> *This exercise derives the description of orbit category morphisms directly from corepresentability, connecting §2.2 to §5.*
+>
+> Use the corepresentability isomorphism $X^H \cong \mathrm{Map}_G(G/H, X)$ to show that $\mathrm{Map}_G(G/H, G/K) \cong (G/K)^H$. Then identify $(G/K)^H$ explicitly as the set $\{ gK \in G/K \mid g^{-1}Hg \subseteq K \}$, and conclude that a morphism $G/H \to G/K$ in $\mathcal{O}_G$ exists if and only if $H$ is subconjugate to $K$.
+
+> [!TIP]- Hint for Exercise 5
+> Apply corepresentability with $X = G/K$: a $G$-map $G/H \to G/K$ is determined by the image of the coset $eH$, which must land in $(G/K)^H$. A coset $gK \in G/K$ is fixed by $h \in H$ iff $hgK = gK$ iff $g^{-1}hg \in K$.
 
 ### 2.3 Induction and Coinduction
 
@@ -193,6 +242,14 @@ the space of $H$-equivariant maps $G \to X$ (where $H$ acts on $G$ by left multi
 
 $$H\mathbf{Top}(UY, X) \cong G\mathbf{Top}(Y, \mathrm{Map}_H(G, X)).$$
 
+> [!QUESTION] Exercise 6
+> *This exercise verifies the induction adjunction (Frobenius reciprocity) directly from the definition of the balanced product.*
+>
+> Construct an explicit natural bijection $G\mathbf{Top}(G \times_H X, Y) \cong H\mathbf{Top}(X, UY)$. Given a $G$-equivariant map $f: G \times_H X \to Y$, define a map $\tilde{f}: X \to Y$ and show it is $H$-equivariant. Conversely, given $g: X \to Y$ an $H$-equivariant map, define $\hat{g}: G \times_H X \to Y$ and verify it is well-defined and $G$-equivariant.
+
+> [!TIP]- Hint for Exercise 6
+> Given $f: G \times_H X \to Y$, set $\tilde{f}(x) = f([e, x])$. For the converse, set $\hat{g}([g', x]) = g' \cdot g(x)$ and check this is independent of the representative: if $(g'h, x) \sim (g', hx)$, then $g'h \cdot g(x) = g' \cdot (h \cdot g(x)) = g' \cdot g(hx)$ using $H$-equivariance of $g$.
+
 > [!INFO] Kan Extension Perspective
 > Let $BG$ and $BH$ denote the one-object topological categories with morphism spaces $G$ and $H$ respectively. The inclusion $i: BH \hookrightarrow BG$ induces $i^*: \mathbf{Top}^{BG} \to \mathbf{Top}^{BH}$, which is exactly the forgetful functor $U$.
 >
@@ -208,6 +265,22 @@ $$H\mathbf{Top}(UY, X) \cong G\mathbf{Top}(Y, \mathrm{Map}_H(G, X)).$$
 >
 > On the other hand, $\mathrm{Map}_H(G, X) = \mathrm{Map}_{C_2}(C_4, \{pt\}) = \{pt\}$ (only one map).
 
+> [!QUESTION] Exercise 7 (Computational)
+> *This exercise computes an induced G-space from a nontrivial H-space, illustrating how induction "spreads" the action.*
+>
+> Let $G = C_4 = \langle r \rangle$, $H = C_2 = \langle r^2 \rangle$, and let $X = S^1 \subset \mathbb{C}$ with $C_2$ acting by $r^2 \cdot z = -z$ (rotation by $\pi$).
+>
+> (a) Describe $C_4 \times_{C_2} S^1$ as a topological space. Is it connected?
+>
+> (b) Compute the $C_4$-fixed-point set $(C_4 \times_{C_2} S^1)^{C_4}$.
+
+> [!TIP]- Solution to Exercise 7
+> (a) As a set, $C_4 \times_{C_2} S^1 = (C_4 \times S^1)/{\sim}$ where $(r^2 g, z) \sim (g, -z)$. Since $C_4/C_2 = \{[e], [r]\}$, we can write every element as $[e, z]$ or $[r, z]$ with $z \in S^1$. The identification is $[e, -z] = [r^2 \cdot e, z] \sim [e, r^2 \cdot z]$, but since $r^2$ acts by $-1$: $[e, -z]$ and $[e, z]$ are *different* elements, so the space is $S^1 \sqcup S^1$ (two disjoint copies).
+>
+> The $C_4$-action swaps the two copies: $r \cdot [e, z] = [r, z]$ and $r \cdot [r, z] = [r^2, z] = [e, -z]$. So $C_4$ acts on $S^1 \sqcup S^1$ by: $r$ maps the first copy to the second and the second back to the first (with a $-1$ twist).
+>
+> (b) $(C_4 \times_{C_2} S^1)^{C_4}$: a fixed point $[g, z]$ satisfies $r \cdot [g, z] = [g, z]$. From the action above, no point is fixed, so $(C_4 \times_{C_2} S^1)^{C_4} = \emptyset$.
+
 ### 2.4 Representation Spheres
 
 A key family of examples arises from linear representations.
@@ -222,6 +295,16 @@ the one-point compactification of $V$, with the $G$-action extended so that $G$ 
 > When $V = \mathbb{R}^n$ with trivial $G$-action, $S^V = S^n$ with trivial $G$-action. When $V = \mathbb{R}$ with $C_2$ acting by $-1$ (the *sign representation* $\sigma$), $S^\sigma \cong S^1$ with $C_2$ acting by reflection (the antipodal map on the equator).
 
 Representation spheres are fundamental for defining *$RO(G)$-graded* cohomology theories, where one suspends not just by $S^n$ but by arbitrary representation spheres $S^V$.
+
+> [!QUESTION] Exercise 8 (Computational)
+> *This exercise computes the fixed-point sets of representation spheres for the sign representation, building intuition for RO(G)-grading.*
+>
+> Let $G = C_2$ and $\sigma: C_2 \to \mathrm{GL}_1(\mathbb{R})$ the *sign representation* ($\tau \cdot t = -t$). Compute $(S^{n\sigma})^{C_2}$ for $n = 0, 1, 2$. Then verify the smash product formula $(S^\sigma)^{C_2} \times (S^\sigma)^{C_2} \cong (S^{2\sigma})^{C_2}$ at the level of fixed-point sets.
+
+> [!TIP]- Solution to Exercise 8
+> $S^{n\sigma}$ is the one-point compactification of $\mathbb{R}^n$ with $C_2$ acting by $v \mapsto -v$. The fixed set $(S^{n\sigma})^{C_2}$ consists of points fixed by $\tau$: $v = -v$ iff $v = 0$, plus the fixed point at $\infty$ (since $\tau$ fixes $\infty$). So $(S^{n\sigma})^{C_2} = \{0, \infty\} \cong S^0$ for all $n \geq 1$, and $(S^0)^{C_2} = S^0$ (both points $\pm 1$ are fixed since the $C_2$-action on $S^0 = \{1,-1\}$ is trivial for $0$-dimensional representation).
+>
+> For the smash product: $S^\sigma \wedge S^\sigma \cong S^{2\sigma}$. Fixed sets: $(S^\sigma)^{C_2} = S^0$ and $(S^{2\sigma})^{C_2} = S^0$, so both sides are $S^0$ — consistent with $S^0 \wedge S^0 \cong S^0$.
 
 ---
 
@@ -269,6 +352,26 @@ flowchart TD
 ```
 
 **The implication is strict.** Every genuine weak equivalence is a naive weak equivalence (taking $H = \{e\}$ gives the underlying map), but the converse fails, as the $C_2$-action example above demonstrates.
+
+> [!QUESTION] Exercise 9 (Computational)
+> *This exercise works out a concrete example of the naive/genuine gap — a map that is naively a weak equivalence but not genuinely so.*
+>
+> Let $G = C_2 = \{e, \tau\}$ and consider the two $C_2$-spaces:
+> - $X = S^1$ with the *reflection action* $\tau \cdot e^{i\theta} = e^{-i\theta}$.
+> - $Y = S^1$ with the *antipodal action* $\tau \cdot e^{i\theta} = e^{i(\theta + \pi)} = -e^{i\theta}$.
+>
+> (a) Show the identity map on the underlying space $S^1$ is a naive weak equivalence $X \to Y$.
+>
+> (b) Compute $X^{C_2}$ and $Y^{C_2}$. Is this map a genuine weak equivalence?
+
+> [!TIP]- Solution to Exercise 9
+> (a) The underlying spaces are both $S^1$, so the identity is a homeomorphism, hence a weak equivalence naively.
+>
+> (b) $X^{C_2} = \{e^{i\theta} \mid e^{-i\theta} = e^{i\theta}\} = \{1, -1\} \cong S^0$ (the two points where $\sin\theta = 0$).
+>
+> $Y^{C_2} = \{e^{i\theta} \mid -e^{i\theta} = e^{i\theta}\} = \emptyset$ (no point satisfies $z = -z$ on $S^1 \subset \mathbb{C} \setminus \{0\}$).
+>
+> Since $X^{C_2} \simeq S^0 \not\simeq \emptyset = Y^{C_2}$, the identity is **not** a genuine weak equivalence. The two $C_2$-spaces have completely different equivariant homotopy types.
 
 ### 3.3 The Model Structure on G Top
 
@@ -343,6 +446,29 @@ where the $H_\beta$ range over (possibly varying) closed subgroups of $G$.
 
 The horizontal top map is the standard inclusion $S^n \hookrightarrow D^{n+1}$, and the left vertical map is the *attaching map* of the cells.
 
+> [!QUESTION] Exercise 10 (Computational)
+> *This exercise writes down the simplest nontrivial G-CW structure, illustrating how free orbits build a space with trivial fixed-point sets.*
+>
+> Give an explicit $C_n$-CW structure on $S^1 \subset \mathbb{C}$ with $C_n = \langle \zeta \rangle$ acting by $\zeta \cdot z = e^{2\pi i/n} z$ (rotation by $2\pi/n$). Identify each cell's orbit type ($G/H$ for some $H$) and verify that $(S^1)^{C_n} = \emptyset$.
+
+> [!TIP]- Solution to Exercise 10
+> Take $n$ equally spaced points $\zeta^k$ for $k = 0, \ldots, n-1$ as the $0$-skeleton: these form a single free orbit $C_n/e$ (since no point is fixed by any nontrivial rotation). Then attach a single $1$-cell of type $C_n/e \times D^1$: the $n$ arcs between consecutive points, all in the same free orbit. The resulting $C_n$-CW structure has one $0$-cell of type $C_n/e$ and one $1$-cell of type $C_n/e \times D^1$.
+>
+> Fixed points: $(S^1)^{C_n}$ requires $e^{2\pi i/n} z = z$, i.e., $z = 0$, but $0 \notin S^1$. So $(S^1)^{C_n} = \emptyset$, consistent with all cells being free.
+
+> [!QUESTION] Exercise 11
+> *This exercise constructs a G-CW structure for a space with empty fixed-point set — the simplest "free" equivariant complex.*
+>
+> Let $C_2$ act on $S^2$ by the *antipodal map* $\tau \cdot (x, y, z) = (-x, -y, -z)$, which has no fixed points. Write a $C_2$-CW structure for this $C_2$-space, identifying the orbit type of each cell. Verify that all cells are free ($C_2/e$-type).
+
+> [!TIP]- Solution to Exercise 11
+> Since the antipodal map has no fixed points, every cell must be free (orbit type $C_2/e$). One minimal structure:
+> - Two $0$-cells forming one free orbit: $C_2/e \times D^0$ (pick the north pole $N$ and south pole $S = \tau(N)$, but the antipodal of $N = (0,0,1)$ is $S = (0,0,-1)$ — these form a free orbit).
+> - One free $1$-cell $C_2/e \times D^1$: a great semicircle from $N$ to $S$ and its antipodal image, forming a free orbit of arcs.
+> - One free $2$-cell $C_2/e \times D^2$: the two hemispheres bounding the above.
+>
+> Compare: the beachball structure for $C_2$ acting by *rotation* (not antipodal) has two *fixed* $0$-cells of type $C_2/C_2$; here all cells are free.
+
 > [!EXAMPLE]- Zero-Dimensional G-CW Complexes
 > A $0$-dimensional $G$-CW complex is simply a disjoint union of orbits:
 > $$X^0 = \coprod_\alpha G/H_\alpha.$$
@@ -370,6 +496,22 @@ $$(G/K)^H = \mathrm{Map}_G(G/H, G/K).$$
 > An element of $(G/K)^H$ is a coset $gK$ fixed by all $h \in H$, i.e., $hgK = gK$ for all $h \in H$, i.e., $g^{-1}Hg \subseteq K$. So
 > $$(G/K)^H = \{ gK \mid g^{-1}Hg \subseteq K \}$$
 > — the $H$-fixed cosets of $K$ correspond to elements $g$ for which $H$ is subconjugate to $K$ via $g$. In particular, $(G/K)^H \neq \emptyset$ iff $H$ is subconjugate to $K$ in $G$.
+
+> [!QUESTION] Exercise 12 (Computational)
+> *This exercise computes all nontrivial fixed-point sets of cells for $G = C_4$, which is the basic data needed to understand the homotopy theory of $C_4$-CW complexes.*
+>
+> Let $G = C_4$ with subgroups $\{e\} \subset C_2 \subset C_4$. For each pair of subgroups $H, K \in \{\{e\}, C_2, C_4\}$, compute $(G/K)^H$ explicitly as a set. Arrange the results in a $3 \times 3$ table. For which pairs is the set nonempty?
+
+> [!TIP]- Solution to Exercise 12
+> $(G/K)^H = \{gK \mid g^{-1}Hg \subseteq K\}$. Since $C_4$ is abelian, $g^{-1}Hg = H$ for all $g$, so the condition is simply $H \subseteq K$.
+>
+> | | $K = \{e\}$ | $K = C_2$ | $K = C_4$ |
+> |---|---|---|---|
+> | $H = \{e\}$ | $C_4/\{e\} \cong C_4$ (4 elements) | $C_4/C_2 \cong \{eC_2, rC_2\}$ (2 elements) | $C_4/C_4 = \{*\}$ (1 element) |
+> | $H = C_2$ | $\emptyset$ ($C_2 \not\subseteq \{e\}$) | $C_4/C_2$ (2 elements, since $C_2 \subseteq C_2$) | $\{*\}$ |
+> | $H = C_4$ | $\emptyset$ | $\emptyset$ | $\{*\}$ |
+>
+> The set is nonempty exactly when $H \subseteq K$.
 
 ### 4.3 Colimit Compatibility
 
@@ -459,6 +601,36 @@ By the analysis in §4.2, an element of $(G/K)^H$ is a coset $gK$ with $g^{-1}Hg
 
 For $G$ a finite group, $\mathcal{O}_G$ is a finite category and this becomes an explicit finite combinatorial object.
 
+> [!QUESTION] Exercise 13
+> *This exercise identifies the orbit category for the simplest nontrivial group, which will recur throughout equivariant homotopy theory as the base case for inductive arguments.*
+>
+> For $G = C_p$ (cyclic of prime order), the only subgroups are $\{e\}$ and $C_p$. Describe $\mathcal{O}_{C_p}$ completely: list both objects, compute all morphism sets, and identify the composition law. Draw the resulting category.
+
+> [!TIP]- Solution to Exercise 13
+> Objects: $C_p/e$ and $C_p/C_p = \{*\}$. Morphism sets (using $(G/K)^H$):
+> - $\mathrm{Hom}(C_p/e, C_p/e) = (C_p/e)^e = C_p/e \cong C_p$ — exactly $p$ endomorphisms (the $p$ elements of $C_p$ acting by left multiplication).
+> - $\mathrm{Hom}(C_p/e, C_p/C_p) = (C_p/C_p)^e = \{*\}$ — one map (collapsing to the point).
+> - $\mathrm{Hom}(C_p/C_p, C_p/e) = (C_p/e)^{C_p} = \emptyset$ — no maps (no $C_p$-fixed points in $C_p/e$).
+> - $\mathrm{Hom}(C_p/C_p, C_p/C_p) = \{*\}$ — the identity.
+>
+> So $\mathcal{O}_{C_p}$ has two objects, a $C_p$-torsor of endomorphisms on the free orbit, one map to the fixed-point object, and no maps back. This is the archetype of all orbit categories.
+
+> [!QUESTION] Exercise 14 (Computational)
+> *This exercise extends Exercise 13 to a group with a nontrivial subgroup lattice, making the orbit category a richer combinatorial object.*
+>
+> For $G = C_4$, completely describe the orbit category $\mathcal{O}_{C_4}$: list the three objects, compute the cardinality of each of the nine hom-sets $\mathrm{Hom}_{\mathcal{O}_{C_4}}(G/H, G/K)$ for $H, K \in \{\{e\}, C_2, C_4\}$, and identify the composition.
+
+> [!TIP]- Solution to Exercise 14
+> From Exercise 12 (since $C_4$ is abelian, $(G/K)^H = G/K$ if $H \subseteq K$ and $\emptyset$ otherwise):
+>
+> | | $G/\{e\}$ | $G/C_2$ | $G/C_4$ |
+> |---|---|---|---|
+> | from $G/\{e\}$ | $C_4$ (4 maps) | $C_4/C_2 \cong \mathbb{Z}/2$ (2 maps) | $\{*\}$ (1 map) |
+> | from $G/C_2$ | $\emptyset$ | $C_4/C_2$ (2 maps) | $\{*\}$ (1 map) |
+> | from $G/C_4$ | $\emptyset$ | $\emptyset$ | $\{*\}$ (1 map) |
+>
+> Composition: the unique map $G/\{e\} \to G/C_4$ factors through both $G/C_2$ routes; the 4 endomorphisms of $G/\{e\}$ compose as the group $C_4$.
+
 ### 5.2 The Presheaf Functor
 
 Every G-space $X$ determines a presheaf on $\mathcal{O}_G$.
@@ -481,6 +653,22 @@ $$\phi^*: X^K \longrightarrow X^H, \quad x \mapsto g \cdot x.$$
 > The functor $\psi$ is *contravariant* in $\mathcal{O}_G$ — a map $G/H \to G/K$ induces a map $X^K \to X^H$ in the *opposite direction*. This is why $\psi$ lands in presheaves $\mathrm{Fun}(\mathcal{O}_G^{\mathrm{op}}, \mathbf{Top})$, not sheaves on $\mathcal{O}_G$.
 
 **Key Observation.** Under $\psi$, genuine weak equivalences in $G\mathbf{Top}$ correspond exactly to *objectwise weak equivalences* in $\mathrm{Fun}(\mathcal{O}_G^{\mathrm{op}}, \mathbf{Top})$ (the *projective* model structure): a map $f: X \to Y$ is a genuine weak equivalence iff $\psi(f)(G/H): X^H \to Y^H$ is a weak equivalence for all $H$. **This is the precise sense in which genuine G-spaces are "systems of spaces."**
+
+> [!QUESTION] Exercise 15 (Computational)
+> *This exercise unpacks Elmendorf's dictionary concretely for a familiar G-space, translating equivariant geometry into presheaf data.*
+>
+> Let $G = C_2$ and $X = S^1 \subset \mathbb{C}$ with the *reflection action* $\tau \cdot z = \bar{z}$ ($\tau$ complex-conjugates). Write down the presheaf $\psi(X): \mathcal{O}_{C_2}^{\mathrm{op}} \to \mathbf{Top}$ explicitly:
+>
+> (a) What are the two spaces $\psi(X)(C_2/e)$ and $\psi(X)(C_2/C_2)$?
+>
+> (b) What is the restriction map $\psi(X)(C_2/C_2) \to \psi(X)(C_2/e)$ corresponding to the unique morphism $C_2/e \to C_2/C_2$?
+
+> [!TIP]- Solution to Exercise 15
+> (a) $\psi(X)(C_2/e) = X^e = S^1$ (the whole space). $\psi(X)(C_2/C_2) = X^{C_2}$ = fixed points of $z \mapsto \bar{z}$ on $S^1$: these are the real points $\{z \in S^1 \mid \bar{z} = z\} = \{1, -1\} \cong S^0$.
+>
+> (b) The unique morphism $C_2/e \to C_2/C_2$ (collapsing $C_2$ to a point) induces the restriction $X^{C_2} \hookrightarrow X^e$, i.e., the inclusion $S^0 = \{1, -1\} \hookrightarrow S^1$.
+>
+> So the presheaf $\psi(X)$ is: the pair of spaces $(S^1, S^0)$ with the inclusion $S^0 \hookrightarrow S^1$ as the structure map. This is all the homotopy-theoretic data of the $C_2$-space $S^1$ with reflection.
 
 ### 5.3 Statement and Proof Sketch
 
@@ -515,6 +703,18 @@ This shows $\psi \circ \Phi \simeq \mathrm{id}$ (up to weak equivalence), establ
 
 > [!QUESTION] The Left Adjoint Perspective
 > The left adjoint $\Phi \dashv \psi$ satisfies: a map $\Phi(\mathcal{F}) \to X$ in $G\mathbf{Top}$ corresponds to a natural transformation $\mathcal{F} \to \psi(X)$ in $\mathrm{Fun}(\mathcal{O}_G^{\mathrm{op}}, \mathbf{Top})$. At $G/H$, this is a map $\mathcal{F}(G/H) \to X^H$, compatible with all restriction maps. This is the precise sense in which $\Phi(\mathcal{F})$ is "built from the data $\mathcal{F}$."
+
+> [!QUESTION] Exercise 16
+> *This exercise makes Elmendorf's equivalence completely explicit for the smallest nontrivial case, showing that $C_2$-spaces are exactly pairs of spaces with a map.*
+>
+> For $G = C_2$, describe a presheaf $\mathcal{F}: \mathcal{O}_{C_2}^{\mathrm{op}} \to \mathbf{Top}$ as a concrete datum (a pair of spaces and a map between them). Under Elmendorf's equivalence, what $C_2$-space does the presheaf $\mathcal{F}$ with $\mathcal{F}(C_2/e) = A$, $\mathcal{F}(C_2/C_2) = B$, and restriction map $\rho: B \to A$ correspond to? What is the condition for $\mathcal{F}$ to correspond to a genuine (not naive) $C_2$-space?
+
+> [!TIP]- Solution to Exercise 16
+> A presheaf on $\mathcal{O}_{C_2}^{\mathrm{op}}$ is determined by: two spaces $A = \mathcal{F}(C_2/e)$ and $B = \mathcal{F}(C_2/C_2)$, a map $\rho: B \to A$ (the restriction along $C_2/e \to C_2/C_2$), and an involution $\sigma: A \to A$ (coming from the nontrivial endomorphism of $C_2/e$, i.e., the generator $\tau \in C_2$ acting on $C_2/e \cong C_2$).
+>
+> The constraint is that $\rho$ maps into the $\sigma$-fixed points: $\sigma \circ \rho = \rho$ (since $B$ maps to the fixed part of $A$).
+>
+> The corresponding $C_2$-space under $\Phi$ is the space $A$ with $C_2$-action given by $\sigma$, and $B \cong A^{C_2}$ (the fixed-point subspace). So a genuine $C_2$-space is precisely the data of a space $A$ with a $C_2$-involution $\sigma$ — but the presheaf perspective makes the fixed-point data $B$ explicit.
 
 ### 5.4 The Infinity-Categorical Statement
 
@@ -552,6 +752,20 @@ Via Elmendorf's theorem, this is the presheaf $\mathcal{O}_G^{\mathrm{op}} \to \
 
 > [!EXAMPLE]- The Universal Space $EG$
 > Taking $\mathcal{F} = \{\{e\}\}$: $E\mathcal{F} = EG$ (the universal free $G$-space), which has $(EG)^H = \emptyset$ for $H \neq \{e\}$ and $(EG)^{\{e\}} \simeq *$. This is the contractible total space of the universal $G$-bundle $EG \to BG$.
+
+> [!QUESTION] Exercise 17 (Computational)
+> *This exercise identifies the classifying space for the trivial family as a familiar object from classical algebraic topology.*
+>
+> Let $G = C_2$ and $\mathcal{F} = \{\{e\}\}$ (the trivial family, containing only the trivial subgroup). The classifying space $E\mathcal{F}$ is characterized by $(E\mathcal{F})^{C_2} = \emptyset$ and $(E\mathcal{F})^e \simeq *$.
+>
+> (a) Show that the infinite-dimensional sphere $S^\infty \subset \mathbb{R}^\infty$ with the antipodal $C_2$-action $\tau \cdot x = -x$ satisfies these conditions.
+>
+> (b) Using the $C_2$-CW structure on $S^\infty$ (built as a sequential colimit of $S^n$ with antipodal action), verify that $E\mathcal{F} = S^\infty$ and that the orbit space $E\mathcal{F}/C_2 = \mathbb{RP}^\infty = BC_2$.
+
+> [!TIP]- Solution to Exercise 17
+> (a) $(S^\infty)^{C_2}$: fixed points of $x \mapsto -x$ on $S^\infty$ would require $x = -x$, i.e., $x = 0$, but $0 \notin S^\infty$. So $(S^\infty)^{C_2} = \emptyset$. The underlying space $S^\infty$ is contractible (it is the colimit of $S^n$ along the standard inclusions, and each map $S^n \hookrightarrow S^{n+1}$ is nullhomotopic in $S^{n+1}$). So $(S^\infty)^e = S^\infty \simeq *$.
+>
+> (b) The $C_2$-CW structure on $S^n$ with antipodal action (from Exercise 11) gives $S^\infty$ a $C_2$-CW structure with all cells of type $C_2/e$ (free). The orbit space is $S^\infty/C_2 = \mathbb{RP}^\infty$, and since $S^\infty$ is contractible with free $C_2$-action, this is indeed a model for $BC_2 = K(C_2, 1)$.
 
 **G-Connected Components.** Via Elmendorf's theorem, the *equivariant $\pi_0$* of a G-space $X$ is the presheaf $G/H \mapsto \pi_0(X^H)$. This records how the connected components of the fixed-point sets vary with the subgroup.
 
