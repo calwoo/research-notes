@@ -9,7 +9,7 @@ This file is the index for the `concepts/equivariant-stable-homotopy/` folder. I
 | File | Status | Topic |
 |------|--------|-------|
 | `g-spaces-and-equivariant-maps.md` | ✅ Written | G-spaces, orbit category, naive vs. genuine, G-CW complexes, Elmendorf's theorem |
-| `equivariant-postnikov-and-slice.md` | 🔲 Planned | Equivariant Postnikov towers (unstable), the slice filtration, slice spectral sequence |
+| `equivariant-postnikov-and-slice.md` | ✅ Written | Equivariant Postnikov towers (unstable), the slice filtration, slice spectral sequence |
 | `bredon-cohomology.md` | 🔲 Planned | Coefficient systems, chain complex of coefficient systems, Bredon (co)homology, computations |
 | `mackey-functors.md` | 🔲 Planned | Mackey functors, the Burnside category, spectral Mackey functors (Barwick) |
 | `g-spectra.md` | 🔲 Planned | Genuine G-spectra indexed on a complete universe, orthogonal G-spectra, naive vs. genuine stable |
