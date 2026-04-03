@@ -173,6 +173,33 @@ The functoriality is as follows: a $G$-map $G/H \to G/K$ (corresponding to conju
 > [!WARNING] Coefficient systems vs. Mackey functors
 > A coefficient system has only *restriction maps* (contravariant functoriality). A *Mackey functor* additionally has *transfer maps* (covariant functoriality) satisfying a double-coset formula. Stably, homotopy groups always form Mackey functors; unstably, they only form coefficient systems. This distinction is invisible non-equivariantly (where there are no proper subgroups to transfer along) but is fundamental in the equivariant stable setting. See Section 3.3 for more.
 
+> [!QUESTION] Exercise C (Computational)
+> *This exercise computes the coefficient system of equivariant homotopy groups for the orbits of $G$, identifying a basic class of $G$-spaces that are already their own Postnikov sections.*
+>
+> Let $G = C_2$. Recall the orbit category $\mathcal{O}_{C_2}$ has two objects: $C_2/e$ and $C_2/C_2$.
+>
+> (a) Regard each orbit $G/H$ as a $C_2$-space. Compute $\underline{\pi}_n(C_2/e)$ and $\underline{\pi}_n(C_2/C_2)$ for $n \geq 0$. That is, compute the abelian group at each object of $\mathcal{O}_{C_2}^{op}$ and the restriction map.
+>
+> (b) Show that both orbits $C_2/e$ and $C_2/C_2$ are already their own 0-th Postnikov sections: $P_0^{C_2}(G/H) \simeq G/H$ for $H \in \{e, C_2\}$.
+>
+> (c) Conclude that any discrete $C_2$-set $S$ (with $C_2$-action) satisfies $P_0^{C_2}(S) \simeq S$. Why does this follow from Elmendorf's theorem without further computation?
+
+> [!TIP]- Solution to Exercise C
+> (a) **For $G/e = C_2$** (the free orbit, underlying set $\{e, \tau\}$ with $\tau$ acting by the nontrivial element):
+> - $(C_2/e)^e = C_2$ (two points), $(C_2/e)^{C_2} = \emptyset$ (no fixed points — $\tau$ acts freely).
+> - $\underline{\pi}_0(C_2/e)(C_2/e) = \pi_0(C_2) = \mathbb{Z}/2$ (two path components).
+> - $\underline{\pi}_0(C_2/e)(C_2/C_2) = \pi_0(\emptyset)$: undefined (basepoint issue; as an unpointed set, $\emptyset$).
+> - $\underline{\pi}_n(C_2/e) = 0$ for $n \geq 1$ (both $(C_2/e)^e = C_2$ and $(C_2/e)^{C_2} = \emptyset$ are discrete, so all higher homotopy groups vanish).
+>
+> **For $G/C_2 = *$** (the trivial orbit, one point with trivial action):
+> - $(*) ^e = *$, $(*) ^{C_2} = *$.
+> - $\underline{\pi}_0(*)(C_2/e) = \pi_0(*) = 0$, $\underline{\pi}_0(*)(C_2/C_2) = \pi_0(*) = 0$.
+> - $\underline{\pi}_n(*) = 0$ for all $n$ (a point has trivial homotopy).
+>
+> (b) $P_0^{C_2}(X)$ is characterized by $\pi_k^H(P_0^{C_2}(X)) = 0$ for $k \geq 1$ and all $H$. Since both orbits have $\pi_k^H = 0$ for $k \geq 1$ (they are discrete), they are already 0-truncated. So $P_0^{C_2}(G/H) \simeq G/H$.
+>
+> (c) Any discrete $C_2$-set $S$ is a disjoint union of orbits $C_2/e$ and $C_2/C_2$, which are both already 0-truncated. Elmendorf's theorem says $P_0^{C_2}(S)$ is computed objectwise on fixed-point sets: $(P_0^{C_2}(S))^H \simeq P_0(S^H)$. Since $S^H$ is discrete for each $H$, $P_0(S^H) \simeq S^H$. Hence $P_0^{C_2}(S) \simeq S$.
+
 ### 2.2 Construction via Elmendorf's Theorem
 
 **Elmendorf's Theorem** (recalled from [[concepts/equivariant-stable-homotopy/g-spaces-and-equivariant-maps|G-Spaces and Equivariant Maps]]): There is a Quillen equivalence
@@ -200,6 +227,24 @@ The fixed-point formula $(P_n^G X)^H \simeq P_n(X^H)$ is the key identity: the e
 > Blumberg's lecture notes explicitly identify the equivariant Postnikov tower as "another application of Elmendorf's theorem." The equivalence $G\mathbf{Top} \simeq \mathrm{Fun}(\mathcal{O}_G^{op}, \mathbf{Spaces})$ reduces any homotopy-theoretic construction on $G$-spaces — such as Postnikov sections — to the corresponding objectwise construction on presheaves of spaces. This is the power of the Elmendorf perspective.
 
 The construction of Section 1.2 applies objectwise: form $(P_n^G X)^H$ by the small object argument applied to $X^H$, using all maps $S^k \to X^H$ for $k > n$. The equivariance is automatic because the construction is functorial in $X^H$, and the fixed-point functors $X \mapsto X^H$ are functorial in $G$-equivariant maps.
+
+> [!QUESTION] Exercise D (Proof)
+> *This exercise proves the equivariant Whitehead theorem, identifying the precise role of Elmendorf's theorem in the argument.*
+>
+> Let $f: X \to Y$ be a $G$-equivariant map between $G$-CW complexes. Suppose $f$ induces isomorphisms $\pi_n^H(X) \xrightarrow{\sim} \pi_n^H(Y)$ for all closed subgroups $H \leq G$ and all $n \geq 0$.
+>
+> (a) Using Elmendorf's theorem, translate the hypothesis into a statement about the induced map of presheaves $\mathcal{O}_G^{op} \to \mathbf{Spaces}$.
+>
+> (b) Apply the classical (non-equivariant) Whitehead theorem objectwise to conclude that $f^H: X^H \to Y^H$ is a homotopy equivalence for each $H$.
+>
+> (c) Conclude that $f$ is a $G$-homotopy equivalence. Where is the $G$-CW assumption used?
+
+> [!TIP]- Solution to Exercise D
+> (a) Under Elmendorf's equivalence, $f: X \to Y$ corresponds to a natural transformation $\hat{f}: \hat{X} \to \hat{Y}$ between presheaves, where $\hat{X}(G/H) = X^H$. The hypothesis $\pi_n^H(f): \pi_n(X^H) \xrightarrow{\sim} \pi_n(Y^H)$ for all $H$ and $n$ says precisely that $\hat{f}(G/H): X^H \to Y^H$ is a weak homotopy equivalence for each $H$ — i.e., $\hat{f}$ is an objectwise weak equivalence.
+>
+> (b) The classical Whitehead theorem states: a weak homotopy equivalence between CW complexes is a homotopy equivalence. Since $X$ is a $G$-CW complex, each fixed-point space $X^H$ is a CW complex (the $H$-fixed points of a $G$-CW complex form a sub-CW complex). Similarly $Y^H$. So the classical Whitehead theorem applies: $f^H: X^H \xrightarrow{\simeq} Y^H$ is a homotopy equivalence for each $H$.
+>
+> (c) An objectwise homotopy equivalence of presheaves is an equivalence in the functor category $\mathrm{Fun}(\mathcal{O}_G^{op}, \mathbf{Spaces})$. Under Elmendorf's Quillen equivalence, this corresponds to a $G$-homotopy equivalence $X \xrightarrow{\simeq} Y$. The $G$-CW assumption is used in step (b): without it, $X^H$ and $Y^H$ need not be CW complexes, so the classical Whitehead theorem does not directly apply. (One can still conclude that $f$ is a weak $G$-equivalence using only the isomorphism on equivariant homotopy groups, but the stronger conclusion of a $G$-homotopy equivalence requires the CW structure.)
 
 ### 2.3 Equivariant Eilenberg-Mac Lane Spaces
 
@@ -349,6 +394,48 @@ where $c_g$ is conjugation by $g$.
 *The transfer maps arise from the covariant functoriality of the smash product in $\mathrm{Sp}^G$ — they have no counterpart in the unstable setting because the suspension spectrum functor $\Sigma^\infty_G$ does not preserve covariant functoriality of orbit sets.*
 
 The integer Postnikov filtration only captures the coefficient system structure (restriction maps); it misses the transfer maps. The slice filtration, built from representation spheres, is sensitive to the full Mackey functor structure.
+
+> [!QUESTION] Exercise F (Computational)
+> *This exercise makes the Burnside Mackey functor explicit for $G = C_2$, concretely illustrating the distinction between coefficient systems and Mackey functors.*
+>
+> The *Burnside Mackey functor* $\underline{A}$ assigns to each $G$-orbit the Burnside ring: $\underline{A}(G/H) = A(H)$, the Grothendieck group of finite $H$-sets.
+>
+> (a) Compute $\underline{A}(C_2/e) = A(e)$ and $\underline{A}(C_2/C_2) = A(C_2)$ explicitly as abelian groups, listing generators.
+>
+> (b) Write down the restriction map $\mathrm{res}^{C_2}_e: A(C_2) \to A(e)$ and the transfer map $\mathrm{tr}_e^{C_2}: A(e) \to A(C_2)$ on generators.
+>
+> (c) Verify the double-coset formula: $\mathrm{res}^{C_2}_e \circ \mathrm{tr}_e^{C_2} = \sum_{[g] \in e \backslash C_2 / e} c_g = \mathrm{id} + \tau_*$, where $\tau$ is the nontrivial element. Conclude $\mathrm{res} \circ \mathrm{tr}([1]) = 2 \in A(e) = \mathbb{Z}$.
+>
+> (d) Explain why the constant coefficient system $\underline{\mathbb{Z}}$ (with restriction $\mathrm{id}: \mathbb{Z} \to \mathbb{Z}$ and *no* transfer) is not a Mackey functor: what transfer would be forced by the double-coset formula?
+
+> [!TIP]- Solution to Exercise F
+> (a) $A(e) = $ Grothendieck group of finite sets $= \mathbb{Z}$, generated by $[*]$ (one point). $A(C_2) = $ Grothendieck group of finite $C_2$-sets. The indecomposable $C_2$-sets are $[C_2/C_2] = [*]$ (trivial) and $[C_2/e] = [C_2]$ (free orbit). So $A(C_2) \cong \mathbb{Z}^2$, with generators $[C_2/C_2]$ and $[C_2/e]$.
+>
+> (b) **Restriction** $\mathrm{res}: A(C_2) \to A(e)$: forget the $C_2$-action and take the underlying set. $[C_2/C_2] = [*] \mapsto [*] = 1$ and $[C_2/e] = [C_2] \mapsto [C_2] = 2[*] = 2$.
+>
+> **Transfer** $\mathrm{tr}: A(e) \to A(C_2)$: "induce" the $e$-set to a $C_2$-set. $\mathrm{tr}([*]) = [C_2 \times_e *] = [C_2/e]$ (the free $C_2$-orbit on one point). So $\mathrm{tr}(n) = n \cdot [C_2/e]$.
+>
+> (c) $\mathrm{res}(\mathrm{tr}([*])) = \mathrm{res}([C_2/e]) = 2$. The double-coset formula: $e \backslash C_2 / e = \{[e], [\tau]\}$ (two cosets). Each contributes $c_g \circ \mathrm{res}^e_{e \cap e} = \mathrm{id}$, so $\mathrm{res} \circ \mathrm{tr} = \mathrm{id} + \mathrm{id} = 2\cdot\mathrm{id}$ on $A(e) = \mathbb{Z}$. So $\mathrm{res}(\mathrm{tr}(1)) = 2$. ✓
+>
+> (d) For $\underline{\mathbb{Z}}$ to be a Mackey functor with $\underline{\mathbb{Z}}(C_2/e) = \underline{\mathbb{Z}}(C_2/C_2) = \mathbb{Z}$ and restriction $= \mathrm{id}$, the double-coset formula forces $\mathrm{res} \circ \mathrm{tr} = 2\cdot\mathrm{id}$ (as above), so the transfer $\mathrm{tr}: \mathbb{Z} \to \mathbb{Z}$ would need to satisfy $\mathrm{id} \circ \mathrm{tr} = 2\cdot\mathrm{id}$, i.e., $\mathrm{tr}(n) = 2n$. This is the *multiplication-by-2* transfer. The "naively constant" Mackey functor has $\mathrm{tr} = 2$; the constant *coefficient system* ignores this map entirely. They agree as coefficient systems but differ as Mackey functors.
+
+> [!QUESTION] Exercise G (Proof)
+> *This exercise identifies the transfer map in stable homotopy concretely, showing why stable homotopy groups carry Mackey functor structure while unstable ones do not.*
+>
+> Let $G = C_2$, and consider the stable transfer map $\mathrm{tr}_e^{C_2}: \pi_n^e(X) \to \pi_n^{C_2}(X)$ for $X \in \mathrm{Sp}^{C_2}$.
+>
+> (a) The stable transfer for the covering $p: C_2/e \to C_2/C_2$ is a map of $G$-spectra $\Sigma^\infty_G C_{2+} \to \Sigma^\infty_G S^0$ (the "norm map" / "umkehr map"). Identify the counit of the adjunction $\Sigma^\infty_G(C_{2+} \wedge -) \dashv \mathrm{Res}^{C_2}_e$ and explain how it gives a map $\Sigma^\infty_G C_{2+} \to S^0$ in $\mathrm{Sp}^{C_2}$.
+>
+> (b) Explain why the corresponding *unstable* transfer does not exist: why is there no natural map $\Sigma(C_2/e)_+ \to S^0$ in $G\mathbf{Top}$ that deserves to be called a transfer? (Hint: consider what happens to fixed-point sets.)
+>
+> (c) Conclude: the suspension spectrum functor $\Sigma^\infty_G: G\mathbf{Top} \to \mathrm{Sp}^G$ does not preserve the absence of transfers — passing to spectra creates transfer maps that did not exist unstably.
+
+> [!TIP]- Solution to Exercise G
+> (a) The adjunction $G_+ \wedge_H (-): \mathrm{Sp}^H \rightleftharpoons \mathrm{Sp}^G: i_H^*$ has counit $\epsilon: G_+ \wedge_H i_H^* X \to X$. For $H = e$ and $X = S^0$: $\epsilon: G_+ \wedge_e S^0 = \Sigma^\infty_G C_{2+} \to S^0$. This is the stable fold map (fold $C_2$ copies of $S^0$ together), and it induces the transfer $\mathrm{tr}_e^{C_2}: \pi_n(X^e) \to \pi_n^{C_2}(X)$ on homotopy groups by precomposition.
+>
+> (b) The unstable analogue would be a map $C_{2+} = C_2 \sqcup \{+\} \to S^0$ in based $C_2$-spaces. The only based maps $C_{2+} \to S^0$ send $C_2$ to the basepoint, i.e., collapse everything — there is no "fold" in the unstable category that respects the $C_2$-action nontrivially. Checking fixed points: $(C_{2+})^{C_2} = \{+\}$ (the basepoint, since $C_2$ acts freely on $C_2$) and $(S^0)^{C_2} = S^0$. A $C_2$-equivariant map $\{+\} \to S^0$ must land at the basepoint, giving no information. The unstable transfer would need to "pick up" elements of $\pi_n(X^e)$ and push them to $\pi_n^{C_2}(X)$ via a norm construction, but the pointset-level norm is not available without the stable structure.
+>
+> (c) The suspension spectrum functor is symmetric monoidal (and in particular smash-product-preserving), and the smash product in $\mathrm{Sp}^G$ supports the norm/transfer via the counit of the induction–restriction adjunction. The unstable category $G\mathbf{Top}$ has induction $G_+ \wedge_H -$, but its counit is only a *unstable* map of spaces, and the fold map $C_{2+} \to S^0$ is only well-defined in spectra (where $S^0$ is the unit for $\wedge$, not just a space). Thus $\Sigma^\infty_G$ creates transfers that do not exist in $G\mathbf{Top}$.
 
 ### 3.4 The Remedy: Representation-Indexed Filtration
 
@@ -530,6 +617,29 @@ A $G$-spectrum with exactly one nonzero homotopy Mackey functor (in degree $-1$)
 > [!EXAMPLE] The 0-slice
 > For a connective $G$-spectrum $X$, the $0$-slice is $P_0^0 X \simeq H\underline{\pi}_0(X)$ — the Eilenberg-Mac Lane spectrum on the $0$-th homotopy Mackey functor. This is the exact stable analogue of the fact that the $0$-th Postnikov section $P_0 X$ is a $K(\pi_0 X, 0)$.
 
+> [!QUESTION] Exercise I (Proof)
+> *This exercise proves that the $(-1)$-slice is a desuspended Eilenberg-Mac Lane spectrum, anchoring the slice tower from below and making the analogy with Postnikov towers precise.*
+>
+> Let $X \in \mathrm{Sp}^G$ be any $G$-spectrum with $\underline{\pi}_{-1}(X) \neq 0$.
+>
+> (a) Using the long exact sequence in homotopy Mackey functors for the fiber sequence $P_{-1}^{-1} X \to P^{-1} X \to P^{-2} X$, show:
+> $$\underline{\pi}_k(P_{-1}^{-1} X) \cong \begin{cases} \underline{\pi}_{-1}(X) & k = -1 \\ 0 & k \neq -1. \end{cases}$$
+>
+> (b) Show that any $G$-spectrum with exactly one nonzero homotopy Mackey functor $\underline{M}$ concentrated in degree $n$ is equivalent to $\Sigma^n H\underline{M}$. (Use the equivariant Whitehead theorem and the fact that $H\underline{M}$ represents Bredon cohomology.)
+>
+> (c) Combine (a) and (b) to conclude $P_{-1}^{-1} X \simeq \Sigma^{-1} H\underline{\pi}_{-1}(X)$.
+
+> [!TIP]- Solution to Exercise I
+> (a) Recall from §4.3: $P^{-1} X$ is slice $(-1)$-null, so $\underline{\pi}_k(P^{-1} X) = 0$ for $k \geq -1$ (by Proposition 4.3 part 4 — slice $(-1)$-null iff $(-1)$-coconnected, i.e., $\pi_k = 0$ for $k \geq -1$). And $P^{-2} X$ is slice $(-2)$-null, so $\underline{\pi}_k(P^{-2} X) = 0$ for $k \geq -2$. From the long exact sequence of the fibration $P_{-1}^{-1} X \to P^{-1} X \to P^{-2} X$:
+> $$\cdots \to \underline{\pi}_k(P_{-1}^{-1} X) \to \underline{\pi}_k(P^{-1} X) \to \underline{\pi}_k(P^{-2} X) \to \underline{\pi}_{k-1}(P_{-1}^{-1} X) \to \cdots$$
+> For $k \geq 0$: both $\underline{\pi}_k(P^{-1} X) = 0$ and $\underline{\pi}_k(P^{-2} X) = 0$, so $\underline{\pi}_k(P_{-1}^{-1} X) = 0$.
+> For $k = -1$: $\underline{\pi}_{-1}(P^{-1} X) = 0$ and $\underline{\pi}_{-1}(P^{-2} X) = \underline{\pi}_{-1}(X)$ (the map $X \to P^{-2} X$ is an isomorphism on $\pi_{-1}$ since $P^{-2}$ kills nothing below $-2$). The exact sequence gives $\underline{\pi}_{-1}(P_{-1}^{-1} X) \cong \underline{\pi}_{-1}(X)$.
+> For $k \leq -2$: $\underline{\pi}_k(P^{-2} X) = 0$ forces $\underline{\pi}_k(P_{-1}^{-1} X) = 0$.
+>
+> (b) Let $Y$ have $\underline{\pi}_n(Y) = \underline{M}$ and $\underline{\pi}_k(Y) = 0$ for $k \neq n$. The map $Y \to \Sigma^n H\underline{M}$ classifying the fundamental class (the identity on $\underline{\pi}_n$) is a map of $G$-spectra inducing isomorphisms on all $\underline{\pi}_k^H$ for all $H$ and all $k$. By the equivariant Whitehead theorem for spectra, this is a weak equivalence. (The spectrum-level Whitehead theorem holds for $G$-spectra: a map in $\mathrm{Sp}^G$ is a weak equivalence iff it induces isomorphisms on $\pi_k^H$ for all $k \in \mathbb{Z}$ and all $H \leq G$.)
+>
+> (c) Part (a) gives $P_{-1}^{-1} X$ has a single nonzero homotopy Mackey functor $\underline{\pi}_{-1}(X)$ in degree $-1$. By (b), $P_{-1}^{-1} X \simeq \Sigma^{-1} H\underline{\pi}_{-1}(X)$. $\square$
+
 > [!QUESTION] Exercise 6 (Computational)
 > *This exercise computes the slices of the sphere $G$-spectrum in the lowest degrees, making the slice tower concrete.*
 >
@@ -558,6 +668,28 @@ A $G$-spectrum with exactly one nonzero homotopy Mackey functor (in degree $-1$)
 *Proof sketch for restriction.* A slice cell $\widetilde{S} = G_+ \wedge_H S^{m\rho_H}$ restricts under $i_K^*$ to $i_K^*(G_+ \wedge_H S^{m\rho_H}) \cong (G/H)_+ \wedge_\emptyset S^{m\rho_H|_K}$. By Mackey's double coset formula, $(i_K^* G_+ \wedge_H -) \cong \bigvee_{[g] \in K\backslash G/H} K_+ \wedge_{K \cap gHg^{-1}} (-)^{c_g}$. Each term $K_+ \wedge_{K \cap gHg^{-1}} S^{m \cdot g \cdot \rho_H|_{K \cap gHg^{-1}}}$ is a $K$-slice cell (since $g \cdot \rho_H|_{K \cap gHg^{-1}}$ contains the regular representation of $K \cap gHg^{-1}$ as a summand). $\square$
 
 **The compatibility of the slice filtration with all three change functors is crucial for HHR's proof: it allows slice computations to be moved between groups and norms to be taken without losing the slice structure.**
+
+> [!QUESTION] Exercise H (Computational)
+> *This exercise verifies that restriction commutes with the slice tower and uses this to compute an explicit example, making the change-of-group compatibility concrete.*
+>
+> Let $G = C_2$ and $H = e$ (trivial subgroup), and let $i_e^*: \mathrm{Sp}^{C_2} \to \mathrm{Sp}$ denote restriction to the trivial subgroup (forgetting equivariance).
+>
+> (a) Show directly from the definitions that $i_e^* P^n X \simeq P^n (i_e^* X)$ for any $G$-spectrum $X$. That is, restriction to the trivial subgroup commutes with the slice section. (Use that $i_e^*$ of a slice $C_2$-cell of dimension $m$ is a wedge of non-equivariant cells of total dimension $m$.)
+>
+> (b) Compute $i_e^*(H\underline{\mathbb{Z}})$ — the underlying non-equivariant spectrum of the Eilenberg-Mac Lane $C_2$-spectrum for the constant Mackey functor $\underline{\mathbb{Z}}$. Use the fact that $(H\underline{\mathbb{Z}})^e = H\mathbb{Z}$ to identify $i_e^*(H\underline{\mathbb{Z}}) \simeq H\mathbb{Z}$.
+>
+> (c) Use (a) and (b) to compute $i_e^*(P^n H\underline{\mathbb{Z}})$ for all $n$. For which $n$ is $P^n H\underline{\mathbb{Z}}$ non-trivially equivariant?
+
+> [!TIP]- Solution to Exercise H
+> (a) The slice section $P^n X$ is characterized by: (i) $P^n X$ is slice $n$-null, and (ii) the fiber of $X \to P^n X$ is slice $n$-positive. Applying $i_e^*$: since $i_e^*$ of a slice cell $G_+ \wedge_H S^{m\rho_H}$ of dimension $m|H|$ is $(G/H)_+ \wedge S^{m\rho_H|_e}$, which is a wedge of copies of $S^{m|H|}$ (all equivariant structure forgotten). A spectrum is slice $n$-null (resp. $n$-positive) iff mapping spaces from all slice cells of dim $> n$ (resp. $\leq n$) are contractible; after applying $i_e^*$, this reduces to the ordinary connectivity conditions for $i_e^* X$ in $\mathrm{Sp}$. One checks the universal property: $i_e^* P^n X$ satisfies the characterization of $P^n(i_e^* X)$, hence $i_e^* P^n X \simeq P^n(i_e^* X)$.
+>
+> (b) The underlying spectrum of $H\underline{\mathbb{Z}}$ is $(H\underline{\mathbb{Z}})^e = H\mathbb{Z}$ (the ordinary Eilenberg-Mac Lane spectrum). This is because the fixed-point functor $(-)^e = i_e^*$ on $\mathrm{Sp}^{C_2}$ forgets the $C_2$-action, and the fixed-point space of an EM spectrum for the constant Mackey functor is the ordinary EM spectrum. So $i_e^*(H\underline{\mathbb{Z}}) \simeq H\mathbb{Z}$.
+>
+> (c) By (a): $i_e^*(P^n H\underline{\mathbb{Z}}) \simeq P^n(H\mathbb{Z})$.
+> - For $n \geq 0$: $H\mathbb{Z}$ is 0-truncated, so $P^0(H\mathbb{Z}) \simeq H\mathbb{Z}$ and $P^n(H\mathbb{Z}) \simeq H\mathbb{Z}$ for all $n \geq 0$.
+> - For $n < 0$: $P^n(H\mathbb{Z}) \simeq *$ (since $H\mathbb{Z}$ is 0-connected, it is already in the positive part; the $n$-section for $n < 0$ kills it entirely).
+>
+> So the underlying spectrum $i_e^* P^n H\underline{\mathbb{Z}}$ is $H\mathbb{Z}$ for $n \geq 0$ and $*$ for $n < 0$. The equivariant content of $P^n H\underline{\mathbb{Z}}$ is non-trivial for all $n \geq 0$ (it retains the $C_2$-action on $H\underline{\mathbb{Z}}$ via the transfer maps in $\underline{\mathbb{Z}}$), but the underlying non-equivariant spectrum is always just $H\mathbb{Z}$.
 
 > [!TIP]- Intuition for norm compatibility
 > The norm $N_K^G$ is the equivariant analogue of the tensor product (not the direct sum). For the slice filtration to be compatible with norms, one needs the dimensions to multiply correctly: a $K$-spectrum of slice dimension $d$ has norm of slice dimension $[G:K] \cdot d$ (since the norm raises the "representation dimension" by the index). This multiplicativity is exactly what the regular representation provides: $\rho_{G|_K}^{\otimes [G:K]}$ contributes to $\rho_G$, matching dimensions.
@@ -754,6 +886,30 @@ $$\tau_{\geq n+1} E \longrightarrow E \longrightarrow \tau_{\leq n} E \longright
 
 is a cofiber sequence. The cofiber $\tau_{\leq n} E / \tau_{\leq n-1} E \simeq H\pi_n(E)[n]$ is an Eilenberg-Mac Lane spectrum. Dually, the *weight filtration* has associated graded $\bigoplus_n S^n \otimes \pi_n^{cell}(E)$ built from spheres.
 
+> [!QUESTION] Exercise L (Proof)
+> *This exercise makes the Eckmann-Hilton duality between spheres and Eilenberg-Mac Lane spectra precise at the level of t-structures and weight structures, identifying the generating objects of each heart.*
+>
+> Work in $\mathrm{Sp}$ (non-equivariant spectra) with the standard t-structure $(\tau_{\geq 0}, \tau_{\leq 0})$.
+>
+> (a) Show that the heart $\mathcal{C}^{\heartsuit} = \tau_{\geq 0} \mathrm{Sp} \cap \tau_{\leq 0} \mathrm{Sp}$ is equivalent to $\mathbf{Ab}$ (abelian groups). Identify the functor realizing this equivalence explicitly. (Hint: $\pi_0: \mathcal{C}^{\heartsuit} \to \mathbf{Ab}$.)
+>
+> (b) Show that $H\mathbb{Z} \in \mathrm{Sp}$ is the unique (up to equivalence) spectrum in the heart with $\pi_0(H\mathbb{Z}) = \mathbb{Z}$, and that every object in the heart is a product of copies of $H\mathbb{Z}[n]$ for varying $n$ (i.e., the heart is generated by $H\mathbb{Z}$).
+>
+> (c) For the standard weight structure on $\mathrm{Sp}$ (whose heart $\mathcal{C}^{w=0}$ consists of retracts of wedges of $S^0$), show that the sphere spectrum $S^0$ generates the heart, and that its Eckmann-Hilton dual is $H\mathbb{Z}$ in the sense that $[S^n, H\mathbb{Z}] = \pi_n(H\mathbb{Z}) = \delta_{n,0} \mathbb{Z}$ and $[H\mathbb{Z}, S^n] = H^n(H\mathbb{Z}; \mathbb{Z})$.
+>
+> (d) Why is the duality between t-structure heart and weight structure heart exact in $\mathrm{Sp}$ but not (with integer cells and slices) in $\mathrm{Sp}^G$?
+
+> [!TIP]- Solution to Exercise L
+> (a) The functor $\pi_0: \tau_{\geq 0}\mathrm{Sp} \cap \tau_{\leq 0}\mathrm{Sp} \to \mathbf{Ab}$ is an equivalence. Every object $E$ in the heart has $\pi_k(E) = 0$ for $k \neq 0$ and $\pi_0(E) \in \mathbf{Ab}$. The inverse is $A \mapsto HA$ (Eilenberg-Mac Lane spectrum). This is an equivalence of categories: $\pi_0(HA) = A$ and a map $E \to E'$ in the heart is determined by $\pi_0(E) \to \pi_0(E')$ (since both spectra are connective and coconnective, the Postnikov section map $E \to H\pi_0(E)$ is an equivalence).
+>
+> (b) $H\mathbb{Z}$ is the spectrum with $\pi_k(H\mathbb{Z}) = \delta_{k,0}\mathbb{Z}$; it is the unit of the equivalence in (a) for $A = \mathbb{Z}$. Every abelian group $A$ is a quotient (or extension) of free groups, hence $HA$ is built from copies of $H\mathbb{Z}$ in the derived sense. More precisely, the heart $\mathbf{Ab}$ is generated by $\mathbb{Z}$ (every abelian group is a quotient of a free one), so the heart of $\mathrm{Sp}$ is generated by $H\mathbb{Z}$.
+>
+> (c) The weight structure heart $\mathcal{C}^{w=0}$ consists of retracts of $\bigvee_\alpha S^0$; its generating object is $S^0$. The duality: $[S^n, H\mathbb{Z}] = \pi_n(H\mathbb{Z}) = \delta_{n,0}\mathbb{Z}$ (maps from the CW-generator to the t-structure generator concentrate in degree 0). Dually, $[H\mathbb{Z}, S^n]$ computes the cohomology of $H\mathbb{Z}$ with $\mathbb{Z}$ coefficients via $H^n(H\mathbb{Z}; \mathbb{Z}) = [H\mathbb{Z}, H\mathbb{Z}[n]]$, which is $\mathbb{Z}$ for $n=0$ and more complex for $n > 0$ (the cohomology of $K(\mathbb{Z},0) = \mathbb{Z}$ in spaces is trivial, but the stable cohomology is $\mathbb{Z}$ concentrated in degree 0). The key point: $S^0$ and $H\mathbb{Z}$ are "dual" in the sense that $[S^0, H\mathbb{Z}] = \mathbb{Z}$ and $H\mathbb{Z}$ is built from $S^0$ via the unit map $S^0 \to H\mathbb{Z}$.
+>
+> (d) In $\mathrm{Sp}$, the sphere spectrum is the only "basic" cell — $S^n = \Sigma^n S^0$ for all $n$. So the weight structure heart (generated by $S^0$) and the t-structure heart (generated by $H\mathbb{Z}$) are genuinely dual: one generates by suspensions of a single object, the other by desuspensions of the Eilenberg-Mac Lane spectrum for $\pi_0(S^0) = \mathbb{Z}$.
+>
+> In $\mathrm{Sp}^G$, there are *two* families of basic cells: integer-graded cells $G/H_+ \wedge S^n$ and slice cells $G_+ \wedge_H S^{m\rho_H}$. The integer CW cells generate the weight structure of the naive (integer) Postnikov tower; the slice cells generate the weight structure of the slice filtration. These are genuinely different categories of cells (they use different representations), so there is no single "equivariant sphere spectrum" that simultaneously generates both. The duality splits into two separate dualities that are not related by a single Eckmann-Hilton symmetry.
+
 > [!EXAMPLE]- Duality for $E = H\mathbb{Z}$
 > The Eilenberg-Mac Lane spectrum $H\mathbb{Z}$ is both slice 0-null AND in the heart of the weight structure: it has $\pi_n(H\mathbb{Z}) = 0$ for $n \neq 0$ (so the Postnikov tower collapses) and is built from a single cell $S^0$ (so the CW filtration is trivial). This extreme simplicity is why $H\mathbb{Z}$ appears as both the fibers of Postnikov towers and the cells of Moore complexes.
 
@@ -794,6 +950,26 @@ The *dual* of the slice t-structure would be a weight structure whose generating
 - Slice cells: $G_+ \wedge_H S^{m\rho_H}$ use the **regular representation** $\rho_H$.
 
 These are genuinely different cells, and there is no single "equivariant sphere spectrum" that generates both. The slice filtration is sensitive to the regular representation in a way that integer-graded CW complexes are not.
+
+> [!QUESTION] Exercise M (Computational)
+> *This exercise exhibits an explicit $C_2$-spectrum that lies in the integer-graded Postnikov filtration but not in the correct slice filtration, making the divergence of the two theories concrete.*
+>
+> Let $G = C_2$ and consider $X = \Sigma^1 H\underline{\mathbb{Z}}$ (the suspension of the Eilenberg-Mac Lane $C_2$-spectrum for the constant Mackey functor).
+>
+> (a) Show that $X = \Sigma H\underline{\mathbb{Z}}$ is in the integer-graded Postnikov filtration at level 1: $\pi_k^H(X) = 0$ for $k > 1$ and all $H \leq C_2$. (This means $X \simeq \tau_{\leq 1} X$ in the naive integer Postnikov tower.)
+>
+> (b) Show that $X$ is *not* slice 1-null. Specifically, find a slice cell $\widetilde{S}$ of dimension $> 1$ such that $\mathrm{Map}_{C_2}(\widetilde{S}, X)$ is not contractible.
+>
+> (c) Conclude that the integer-graded Postnikov filtration and the slice filtration give *different* answers for $X$: integer-Postnikov declares $X$ to be in level $\leq 1$, but the slice filtration does not. Explain in one sentence what extra structure the slice filtration detects.
+
+> [!TIP]- Solution to Exercise M
+> (a) $\pi_k^H(\Sigma H\underline{\mathbb{Z}}) = \pi_{k-1}^H(H\underline{\mathbb{Z}})$. Since $H\underline{\mathbb{Z}}$ has $\pi_j^H = \delta_{j,0}\mathbb{Z}$ for all $H \leq C_2$ (it is 0-truncated and 0-connected), we get $\pi_k^H(\Sigma H\underline{\mathbb{Z}}) = \delta_{k,1}\mathbb{Z}$. In particular, $\pi_k^H(X) = 0$ for $k > 1$, so $X$ is in the integer Postnikov level 1: $\tau_{\leq 1}^{\mathrm{int}} X \simeq X$. ✓
+>
+> (b) Consider the even slice cell $\widetilde{S} = S^{1+\sigma} = G_+ \wedge_{C_2} S^{\rho_{C_2}}$ of dimension 2 (see Exercise 4). Compute:
+> $$\mathrm{Map}_{C_2}(S^{1+\sigma}, \Sigma H\underline{\mathbb{Z}}) \simeq \Omega^{1+\sigma}(\Sigma H\underline{\mathbb{Z}}) \simeq \Omega^\sigma H\underline{\mathbb{Z}}.$$
+> Now $\Omega^\sigma H\underline{\mathbb{Z}} \simeq \mathrm{Map}_{C_2}(S^\sigma, H\underline{\mathbb{Z}})$. Since $S^\sigma$ has $(S^\sigma)^{C_2} = S^0$ and $(S^\sigma)^e = S^1$, a $C_2$-map $S^\sigma \to H\underline{\mathbb{Z}}$ involves a map $S^0 \to (H\underline{\mathbb{Z}})^{C_2} = H\mathbb{Z}$ and a compatible map $S^1 \to (H\underline{\mathbb{Z}})^e = H\mathbb{Z}$. The map $S^0 \to H\mathbb{Z}$ picks a class in $\pi_0(H\mathbb{Z}) = \mathbb{Z}$ (non-contractible), so $\mathrm{Map}_{C_2}(S^\sigma, H\underline{\mathbb{Z}})$ has $\pi_0 \cong \mathbb{Z} \neq 0$. Hence $\mathrm{Map}_{C_2}(\widetilde{S}, X)$ is not contractible, and $X$ is *not* slice 1-null (the slice cell of dimension 2 "sees" it).
+>
+> (c) The integer-graded Postnikov filtration only tracks $\pi_k^H(X)$ for integer $k$, seeing that $X$ has homotopy concentrated in degree 1. The slice filtration additionally detects *representation-theoretic structure*: specifically, the $RO(C_2)$-graded homotopy groups $\pi_\alpha^H(X)$ for $\alpha \in RO(C_2)$. The class detected by $S^\sigma \to H\underline{\mathbb{Z}}$ lives in $\pi_{-\sigma}(H\underline{\mathbb{Z}}) = \pi_0(H\underline{\mathbb{Z}}) = \mathbb{Z}$ (a representation-graded homotopy group), which the integer filtration is blind to.
 
 > [!DANGER] The Failure of Naive Equivariant Eckmann-Hilton Duality
 > In the equivariant stable category, the Eckmann-Hilton duality between CW filtrations and Postnikov towers **fails** to extend cleanly from the integer-graded setting to the representation-graded setting. Specifically:
