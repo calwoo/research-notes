@@ -351,6 +351,46 @@ where $\underline{A}(G)$ is the *Burnside ring Mackey functor* (with $\underline
 | Adams isomorphism | Fails | $(G_+ \wedge_H X)^G \simeq X^H$ |
 | RO(G)-graded Bredon cohomology | No | Yes: $H^V_G(X; \underline{M})$ |
 
+> [!NOTE] Three Flavors of Equivariant Homotopy Theory
+>
+> There are three levels of equivariant structure, each with an unstable and a stable incarnation, connected by a chain of functors. Moving left-to-right loses equivariant information; moving top-to-bottom stabilizes.
+>
+> ```mermaid
+> flowchart LR
+>     subgraph Unstable
+>         GTop["Genuine G-spaces<br/>weq: all X^H equiv"]
+>         NTop["Naive G-spaces<br/>weq: underlying X equiv"]
+>         BTop["Borel G-spaces<br/>Fun(BG, Top)"]
+>     end
+>     subgraph Stable
+>         GSp["Genuine G-spectra<br/>pi_* are Mackey functors<br/>Sp^G indexed on U_complete"]
+>         NSp["Naive G-spectra<br/>Fun(BG, Sp)<br/>Sp^G indexed on R^inf"]
+>         BSp["Borel G-spectra<br/>EG+ wedge E = E<br/>cohomology of X_hG"]
+>     end
+>     GTop -->|"iota*<br/>forget fixed-pt weq"| NTop
+>     NTop -->|"EG x_G -<br/>Borel construction"| BTop
+>     GTop -->|"Sigma^inf_+"| GSp
+>     NTop -->|"Sigma^inf_+"| NSp
+>     BTop -->|"Sigma^inf_+"| BSp
+>     GSp -->|"iota*<br/>trivial universe"| NSp
+>     NSp -->|"EG+ wedge -<br/>Borelify"| BSp
+> ```
+>
+> **Key distinctions:**
+>
+> | | Genuine | Naive | Borel |
+> |--|---------|-------|-------|
+> | Unstable weq | All $X^H \xrightarrow{\sim} Y^H$ | $X \xrightarrow{\sim} Y$ underlying | $EG \times_G X \xrightarrow{\sim} EG \times_G Y$ |
+> | Stable $\pi_*$ | Mackey functors $\underline{\pi}_n$ | Plain groups $\pi_n^e$ with $G$-action | Plain groups; $\pi_n^H \cong \pi_n^{hH}$ always |
+> | Fixed pts | $X^H \neq X^{hH}$ in general | $(-)^H$ not homotopically meaningful | $X^H \simeq X^{hH}$ by definition |
+> | Cohomology theory | $E^*_G(X)$ — RO(G)-graded | $E^*_G(X)$ — integer-graded only | $E^*(EG \times_G X)$ — Borel cohomology |
+> | Sphere spectrum $\pi_0$ | $\underline{A}(G)$ (Burnside ring MF) | $\underline{\mathbb{Z}}$ (constant MF) | $\mathbb{Z}$ |
+> | Elmendorf description | Presheaves on $\mathcal{O}_G$ | Presheaves on $\{G/G\} \simeq BG$ | Presheaves on $BG$ (same) |
+>
+> **Inclusions and adjoints (stable).** There is a chain of adjunctions
+> $$\mathrm{Sp}^G_{\mathrm{Borel}} \underset{i_*}{\overset{i^*}{\rightleftharpoons}} \mathrm{Sp}^G_{\mathrm{naive}} \underset{\iota_*}{\overset{\iota^*}{\rightleftharpoons}} \mathrm{Sp}^G_{\mathrm{gen}}$$
+> where $i^*$ and $\iota^*$ are the forgetful functors (right adjoints), and $i_*$, $\iota_*$ are their left adjoints (induction / change-of-universe). The Borel-complete objects $\{E : EG_+ \wedge E \xrightarrow{\sim} E\}$ form a full subcategory of genuine $G$-spectra closed under the smash product. *Importantly*, the functors $i^*$ and $\iota^*$ are not equivalences of homotopy categories (Lewis's theorem), so these three theories are genuinely distinct.
+
 ---
 
 ## 6. Homotopy Groups as Mackey Functors 🔑
