@@ -27,6 +27,12 @@
   - [[#Problem 21 Projective Resolution Algorithm for C2-Mackey Functors|Problem 21: Projective Resolution Algorithm for C2-Mackey Functors]]
   - [[#Problem 22 Box Product Algorithm for Cp|Problem 22: Box Product Algorithm for Cp]]
   - [[#Problem 23 Burnside Category Morphism Group Enumerator|Problem 23: Burnside Category Morphism Group Enumerator]]
+- [[#G-CW-Spectra and Slice Filtration|G-CW-Spectra and Slice Filtration]]
+  - [[#Problem 24 Genuine G-CW Cells for C2|Problem 24: Genuine G-CW Cells for C2]]
+  - [[#Problem 25 Restriction of Cells via the Double Coset Formula|Problem 25: Restriction of Cells via the Double Coset Formula]]
+  - [[#Problem 26 Slice Filtration Under the Forgetful Functor|Problem 26: Slice Filtration Under the Forgetful Functor]]
+  - [[#Problem 27 Borel Completion and the HFPSS|Problem 27: Borel Completion and the HFPSS]]
+  - [[#Problem 28 Genuine G-CW Cell Enumerator|Problem 28: Genuine G-CW Cell Enumerator]]
 
 ---
 
@@ -454,3 +460,99 @@ Return a list of representative elements, one per double coset.
 (c) **Verification table**: Apply the function to $G = S_3$ and all pairs $(H, K)$ of subgroups (up to conjugacy), and produce a table with rows/columns indexed by subgroups and entries $|H\backslash S_3/K|$. Verify the entry for $(H, K) = (\langle(12)\rangle, \langle(13)\rangle)$ matches your hand computation from Problem 5.
 
 (d) **Burnside ring structure constants**: Explain how the output of `morphism_rank` relates to the structure constants of the Burnside ring $A(G)$: specifically, the coefficient of $[G/L]$ in $[G/H] \cdot [G/K]$ can be computed from double coset data. Write the formula and apply it to compute $[S_3/H] \cdot [S_3/K]$ for $H = K = \langle(12)\rangle$ in $A(S_3)$.
+
+---
+
+## G-CW-Spectra and Slice Filtration
+
+### Problem 24: Genuine G-CW Cells for C2
+
+*This problem makes the two-tier cell structure of genuine $C_2$-CW-spectra concrete by listing all cells of representation-dimension $\leq 2$ and comparing them to their naive and slice counterparts.*
+
+> **Prerequisites:** [[concepts/equivariant-stable-homotopy/g-spectra#5.5 G-CW-Spectra|§5.5 — G-CW-Spectra]]; [[concepts/equivariant-stable-homotopy/equivariant-postnikov-and-slice#4.1 Slice Cells|Slice Cells §4.1]]
+
+Let $G = C_2 = \{e, \tau\}$ with representations: $\mathbf{1}$ (trivial, dimension 1), $\sigma$ (sign, dimension 1), $\rho = \mathbf{1} \oplus \sigma$ (regular, dimension 2).
+
+(a) **Naive cells of dimension $\leq 2$**: List all naive $C_2$-CW cells $C_2/H_+ \wedge D^n$ for $n \leq 2$. For each, identify the subgroup $H \in \{e, C_2\}$, the underlying non-equivariant cell $D^n$, and the $C_2$-action.
+
+(b) **Genuine cells of representation-dimension $\leq 2$**: List all genuine $C_2$-CW cells $C_2/H_+ \wedge D^V$ for $\dim_\mathbb{R}(V) \leq 2$, ranging over all real $C_2$-representations $V$ of dimension $\leq 2$ and both subgroups $H \leq C_2$. Organize by representation type ($V = n\mathbf{1}$, $V = n\sigma$, $V = \mathbf{1} \oplus \sigma = \rho$, etc.).
+
+(c) **Slice cells among genuine cells**: Identify which genuine cells from (b) are slice cells (i.e., of the form $G_+ \wedge_H S^{m\rho_H}$ for some $H$ and $m$). Which genuine cells are *not* slice cells?
+
+(d) **Fixed-point contributions**: For each genuine cell $C_2/H_+ \wedge D^V$ listed in (b), determine what it contributes to the fixed-point spectra: $\pi_*^{C_2}$ and $\pi_*^e$. Which cells are "seen" by the naive model structure?
+
+---
+
+### Problem 25: Restriction of Cells via the Double Coset Formula
+
+*This problem verifies the Mackey double coset formula for restriction of genuine G-CW cells, making the compatibility of the cell structure with change-of-group explicit.*
+
+> **Prerequisites:** [[concepts/equivariant-stable-homotopy/g-spectra#5.5 G-CW-Spectra|§5.5 — G-CW-Spectra]]; [[concepts/equivariant-stable-homotopy/mackey-functors#4. The Mackey Double Coset Formula|Mackey Double Coset Formula §4]]
+
+Let $G = C_4 = \langle g \rangle$ and let $H = C_2 = \langle g^2 \rangle \leq G$. Let $V = \rho_G$ be the regular representation of $G$ (dimension 4).
+
+(a) **Compute $i_{C_2}^*(G/G_+ \wedge D^V)$**: Apply the Mackey double coset formula
+$$i_K^*(G/L_+\wedge D^V) \cong \bigsqcup_{[g]\in K\backslash G/L} K/(K\cap {}^gL)_+\wedge D^{V|_{K\cap {}^gL}}$$
+with $K = H = C_2$, $L = G$, $V = \rho_G$. Enumerate the double cosets $C_2 \backslash C_4 / C_4$, and for each, identify the resulting $C_2$-cell.
+
+(b) **Compare representation types**: Show that $V|_{C_2} = \rho_{C_2} \oplus \rho_{C_2}$ (the regular representation of $C_2$ appearing twice). Hence the restricted cell decomposes as two $C_2$-cells of type $C_2/C_{2+} \wedge D^{\rho_{C_2}}$.
+
+(c) **Dimension check**: Verify that the total representation-dimension is preserved: $\dim_\mathbb{R}(\rho_G) = 4$ and the restricted cells together have total underlying dimension 4.
+
+(d) **General principle**: State the general formula for $\dim_\mathbb{R}(V|_H)$ in terms of $\dim_\mathbb{R}(V)$ and $[G:H]$ when $V$ contains $\rho_G$ as a direct summand. Use this to explain why the restriction of a slice cell of dimension $m|G|$ decomposes into cells of dimension $m|H|$.
+
+---
+
+### Problem 26: Slice Filtration Under the Forgetful Functor
+
+*This problem establishes the key comparison $\iota^* P^n_{\mathrm{slice}} X \simeq P^n_{\mathrm{Post}}(\iota^* X)$, showing precisely how the slice tower maps to the Postnikov tower under the forgetful functor to naive G-spectra.*
+
+> **Prerequisites:** [[concepts/equivariant-stable-homotopy/g-spectra#5.5 G-CW-Spectra|§5.5 — G-CW-Spectra]]; [[concepts/equivariant-stable-homotopy/equivariant-postnikov-and-slice#4.2 Slice Null and Slice Positive Spectra|Slice Null/Positive §4.2]]
+
+Let $\iota^*: \mathrm{Sp}^G_{\mathrm{gen}} \to \mathrm{Sp}^G_{\mathrm{naive}}$ be the forgetful functor (restriction to trivial universe).
+
+(a) **Cells under $\iota^*$**: Show that $\iota^*$ sends a genuine G-CW cell $G/H_+ \wedge D^V$ (with $V$ a $G$-representation of dimension $n = \dim_\mathbb{R}(V)$) to the naive cell $G/H_+ \wedge D^n$ (with trivial action on $D^n$). Conclude that $\iota^*$ sends a genuine G-CW-spectrum of representation-dimension $\leq n$ to a naive G-CW-spectrum of dimension $\leq n$.
+
+(b) **Slice-null implies Postnikov-truncated**: Show that if $X$ is slice $n$-null (i.e., $\mathrm{Map}(\widetilde{S}, X) \simeq *$ for all slice cells $\widetilde{S}$ of dimension $> n$), then $\iota^* X$ is Postnikov $n$-truncated (i.e., $\pi_k^e(\iota^* X) = 0$ for $k > n$). *Hint*: the free slice cells $G_+ \wedge_e S^k$ are also slice cells of dimension $k$.
+
+(c) **Slice-positive implies connective**: Show that if $X$ is slice $n$-positive, then $\iota^* X$ is $(n)$-connective as a naive G-spectrum.
+
+(d) **Conclusion**: Use (b) and (c) and the universal property of the Postnikov section to conclude $\iota^* P^n_{\mathrm{slice}} X \simeq P^n_{\mathrm{Post}}(\iota^* X)$. Why does the converse fail — that is, why does Postnikov-truncation of $\iota^* X$ not determine the slice section of $X$?
+
+---
+
+### Problem 27: Borel Completion and the HFPSS
+
+*This problem shows that for Borel-complete G-spectra the slice spectral sequence collapses to the homotopy fixed point spectral sequence, making the Borel–genuine relationship concrete at the level of spectral sequences.*
+
+> **Prerequisites:** [[concepts/equivariant-stable-homotopy/g-spectra#5.5 G-CW-Spectra|§5.5 — G-CW-Spectra]]; [[concepts/equivariant-stable-homotopy/equivariant-postnikov-and-slice#5.1 Construction from the Slice Tower|Slice SS §5.1]]
+
+Let $E$ be a Borel-complete $G$-spectrum, i.e., $EG_+ \wedge E \xrightarrow{\sim} E$.
+
+(a) **Slices of $E$ are Borel-complete**: Show that for each $n$, the slice $P_n^n E$ (the $n$-th layer of the slice tower) is itself Borel-complete. *Hint*: Use the fact that $EG_+ \wedge -$ is a smashing localization and preserves fiber sequences.
+
+(b) **Fixed points equal homotopy fixed points on slices**: Using (a), show that $(P_n^n E)^H \simeq (P_n^n E)^{hH}$ for all $H \leq G$. Conclude that the homotopy groups $\pi_*^H(P_n^n E)$ are determined entirely by $\pi_*(P_n^n E^e)$ with its $H$-action.
+
+(c) **The $E_2$-page**: Show that the $E_1$-page of the slice SS for $E$ satisfies
+$$E_1^{n,*} = \pi_*^G(P_n^n E) \cong C^n(EG;\, \pi_*(E^e))^G$$
+where the right-hand side is the $G$-equivariant cochains on $EG$ with coefficients in $\pi_*(E^e)$. Conclude that $E_2^{s,t} \cong H^s(G;\, \pi_t(E^e))$.
+
+(d) **A worked example**: Let $G = C_2$ and $E = H\mathbb{Z}$ with $C_2$ acting trivially (so $E^{C_2} = H\mathbb{Z}$). Identify the HFPSS $E_2$-page and write down the first few groups. Why does this spectral sequence *not* degenerate at $E_2$?
+
+---
+
+### Problem 28: Genuine G-CW Cell Enumerator
+
+*This problem develops a Python algorithm to enumerate the genuine G-CW cells of a given dimension for cyclic groups, making the two-tier cell structure (naive cells + representation cells) algorithmic.*
+
+> **Prerequisites:** [[concepts/equivariant-stable-homotopy/g-spectra#5.5 G-CW-Spectra|§5.5 — G-CW-Spectra]]
+
+For $G = C_p$ (cyclic of prime order $p$), the real representations of dimension $\leq n$ are: $k\mathbf{1}$ (trivial, dim $k$) and $k\mathbf{1} \oplus m\sigma$ (with $\sigma$ the sign/rotation representation, dim $k + 2m$) for various $k, m \geq 0$.
+
+(a) **Representation enumeration**: Write a Python function `reps_of_dim(p, n)` that returns all isomorphism classes of real $C_p$-representations of dimension $\leq n$, represented as pairs `(trivial_copies, nontrivial_copies)`. For $p = 2$ and $n = 4$, list the output.
+
+(b) **Cell enumeration**: Write `genuine_cells(p, n)` that returns all genuine $C_p$-CW cells $C_p/H_+ \wedge D^V$ of $\dim_\mathbb{R}(V) \leq n$, as triples `(H, V_trivial, V_nontrivial)`. Run it for $p = 2$, $n = 2$ and compare to Problem 24(b).
+
+(c) **Naive vs. genuine count**: For $G = C_2$ and $n = 1, 2, 3, 4$, compute the number of distinct naive cells and genuine cells of dimension exactly $n$. Fill in a table. What is the ratio of genuine to naive cells for large $n$?
+
+(d) **Slice cell identification**: Extend `genuine_cells` to flag which cells are slice cells (i.e., $C_p/H_+ \wedge D^{m\rho_H}$ for some $m$). For $p = 2$ and $n \leq 4$, list the non-slice genuine cells.

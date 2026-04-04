@@ -670,3 +670,87 @@ def morphism_rank(G, H_elements, K_elements, mul):
 # So [S3/H]^2 = [G/H] + [G/{e}] = [S3/<(12)>] + [S3/e].
 ```
 
+
+---
+
+## G-CW-Spectra and Slice Filtration
+
+> [!TIP]- Solution to Exercise 24
+> **Key insight:** Genuine $C_2$-CW cells split into two families: the *free cells* $C_2/e_+ \wedge D^V$ (one orbit of cells) and the *fixed cells* $C_2/C_{2+} \wedge D^V$ (cells with full isotropy). The representation type of $V$ distinguishes cells invisible to the naive model structure.
+>
+> **Sketch:**
+> (a) *Naive cells of dimension $\leq 2$*: $C_2/e_+ \wedge D^n$ for $n = 0,1,2$ (free, two cells each) and $C_2/C_{2+} \wedge D^n$ for $n = 0,1,2$ (fixed, one cell each) — total 6 naive cells of each dimension type.
+>
+> (b) *Genuine cells of rep-dimension $\leq 2$*: In addition to the naive cells, one has $C_2/H_+ \wedge D^{m\sigma}$ for $m = 1$ (sign representation, $H \in \{e, C_2\}$) and $C_2/H_+ \wedge D^{\mathbf{1} \oplus \sigma} = C_2/H_+ \wedge D^\rho$ (regular rep, dim 2). For dimension 1: $\{C_2/e_+ \wedge D^\sigma,\, C_2/C_{2+} \wedge D^\sigma\}$ are the non-naive genuine cells. For dimension 2: add $\{C_2/H_+ \wedge D^\rho : H \leq C_2\}$.
+>
+> (c) *Slice cells*: The slice cells are $G_+ \wedge_{C_2} S^{m\rho_{C_2}}$ (dim $2m$) and $G_+ \wedge_e S^m$ (dim $m$). Among the dimension $\leq 2$ genuine cells, the slice cells are $C_2/C_{2+} \wedge D^\rho$ (= $G_+ \wedge_{C_2} D^{\rho_{C_2}}$, dim 2) and the free cells $C_2/e_+ \wedge D^n$. The non-slice genuine cells are $C_2/H_+ \wedge D^{k\sigma}$ and $C_2/e_+ \wedge D^\rho$ — these involve representations other than the regular representation.
+>
+> (d) $C_2/e_+ \wedge D^V$ contributes to $\pi_*^e$ (any $V$, as the underlying cell is always visible). $C_2/C_{2+} \wedge D^V$ contributes to $\pi_*^{C_2}$ only when $V^{C_2} \neq 0$; if $V = n\sigma$ (pure sign), $(D^V)^{C_2} = \{0\}$ so the fixed-point contribution is trivial. The naive model structure sees only $H = e$ cells and $V = \mathbb{R}^n$ (trivial representation).
+
+> [!TIP]- Solution to Exercise 25
+> **Key insight:** Restriction of a cell $G/G_+ \wedge D^V$ along $i_{C_2}^*$ uses $C_2 \backslash C_4 / C_4 = \{[e]\}$ (one double coset), so the restriction is a single $C_2$-cell; the representation restricts as $\rho_G|_{C_2} \cong 2\rho_{C_2}$.
+>
+> **Sketch:**
+> (a) $C_2 \backslash C_4 / C_4$ has a single element $[e]$ (since $C_4$ is transitive on itself). The formula gives $i_{C_2}^*(C_4/C_{4+} \wedge D^{\rho_{C_4}}) \cong C_2/(C_2 \cap C_4)_+ \wedge D^{\rho_{C_4}|_{C_2}} = C_2/C_{2+} \wedge D^{\rho_{C_4}|_{C_2}}$.
+>
+> (b) The regular representation restricts: $\rho_{C_4}|_{C_2}$ has character $\chi_{\rho_{C_4}}|_{C_2}$. By Frobenius reciprocity (or direct computation), $\rho_{C_4}|_{C_2} \cong 2\rho_{C_2}$ (since both are the regular representation of $C_2$ with multiplicity 2 from the index $[C_4:C_2] = 2$). So the restricted cell is $C_2/C_{2+} \wedge D^{2\rho_{C_2}}$.
+>
+> (c) $\dim_\mathbb{R}(\rho_{C_4}) = 4 = \dim_\mathbb{R}(2\rho_{C_2}) = 2 \cdot 2$. ✓
+>
+> (d) In general, for $V$ containing $\rho_G$: $\dim_\mathbb{R}(V|_H) = \dim_\mathbb{R}(V)$ (restriction doesn't change dimension). For a slice cell $G_+ \wedge_G S^{m\rho_G}$ of dimension $m|G|$, the restricted $H$-cell has representation $m\rho_G|_H = m[G:H]\rho_H$, giving cells of dimension $m|H| \cdot [G:H] = m|G|$ — dimension preserved, but now there are $[G:H]$ copies of the $H$-slice cell of dimension $m|H|$.
+
+> [!TIP]- Solution to Exercise 26
+> **Key insight:** $\iota^*$ kills all representation-sphere data, collapsing $S^V \mapsto S^{\dim V}$. The universal property of $P^n_{\mathrm{slice}}$ (resp. $P^n_{\mathrm{Post}}$) then forces the comparison.
+>
+> **Sketch:**
+> (a) $\iota^*$ on structure maps: the orthogonal $G$-spectrum $X$ evaluated on a $G$-representation $V$ gives $X(V)$ with $G$-action; $\iota^*(X)$ forgets the representation structure on $V$, viewing it as $\mathbb{R}^{\dim V}$. Hence $\iota^*(G/H_+ \wedge D^V) = G/H_+ \wedge D^n$ with $n = \dim V$.
+>
+> (b) A free slice cell $G_+ \wedge_e S^k$ is a slice cell of dimension $k$. If $X$ is slice $n$-null, then $\mathrm{Map}(G_+ \wedge_e S^k, X) \simeq *$ for $k > n$. But $\mathrm{Map}(G_+ \wedge_e S^k, X)^e = \mathrm{Map}(S^k, X^e) \simeq *$, so $\pi_k^e(X) = 0$ for $k > n$.
+>
+> (c) Similarly, slice $n$-positivity forces $G_+ \wedge_e S^k \to X$ null for $k \leq n$, hence $\pi_k^e(\iota^* X) = 0$ for $k \leq n$, i.e., $\iota^* X$ is $(n+1)$-connective.
+>
+> (d) The map $X \to P^n_{\mathrm{slice}} X$ induces $\iota^* X \to \iota^* P^n_{\mathrm{slice}} X$; by (b)/(c) the target is Postnikov-$n$-truncated and the fiber is $n$-connective, so by the universal property $\iota^* P^n_{\mathrm{slice}} X \simeq P^n_{\mathrm{Post}}(\iota^* X)$. The converse fails because $P^n_{\mathrm{Post}}(\iota^* X)$ knows nothing about the $G$-representation-sphere maps $[S^V, X]^H$ for non-trivial $V$; the slice section $P^n_{\mathrm{slice}} X$ carries this extra structure.
+
+> [!TIP]- Solution to Exercise 27
+> **Key insight:** Borel-completeness ($EG_+ \wedge E \simeq E$) propagates to each slice layer, so $E^H \simeq E^{hH}$ forces the slice $E_1$-page to be group cochains, giving the HFPSS $E_2$-page.
+>
+> **Sketch:**
+> (a) The Borel completion $EG_+ \wedge -$ is a smashing localization (a localization with smashing acyclization $\widetilde{EG} \wedge -$). It commutes with filtered colimits and fiber sequences. Since $P_n^n E$ is a retract of $E$ in the stable category (via the slice tower), and $EG_+ \wedge E \simeq E$, the same holds for each $P_n^n E$ after applying $EG_+ \wedge -$ to the fiber sequences in the tower.
+>
+> (b) For Borel-complete $E'$: the cofiber sequence $EG_+ \wedge E' \to E' \to \widetilde{EG} \wedge E'$ collapses to $E' \xrightarrow{\sim} E' \to *$, so $\widetilde{EG} \wedge E' \simeq *$. This means the Tate construction $(E')^{tH} = 0$, and by the Tate cofiber sequence $(E')^H \simeq (E')^{hH}$.
+>
+> (c) Since $(P_n^n E)^H \simeq (P_n^n E)^{hH}$, the homotopy groups $\pi_*^G(P_n^n E)$ depend only on the homotopy $G$-module $\pi_*(P_n^n E^e)$. The $E_1$-page is $\pi_*^G(P_n^n E) \cong C^n(EG; \pi_*(E^e))^G$ (equivariant cochains on the contractible free $G$-space $EG$), so $E_2^{s,t} \cong H^s(G; \pi_t(E^e))$.
+>
+> (d) $G = C_2$, $E = H\mathbb{Z}$ trivially, so $\pi_t(E^e) = \mathbb{Z}$ for $t = 0$ and $0$ otherwise. The HFPSS has $E_2^{s,0} = H^s(C_2; \mathbb{Z})$: this is $\mathbb{Z}$ for $s = 0$, $\mathbb{Z}/2$ for $s > 0$ even, and $0$ for $s$ odd. It does *not* degenerate at $E_2$ because the abutment $\pi_*(H\mathbb{Z}^{hC_2})$ is nontrivial in negative degrees (it receives contributions from the $C_2$-norm), and the differential $d_2: E_2^{0,0} \to E_2^{2,-1}$ is nontrivial.
+
+> [!TIP]- Solution to Exercise 28
+> **Key insight:** For $G = C_p$, the real representations of dimension $n$ form a two-parameter family $(k, m)$ with $k + 2m = n$ ($k$ trivial summands, $m$ nontrivial 2D summands). The genuine cells are indexed by this data together with a choice of subgroup $H \leq C_p$.
+>
+> **Sketch:**
+>
+> ```python
+> def reps_of_dim(p, n):
+>     """All real C_p-reps of dimension <= n as (trivial_copies, nontrivial_copies)."""
+>     result = []
+>     for total_dim in range(n + 1):
+>         for nontrivial in range(total_dim // 2 + 1):
+>             trivial = total_dim - 2 * nontrivial
+>             result.append((trivial, nontrivial))
+>     return result
+>
+> def genuine_cells(p, n):
+>     """All genuine C_p-CW cells C_p/H+ ^ D^V of dim(V) <= n."""
+>     subgroups = [0, p]  # H = {e} (order 1) or H = C_p (order p)
+>     cells = []
+>     for (k, m) in reps_of_dim(p, n):
+>         for H_order in subgroups:
+>             cells.append((H_order, k, m))
+>     return cells
+>
+> # For p=2, n=2: reps = (0,0),(1,0),(2,0),(0,1) -> dims 0,1,2,2
+> # Cells: each rep x {H=e, H=C2} -> 8 cells total (vs 3 naive cell types x 2 subgroups = 6)
+> ```
+>
+> (c) Naive cells of dimension $n$: $C_2/e_+ \wedge D^n$ and $C_2/C_{2+} \wedge D^n$ — 2 cells per dimension. Genuine cells of dimension $n$: 2 subgroups $\times$ (number of reps of dim $n$). For $n = 1$: reps are $(\mathbf{1}, \sigma)$ — 2 reps, 4 genuine cells vs. 2 naive cells (ratio 2). For $n = 2$: reps are $(2\mathbf{1}, \mathbf{1}\oplus\sigma, 2\sigma)$ — 3 reps, 6 genuine cells vs. 2 naive (ratio 3). In general the number of reps of dimension $n$ grows as $\lfloor n/2 \rfloor + 1$, so the ratio is $\lfloor n/2 \rfloor + 1$.
+>
+> (d) Slice cells of dim $\leq 4$ for $C_2$: $C_2/e_+ \wedge D^n$ (free, all $n$) and $C_2/C_{2+} \wedge D^{m\rho}$ (regular rep, $m = 1: D^\rho$, $m=2: D^{2\rho}$). Non-slice genuine cells: $C_2/H_+ \wedge D^{k\sigma}$ (pure sign representation) and $C_2/H_+ \wedge D^{\mathbf{1} \oplus k\sigma}$ for $k \geq 2$ (mixed non-regular). For dim $\leq 4$: $C_2/H_+ \wedge D^\sigma$ (dim 1), $C_2/H_+ \wedge D^{2\sigma}$ (dim 2), $C_2/H_+ \wedge D^{\mathbf{1}+2\sigma}$ (dim 3), etc.
