@@ -66,6 +66,17 @@ where $N_{\text{params}}$ is the total parameter count and $B_{\text{bytes}}$ is
 | Q4_K_M (GGUF) | ~4.5 | ~0.56 | Mixed precision; best quality-per-bit |
 | Q2_K (GGUF) | ~2.6 | ~0.33 | Aggressive; noticeable degradation |
 
+> [!INFO] Decoding the dtype names
+> The floating-point formats are straightforward: **FP32** is standard 32-bit IEEE float; **BF16** (*brain float 16*) keeps FP32's 8-bit exponent but trims the mantissa to 7 bits, preserving dynamic range at half the size; **FP16** uses a 5-bit exponent instead, which is numerically trickier but widely supported on older hardware.
+>
+> The **Q-formats** are GGUF-specific and encode more information in their name:
+> - The leading number is the *average* bits per weight (Q4 ≈ 4 bits, Q2 ≈ 2 bits) — but these are averages across a block, not a uniform allocation.
+> - **`_K`** means the format uses *k-quants*: weights are grouped into blocks of 32 or 256, and each block stores a shared scale and minimum value in higher precision. This recovers significant quality vs naïve round-to-nearest at the same bit budget.
+> - **`_M` / `_S`** (medium / small) control which layers get slightly more bits. `_M` gives extra precision to the attention and embedding layers that are most sensitive to quantization error; `_S` is more uniform.
+> - **`_K_M`** together therefore means: *block-wise quantization, with attention/embedding layers getting a precision bump*. This is why Q4_K_M outperforms plain Q4_0 at the same nominal bit width.
+>
+> **Q2_K** follows the same pattern at 2 bits/weight — the `_K` still uses block scales, but at 2 bits the per-weight precision is so coarse that quality degrades noticeably regardless. It exists for extreme memory constraints where even a degraded model is better than nothing.
+
 **Example:** A 70B parameter model in BF16 requires $70 \times 10^9 \times 2 = 140\,\text{GB}$ VRAM — requiring two A100-80GB GPUs or equivalent. At Q4_K_M it drops to ~$70 \times 10^9 \times 0.56 \approx 39\,\text{GB}$, fitting on a single A100-80GB with room for KV cache.
 
 > [!TIP] Rule of Thumb

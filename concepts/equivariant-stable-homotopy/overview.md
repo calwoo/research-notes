@@ -14,7 +14,7 @@ This file is the index for the `concepts/equivariant-stable-homotopy/` folder. I
 | `mackey-functors.md` | ✅ Written | Mackey functors, the Burnside category, spectral Mackey functors (Barwick) |
 | `g-spectra.md` | ✅ Written | Genuine G-spectra indexed on a complete universe, orthogonal G-spectra, naive vs. genuine stable |
 | `ro-g-graded-cohomology.md` | 🔲 Planned | RO(G)-graded homotopy groups, representation spheres, RO(G)-graded Bredon cohomology |
-| `fixed-point-spectra.md` | 🔲 Planned | Geometric fixed points $\Phi^H$, categorical fixed points $(-)^H$, homotopy fixed points $(-)^{hH}$; the Tate diagram |
+| `fixed-point-spectra.md` | ✅ Written | Geometric fixed points $\Phi^H$, categorical fixed points $(-)^H$, homotopy fixed points $(-)^{hH}$; the Tate diagram |
 | `wirthmuller-and-adams.md` | 🔲 Planned | Wirthmuller isomorphism $i_! \simeq i_*$, Adams isomorphism, formal duality |
 | `norm-maps.md` | 🔲 Planned | Multiplicative norm $N_H^G$, $N_\infty$-operads, commutative equivariant ring spectra |
 | `tate-spectra.md` | 🔲 Planned | Tate construction $X^{tG}$, Tate diagonal, generalized Tate cohomology, TC and THH |

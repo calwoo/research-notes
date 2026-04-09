@@ -44,7 +44,15 @@ The natural fix is quantization: store each FP16/BF16 number in fewer bits. But 
 > [!NOTE] Why metadata overhead is unavoidable in classical quantization
 > Classical uniform quantizers map $[x_{\min}, x_{\max}]$ to $\{0, 1, \ldots, 2^b - 1\}$. To dequantize you need $x_{\min}$ and the step size $\Delta = (x_{\max} - x_{\min})/2^b$. Storing these two FP16 numbers per block of $G$ coordinates adds $32/G$ bits per coordinate. For $G = 16$, this is $+2$ bits — a major fraction of a 3-bit quantizer.
 
+> [!NOTE]- What is a 3-bit quantizer?
+> A *$b$-bit uniform quantizer* maps a scalar $x \in [x_{\min}, x_{\max}]$ to one of $2^b$ equally-spaced levels $\{0, 1, \ldots, 2^b - 1\}$ via
+> $$\hat{x} = \left\lfloor \frac{x - x_{\min}}{\Delta} \right\rfloor, \qquad \Delta = \frac{x_{\max} - x_{\min}}{2^b - 1}.$$
+> For $b = 3$ there are 8 levels; each value is stored in 3 bits. Dequantization recovers $x \approx x_{\min} + \hat{x}\cdot\Delta$, which requires $x_{\min}$ and $\Delta$ (or equivalently a zero-point and scale). These constants must be stored alongside the quantized values — the source of the overhead described above.
+
 QJL sidesteps metadata entirely by replacing the classical quantizer with a *sketching* operation whose output distribution is analytically known from the design of the sketch.
+
+> [!NOTE]- What is a sketch / sketching operation?
+> A *sketch* (or *linear sketch*) of a vector $x \in \mathbb{R}^d$ is a compressed representation $Sx \in \mathbb{R}^m$ produced by a random linear map $S \in \mathbb{R}^{m \times d}$ with $m \ll d$. The *sketching operation* is the act of applying $S$. Unlike classical quantization, the output distribution of $Sx$ is determined entirely by the distribution of $S$ — no per-vector calibration constants (zero-point, scale) are needed to interpret the result. The [[concepts/randomized-algorithms/metric-geometry-and-dimension-reduction|Johnson–Lindenstrauss transform]] is a canonical sketch: for $S_{ij} \overset{\text{i.i.d.}}{\sim} \mathcal{N}(0,1)$, the rescaled sketch $\frac{1}{\sqrt{m}}Sx$ preserves $\ell_2$ norms and pairwise inner products up to $(1\pm\varepsilon)$ with high probability. QJL goes one step further by *sign-quantizing* the sketch output ($\operatorname{sign}(Sk) \in \{-1,+1\}^m$), reducing storage to 1 bit per sketch coordinate.
 
 ![Figure 1 from Zandieh et al. (2024): Overview of the KV cache quantization pipeline via the QJL transform](figures/qjl/qjl-fig1-overview-pipeline.png)
 *Figure 1 (Zandieh et al., 2024): The QJL pipeline. During prompt encoding (left), key embeddings are projected via a random JL matrix S, sign-quantized to 1 bit, and cached together with the scalar norm. During token generation (right), the query is projected by the same S and its inner product with each cached sign vector is computed, yielding an unbiased estimate of the full-precision attention score — with no stored quantization constants.*
@@ -52,6 +60,30 @@ QJL sidesteps metadata entirely by replacing the classical quantizer with a *ske
 ---
 
 ## 2. The QJL Transform
+
+> [!INFO]- The standard JL inner product estimator (baseline for QJL)
+> Let $S \in \mathbb{R}^{m \times d}$ have i.i.d. entries $S_{ij} \sim \mathcal{N}(0,1)$. For any $q, k \in \mathbb{R}^d$, the *standard JL estimator* of $\langle q, k\rangle$ is
+> $$\operatorname{ProdJL}(q,k) := \frac{1}{m}\langle Sq, Sk\rangle.$$
+> **Unbiasedness:** $\mathbb{E}_S[\operatorname{ProdJL}(q,k)] = \langle q,k\rangle$, since $\mathbb{E}[S^\top S] = I_d$.
+>
+> **Distortion guarantee:** For $m = O(\varepsilon^{-2}\log(1/\delta))$,
+> $$\Pr_S\!\bigl[|\operatorname{ProdJL}(q,k) - \langle q,k\rangle| > \varepsilon\|q\|_2\|k\|_2\bigr] \leq \delta.$$
+>
+> **Storage cost:** Caching $Sk$ requires $m$ full-precision floats (16 bits each), for a total of $16m$ bits per key token. QJL replaces $Sk$ with $\operatorname{sign}(Sk) \in \{-1,+1\}^m$ (1 bit each) plus one scalar $\|k\|_2$ (16 bits) — a $16\times$ reduction in sketch storage at the cost of a modest increase in the distortion constant.
+>
+> ---
+>
+> **Why not skip the JL step entirely ("QL")?** A natural cheaper alternative is to sign-quantize $k$ directly in $\mathbb{R}^d$ — call this QL:
+> $$\widehat{\langle q,k\rangle}_{\text{QL}} := c \cdot \|k\|_2 \cdot \langle q, \operatorname{sign}(k)\rangle.$$
+> This fails for three reasons.
+>
+> **1. No statistical structure to analyze.** With QL, $\operatorname{sign}(k)$ is a deterministic function of $k$ — there is no random variable to average over. The error $\langle q,k\rangle - c\|k\|_2\langle q,\operatorname{sign}(k)\rangle$ is a single fixed number that can be arbitrarily large; "unbiasedness" is not even a meaningful statement.
+>
+> **2. The unbiasedness proof requires Gaussian independence.** The key step in proving $\mathbb{E}_S[\operatorname{ProdQJL}] = \langle q,k\rangle$ is decomposing $q = \frac{\langle q,k\rangle}{\|k\|_2^2}k + q^{\perp k}$ and showing the cross term vanishes:
+> $$\mathbb{E}\bigl[s_i^\top q^{\perp k} \cdot \operatorname{sign}(s_i^\top k)\bigr] = 0.$$
+> This uses the fact that $s_i^\top k$ and $s_i^\top q^{\perp k}$ are **independent** — they are uncorrelated Gaussians (since $k \perp q^{\perp k}$), and joint Gaussianity of $(s_i^\top k,\, s_i^\top q^{\perp k})$ promotes uncorrelatedness to independence. For QL the analogous term is $q_i^{\perp k}\cdot\operatorname{sign}(k_i)$: there is no joint Gaussianity, independence fails, and the cross term does not vanish.
+>
+> **3. Sign quantization is extremely lossy for skewed vectors.** Key vectors in transformers have outlier coordinates — a few large-magnitude dimensions and many near-zero ones (empirically visible in the key cache outlier plots). Direct sign quantization assigns equal weight $\pm 1$ to every coordinate regardless of magnitude, so the estimate is dominated by the signs of the outlier dimensions irrespective of $q$. The JL projection fixes this by *isotropizing* $k$: each projected coordinate $s_i^\top k \sim \mathcal{N}(0,\|k\|_2^2)$ has the same distribution for any $k$, making sign quantization uniformly efficient across all key vectors.
 
 ### 2.1 Definition
 
@@ -65,6 +97,11 @@ $$\operatorname{ProdQJL}(q, k) := \frac{\sqrt{\pi/2}}{m} \cdot \|k\|_2 \cdot \la
 
 > [!INFO] Why asymmetric?
 > If we applied QJL to *both* vectors we would obtain an unbiased estimator of the *angle* $\theta(q,k)$, not the inner product $\langle q, k\rangle = \|q\|\|k\|\cos\theta$. Recovering the cosine from the angle estimate via $\cos(\hat\theta)$ introduces bias. The fix: quantize only $k$ (the cached vector), leave $q$ (the fresh query vector, already in memory) unquantized.
+
+> [!NOTE] What this means for the key cache
+> Yes — during inference, each key token $k_i$ is never stored directly. Instead the cache holds $H_S(k_i) = \operatorname{sign}(Sk_i) \in \{-1,+1\}^m$ ($m$ bits) and the scalar $\|k_i\|_2$ (1 FP16 = 16 bits), totalling $m + 16$ bits per token. The original key required $16d$ bits (FP16). So the compression ratio is
+> $$\frac{16d}{m + 16}.$$
+> The 16× figure refers specifically to the *sketch storage* ($Sk$ at FP16 → $\operatorname{sign}(Sk)$ at 1 bit/coord), not the overall ratio. The overall key cache compression depends on how $m$ is chosen relative to $d$: with $d = 256$ and $m \approx 750$ bits (sufficient for 32k-token contexts at $\varepsilon = 0.2$), the ratio is roughly $\frac{16 \times 256}{750 + 16} \approx 5.3\times$ — matching the paper's reported ">5× vs. FP16 baseline". The value cache is separate and unaffected by QJL. The query $q_n$ is never cached at all (it is always fresh at each decode step).
 
 ### 2.2 Unbiasedness (Lemma 3.2)
 
@@ -81,6 +118,13 @@ Each $s_i$ is a standard Gaussian row. Because $k \perp q^{\perp k}$, the projec
 For the first term, $x := s_i^\top k \sim \mathcal{N}(0, \|k\|_2^2)$, so $\mathbb{E}[|x|] = \sqrt{2/\pi}\,\|k\|_2$ by the half-normal formula. Substituting:
 
 $$\mathbb{E}[\operatorname{ProdQJL}(q,k)] = \sqrt{\pi/2} \cdot \frac{\langle q,k\rangle}{\|k\|_2} \cdot \sqrt{2/\pi}\,\|k\|_2 = \langle q,k\rangle. \quad \square$$
+
+> [!NOTE]- The half-normal formula
+> If $X \sim \mathcal{N}(0, \sigma^2)$, then $\mathbb{E}[|X|] = \sigma\sqrt{2/\pi}$. Derivation: by symmetry,
+> $$\mathbb{E}[|X|] = 2\int_0^\infty x \cdot \frac{1}{\sigma\sqrt{2\pi}}\,e^{-x^2/(2\sigma^2)}\,dx.$$
+> Substitute $u = x^2/(2\sigma^2)$, so $x\,dx = \sigma^2\,du$:
+> $$= \frac{2}{\sigma\sqrt{2\pi}}\int_0^\infty e^{-u}\,\sigma^2\,du = \frac{2\sigma}{\sqrt{2\pi}}\cdot 1 = \sigma\sqrt{\tfrac{2}{\pi}}.$$
+> In context, $x = s_i^\top k \sim \mathcal{N}(0,\|k\|_2^2)$, so $\sigma = \|k\|_2$ and $\mathbb{E}[|s_i^\top k|] = \|k\|_2\sqrt{2/\pi}$.
 
 > [!TIP]- Key contrast with the standard JL estimator
 > The standard JL estimator $\frac{1}{m}\langle Sq, Sk\rangle$ is also unbiased for $\langle q,k\rangle$ (the JL lemma). QJL replaces $Sk \in \mathbb{R}^m$ (32 bits per entry) with $\operatorname{sign}(Sk) \in \{-1,+1\}^m$ (1 bit per entry), **at the cost of one stored scalar $\|k\|_2$ (FP16)**. The $\sqrt{\pi/2}$ prefactor corrects for the sign-collapse that shrinks the expected magnitude.

@@ -7,14 +7,18 @@
 | Scalability | Original Muon untested beyond small LMs | Weight decay + per-parameter update scaling | Validated on 3B/16B MoE at 5.7T tokens |
 | Compute efficiency | AdamW is the de facto standard | Muon under compute-optimal training | ~2x fewer FLOPs to match AdamW loss |
 | Theoretical grounding | Heuristic motivation for orthogonalization | Steepest descent under RMS-to-RMS operator norm | Update = UV^T from SVD is the exact dual solution |
+| Network-level metrization | Layer-wise norms chosen ad hoc | Modular norm: recursive max of scaled layer norms | Depth-independent Lipschitz constant; LR transfers across width and depth without muP correction factors |
 | Hyperparameter transfer | Optimizer-specific tuning required | Scaling factor ties update RMS to parameter shape | Muon reuses AdamW learning rate and weight decay |
 | Model quality | DeepSeek-V2-Lite MMLU 58.3, MATH 17.1 | Moonlight (same arch/tokens) | MMLU 70.0, MATH 45.3, HumanEval 48.1 |
+| Independent audit | Kimi's 2× claim vs. undertuned AdamW baseline | Wen et al. (2025): 3-phase coordinate-descent fair comparison | 1.3–1.4× at ≤520M; ~1.1× at 1.2B; advantage projected to vanish at 7B+ |
 
 ## Relations
 
-**Builds on:** [[papers/shampoo|Shampoo]] *(no note yet)*, [[papers/adam|Adam / AdamW]] *(no note yet)*
+**Builds on:** [[papers/shampoo|Shampoo]] *(no note yet)*, [[papers/adam|Adam / AdamW]] *(no note yet)*, [[papers/modular-norm|Scalable Optimization in the Modular Norm (Large et al., 2024)]] *(no note yet)*
 **Extended by:** [[papers/muon-hyperball|Hyperball / HyperMuon]] *(no note yet)*
 **Concepts used:** [[concepts/randomized-algorithms/metric-geometry-and-dimension-reduction|Metric Geometry and Dimension Reduction]], [[concepts/optimization/steepest-descent|Steepest Descent and Dual Norms]] *(no note yet)*
+**Companion:** [[papers/old-optimizer-new-norm|Old Optimizer, New Norm: An Anthology (Bernstein & Newhouse, 2024)]] *(no note yet)*
+**Evaluated by:** [[papers/fantastic-pretraining-optimizers|Fantastic Pretraining Optimizers and Where to Find Them (Wen et al., 2025)]] *(no note yet)*
 
 ---
 
@@ -38,6 +42,16 @@
 - [[#9. Distributed Implementation|9. Distributed Implementation]]
 - [[#10. Practical Considerations and Hyperparameters|10. Practical Considerations and Hyperparameters]]
 - [[#11. Experimental Results|11. Experimental Results]]
+- [[#12. The Modular Norm: Metrizing the Full Network|12. The Modular Norm: Metrizing the Full Network]]
+  - [[#12.1 From Layer Norms to Network Norms|12.1 From Layer Norms to Network Norms]]
+  - [[#12.2 The Anthology: Optimizers as Steepest Descent|12.2 The Anthology: Optimizers as Steepest Descent]]
+  - [[#12.3 Normed Optimization in Practice|12.3 Normed Optimization in Practice]]
+  - [[#12.4 Why Embedding Layers Need a Different Norm|12.4 Why Embedding Layers Need a Different Norm]]
+- [[#13. External Validation and Scaling Limits|13. External Validation and Scaling Limits]]
+  - [[#13.1 Correcting the Speedup Claim|13.1 Correcting the Speedup Claim]]
+  - [[#13.2 The Matrix-vs-Scalar Divide|13.2 The Matrix-vs-Scalar Divide]]
+  - [[#13.3 Scaling Limits: Model Size and Chinchilla Ratio|13.3 Scaling Limits: Model Size and Chinchilla Ratio]]
+  - [[#13.4 Hyperparameter Sensitivity as Evidence for LR Transfer|13.4 Hyperparameter Sensitivity as Evidence for LR Transfer]]
 - [[#References|References]]
 
 ---
@@ -58,6 +72,15 @@ The central question is: why should this be a good idea? The answer, developed i
 2. **Approximate second-order optimization** via the connection to Shampoo.
 3. **Geometric** intuitions about update isotropy across singular directions.
 4. **Explore-exploit trade-offs** in traversing the loss landscape.
+
+> [!NOTE] Nesterov momentum and the momentum buffer
+> Standard *heavy ball* momentum accumulates a running average of past gradients — the *momentum buffer* $\mathbf{M}_t$ — and uses it as the update direction:
+> $$\mathbf{M}_t = \mu\mathbf{M}_{t-1} + \nabla_\mathbf{W}\mathcal{L}_t, \qquad \mathbf{W}_t = \mathbf{W}_{t-1} - \eta\mathbf{M}_t$$
+> The buffer smooths out noisy mini-batch gradients: it acts as an exponentially weighted average of the gradient history, with coefficient $\mu$ (typically 0.95) controlling the effective window. Directions that are consistently non-zero across steps accumulate large buffer magnitude; noisy or oscillating directions cancel and stay small.
+>
+> *Nesterov momentum* modifies the evaluation point before computing the gradient. Instead of computing the gradient at the current weights $\mathbf{W}_{t-1}$, it evaluates at the *lookahead point* $\mathbf{W}_{t-1} - \eta\mu\mathbf{M}_{t-1}$ — where the weights would land if we just continued with the existing buffer. The effective update becomes:
+> $$\mathbf{M}_t = \mu\mathbf{M}_{t-1} + \nabla_\mathbf{W}\mathcal{L}_t(\mathbf{W}_{t-1} - \eta\mu\mathbf{M}_{t-1})$$
+> Intuitively, Nesterov "looks ahead" along the momentum direction before correcting course, giving faster convergence in smooth convex settings and reduced oscillation in practice. In Muon, the momentum buffer $\mathbf{M}_t$ (accumulated with Nesterov momentum) serves as the raw signal from which the orthogonalized update $\mathbf{O}_t = \operatorname{NS}(\mathbf{M}_t)$ is computed — so the buffer encodes both the gradient direction and its historical consistency, and the Newton-Schulz step then discards the magnitude while preserving the directional information.
 
 > [!INFO] Historical note
 > The original Muon implementation was released by Keller Jordan as a NanoGPT training speedrun optimizer in 2024. The name was coined then. The theoretical derivation connecting it to steepest descent under the RMS-to-RMS operator norm was later worked out by Jeremy Bernstein and further analyzed by Jianlin Su (Su Jianlin, known for the RoPE positional embedding). The Kimi Team's 2025 paper constitutes the first rigorous large-scale validation.
@@ -169,6 +192,15 @@ where $\|\mathbf{W}\|_{\text{op}} = \sigma_{\max}(\mathbf{W})$ is the *spectral 
 ### 3.2 Steepest Descent Under the Operator Norm
 
 The standard gradient descent update $\mathbf{W} \leftarrow \mathbf{W} - \eta \nabla_\mathbf{W} \mathcal{L}$ is steepest descent under the *Frobenius norm* constraint $\|\Delta\mathbf{W}\|_F \leq \eta$. Muon instead uses steepest descent under the RMS-to-RMS operator norm constraint.
+
+> [!NOTE] Why the gradient is steepest descent under the Frobenius norm
+> Steepest descent means: given a step-size budget $\eta$, choose the update $\Delta\mathbf{W}$ that decreases the loss as much as possible. Under a first-order (linearization) approximation, the loss change is:
+> $$\mathcal{L}(\mathbf{W} + \Delta\mathbf{W}) \approx \mathcal{L}(\mathbf{W}) + \langle \nabla_\mathbf{W}\mathcal{L},\, \Delta\mathbf{W} \rangle_F$$
+> where $\langle \mathbf{A}, \mathbf{B} \rangle_F = \operatorname{tr}(\mathbf{A}^\top \mathbf{B})$ is the Frobenius inner product. The steepest descent problem is therefore:
+> $$\Delta\mathbf{W}^* = \arg\min_{\|\Delta\mathbf{W}\|_F \leq \eta} \langle \nabla_\mathbf{W}\mathcal{L},\, \Delta\mathbf{W} \rangle_F$$
+> By the Cauchy–Schwarz inequality for the Frobenius inner product, $\langle \mathbf{G}, \Delta\mathbf{W} \rangle_F \geq -\|\mathbf{G}\|_F \|\Delta\mathbf{W}\|_F$, with equality exactly when $\Delta\mathbf{W} = -c\,\mathbf{G}$ for some $c > 0$. The constraint $\|\Delta\mathbf{W}\|_F \leq \eta$ then pins $c = \eta / \|\mathbf{G}\|_F$, giving $\Delta\mathbf{W}^* = -\eta\,\mathbf{G}/\|\mathbf{G}\|_F$. Up to the step-size normalisation (absorbed into $\eta$), this is exactly the gradient descent update $-\eta\,\nabla_\mathbf{W}\mathcal{L}$.
+>
+> The Frobenius norm treats every entry of $\mathbf{W}$ symmetrically — it is the flat Euclidean metric on the space of matrices. Gradient descent is therefore the *right* steepest descent method if and only if Euclidean distance is the right measure of how much the weight matrix has changed. The key insight motivating Muon is that Euclidean distance in weight space is *not* a natural measure of change for a linear layer: what matters is how much the layer's input–output behavior changes, which is measured by the operator norm, not the Frobenius norm.
 
 ![Different distance notions lead to different optimization theories (Bernstein, 2025)](figures/muon-optimizer/bernstein-geometry.png)
 *Choosing the right geometry for weight updates: Frobenius norm (SGD), element-wise $\ell^\infty$ (Adam), or operator norm (Muon) each induce different steepest descent directions and distinct optimization theories.*
@@ -444,6 +476,170 @@ The comparison is same architecture, same number of training tokens.
 
 ---
 
+## 12. The Modular Norm: Metrizing the Full Network
+
+📐 The single-layer analysis of §3 shows that Muon is steepest descent under the RMS-to-RMS operator norm on one weight matrix. But a neural network has *many* weight matrices, and one still needs to decide how to aggregate layer-wise norms into a norm on the full parameter vector. The *modular norm* of Large et al. (2024) provides the principled answer.
+
+### 12.1 From Layer Norms to Network Norms
+
+Given layer-wise norms $\|\cdot\|_{W_k}$ and scaling constants $s_1, \ldots, s_L > 0$, the *modular norm* on the full weight space $\mathcal{W} = \mathcal{W}_1 \times \cdots \times \mathcal{W}_L$ is:
+
+$$\|(w_1, \ldots, w_L)\|_{\mathcal{W}} := \max_{k}\bigl(s_k \|w_k\|_{\mathcal{W}_k}\bigr)$$
+
+This is an $\ell^\infty$ combination of scaled layer norms — *not* an $\ell^2$ or $\ell^1$ combination. The choice of $\ell^\infty$ is not aesthetic: it is forced by the requirement that the associated Lipschitz (sharpness) constant be *invariant to depth*. An $\ell^2$ combination would produce a sharpness constant that grows with $\sqrt{L}$, making learning rate transfer across depth impossible.
+
+**The recursive construction.** The modular norm is built up from modules — composable objects that carry four attributes: `forward`, `mass`, `sensitivity`, and `norm`. Two binary operations suffice to build any architecture:
+
+- **Composition** $M_2 \circ M_1$: the composite norm is $\max\!\bigl(M_2.\mathrm{sensitivity} \cdot \tfrac{M.\mathrm{mass}}{M_1.\mathrm{mass}} \|w_1\|_1,\, \tfrac{M.\mathrm{mass}}{M_2.\mathrm{mass}} \|w_2\|_2\bigr)$.
+- **Concatenation** $(M_1, M_2)$: the norm is $\max\!\bigl(\tfrac{M.\mathrm{mass}}{M_1.\mathrm{mass}} \|w_1\|_1,\, \tfrac{M.\mathrm{mass}}{M_2.\mathrm{mass}} \|w_2\|_2\bigr)$ (sensitivity does not appear because neither module feeds through the other).
+
+The key invariant maintained throughout is *well-normedness*: a module is well-normed if $\|\nabla_w M(w,x) \cdot \Delta w\|_Y \leq \|\Delta w\|_M$ (Lipschitz-1 in weight space) and $\|\nabla_x M(w,x) \cdot \Delta x\|_Y \leq M.\mathrm{sensitivity} \cdot \|\Delta x\|_X$ (Lipschitz-sensitivity in input space). Both composition and concatenation *preserve* well-normedness.
+
+**Mass allocation.** The `mass` parameter of each module controls the proportion of feature learning that module contributes to any compound module. If $M_k.\mathrm{mass} / M.\mathrm{mass}$ is the fraction of total mass assigned to layer $k$, then the contribution of that layer to the linearized output change is bounded by that same fraction times $\|{}\Delta w\|_{\mathcal{W}}$. For residual networks, the empirically best choice keeps the total mass of hidden layers $m$ fixed as depth scales ($M_{\text{block}}.\mathrm{mass} = m/L$), so that each block learns at rate $O(1/L)$ and the total hidden-layer learning remains $O(1)$.
+
+> [!INFO] The Lipschitz smoothness theorem
+> **Proposition (Large et al., 2024).** For any neural network built from *well-normed* atomic modules — including linear layers (using the RMS-to-RMS operator norm), embedding layers (using the $\ell^1 \to \ell^2$ max-column norm), and standard nonlinearities — the gradient of the network is Lipschitz-continuous in the modular norm, with a sharpness constant that is *independent of depth* for residual networks with the canonical mass allocation. This is the rigorous foundation for depth-transferable learning rates.
+
+### 12.2 The Anthology: Optimizers as Steepest Descent
+
+Bernstein & Newhouse (2024) unify Adam, Shampoo, and Muon by showing that each (with exponential moving averages disabled) is *steepest descent under a particular norm*:
+
+| Optimizer | Norm | Update direction |
+|-----------|------|-----------------|
+| Adam (no EMA) | Max-of-max norm: $\max_l \|W_l\|_{\ell^1 \to \ell^\infty}$ | $-\operatorname{sign}(G_l)$ layer-wise |
+| Shampoo / Muon (no accum.) | Max spectral norm: $\max_l \|W_l\|_{\ell^2 \to \ell^2}$ | $-U_l V_l^\top$ layer-wise |
+| SGD | Frobenius (Schatten-2) norm | $-G_l / \|G_l\|_F$ |
+
+The *max* over layers is the $\ell^\infty$ aggregation of the modular norm — both Adam and Shampoo/Muon implicitly use a modular norm, but with different choices of per-layer norm ($\ell^1 \to \ell^\infty$ vs. $\ell^2 \to \ell^2$).
+
+The steepest descent problem for the modular norm $\max_l s_l \|\Delta W_l\|_l$ is:
+
+$$\Delta W_l^* = -\frac{\eta}{s_l} \cdot \underset{\|T_l\|_l \leq 1}{\operatorname{arg\,max}}\langle G_l, T_l \rangle \qquad \text{with global step size } \eta = \frac{1}{\lambda}\sum_k s_k \|G_k\|_k^*$$
+
+Each layer is updated in the direction of the steepest descent under *its own norm*, with a *global* learning rate shared across layers. This is precisely the recipe of both Muon (spectral norm per layer) and normed Adam (infinity norm per layer).
+
+> [!DANGER] EMA hides the norm structure
+> Once exponential moving averages are restored, Adam and Shampoo no longer exactly solve a steepest descent problem — the accumulated statistics introduce a bias toward historically large gradient directions. The norm interpretation is *exact* only in the no-EMA limit. Nevertheless, the anthology argues that EMA plays the role of "smoothing" rather than fundamentally changing the algorithm, and the norm perspective still guides intuition.
+
+> [!EXAMPLE] Why Muon is the right norm for linear layers
+> The modular norm assigns each layer its *natural* norm based on the role it plays. A linear layer $W \in \mathbb{R}^{d_\text{out} \times d_\text{in}}$ maps RMS-normalized activations to RMS-normalized pre-activations, so the RMS-to-RMS operator norm (= rescaled spectral norm) is the tightest measure of behavioral change. Steepest descent under this norm gives $\Delta W \propto UV^\top$ — precisely Muon.
+
+### 12.3 Normed Optimization in Practice
+
+The `Modula` Python package (available via `pip install modula`) implements the modular norm for arbitrary PyTorch architectures. The training loop becomes:
+
+```python
+delta_w = base_optim.step(net.parameters())   # run Adam or SGD
+net.normalize(delta_w)                         # normalize in modular norm
+net.parameters() -= eta(step) * delta_w        # apply with LR schedule
+```
+
+The normalization wrapper renders the optimal learning rate *invariant to width and depth*, with no muP-style correction factors. Empirically:
+
+- Learning rate sweeps collapse to the same optimum across width $2^5$–$2^8$ and depth $2$–$10$ blocks.
+- Normed SGD trains GPT on par with AdamW, at *half the memory* (no second moment needed).
+- Mass hyperparameter: best performance at $m \approx 0.5$–$1$ for residual MLP on CIFAR-10; transferable from small to large scale.
+
+> [!WARNING] Modular norm is not free
+> Computing the normalization requires evaluating each layer's norm (e.g., spectral norm for linear layers). Spectral norm computation costs $O(\min(d_\text{in}, d_\text{out}))$ via a power iteration or $O(d_\text{in} d_\text{out} \min(d_\text{in}, d_\text{out}))$ via SVD. In practice, one or two steps of power iteration suffice and the overhead is small, but it is nonzero — unlike Muon's Newton-Schulz approach, which handles orthogonalization and normalization simultaneously.
+
+### 12.4 Why Embedding Layers Need a Different Norm
+
+🔑 The Muon paper prescribes AdamW for embedding tables but Muon for linear layers — a distinction that the modular norm makes *theoretically precise*.
+
+An embedding layer maps a one-hot token index $e_i \in \{0,1\}^V$ (with $\|e_i\|_1 = 1$) to a dense embedding $We_i \in \mathbb{R}^d$. The *natural* input norm is $\ell^1$ (not $\ell^2$, since activations are one-hot). The induced operator norm is therefore the $\ell^1 \to \ell^2$ norm:
+
+$$\|W\|_{\ell^1 \to \ell^2} = \max_j \|W_{:,j}\|_2 \qquad \text{(max column norm)}$$
+
+The steepest descent direction under the max-column norm is *not* $UV^\top$ — it is a per-column normalization that corresponds more closely to Adam (sign-like) behavior on embedding rows. This is why AdamW, which approximates per-element normalization, is more suitable for embeddings than Muon.
+
+**In summary:** the modular norm assigns $\|\cdot\|_{\ell^2 \to \ell^2}$ (spectral) to linear layers and $\|\cdot\|_{\ell^1 \to \ell^2}$ (max-column) to embedding layers. Muon implements spectral steepest descent; Adam implements a max-norm approximation. *The modular norm is the framework that explains why you use one and not the other.*
+
+> [!NOTE] Schatten norm summary
+> The family of Schatten norms $S_p$ interpolates between the spectral norm ($S_\infty = \sigma_\max$), the Frobenius norm ($S_2 = \|\sigma\|_2$), and the nuclear norm ($S_1 = \sum_i \sigma_i$). The Bernstein anthology notes that steepest descent under $S_\infty$ (spectral) gives $UV^\top$ (Muon / Shampoo), while steepest descent under $S_2$ (Frobenius) gives $G/\|G\|_F$ (standard gradient descent). The modular norm chooses $S_\infty$ per layer (the max Schatten norm over layers) as the architecture-aware norm for multi-layer networks.
+
+---
+
+## 13. External Validation and Scaling Limits
+
+⚠️ The Kimi team's experimental results (§11) show Muon outperforming AdamW by 2× in compute efficiency. This figure requires scrutiny. A systematic independent benchmark by Wen et al. (2025) — covering 11 optimizers, 4 model scales, and 4 Chinchilla regimes with rigorous per-optimizer hyperparameter tuning — reveals that the true picture is both more nuanced and more honest.
+
+### 13.1 Correcting the Speedup Claim
+
+The 2× figure in the Kimi paper, and similar claims in concurrent works, share a common methodological flaw: the AdamW baseline is undertuned. The standard GPT-3 recipe uses a peak learning rate of 6e-4. Wen et al. show that *tuning only the learning rate* for AdamW — moving from 6e-4 to 8e-3 — already produces a ~2× speedup on a 130M model. In other words, the "2×" gain attributed to Muon is largely the gain of comparing against a misconfigured baseline.
+
+Against a properly tuned AdamW (via exhaustive coordinate descent on all hyperparameters), Muon's actual measured speedup is:
+
+| Model size | Chinchilla ratio | Muon speedup vs. AdamW |
+|------------|-----------------|------------------------|
+| 130M | 1–4× | ~1.3–1.4× |
+| 300M–520M | 1–4× | ~1.3× |
+| 1.2B | 1–8× | ~1.1× |
+| 7B (extrapolated) | 1× | ≲1.0× (projected) |
+
+**The speedup is real but modest, and inversely proportional to model scale.**
+
+> [!DANGER] The weak-baseline trap
+> The 2× speedup claim propagated across many optimizer papers (MARS, Cautious, FOCUS, SWAN, DION all report ≥2×) because they shared the same undertuned GPT-3 recipe baseline. Wen et al. show that the maximum achievable speedup over a *well-tuned* AdamW is approximately 1.4× at any scale, and that this figure shrinks with model size. Comparing against a properly tuned baseline is non-negotiable for honest optimizer evaluation.
+
+A secondary methodological issue: optimizer rankings can *reverse* during learning rate decay. Curves that show a large gap at intermediate checkpoints may flip before the end of training. This means early-stopping comparisons — common in the literature — are unreliable.
+
+### 13.2 The Matrix-vs-Scalar Divide
+
+Despite the corrected numbers, Wen et al. confirm the theoretically motivated prediction from §3 and §7: **matrix-based optimizers are categorically better than scalar-based optimizers**.
+
+The benchmark groups optimizers into two families:
+
+- **Scalar-based** (update each parameter independently using scalar operations): AdamW, NAdamW, MARS, Cautious, Lion, Adam-mini. After fair tuning, all scalar-based optimizers achieve similar performance to AdamW, with speedups of at most 1.2× over AdamW.
+- **Matrix-based** (precondition gradients using matrix multiplication): Muon, Soap, Kron (PSGD), Scion. All matrix-based optimizers consistently outperform all scalar-based ones across every model scale and Chinchilla ratio tested.
+
+This is a clean empirical validation of the theoretical narrative: the steepest descent under the spectral norm (§3.2–§3.3) is a genuinely better update rule for weight matrices than element-wise normalization (Adam) or plain gradient descent (SGD). The spectral norm is the *right* geometry for linear operators, and using it pays off across the board.
+
+> [!NOTE] Why matrix-based methods win
+> Within the matrix-based family, the methods share a common structure: each updates weight matrices by multiplying the gradient with a preconditioning matrix (rather than dividing element-wise by a scalar second moment). Muon uses Newton-Schulz to compute the polar factor; Soap uses Shampoo-style Kronecker preconditioning; Kron uses a different blocked Kronecker preconditioner. Despite different implementations, they converge to similar losses in the overtrained regime — suggesting the crucial ingredient is the matrix preconditioning itself, not the specific algorithm.
+
+### 13.3 Scaling Limits: Model Size and Chinchilla Ratio
+
+Two concrete failure modes are documented by Wen et al.
+
+**Failure mode 1: large models.** Muon's speedup over AdamW is inversely proportional to model size. At 1.2B parameters with 8× Chinchilla tokens, Muon achieves a speedup of only ~1.1× — statistically real but practically marginal. The fitted scaling law extrapolates to a *slightly negative* speedup for Muon vs. AdamW at 7B parameters in the 1× Chinchilla regime. *This does not mean Muon is bad at scale* — it means the matrix-based advantage that is clear at 100M parameters converges to roughly the same loss as AdamW at frontier model sizes. The current practical adoption at scale (e.g., Kimi K2 uses Muon-clip, a Muon variant) may reflect other benefits (optimizer state memory savings, distributional properties) rather than a speedup.
+
+**Failure mode 2: high data-to-model ratios.** Muon is the best optimizer at 1–4× Chinchilla (the standard pretraining regime). But at 8–16× Chinchilla (heavily overtrained models, as used in Llama-3 style compute-optimal-then-continue setups), Muon is overtaken by Soap and Kron. The conjecture is that Soap and Kron, by maintaining accumulated gradient second-moment statistics (Kronecker preconditioners), become increasingly effective as the gradient signal is averaged over more data — while Muon, which discards gradient history at each step (see §4), loses relative to methods that exploit long-run gradient heterogeneity.
+
+```mermaid
+flowchart LR
+    subgraph "Matrix-based optimizers"
+    A["Muon<br/>Best at 1–4× Chinchilla<br/>Small-to-mid scale"]
+    B["Soap / Kron<br/>Best at ≥8× Chinchilla<br/>High data ratio"]
+    end
+    C["Scalar-based<br/>(AdamW, Lion, MARS)"]
+    A -->|"overtrained regime"| B
+    A -->|"always beats"| C
+    B -->|"always beats"| C
+```
+
+> [!WARNING] Chinchilla ratio matters for optimizer choice
+> If you are training in the compute-optimal (1× Chinchilla) regime or slightly beyond, Muon is the strongest matrix-based optimizer. If you are training a small model on a very large token budget (≥8× Chinchilla) — e.g., a 1B model on 200B+ tokens — Soap or Kron may be preferable. This regime dependence is not discussed in the original Muon papers.
+
+### 13.4 Hyperparameter Sensitivity as Evidence for LR Transfer
+
+One of Wen et al.'s key outputs is a table of *scaling-sensitive hyperparameters* for each optimizer — those that must be retuned as model size or data budget changes.
+
+| Optimizer | Scaling-sensitive hyperparameters |
+|-----------|----------------------------------|
+| AdamW | LR, warmup, weight decay, batch size |
+| NAdamW | LR, warmup |
+| Muon | **LR only** |
+| Soap | LR, warmup, block size |
+| Kron | LR |
+
+**Muon and Kron each have only one scaling-sensitive hyperparameter: the learning rate.** This is direct empirical evidence for the LR transfer theory in §3.4. The modular norm derivation predicts that the Muon update direction ($UV^\top$) is intrinsically scale-normalized, so the only free parameter governing step size is $\eta$ — and empirically, $\eta$ must be retuned across scales but *no other hyperparameter does*. AdamW, by contrast, requires retuning weight decay and batch size in addition to LR, because its update direction is not intrinsically normalized.
+
+> [!TIP] Practical hyperparameter guidance from Wen et al.
+> For Muon: tune only the learning rate. The weight decay, momentum, and Newton-Schulz iterations are stable across scales. For the best results, use separate learning rates for embedding layers and matrix weights — the authors find this improves Muon's performance non-trivially. The optimal LR for Muon at 520M scale is in the range 4e-3 to 8e-3, considerably higher than AdamW's typical 6e-4.
+
+---
+
 ## References
 
 | Reference Name | Brief Summary | Link to Reference |
@@ -457,3 +653,6 @@ The comparison is same architecture, same number of training tokens.
 | [Su Jianlin: Muon Analysis II (kexue.fm/10739)](https://kexue.fm/archives/10739) | Extended analysis and connections to other optimizers from Su Jianlin | [https://kexue.fm/archives/10739](https://kexue.fm/archives/10739) |
 | [Shampoo: Preconditioned Stochastic Tensor Optimization (Gupta et al., 2018)](https://arxiv.org/abs/1802.09568) | Introduces Kronecker-factored gradient preconditioning; Muon is a limiting case of Shampoo with single-step gradient memory | [https://arxiv.org/abs/1802.09568](https://arxiv.org/abs/1802.09568) |
 | [Scalable Second Order Optimization for Deep Learning (Anil et al., 2020)](https://arxiv.org/abs/2002.09018) | Practical Shampoo implementation at scale; comparison point for Muon's computational efficiency | [https://arxiv.org/abs/2002.09019](https://arxiv.org/abs/2002.09019) |
+| [Fantastic Pretraining Optimizers and Where to Find Them (Wen et al., 2025)](https://arxiv.org/abs/2509.02046) | Rigorous 3-phase hyperparameter sweep of 11 optimizers at 0.1B–1.2B scale; corrects Muon's 2× speedup claim to 1.3× against well-tuned AdamW; documents diminishing returns with scale | [https://arxiv.org/abs/2509.02046](https://arxiv.org/abs/2509.02046) |
+| [Scalable Optimization in the Modular Norm (Large et al., 2024)](https://arxiv.org/abs/2405.14813) | Defines the modular norm recursively over the module tree; proves depth-independent Lipschitz smoothness; introduces `Modula` package for architecture-aware LR transfer | [https://arxiv.org/abs/2405.14813](https://arxiv.org/abs/2405.14813) |
+| [Old Optimizer, New Norm: An Anthology (Bernstein & Newhouse, 2024)](https://arxiv.org/abs/2409.20325) | Shows Adam = max-of-max norm steepest descent, Shampoo/Muon = spectral norm steepest descent, Prodigy = sign descent with escape-velocity step size; introduces modular norm as the unifying design space | [https://arxiv.org/abs/2409.20325](https://arxiv.org/abs/2409.20325) |

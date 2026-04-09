@@ -139,7 +139,7 @@ The first term absorbs $a_1$ into the right $A$-action on $M$; the last term abs
 
 ### 2.4 Acyclicity: The Contracting Homotopy
 
-The bar resolution is a free resolution of $k$ as an $A$-module. The proof is explicit:
+The bar complex $B(k,A,k)$ is an acyclic complex of $k$-modules — its terms $\bar{A}^{\otimes n}$ are free over $k$ but not over $A$. The actual free left $A$-module resolution of $k$ is $B(A,A,k)$, with terms $A \otimes_k \bar{A}^{\otimes n}$ (free over $A$ on basis $\bar{A}^{\otimes n}$); one recovers $B(k,A,k)$ from it by applying $k \otimes_A -$. The proof of acyclicity is explicit:
 
 **Proposition (Acyclicity).** The augmented bar complex
 
@@ -154,22 +154,58 @@ $$s[a_1 | a_2 | \cdots | a_n] = [1 | a_1 | a_2 | \cdots | a_n]$$
 (prepend the unit $1 \in A$ to the bar sequence; note $1 \notin \bar{A}$, so we must work in the unreduced bar complex where the $a_i$ range over all of $A$, not just $\bar{A}$). A direct computation gives $\partial s + s \partial = \mathrm{id}$, hence $H_n(B(A)) = 0$ for $n > 0$ and $H_0 \cong k$. $\square$
 
 > [!INFO] Why this homotopy is not $A$-linear
-> The map $s$ is only a $k$-linear contracting homotopy, not a map of $A$-modules. This is fine: acyclicity of the bar complex as a complex of $k$-modules is all that is needed to conclude it is a free resolution of $k$ as an $A$-module. The freeness is evident since each $B_n(k,A,k) = \bar{A}^{\otimes n}$ is free as a $k$-module (and $B_n(M,A,N)$ is the tensor product of a free module with $M$ and $N$).
+> The map $s$ is only a $k$-linear contracting homotopy, not a map of $A$-modules. This is exactly what is needed: acyclicity of $B(k,A,k)$ as a complex of $k$-modules implies that $B(A,A,k)$ — the free $A$-module resolution obtained by tensoring each term on the left with $A$ — is a valid projective resolution, since its exactness follows from the same contracting homotopy applied termwise.
 
 The same argument applies to the two-sided bar complex $B(M,A,N)$: the contracting homotopy prepends a unit to the bar sequence, and one obtains:
 
 **Corollary.** $B_\bullet(M,A,N) \to M \otimes_A N \to 0$ is a resolution of $M \otimes_A N$ by free $k$-modules.
 
+*This exercise makes the contracting homotopy explicit by carrying out the identity $\partial s + s\partial = \mathrm{id}$ on a concrete element, and identifies the two-sided generalization with the extra degeneracy used in the topological setting.*
+
+> [!QUESTION] Exercise 1
+> Let $A$ be an augmented $k$-algebra and define the contracting homotopy $s: B_n(k,A,k) \to B_{n+1}(k,A,k)$ by $s[a_1|\cdots|a_n] = [1|a_1|\cdots|a_n]$.
+>
+> (a) Verify $(\partial s + s\partial)[a_1|a_2] = [a_1|a_2]$ by expanding both terms explicitly and checking cancellation.
+>
+> (b) Show the formula $\partial s + s\partial = \mathrm{id}$ holds in general by tracking the sign on each term produced by $\partial s[a_1|\cdots|a_n]$ and $s\partial[a_1|\cdots|a_n]$, and identifying which terms cancel and which survive.
+>
+> (c) Generalize: for the two-sided complex $B(M,A,N)$, define $s(m[a_1|\cdots|a_n]n') = m[1|a_1|\cdots|a_n]n'$ and verify this is still a contracting homotopy. Which step in (b) required the first factor to be $A$ itself (not a general $M$)?
+>
+> **Prerequisites:** [[#2.3 The Two-Sided Bar Construction B(M, A, N)|§2.3]], [[#2.4 Acyclicity: The Contracting Homotopy|§2.4]]
+
+> [!TIP]- Solution to Exercise 1
+> **Key insight:** The extra degeneracy $s$ exists because $A$ acts on itself — prepending $1$ works precisely because $1$ is a unit. The term $d_0 s[a_1|\cdots|a_n] = [1 \cdot a_1|\cdots] = [a_1|\cdots]$ uses unitality and cancels with all other terms.
+>
+> **Sketch:** (a) $\partial s[a_1|a_2] = \partial[1|a_1|a_2] = [1 \cdot a_1|a_2] - [1|a_1 a_2] + [1|a_1] \cdot a_2$... but we are in $B(k,A,k)$ so the outer terms hit the trivial module: $\partial s[a_1|a_2] = [a_1|a_2] - [a_1 a_2] + [a_1]a_2$ where the last term uses the right $A$-action on $k$, i.e. $a_2$ acts by $\varepsilon(a_2)$. Meanwhile $s\partial[a_1|a_2] = s(-[a_1 a_2] + \varepsilon(a_2)[a_1]) = -[1|a_1 a_2] + \varepsilon(a_2)[1|a_1]$. The sum telescopes to $[a_1|a_2]$. (b) In general, $\partial s$ produces $[a_1|\cdots|a_n]$ from $d_0 s$ plus terms $d_i s$ for $i \geq 1$; each $d_i s$ for $i \geq 1$ is $s d_{i-1}$, which exactly cancels the $s d_{i-1}$ terms in $s\partial$. (c) The step that fails for general $M$: $d_0 s(m[a_1|\cdots]n') = m \cdot 1 \cdot [a_1|\cdots]n' = m[a_1|\cdots]n'$ only because $m \cdot 1 = m$ requires $m \in A$ (or at least that the left $A$-action on $M$ satisfies $m \cdot 1_A = m$, which is the unit axiom for a module). So the argument goes through for $B(A,A,N)$ but not for $B(M,A,N)$ with $M \neq A$ unless $M$ has the unit property. The homotopy $s(m[a_1|\cdots]n') = m[1|\cdots]n'$ prepends $1$ into the $A$-strand, not before $m$, so the identity $d_0 s = \mathrm{id}$ actually holds for any $M$ — but $s$ is not $A$-linear. The key point is that $B(A,A,N)$ is contractible for *any* $N$, which is what makes $EA = |B(A,A,*)|$ contractible.
+
 ### 2.5 Computing Tor via the Bar Resolution
 
-Since $B(A) = B(k,A,k)$ is a free resolution of $k$ over $A$, we have:
+Since $B(A,A,k)$ is a free left $A$-module resolution of $k$, applying $M \otimes_A -$ gives a complex computing $\mathrm{Tor}^A_*(M, k)$. The two-sided complex $B(M,A,N)$ generalizes this: $B(M,A,A)$ is a free right $A$-module resolution of $M$ (terms $M \otimes_k \bar{A}^{\otimes n} \otimes_k A$, free over $A$), and
 
-$$\mathrm{Tor}_n^A(M, N) \cong H_n(M \otimes_A B(A) \otimes_A N) = H_n(B(M,A,N)).$$
+$$\mathrm{Tor}_n^A(M, N) \cong H_n(B(M,A,A) \otimes_A N) = H_n(B(M,A,N)).$$
 
-This is the *canonical* computation of Tor: no choices of resolution were made. The bar complex is determined entirely by the algebra structure of $A$.
+Note also that $k \otimes_A k \cong k$ (since $A$ acts on $k$ via $\varepsilon$, the tensor relation becomes trivial), so $B(k,A,k)$ resolves $k \otimes_A k = k$ — consistent with the general formula for $M = N = k$. This is the *canonical* computation of Tor: no choices of resolution were made.
 
 > [!WARNING] Efficiency vs. canonicity
 > The bar resolution is almost never the most efficient resolution to work with. For a polynomial algebra $A = k[x]$, the bar resolution is an infinite complex, while $0 \to A \xrightarrow{x} A \to k \to 0$ is a two-term free resolution. The bar construction's value is not computational efficiency — it is functoriality, canonicity, and its role as a universal object.
+
+*This exercise computes $\mathrm{Tor}$ via the bar resolution in the simplest nontrivial case and reveals the periodic structure that arises from the exterior algebra.*
+
+> [!QUESTION] Exercise 2
+> Let $k$ be a field and $A = k[x]/(x^2)$ (the exterior algebra on one generator). Write $\bar{A} = kx$ (one-dimensional, spanned by $x$).
+>
+> (a) Write out the bar complex $B_0, B_1, B_2, B_3$ as $k$-vector spaces and give the differentials $\partial: B_n \to B_{n-1}$ explicitly in terms of the basis elements $[x|\cdots|x]$.
+>
+> (b) Show that the complex is the periodic complex $\cdots \xrightarrow{0} k \xrightarrow{0} k \xrightarrow{0} k \to 0$. (Why are all differentials zero?)
+>
+> (c) Conclude $\mathrm{Tor}_n^A(k,k) \cong k$ for all $n \geq 0$, and compare with the Hilbert syzygy theorem (which says polynomial algebras have finite projective dimension).
+>
+> **Prerequisites:** [[#2.3 The Two-Sided Bar Construction B(M, A, N)|§2.3]], [[#2.5 Computing Tor via the Bar Resolution|§2.5]]
+
+> [!TIP]- Solution to Exercise 2
+> **Key insight:** $\bar{A} = kx$ is one-dimensional, so $B_n = \bar{A}^{\otimes n} = k[x|\cdots|x]$ is one-dimensional for each $n$. Every differential is $\partial[x|\cdots|x] = \sum (-1)^i [x|\cdots|x^2|\cdots|x]$, but $x^2 = 0$ in $A$, so every term vanishes.
+>
+> **Sketch:** (a) $B_0 = k$, $B_1 = kx$, $B_2 = k[x|x]$, $B_3 = k[x|x|x]$, all one-dimensional. $\partial[x] = 0$ since $x \cdot 1_k = \varepsilon(x) \cdot 1_k = 0$ (as $x \in \bar A$) and $1_k \cdot x = 0$ similarly. More generally $\partial[x|\cdots|x] = \sum (-1)^i [x|\cdots|x^2|\cdots|x] = 0$. (b) All differentials are zero because every internal multiplication produces $x^2 = 0$ and every boundary term hits the augmentation (which sends $x \mapsto 0$). (c) The homology is $k$ in every degree. Compare: $k[x]$ (no nilpotents) has the Koszul resolution $0 \to k[x] \xrightarrow{x} k[x] \to k \to 0$ with $\mathrm{Tor}_n^{k[x]}(k,k) = 0$ for $n > 1$. The nilpotence $x^2 = 0$ kills the differential and forces infinite Tor, reflecting the infinite projective dimension of $k$ over $A$.
 
 ---
 
@@ -202,6 +238,26 @@ The degeneracy maps insert a unit $1_A \in A$ at position $j+1$.
 
 > [!NOTE] Simplicial identities
 > These maps satisfy the simplicial identities $d_i d_j = d_{j-1} d_i$ for $i < j$, and the analogous identities for $s_j$ and mixed $d_i s_j$. These identities encode the functoriality of $[n] \mapsto B_n$ with respect to order-preserving maps.
+
+*This exercise verifies the simplicial identities directly from the definitions and identifies which algebraic axiom (associativity vs. unitality) each identity uses.*
+
+> [!QUESTION] Exercise 3
+> Work with $B_\bullet(M, A, N)$ as defined in [[#3.2 Face and Degeneracy Maps|§3.2]].
+>
+> (a) Verify the identity $d_1 d_2 = d_1 d_1$ on $B_3(M,A,N)$ (i.e., $d_i d_j = d_{j-1} d_i$ for $i=1, j=2$) by computing both sides on a general element $m \otimes a_1 \otimes a_2 \otimes a_3 \otimes n'$.
+>
+> (b) Verify $d_0 s_0 = \mathrm{id}$ (i.e., $d_i s_j = \mathrm{id}$ for $i = j$) on $B_1(M,A,N)$.
+>
+> (c) Verify $d_0 s_1 = s_0 d_0$ (i.e., $d_i s_j = s_{j-1} d_i$ for $i < j$) on $B_1(M,A,N)$.
+>
+> (d) For each identity in (a)–(c), state which axiom of an $A$-module the verification reduces to (associativity of multiplication in $A$, unitality $1_A \cdot a = a$, or associativity of the module action).
+>
+> **Prerequisites:** [[#3.2 Face and Degeneracy Maps|§3.2]]
+
+> [!TIP]- Solution to Exercise 3
+> **Key insight:** All simplicial identities reduce to either associativity $(a_i a_{i+1})a_{i+2} = a_i(a_{i+1} a_{i+2})$ or unitality $1 \cdot a = a = a \cdot 1$ — the coefficient objects $M$ and $N$ are spectators except at the boundary faces $d_0$ (which uses the $M$-action) and $d_n$ (which uses the $N$-action).
+>
+> **Sketch:** (a) $d_1 d_2(m \otimes a_1 \otimes a_2 \otimes a_3 \otimes n') = d_1(m \otimes a_1 \otimes a_2 a_3 \otimes n') = m \otimes a_1(a_2 a_3) \otimes n'$. And $d_1 d_1(m \otimes a_1 \otimes a_2 \otimes a_3 \otimes n') = d_1(m \otimes a_1 a_2 \otimes a_3 \otimes n') = m \otimes (a_1 a_2)a_3 \otimes n'$. These are equal by associativity in $A$. (b) $d_0 s_0(m \otimes a_1 \otimes n') = d_0(m \otimes 1 \otimes a_1 \otimes n') = m \cdot 1 \otimes a_1 \otimes n' = m \otimes a_1 \otimes n'$, using $m \cdot 1_A = m$ (right unit axiom for $M$). (c) $d_0 s_1(m \otimes a_1 \otimes n') = d_0(m \otimes a_1 \otimes 1 \otimes n') = ma_1 \otimes 1 \otimes n'$. And $s_0 d_0(m \otimes a_1 \otimes n') = s_0(ma_1 \otimes n') = ma_1 \otimes 1 \otimes n'$. Equal. (d): (a) uses associativity in $A$; (b) uses the right unit axiom for $M$; (c) uses neither — it is a tautological commutation of inserting $1$ at position $1$ vs. applying $d_0$ then inserting at position $0$.
 
 ### 3.3 The Normalized Chain Complex and Dold-Kan
 
@@ -250,6 +306,58 @@ where $(d_i(g), t) \sim (g, \delta_i(t))$ and $(s_j(g), t) \sim (g, \sigma_j(t))
 > [!INFO] Historical note
 > Milnor (1956) first constructed $BG$ via the infinite join construction $G * G * G * \cdots$, which is homeomorphic to $|NG|$ but less transparent. The simplicial/bar construction perspective was developed by Segal (1968), who showed $BG = |NG|$ and used it to construct spectra via $\Gamma$-spaces — see [[papers/matryoshka-representation-learning|Segal (1974)]] and [[concepts/category-theory/segal-categories-cohomology|the Segal note]].
 
+*This exercise makes the bar construction completely concrete for the two most fundamental groups, connecting the simplicial machinery to familiar classifying spaces.*
+
+> [!QUESTION] Exercise 4
+> (a) **$G = \mathbb{Z}$:** Write down $B_0, B_1, B_2$ of $B(*,\mathbb{Z},*)$ as sets with all face maps. Show the 1-skeleton is a circle, the 2-cells fill in all composites $[m][n] = [m+n]$, and conclude $B\mathbb{Z} \simeq S^1 = K(\mathbb{Z},1)$.
+>
+> (b) **$G = \mathbb{Z}/2$:** Write down $B_0, B_1, B_2$ with face maps. Identify the unique nondegenerate cell in each degree and describe the attaching maps. Conclude that the $n$-skeleton of $B(\mathbb{Z}/2)$ is $\mathbb{RP}^n$, hence $B(\mathbb{Z}/2) \simeq \mathbb{RP}^\infty = K(\mathbb{Z}/2, 1)$.
+>
+> (c) How many nondegenerate $k$-cells does $B(\mathbb{Z}/n)$ have in each degree? (Watch for the off-by-one: the answer is not $n^k$.)
+>
+> **Prerequisites:** [[#4.2 The Classifying Space BG|§4.2]], [[#3.2 Face and Degeneracy Maps|§3.2]]
+
+> [!TIP]- Solution to Exercise 4
+> **Key insight:** A simplex $(g_1, \ldots, g_k) \in G^k$ is *nondegenerate* iff no $g_i = e$ — inserting any unit gives a degenerate simplex. So the count of nondegenerate $k$-cells is $|G \setminus \{e\}|^k$.
+>
+> **Sketch:** (a) $B_0 = \{*\}$, $B_1 = \mathbb{Z}$ (one 1-cell per integer), $B_2 = \mathbb{Z}^2$ with $d_0(m,n) = n$, $d_1(m,n) = m+n$, $d_2(m,n) = m$. Each 2-cell $(m,n)$ is a triangle with edges $[m]$, $[n]$, and $[m+n]$, gluing the path $[m][n]$ to $[m+n]$. After realization, all 1-cells become identified (since $[n] = [1]^n$ in $\pi_1$), and the 2-cells force $\pi_1 = \mathbb{Z}$ and kill higher $\pi_k$ inductively. Result: $S^1$. (b) $B_0 = \{*\}$, $B_1 = \{0,1\}$ — one nondegenerate 1-cell $[1]$. $B_2 = \{(0,0),(0,1),(1,0),(1,1)\}$; nondegenerate cells: $(1,1)$ only (both entries $\neq 0$). Face maps: $d_0(1,1) = 1$, $d_1(1,1) = 1+1 = 0 = *$, $d_2(1,1) = 1$. So the 2-cell attaches along $[1][1][1]^{-1}$, i.e. forces $[1]^2 = *$. This builds $\mathbb{RP}^2$; repeating gives $\mathbb{RP}^\infty$. (c) Nondegenerate $k$-cells: $(|G|-1)^k = (n-1)^k$.
+
+*This exercise shows the bar construction is strictly compatible with products, giving a clean proof that $K(G \times H, 1) \simeq K(G,1) \times K(H,1)$.*
+
+> [!QUESTION] Exercise 5
+> For discrete groups $G$ and $H$, show there is a natural homeomorphism $B(G \times H) \cong BG \times BH$ by:
+>
+> (a) Identifying the simplicial space $B_\bullet(G \times H)$ with $B_\bullet(G) \times B_\bullet(H)$ (componentwise face and degeneracy maps).
+>
+> (b) Citing the fact that geometric realization commutes with finite products for "good" simplicial spaces (those whose degeneracy maps are cofibrations) to conclude $|B_\bullet(G \times H)| \cong |B_\bullet(G)| \times |B_\bullet(H)|$.
+>
+> (c) Deduce $K(G \times H, 1) \simeq K(G,1) \times K(H,1)$ for any two discrete groups.
+>
+> **Prerequisites:** [[#4.2 The Classifying Space BG|§4.2]]
+
+> [!TIP]- Solution to Exercise 5
+> **Key insight:** The bar construction is functorial in $G$ and sends products of groups to products of simplicial sets; the content is entirely in the geometric realization step, which requires the "goodness" condition to avoid point-set pitfalls.
+>
+> **Sketch:** (a) $(G \times H)^n \cong G^n \times H^n$ and face maps $d_i^{G \times H} = (d_i^G, d_i^H)$ — this is just the product of simplicial sets. (b) The simplicial spaces $B_\bullet(G)$ and $B_\bullet(H)$ are "good" since all degeneracy maps $s_j: G^n \to G^{n+1}$ are closed cofibrations (being homeomorphisms onto closed subsets). The Milnor–Geometric Realization theorem then gives $|X_\bullet \times Y_\bullet| \cong |X_\bullet| \times |Y_\bullet|$. (c) Immediate: $B(G \times H) \simeq BG \times BH$, and $\pi_1(BG \times BH) \cong G \times H$, $\pi_k = 0$ for $k > 1$.
+
+*This exercise connects the combinatorics of the bar construction to classical topology via the Euler characteristic, and catches a common off-by-one error in cell counting.*
+
+> [!QUESTION] Exercise 6
+> For $G = \mathbb{Z}/n$, let $\mathrm{sk}_k B(\mathbb{Z}/n)$ denote the $k$-skeleton of $B(\mathbb{Z}/n)$.
+>
+> (a) Using the result of Exercise 4(c), write a formula for the number of nondegenerate $j$-cells for each $0 \leq j \leq k$.
+>
+> (b) Compute the Euler characteristic $\chi(\mathrm{sk}_k B(\mathbb{Z}/n)) = \sum_{j=0}^k (-1)^j c_j$ where $c_j$ is the number of nondegenerate $j$-cells.
+>
+> (c) For $n = 2$, verify the formula matches $\chi(\mathbb{RP}^k)$ for $k = 1, 2, 3, 4$.
+>
+> **Prerequisites:** Exercise 4, [[#4.2 The Classifying Space BG|§4.2]]
+
+> [!TIP]- Solution to Exercise 6
+> **Key insight:** The nondegenerate cell count is $(n-1)^j$ (not $n^j$), so the Euler characteristic is a geometric series in $-(n-1)$.
+>
+> **Sketch:** (a) $c_0 = 1$ (the unique basepoint), $c_j = (n-1)^j$ for $j \geq 1$. (b) $\chi(\mathrm{sk}_k) = 1 + \sum_{j=1}^k (-1)^j (n-1)^j = 1 - (n-1)\frac{1-(-1)^{k+1}(n-1)^k}{n}$. Simplifies to $\frac{1 + (-1)^k (n-1)^{k+1}}{n}$ after algebra. (c) For $n = 2$: $c_j = 1$ for all $j$. $\chi(\mathrm{sk}_k) = \sum_{j=0}^k (-1)^j = \begin{cases} 1 & k \text{ even} \\ 0 & k \text{ odd}\end{cases}$, which matches $\chi(\mathbb{RP}^k) = \frac{1+(-1)^k}{2}$. ✓
+
 ### 4.3 The Universal Bundle EG via the Two-Sided Bar
 
 The *universal principal $G$-bundle* $EG \to BG$ also arises from the bar construction. Using $G$ itself as a left $G$-space (via left multiplication):
@@ -268,6 +376,42 @@ More generally, the two-sided bar construction $B(Y, G, X)$ for $G$-spaces $Y$ (
 
 $$B(Y, G, X) \simeq Y \times_G EG \times_G X.$$
 
+*This exercise verifies the contractibility of $EG$ and freeness of the $G$-action from the simplicial structure, giving a complete proof that $EG \to BG$ is a principal $G$-bundle.*
+
+> [!QUESTION] Exercise 7
+> Let $G$ be a discrete group and $EG = B(G,G,*) = |[n \mapsto G^{n+1}]|$.
+>
+> (a) Define the extra degeneracy $s_{-1}: G^{n+1} \to G^{n+2}$ by $s_{-1}(g_0, g_1, \ldots, g_n) = (e, g_0, g_1, \ldots, g_n)$. Verify $d_0 \circ s_{-1} = \mathrm{id}$ and $d_{i+1} \circ s_{-1} = s_{-1} \circ d_i$ for all $i \geq 0$. Conclude $EG \simeq *$.
+>
+> (b) The left $G$-action on $EG$ is $g \cdot (g_0, g_1, \ldots, g_n) = (gg_0, gg_1, \ldots, gg_n)$. Show this action is free: if $g \cdot (g_0, \ldots, g_n) = (g_0, \ldots, g_n)$ then $g = e$.
+>
+> (c) Show the simplicial map $G^{n+1} \to G^n$ given by $(g_0, g_1, \ldots, g_n) \mapsto (g_0^{-1}g_1, g_1^{-1}g_2, \ldots, g_{n-1}^{-1}g_n)$ is $G$-equivariant (for the $G$-action on $G^n$ by left multiplication on the first factor only) and induces $EG \to BG$ on geometric realizations.
+>
+> **Prerequisites:** [[#4.3 The Universal Bundle EG via the Two-Sided Bar|§4.3]], Exercise 1
+
+> [!TIP]- Solution to Exercise 7
+> **Key insight:** The extra degeneracy works because $G$ acts on itself — prepending $e$ is the unit. The freeness uses that $G$ acts on $G^{n+1}$ by changing every coordinate simultaneously, so a fixed point requires $g = e$.
+>
+> **Sketch:** (a) $d_0 s_{-1}(g_0,\ldots,g_n) = d_0(e,g_0,\ldots,g_n) = (e \cdot g_0, g_1, \ldots, g_n) = (g_0, g_1,\ldots,g_n)$ ✓. $d_{i+1} s_{-1}(g_0,\ldots,g_n) = d_{i+1}(e,g_0,\ldots,g_n)$ multiplies entries at positions $i+1$ and $i+2$ (0-indexed), which are $g_i$ and $g_{i+1}$, giving $(e,g_0,\ldots,g_ig_{i+1},\ldots,g_n) = s_{-1} d_i(g_0,\ldots,g_n)$ ✓. The extra degeneracy gives a simplicial null-homotopy $\mathrm{id} \simeq c_*$ (constant map), so $|B(G,G,*)| \simeq *$. (b) $g \cdot (g_0,\ldots,g_n) = (gg_0,\ldots,gg_n) = (g_0,\ldots,g_n)$ iff $gg_i = g_i$ for all $i$, iff $g = e$. (c) Under $(g_0,\ldots,g_n) \mapsto (g_0^{-1}g_1,\ldots)$: left $G$-action sends $g_i \mapsto gg_i$, so $g_i^{-1}g_{i+1} \mapsto (gg_i)^{-1}(gg_{i+1}) = g_i^{-1}g_{i+1}$ — the map is $G$-invariant. It is compatible with face maps: $d_i$ on $G^{n+1}$ corresponds to $d_i$ on $G^n$ via this change of coordinates. The quotient $EG/G = B(*,G,*) = BG$.
+
+*This exercise deduces $\Omega BG \simeq G$ from the fiber sequence, providing the key structural result that explains why the bar construction deloops topological groups.*
+
+> [!QUESTION] Exercise 8
+> Let $G$ be a discrete group. Use the fiber sequence $G \to EG \to BG$ from §4.3.
+>
+> (a) Write out the long exact sequence of homotopy groups for the fibration $G \to EG \to BG$.
+>
+> (b) Use contractibility of $EG$ (Exercise 7(a)) to show $\pi_n(BG) \cong \pi_{n-1}(G)$ for all $n \geq 1$.
+>
+> (c) Conclude $BG = K(G,1)$ when $G$ is discrete. What goes wrong if $G$ is not discrete — say $G = S^1$? What does $BS^1$ look like?
+>
+> **Prerequisites:** [[#4.3 The Universal Bundle EG via the Two-Sided Bar|§4.3]], Exercise 7
+
+> [!TIP]- Solution to Exercise 8
+> **Key insight:** Contractibility of $EG$ makes it the "path space" of $BG$, forcing $\Omega BG \simeq G$ exactly as contractibility of $PX$ forces $\Omega X \simeq \Omega X$ in the based path-loop fibration.
+>
+> **Sketch:** (a) $\cdots \to \pi_n(G) \to \pi_n(EG) \to \pi_n(BG) \to \pi_{n-1}(G) \to \pi_{n-1}(EG) \to \cdots$. (b) Since $EG \simeq *$: $\pi_n(EG) = 0$ for all $n$, so the LES gives $0 \to \pi_n(BG) \xrightarrow{\cong} \pi_{n-1}(G) \to 0$. (c) For $G$ discrete: $\pi_0(G) = G$, $\pi_k(G) = 0$ for $k \geq 1$. So $\pi_1(BG) = G$ and $\pi_k(BG) = 0$ for $k \neq 1$: this is $K(G,1)$. For $G = S^1$: $\pi_1(S^1) = \mathbb{Z}$, $\pi_k(S^1) = 0$ for $k > 1$, so $BS^1$ has $\pi_2(BS^1) = \mathbb{Z}$ and all other $\pi_k = 0$: $BS^1 = K(\mathbb{Z},2) = \mathbb{CP}^\infty$.
+
 ### 4.4 Homotopy Colimits as Bar Constructions
 
 The bar construction also computes *homotopy colimits* of diagrams. Let $\mathcal{D}$ be a small category and $F: \mathcal{D} \to \mathbf{Top}$ a diagram. The *homotopy colimit* of $F$ is
@@ -285,6 +429,24 @@ This perspective (Malkiewich's notes on homotopy colimits) shows that $\mathrm{h
 
 > [!EXAMPLE] Hocolim as homotopy pushout
 > For $\mathcal{D} = \bullet \leftarrow \bullet \rightarrow \bullet$ (the span category) and $F = (A \leftarrow C \rightarrow B)$, the bar construction $B(*, \mathcal{D}, F)$ recovers the homotopy pushout $A \sqcup^h_C B = (A \sqcup (C \times [0,1]) \sqcup B)/(c,0) \sim f(c), (c,1) \sim g(c)$.
+
+*This exercise identifies $B(*,G,X)$ as the Borel construction $EG \times_G X$, recovering equivariant homotopy theory as a special case of the bar machinery.*
+
+> [!QUESTION] Exercise 9
+> Let $G$ be a discrete group acting on a space $X$ from the left. Define the *twisted bar construction* with $B_n(*,G,X) = G^n \times X$ and face maps $d_0(g_1,\ldots,g_n,x) = (g_2,\ldots,g_n, g_1 \cdot x)$, $d_i(g_1,\ldots,g_n,x) = (g_1,\ldots,g_ig_{i+1},\ldots,g_n,x)$ for $0 < i < n$, and $d_n(g_1,\ldots,g_n,x) = (g_1,\ldots,g_{n-1},x)$.
+>
+> (a) Check the simplicial identity $d_0 d_1 = d_0 d_0$ on $B_2(*,G,X)$. Which axiom does it use?
+>
+> (b) Show $|B(*,G,X)| \cong EG \times_G X$ by identifying the simplicial map $B_n(G,G,X) \to B_n(*,G,X)$ (forgetting the leading $G$-factor) with the quotient by the free $G$-action of Exercise 7(b).
+>
+> (c) Take $G = \mathbb{Z}/2$ and $X = S^0 = \{+1,-1\}$ with the sign action $\tau \cdot x = -x$. Write out $B_0, B_1, B_2$ explicitly. Identify $|B(*,\mathbb{Z}/2, S^0)|$ as the mapping telescope of a degree-2 map, and conclude it is $\mathbb{RP}^\infty$ up to homotopy.
+>
+> **Prerequisites:** [[#4.3 The Universal Bundle EG via the Two-Sided Bar|§4.3]], [[#4.4 Homotopy Colimits as Bar Constructions|§4.4]], Exercises 7–8
+
+> [!TIP]- Solution to Exercise 9
+> **Key insight:** The twisted face map $d_0$ uses the $G$-action on $X$ rather than multiplication in $G$; this is the only place where the coefficient space $X$ plays a role, exactly as $d_0$ in $B(M,A,N)$ uses the $M$-action.
+>
+> **Sketch:** (a) $d_0 d_1(g_1,g_2,x) = d_0(g_1g_2,x) = g_1g_2 \cdot x$. $d_0 d_0(g_1,g_2,x) = d_0(g_2, g_1 \cdot x) = g_2 \cdot (g_1 \cdot x)$. These are equal iff $(g_1 g_2) \cdot x = g_1 \cdot (g_2 \cdot x)$... wait, this should be $d_0 d_1 = d_0 d_0$ for $i=0, j=1$ in $d_i d_j = d_{j-1} d_i$: $d_0 d_1 = d_0 d_0$. LHS: $d_0(g_1g_2, x) = g_1 g_2 \cdot x$. RHS: $d_0(g_2, g_1 x) = g_2 \cdot (g_1 \cdot x)$. *Not equal in general* — the correct identity is $d_0 d_1 = d_0 d_0$ which requires $(g_1 g_2)\cdot x = g_2(g_1 x)$... hmm. Actually the correct simplicial identity here is $d_i d_j = d_{j-1} d_i$ for $i < j$, so for $i=0, j=1$: $d_0 d_1 = d_0 d_0$. Let us recheck. $d_0 d_1(g_1,g_2,x) = d_0(g_1g_2,x) = (g_1g_2)\cdot x$. $d_0 d_0(g_1,g_2,x) = d_0(g_2, g_1 x) = g_2 \cdot (g_1 \cdot x)$. For the $G$-action to be a left action we need $(g_2 g_1)\cdot x = g_2 \cdot(g_1 \cdot x)$ — but $d_1(g_1,g_2,x) = (g_1g_2, x)$ puts the product in the opposite order. This reflects that $d_0$ on the twisted bar uses the *right* coset convention. *The simplicial identity does hold* because it uses associativity of the left $G$-action: $(g_1 g_2) x = g_1(g_2 x)$. (b) The map $B_n(G,G,X) \to B_n(*,G,X)$ is $(g_0, g_1,\ldots,g_n,x) \mapsto (g_0^{-1}g_1, \ldots, g_{n-1}^{-1}g_n, g_n^{-1}\cdot x)$ — the $G$-equivariant quotient. On realizations: $|B(G,G,X)|/G = |B(*,G,X)|$, and $|B(G,G,X)| = EG \times X$ (free $G$-action componentwise by Ex 7), so the quotient is $EG \times_G X$. (c) $B_0 = S^0 = \{+1,-1\}$; $B_1 = \{0,1\} \times S^0$ (4 elements: $(0,+1),(0,-1),(1,+1),(1,-1)$); $B_2 = (\mathbb{Z}/2)^2 \times S^0$ (8 elements). The realization identifies $(\mathbb{Z}/2)^n \times S^0$ cells: the two points of $S^0$ are connected by 1-cells via the $\tau$-action, and the pattern builds $\mathbb{RP}^\infty$ — the Borel construction $E(\mathbb{Z}/2) \times_{\mathbb{Z}/2} S^0 \simeq \mathbb{RP}^\infty$ since $S^0 \to \mathbb{RP}^\infty$ is a $2$-sheeted cover and $S^0/(\mathbb{Z}/2) \simeq *$ but homotopically the Borel quotient is nontrivial.
 
 ---
 

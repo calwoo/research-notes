@@ -37,6 +37,12 @@
 
 ## 1. Problem Definition
 
+📐 KV cache quantization is, at its core, a *vector quantization problem*: during autoregressive decoding, key embeddings $k_1, k_2, \ldots \in \mathbb{R}^d$ arrive one at a time and must be compressed to $b$ bits/coordinate immediately, before the next token is generated. The downstream task — computing attention scores $\langle q_n, k_i\rangle$ — places two distinct demands on the quantizer that turn out to be in tension with each other.
+
+Prior methods handle this unevenly. Classical quantizers (KIVI, KVQuant) group coordinates into blocks and store a zero-point and scale per block, introducing $\approx 1$–$2$ extra bits of metadata overhead per value — a large fraction of the budget at 3 bits. [[papers/kv-cache-quantization/qjl|QJL]] eliminates metadata by replacing the quantizer with a random sign sketch, achieving an *unbiased* inner product estimator with no stored calibration constants, but at a fixed effective bit-width (≈3 bits/coordinate). **Neither approach provides a principled framework for achieving near-optimal distortion at arbitrary $b$.**
+
+TurboQuant's goal: for any bit-width $b$, design a data-oblivious quantizer whose distortion is within a small constant factor of the *information-theoretic optimum* — the tightest possible rate–distortion trade-off, proved in Section 2.
+
 🔑 **Problem setup.** A *$b$-bit vector quantizer* is a pair $(Q, Q^{-1})$ where $Q : \mathbb{R}^d \to \{0,1\}^{bd}$ compresses $x$ into $bd$ bits and $Q^{-1}: \{0,1\}^{bd} \to \mathbb{R}^d$ reconstructs an approximation. Two distortion objectives:
 
 $$D_{\text{mse}}(Q) := \mathbb{E}_Q\!\left[\|x - Q^{-1}(Q(x))\|_2^2\right] \quad \text{(MSE distortion)}$$
@@ -46,9 +52,9 @@ $$D_{\text{prod}}(Q) := \mathbb{E}_Q\!\left[(\langle y, x\rangle - \langle y, Q^
 For the inner product objective, we additionally require *unbiasedness*: $\mathbb{E}_Q[\langle y, Q^{-1}(Q(x))\rangle] = \langle y, x\rangle$ for all $y$.
 
 > [!NOTE] Why two separate objectives?
-> MSE measures average reconstruction error in $\ell_2$ norm. Inner product distortion directly measures how well attention scores (which are inner products) are preserved. *MSE-optimal quantizers are not unbiased for inner products* — TurboQuant addresses both with different algorithms ($Q_{\text{mse}}$ and $Q_{\text{prod}}$).
+> MSE measures average reconstruction error in $\ell_2$ norm. Inner product distortion directly measures how well attention scores (which are inner products) are preserved. *MSE-optimal quantizers are not unbiased for inner products* — Section 4.1 shows the bias is exactly $2/\pi$ at $b=1$ — so TurboQuant addresses both with separate algorithms ($Q_{\text{mse}}$ and $Q_{\text{prod}}$).
 
-The goal is *online* (data-oblivious, no offline training) quantizers achieving near-optimal distortion rate, expressed as a function of bit-width $b$.
+The *online* (data-oblivious) requirement is essential to the KV cache setting: keys are generated token-by-token at inference time, so there is no corpus to run k-means on, no offline calibration pass, and no per-input statistics to collect. The quantizer must be fixed before any input is seen and must achieve near-optimal distortion for *any* input — including adversarially chosen ones. This is the key gap relative to classical learned vector quantization, which requires offline training data.
 
 ---
 

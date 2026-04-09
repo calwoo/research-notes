@@ -44,7 +44,8 @@
   - [[#9.1 Change of Universe|9.1 Change of Universe]]
   - [[#9.2 Change of Group: Restriction|9.2 Change of Group: Restriction]]
   - [[#9.3 Induction and Coinduction|9.3 Induction and Coinduction]]
-  - [[#9.4 Preview: Fixed-Point Functors|9.4 Preview: Fixed-Point Functors]]
+  - [[#9.4 The Multiplicative Norm|9.4 The Multiplicative Norm]]
+  - [[#9.5 Preview: Fixed-Point Functors|9.5 Preview: Fixed-Point Functors]]
 - [[#References|References]]
 
 ---
@@ -59,7 +60,7 @@ The problem is that this is too coarse. There are several structural theorems in
 
 1. **RO(G)-graded homotopy groups.** For a genuine G-spectrum $E$, one wants to define $\pi_V^H(E) = [S^V, E]^H$ for any real representation $V$ of $G$ and subgroup $H \leq G$. This requires that $S^V \wedge -$ is invertible in the homotopy category.
 
-2. **The Wirthmuller isomorphism.** For a subgroup inclusion $i: H \hookrightarrow G$, the functors $i_! = G_+ \wedge_H - $ (left adjoint to restriction) and $i_* = F_H(G_+, -)$ (right adjoint) are *not* equivalent in the naive setting. In the genuine setting, the Wirthmuller isomorphism gives $i_! E \simeq i_* E \otimes S^{L_{G/H}}$ where $L_{G/H}$ is the tangent representation of $G/H$. This fails naively.
+2. **The Wirthmuller isomorphism.** For a subgroup inclusion $i: H \hookrightarrow G$, the functors $i_!(E) = G_+ \wedge_H E$ (left adjoint to restriction) and $i_* = F_H(G_+, -)$ (right adjoint) are *not* equivalent in the naive setting. Here $G_+$ carries a $(G,H)$-bispace structure: left $G$-action by left multiplication and right $H$-action by right multiplication; the balanced smash product $G_+ \wedge_H E$ quotients by $(gh, e) \sim (g, he)$ for $h \in H$. In the genuine setting, the Wirthmuller isomorphism gives $i_! E \simeq i_* E \wedge S^L$ where $L = L_{G/H}$ is the tangent representation of $G/H$. This fails naively.
 
 3. **The Adams isomorphism.** For a free $H$-spectrum $X$, the Adams isomorphism $(G_+ \wedge_H X)^G \simeq X^H$ is a theorem about genuine spectra; it has no naive analogue.
 
@@ -189,6 +190,13 @@ is a homeomorphism of based $G$-spaces.
 
 The category $G\mathcal{S}(\mathcal{U})$ of $G$-spectra is the full subcategory of $G\mathcal{P}(\mathcal{U})$ on the $\Omega$-$G$-spectra.
 
+> [!NOTE] The universe is part of the 1-category, not just the homotopy theory
+> The notation $G\mathcal{S}(\mathcal{U})$ is not decorative: the underlying 1-category genuinely depends on $\mathcal{U}$, because the *objects themselves* are functors out of the poset $\mathcal{V}(\mathcal{U})$. Two different choices of universe give two different functor categories:
+> $$G\mathcal{S}(\mathcal{U}_{\mathrm{triv}}) \neq G\mathcal{S}(\mathcal{U}_{\mathrm{complete}})$$
+> as 1-categories (different source posets, different objects, different morphisms). This is in contrast to the orthogonal spectra model (§5), where naive and genuine are two model structures on a single fixed 1-category $\mathrm{Sp}^G_O$.
+>
+> Concretely: a spectrum $E \in G\mathcal{S}(\mathcal{U}_{\mathrm{triv}})$ has levels $E_{\mathbb{R}^n}$ indexed only by copies of $\mathbb{R}^n$ with trivial $G$-action. No level $E_V$ for a non-trivial representation $V$ exists — such a level is not part of the data. A spectrum $E' \in G\mathcal{S}(\mathcal{U}_{\mathrm{complete}})$ has levels $E'_V$ for every $V \in \mathcal{V}(\mathcal{U}_{\mathrm{complete}})$, including all representations. These are structurally incomparable objects.
+
 > [!NOTE] The Omega condition is on all representation-indexed levels
 > Critically, the homeomorphism condition is required for *all* finite-dimensional sub-representations $V \subset W \subset \mathcal{U}$, not just for $V = \mathbb{R}^n \subset \mathbb{R}^{n+1}$. This means $E_V$ determines all of $E$ via iterating $\Omega^W$. In the complete universe, this is a much stronger condition than the classical $E_n \simeq \Omega E_{n+1}$, because it includes suspension by non-trivial representation spheres.
 
@@ -300,8 +308,19 @@ On the category $\mathrm{Sp}^G_O$ of orthogonal $G$-spectra, there is a Quillen 
 
 The homotopy category of the naive model structure is denoted $\mathrm{Ho}^G_{\mathrm{naive}}(\mathrm{Sp}^G_O)$.
 
-> [!NOTE] Naive spectra vs. spectra with G-action
-> Naive $G$-spectra are equivalent, as homotopy theories, to *orthogonal spectra equipped with a $G$-action* — i.e., to $\mathrm{Fun}(BG, \mathrm{Sp})$ in the $\infty$-categorical sense. This is a genuine simplification: the $G$-action lives only on the values, not on the indexing data.
+> [!NOTE] Naive G-spectra = Borel G-spectra = Fun(BG, Sp)
+> The naive model structure on $\mathrm{Sp}^G_O$ presents the $\infty$-category $\mathrm{Fun}(BG, \mathrm{Sp})$ — the same homotopy theory as "Borel G-spectra." The proof has two steps.
+>
+> **Step 1 (Naive = Fun(BG, Sp)).** By Proposition A.19 (HHR), $\mathrm{Sp}^G_O \cong \mathrm{Fun}(BG, \mathrm{Sp}_O)$ as 1-categories, and the naive weak equivalences are exactly the objectwise weak equivalences. A general theorem (Lurie, HTT §A.3.3) states that the projective model structure on $\mathrm{Fun}(\mathcal{I}, \mathcal{M})$ presents $\mathrm{Fun}(\mathcal{I}, L(\mathcal{M}))$ as an $\infty$-category. Taking $\mathcal{I} = BG$ and $\mathcal{M} = \mathrm{Sp}_O$: the naive homotopy theory is $\mathrm{Fun}(BG, \mathrm{Sp})$.
+>
+> **Step 2 (Borel-complete genuine = Fun(BG, Sp)).** The naive spectra (image of $\iota_*$ in genuine) and the Borel-complete genuine spectra $\mathcal{B} = \{X \in \mathrm{Sp}^G_{\mathrm{gen}} : X^H \simeq X^{hH}\ \forall H\}$ are *different* full subcategories of the genuine theory. The equivalence between them is not trivial. Concretely, $\iota_* \mathbb{S}$ (naive sphere with trivial $G$-action, left Kan extended to genuine) is NOT Borel-complete: $(\iota_* \mathbb{S})^{C_2} = \mathbb{S}$ (categorical fixed points, trivial action), but $(\iota_* \mathbb{S})^{hC_2} = \mathbb{S}^{hC_2} \neq \mathbb{S}$ (the homotopy fixed-point spectral sequence $H^p(C_2; \pi_q^s) \Rightarrow \pi_{q-p}(\mathbb{S}^{hC_2})$ has non-trivial group cohomology contributions).
+>
+> The correct equivalence goes through the *Borel completion functor*:
+> $$\Phi: \mathrm{Fun}(BG, \mathrm{Sp}) \to \mathcal{B},\quad Y \mapsto F(EG_+, \iota_* Y)$$
+> $$\Psi: \mathcal{B} \to \mathrm{Fun}(BG, \mathrm{Sp}),\quad X \mapsto \iota^* X$$
+> These are inverse equivalences. $\Psi \circ \Phi(Y) \simeq Y$: since $EG \simeq *$ non-equivariantly, $F(EG_+, \iota_* Y)^e \simeq Y$, so restricting to the trivial subgroup recovers $Y$. $F(EG_+, \iota_* Y)$ is Borel-complete: $(F(EG_+, \iota_* Y))^H = (\iota_* Y)^{hH}$ and $(F(EG_+, \iota_* Y))^{hH} = F(EH_+ \wedge EG_+, \iota_* Y)^H = F(EH_+, \iota_* Y)^H = (\iota_* Y)^{hH}$, where the middle step uses $EH_+ \wedge EG_+ \simeq EH_+$ as $H$-spaces (since $EG|_H = EH$). The key lemma underlying $(\iota_* Y)^{hH}$ being well-behaved is proved in Schwede, *Lectures on Equivariant Stable Homotopy Theory*, §7.
+>
+> "Naive" emphasizes the coarser weak equivalences; "Borel" emphasizes that the cohomology theories represented are Borel equivariant theories $E^*(EG \times_G X)$. They are not distinct homotopy theories, but the equivalence between their two appearances inside the genuine category requires the Borel completion $F(EG_+, -)$, not the naive embedding $\iota_*$.
 
 ### 5.2 The Genuine Model Structure
 
@@ -338,8 +357,16 @@ $$\underline{\pi}_0^{\mathrm{genuine}}(\mathbb{S}) = \underline{A}(G), \quad \un
 
 where $\underline{A}(G)$ is the *Burnside ring Mackey functor* (with $\underline{A}(G)(G/H) = A(H)$, the Burnside ring of $H$, including transfer maps) and $\underline{\mathbb{Z}}$ is the constant Mackey functor. Since $A(H) \neq \mathbb{Z}$ for $H \neq \{e\}$ (the Burnside ring has additional generators from non-trivial $H$-sets), these two objects are not isomorphic as Mackey functors. Therefore $\mathbb{S}^{\mathrm{genuine}} \not\simeq \mathbb{S}^{\mathrm{naive}}$ in any putative equivalence. $\square$
 
-> [!DANGER] These are not just different presentations of the same category
-> The naive and genuine stable categories are categorically distinct — they have different objects, different morphisms, and represent different cohomology theories. A naive $G$-spectrum represents a cohomology theory with naive suspension isomorphisms; a genuine $G$-spectrum represents a cohomology theory with RO(G)-graded suspension isomorphisms. See [[concepts/equivariant-stable-homotopy/ro-g-graded-cohomology|RO(G)-Graded Cohomology]] *(no note yet)* for the latter.
+> [!DANGER] How "naive vs. genuine" manifests depends on the model
+> The naive/genuine distinction looks different in each model for G-spectra, and confusing them is a source of errors:
+>
+> **Orthogonal spectra** (the model used in this section): naive and genuine are two *model structures* on the **same** 1-category $\mathrm{Sp}^G_O$. Same objects, same morphisms — only the weak equivalences differ (non-equivariant $\pi_*$ vs. all fixed-point $\pi_*^H$). Lewis's theorem is then a statement purely about homotopy theory: the resulting homotopy categories are non-equivalent.
+>
+> **LMS universe-indexed spectra** (§3): the underlying 1-category *itself* changes with the universe. A naive G-spectrum lives in $G\mathcal{S}(\mathcal{U}_{\mathrm{triv}})$ — a functor out of the poset of subspaces of $\mathbb{R}^\infty$ (trivial $G$-action). A genuine G-spectrum lives in $G\mathcal{S}(\mathcal{U}_{\mathrm{complete}})$ — a functor out of the poset of all finite-dimensional $G$-representations. These have different source posets and hence different objects and morphisms at the point-set level. There is no "same underlying category" to speak of.
+>
+> **$\infty$-categorical formulation:** naive $G$-spectra are $\mathrm{Fun}(BG, \mathrm{Sp}) \simeq \mathrm{Mod}_{\Sigma^\infty_+ G}(\mathrm{Sp})$; genuine $G$-spectra are spectral Mackey functors $\mathrm{Fun}^\times(\mathrm{Span}(\mathcal{F}_G), \mathrm{Sp}) \simeq \mathrm{Mod}_{\mathbb{S}[A(G)]}(\mathrm{Sp})$. Again genuinely different $\infty$-categories — the Burnside ring spectrum $\mathbb{S}[A(G)]$ is strictly larger than $\Sigma^\infty_+ G$.
+>
+> The Mandell–May equivalence $\mathrm{Sp}^G_O \simeq_Q G\mathcal{S}(\mathcal{U}_{\mathrm{complete}})$ shows the orthogonal and LMS complete-universe models present the **same genuine homotopy theory**, despite the point-set difference.
 
 ### 5.4 What the Genuine Theory Gains
 
@@ -352,45 +379,41 @@ where $\underline{A}(G)$ is the *Burnside ring Mackey functor* (with $\underline
 | Adams isomorphism | Fails | $(G_+ \wedge_H X)^G \simeq X^H$ |
 | RO(G)-graded Bredon cohomology | No | Yes: $H^V_G(X; \underline{M})$ |
 
-> [!NOTE] Three Flavors of Equivariant Homotopy Theory
+> [!NOTE] Two Flavors of Equivariant Stable Homotopy Theory
 >
-> There are three levels of equivariant structure, each with an unstable and a stable incarnation, connected by a chain of functors. Moving left-to-right loses equivariant information; moving top-to-bottom stabilizes.
+> There are **two** genuinely distinct stable equivariant homotopy theories — not three. "Naive" and "Borel" are two names for the same $\infty$-category.
 >
 > ```mermaid
 > flowchart LR
 >     subgraph Unstable
->         GTop["Genuine G-spaces<br/>weq: all X^H equiv"]
->         NTop["Naive G-spaces<br/>weq: underlying X equiv"]
->         BTop["Borel G-spaces<br/>Fun(BG, Top)"]
+>         GTop["Genuine G-spaces<br/>weq: all X^H equiv<br/>Elmendorf: PSh(O_G)"]
+>         NTop["Naive/Borel G-spaces<br/>weq: underlying X equiv<br/>Fun(BG, Top)"]
 >     end
 >     subgraph Stable
->         GSp["Genuine G-spectra<br/>pi_* are Mackey functors<br/>Sp^G indexed on U_complete"]
->         NSp["Naive G-spectra<br/>Fun(BG, Sp)<br/>Sp^G indexed on R^inf"]
->         BSp["Borel G-spectra<br/>EG+ wedge E = E<br/>cohomology of X_hG"]
+>         GSp["Genuine G-spectra<br/>spectral Mackey functors<br/>pi_* = Mackey functors"]
+>         NSp["Naive = Borel G-spectra<br/>Fun(BG, Sp)<br/>pi_* = plain groups with G-action"]
 >     end
->     GTop -->|"iota*<br/>forget fixed-pt weq"| NTop
->     NTop -->|"EG x_G -<br/>Borel construction"| BTop
+>     GTop -->|"forget fixed-pt weq"| NTop
 >     GTop -->|"Sigma^inf_+"| GSp
 >     NTop -->|"Sigma^inf_+"| NSp
->     BTop -->|"Sigma^inf_+"| BSp
->     GSp -->|"iota*<br/>trivial universe"| NSp
->     NSp -->|"EG+ wedge -<br/>Borelify"| BSp
+>     GSp -->|"iota* (trivial universe)"| NSp
 > ```
 >
 > **Key distinctions:**
 >
-> | | Genuine | Naive | Borel |
-> |--|---------|-------|-------|
-> | Unstable weq | All $X^H \xrightarrow{\sim} Y^H$ | $X \xrightarrow{\sim} Y$ underlying | $EG \times_G X \xrightarrow{\sim} EG \times_G Y$ |
-> | Stable $\pi_*$ | Mackey functors $\underline{\pi}_n$ | Plain groups $\pi_n^e$ with $G$-action | Plain groups; $\pi_n^H \cong \pi_n^{hH}$ always |
-> | Fixed pts | $X^H \neq X^{hH}$ in general | $(-)^H$ not homotopically meaningful | $X^H \simeq X^{hH}$ by definition |
-> | Cohomology theory | $E^*_G(X)$ — RO(G)-graded | $E^*_G(X)$ — integer-graded only | $E^*(EG \times_G X)$ — Borel cohomology |
-> | Sphere spectrum $\pi_0$ | $\underline{A}(G)$ (Burnside ring MF) | $\underline{\mathbb{Z}}$ (constant MF) | $\mathbb{Z}$ |
-> | Elmendorf description | Presheaves on $\mathcal{O}_G$ | Presheaves on $\{G/G\} \simeq BG$ | Presheaves on $BG$ (same) |
+> | | Genuine | Naive = Borel |
+> |--|---------|--------------|
+> | $\infty$-category | Spectral Mackey functors $\mathrm{Fun}^\times(\mathrm{Span}(\mathcal{F}_G), \mathrm{Sp})$ | $\mathrm{Fun}(BG, \mathrm{Sp})$ |
+> | Stable $\pi_*$ | Mackey functors $\underline{\pi}_n$ with transfers | Plain groups $\pi_n^e$ with $G$-action, no transfers |
+> | Fixed points | $X^H \neq X^{hH}$ in general | Derived fixed pts = $X^{hH}$ (limits in $\mathrm{Fun}(BG, \mathrm{Sp})$ are homotopy limits); categorical $X^H$ is not homotopy-invariant in the naive model structure |
+> | Cohomology theory | $E^*_G(X)$ — RO(G)-graded | $E^*(EG \times_G X)$ — Borel cohomology |
+> | Sphere spectrum $\pi_0$ | $\underline{A}(G)$ (Burnside ring Mackey functor) | $\mathbb{Z}$ |
 >
-> **Inclusions and adjoints (stable).** There is a chain of adjunctions
-> $$\mathrm{Sp}^G_{\mathrm{Borel}} \underset{i_*}{\overset{i^*}{\rightleftharpoons}} \mathrm{Sp}^G_{\mathrm{naive}} \underset{\iota_*}{\overset{\iota^*}{\rightleftharpoons}} \mathrm{Sp}^G_{\mathrm{gen}}$$
-> where $i^*$ and $\iota^*$ are the forgetful functors (right adjoints), and $i_*$, $\iota_*$ are their left adjoints (induction / change-of-universe). The Borel-complete objects $\{E : EG_+ \wedge E \xrightarrow{\sim} E\}$ form a full subcategory of genuine $G$-spectra closed under the smash product. *Importantly*, the functors $i^*$ and $\iota^*$ are not equivalences of homotopy categories (Lewis's theorem), so these three theories are genuinely distinct.
+> **Why naive = Borel.** Both are $\mathrm{Fun}(BG, \mathrm{Sp})$, but the equivalence is not trivial — the two theories appear as *different* full subcategories of the genuine theory. Step 1: the naive model structure presents $\mathrm{Fun}(BG, \mathrm{Sp})$ by Prop A.19 (HHR) + the general fact that the projective model structure on $\mathrm{Fun}(\mathcal{I}, \mathcal{M})$ presents $\mathrm{Fun}(\mathcal{I}, L(\mathcal{M}))$. Step 2: the Borel-complete subcategory $\mathcal{B}$ is equivalent to $\mathrm{Fun}(BG, \mathrm{Sp})$ via $Y \mapsto F(EG_+, \iota_* Y)$ (Borel completion of the left Kan extension) and $X \mapsto \iota^* X$ (restrict to trivial universe). Crucially, the naive embedding $\iota_*$ alone does NOT land in $\mathcal{B}$: for example, $(\iota_* \mathbb{S})^{C_2} = \mathbb{S}$ (categorical fixed points, trivial action) while $(\iota_* \mathbb{S})^{hC_2} = \mathbb{S}^{hC_2} \neq \mathbb{S}$, so $\iota_* \mathbb{S}$ fails Borel-completeness. See the NOTE in §5.1 for the full argument.
+>
+> **Adjunction.** There is an adjunction
+> $$\mathrm{Sp}^G_{\mathrm{naive/Borel}} \underset{\iota_*}{\overset{\iota^*}{\rightleftharpoons}} \mathrm{Sp}^G_{\mathrm{gen}}$$
+> where $\iota^*$ is the right adjoint (restrict to trivial universe / forget genuine structure) and $\iota_*$ is its left adjoint (left Kan extension to complete universe). Lewis's theorem says this is **not** a Quillen equivalence when $G \neq \{e\}$: the two theories are genuinely distinct.
 
 ### 5.5 G-CW-Spectra 📐
 
@@ -752,7 +775,70 @@ flowchart LR
     style B fill:#d5f5e3
 ```
 
-### 9.4 Preview: Fixed-Point Functors
+### 9.4 The Multiplicative Norm
+
+The induction functor $G_+ \wedge_H -$ of §9.3 is additive: it sends wedges to wedges. The equivariant stable category supports a second, *multiplicative* induction $N_H^G: \mathrm{Sp}^H \to \mathrm{Sp}^G$, called the *norm*, which sends smash products to smash products and is the left adjoint to restriction on commutative ring spectra. Its construction is one of the key innovations of [Hill–Hopkins–Ravenel](https://arxiv.org/abs/0908.3724).
+
+**The categorical foundation: $\mathrm{Sp}^G_O \cong S^{BG}$**
+
+The norm is made possible by a fundamental equivalence of categories. Define the *indexing category* $J$ (for orthogonal spectra) as the category of finite-dimensional real inner product spaces with linear isometric embeddings, and $J^G$ as the full subcategory on finite-dimensional real $G$-representations. Let $i: J \hookrightarrow J^G$ be the inclusion of trivially-indexed spaces.
+
+**Proposition A.12 (HHR, §A.2.3).** *The forgetful functor gives an equivalence of topological G-categories: $J^G \simeq$ (objects of $J$ with $G$-action).*
+
+The proof turns on Lemma A.20 (Mandell–May, Lemma V.1.5): for any two $G$-representations $V, W$ of the same dimension,
+
+$$O(V, U) \times_{O(V)} O(W, V) \cong O(W, U)$$
+
+as a coequalizer in $T^G$. Since any $G$-representation $W$ of dimension $n$ is non-equivariantly isomorphic to $\mathbb{R}^n$, the coequalizer shows that the representation sphere $S^{-W}$ is isomorphic to the left Kan extension $i_!(S^{-\mathbb{R}^n})$. Everything in $S^G$ is therefore determined by the trivially-indexed levels.
+
+**Proposition A.19 (HHR, §A.2.6).** *The restriction and left Kan extension functors*
+
+$$i^*: \mathrm{Cat}^G(J^G, T^G) \rightleftharpoons \mathrm{Cat}^G(J, T^G) :i_!$$
+
+*are inverse equivalences of symmetric monoidal categories. In other words, $\mathrm{Sp}^G_O$ is equivalent to the category $S^{BG}$ of orthogonal spectra equipped with a $G$-action.*
+
+HHR flag the key consequence immediately after (§2.2.3, p. 14–15):
+
+> *"The fact that the category $S^G$ is equivalent to the category of objects in $S$ equipped with a G-action has an important and useful consequence. It means that if a construction involving spectra happens to produce something with a G-action, it defines a functor with values in G-spectra."*
+
+> [!INFO] Why this is surprising
+> At first glance, $J^G$ contains all $G$-representations, which is far richer than $J$. Prop A.19 says this richness is *illusory* at the categorical level: representing spheres $S^{-V}$ for non-trivial $V$ are all isomorphic (as objects of $\mathrm{Sp}^G_O$) to left Kan extensions of the trivially-indexed ones, and hence the category is no larger. The non-trivial representations enter only when you impose the *genuine* model structure (different weak equivalences), not when you build the underlying category.
+
+**The norm functor (HHR, Definition A.52, §A.4)**
+
+Using Prop A.19 to identify $\mathrm{Sp}^H = S^{BH}$ and $\mathrm{Sp}^G = S^{BG}$, HHR define the norm as follows. Write $B_{G/H}G$ for the topological G-category with one object and automorphism group G acting on itself, "over" the G-set $G/H$. The inclusion of the identity coset gives an equivalence $BH \simeq B_{G/H}G$.
+
+**Definition A.52 (HHR).** The *norm functor* $N_H^G: \mathrm{Sp}^H \to \mathrm{Sp}^G$ is the composite
+
+$$\mathrm{Sp}^H = S^{BH} \xrightarrow{\;i_!\;} S^{B_{G/H}G} \xrightarrow{\;p^\wedge_*\;} S^{BG} = \mathrm{Sp}^G,$$
+
+where $i_!$ is left Kan extension and $p^\wedge_*$ is the *indexed smash product* over the G-set $G/H$.
+
+Concretely, for $X \in \mathrm{Sp}^H$ and a choice of coset representatives $\{g_1, \ldots, g_n\}$ for $G/H$:
+
+$$N_H^G(X) = \bigwedge_{gH \in G/H} g \cdot X$$
+
+where G acts on this smash product by permuting the factors (via the left action of G on $G/H$) and each factor $g \cdot X$ carries the conjugate H-action. *No representation sphere appears anywhere in this definition.* The norm is purely an indexed smash product construction, analogous to the Evens norm in group cohomology.
+
+> [!NOTE] The norm as a multiplicative induction
+> Compare with additive induction $G_+ \wedge_H X$, which replaces the smash product $\wedge$ by the indexed wedge $\bigvee_{gH \in G/H} g \cdot X$. Both are left adjoints: $G_+ \wedge_H -$ is left adjoint to restriction on all spectra; $N_H^G$ is left adjoint to restriction on *commutative* ring spectra (i.e., $E_\infty$ algebras in $\mathrm{Sp}^G_O$). The norm distributes over wedges: $N_H^G(X \vee Y) \simeq \bigvee_{S \subseteq G/H} N_H^{N_GS}(X) \wedge N_H^{N_GS^c}(Y)$.
+
+**Key property: geometric fixed points (HHR, Proposition 2.55)**
+
+The utility of the norm in the Kervaire invariant proof comes from its interaction with geometric fixed points $\Phi^H$ (§9.5):
+
+**Proposition 2.55 (HHR).** *For $H \leq G$ and $X \in \mathrm{Sp}^H$,*
+
+$$\Phi^H(N_H^G X) \simeq (\Phi^H X)^{\wedge [G:H]}.$$
+
+*In particular, if $X$ is an $H$-equivariant ring spectrum, $\Phi^H(N_H^G X)$ is the $[G:H]$-fold smash power of the underlying ring spectrum.*
+
+This is the genuine equivariant content: the norm is defined without representation spheres, but Prop 2.55 shows it sees the correct RO(G)-graded information at fixed points. The proof uses that the norm preserves cofibrant objects (Prop B.89) and the formula for geometric fixed points of an indexed smash product.
+
+> [!EXAMPLE] The norm in the Kervaire argument
+> HHR construct the spectrum $M\!UR$ as a $C_2$-equivariant commutative ring, then form $M\!U^{((G))} = N_{C_2}^G(M\!UR)$ for $G = C_{2^n}$. By Prop 2.55, $\Phi^{C_2}(M\!U^{((G))})$ is a smash power of $M\!UR^{C_2} \simeq M\!O$. The slice differentials and the gap theorem then show certain elements in $\pi_*(M\!U^{((G))})$ are permanently nontrivial, ruling out Kervaire invariant one elements in high dimensions.
+
+### 9.5 Preview: Fixed-Point Functors
 
 The change-of-group functors interact with three distinct *fixed-point constructions*, which will be treated in full in [[concepts/equivariant-stable-homotopy/fixed-point-spectra|Fixed-Point Spectra]] *(no note yet)*:
 
