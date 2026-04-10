@@ -12,6 +12,7 @@ This file is the index for the `concepts/information-theory/` folder. It lists p
 | `aep-and-typicality.md` | 🔲 Planned | Asymptotic equipartition property, typical sets, lossless source coding |
 | `channel-capacity.md` | 🔲 Planned | Channel capacity, Fano's inequality, Shannon's noisy channel coding theorem |
 | `rate-distortion.md` | ✅ Written | Rate-distortion function, Blahut–Arimoto algorithm, connection to learned quantization |
+| `quantization.md` | ✅ Written | Scalar/vector quantization, Panter–Dite, product quantization, random rotation, JL lemma, TurboQuant |
 | `maximum-entropy.md` | 🔲 Planned | Jaynes' maximum-entropy principle, exponential families, statistical mechanics bridge |
 | `information-geometry.md` | 🔲 Planned | Fisher–Rao metric, dual affine connections, α-connections, e/m-projections |
 | `information-cohomology.md` | 🔲 Planned | Baudot–Bennequin construction, information structures as ringed sites, higher-order mutual information |
