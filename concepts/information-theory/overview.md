@@ -11,7 +11,7 @@ This file is the index for the `concepts/information-theory/` folder. It lists p
 | `entropy-and-divergences.md` | 🔲 Planned | Entropy, KL divergence, f-divergences, mutual information, and core inequalities |
 | `aep-and-typicality.md` | 🔲 Planned | Asymptotic equipartition property, typical sets, lossless source coding |
 | `channel-capacity.md` | 🔲 Planned | Channel capacity, Fano's inequality, Shannon's noisy channel coding theorem |
-| `rate-distortion.md` | 🔲 Planned | Rate-distortion function, Blahut–Arimoto algorithm, connection to learned quantization |
+| `rate-distortion.md` | ✅ Written | Rate-distortion function, Blahut–Arimoto algorithm, connection to learned quantization |
 | `maximum-entropy.md` | 🔲 Planned | Jaynes' maximum-entropy principle, exponential families, statistical mechanics bridge |
 | `information-geometry.md` | 🔲 Planned | Fisher–Rao metric, dual affine connections, α-connections, e/m-projections |
 | `information-cohomology.md` | 🔲 Planned | Baudot–Bennequin construction, information structures as ringed sites, higher-order mutual information |
