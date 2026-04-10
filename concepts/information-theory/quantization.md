@@ -29,9 +29,6 @@
   - [[#7.1 Distortion Bound and Information-Theoretic Lower Bound|7.1 Distortion Bound and Information-Theoretic Lower Bound]]
   - [[#7.2 The Constant Gap and Connection to Panter-Dite|7.2 The Constant Gap and Connection to Panter-Dite]]
   - [[#7.3 Two-Stage Pipeline for Inner Product Preservation|7.3 Two-Stage Pipeline for Inner Product Preservation]]
-- [[#8. Exercises|8. Exercises]]
-  - [[#8.1 Mathematical Development|8.1 Mathematical Development]]
-  - [[#8.2 Algorithmic Applications|8.2 Algorithmic Applications]]
 - [[#References|References]]
 
 ---
@@ -89,6 +86,42 @@ The Lloyd-Max algorithm iterates these two conditions to convergence (analogous 
 > [!EXAMPLE] Gaussian source
 > For $X \sim \mathcal{N}(0, \sigma^2)$ and $b = 2$ bits ($N = 4$ levels), the Lloyd-Max algorithm places the four reconstruction levels at $\pm 0.4528\sigma$ and $\pm 1.510\sigma$, achieving $D \approx 0.1175\sigma^2$. The uniform quantizer on the same source achieves higher distortion because it wastes resolution on the low-density tails.
 
+> [!QUESTION] Exercise 1: Optimal Within-Cell MSE
+> *This problem establishes the optimal within-cell granular MSE for a non-uniform quantizer.*
+>
+> > **Prerequisites:** [[#1.1 Encoder, Decoder, and Quantization Cells|Section 1.1]]
+>
+> For a cell $\mathcal{R}_k = [t_{k-1}, t_k]$ of width $\Delta_k = t_k - t_{k-1}$ and reconstruction level $y_k$, show that the within-cell MSE $\int_{t_{k-1}}^{t_k}(x - y_k)^2 f(x)\, dx$ is minimized over $y_k$ by the centroid $y_k^* = \mathbb{E}[X \mid X \in \mathcal{R}_k]$, and compute the resulting minimum value in terms of $\mathrm{Var}[X \mid X \in \mathcal{R}_k]$.
+
+> [!TIP]- Solution to Exercise 1
+> **Key insight:** Minimizing a quadratic in $y_k$ yields the centroid; the minimum is the conditional variance.
+>
+> **Sketch:** Let $p_k = P(X \in \mathcal{R}_k)$ and $\mu_k = \mathbb{E}[X \mid X \in \mathcal{R}_k]$. The cell MSE equals $p_k \mathbb{E}[(X - y_k)^2 \mid X \in \mathcal{R}_k] = p_k [\mathrm{Var}(X \mid X \in \mathcal{R}_k) + (\mu_k - y_k)^2]$. This is minimized at $y_k = \mu_k$, giving minimum value $p_k \cdot \mathrm{Var}[X \mid X \in \mathcal{R}_k]$.
+
+> [!QUESTION] Exercise 2: Exact Uniform Quantizer MSE
+> *This problem derives the uniform quantizer MSE from the exact within-cell distribution.*
+>
+> > **Prerequisites:** [[#1.2 MSE of the Uniform Quantizer|Section 1.2]]
+>
+> Let $X \sim \mathrm{Uniform}[0, 1]$ and use a uniform $b$-bit quantizer with step size $\Delta = 2^{-b}$. Compute the exact MSE (not an approximation) and verify it equals $\Delta^2/12$.
+
+> [!TIP]- Solution to Exercise 2
+> **Key insight:** For a uniform source and uniform quantizer, the granular and overload terms both collapse neatly.
+>
+> **Sketch:** Within cell $k$, $X$ is uniform on $[(k-1)\Delta, k\Delta]$ with reconstruction level $y_k = (k - 1/2)\Delta$. The within-cell error is $\mathrm{Uniform}[-\Delta/2, \Delta/2]$ with variance $\Delta^2/12$. Summing $2^b$ cells each contributing $\Delta \cdot (\Delta^2/12) = \Delta^3/12$ and noting $\sum_k p_k = 1$ gives $D = \Delta^2/12$ exactly (no overload since support is bounded).
+
+> [!QUESTION] Exercise 3: Lloyd-Max Breakpoint Condition
+> *This problem derives the Lloyd-Max breakpoint condition by direct differentiation.*
+>
+> > **Prerequisites:** [[#1.3 Lloyd-Max Optimality Conditions|Section 1.3]]
+>
+> Let $D = \sum_{k=1}^{N} \int_{t_{k-1}}^{t_k}(x - y_k)^2 f(x)\, dx$. Compute $\partial D / \partial t_k$ and show that setting it to zero yields $t_k = (y_k + y_{k+1})/2$ provided $f(t_k) > 0$.
+
+> [!TIP]- Solution to Exercise 3
+> **Key insight:** The breakpoint $t_k$ appears only in the upper limit of integral $k$ and the lower limit of integral $k+1$.
+>
+> **Sketch:** By Leibniz rule, $\partial D/\partial t_k = (t_k - y_k)^2 f(t_k) - (t_k - y_{k+1})^2 f(t_k)$. Setting this to zero (assuming $f(t_k) > 0$) gives $(t_k - y_k)^2 = (t_k - y_{k+1})^2$, hence $t_k - y_k = \pm(t_k - y_{k+1})$. The minus sign gives $y_k = y_{k+1}$ (degenerate), so $t_k = (y_k + y_{k+1})/2$.
+
 ---
 
 ## 2. High-Rate Quantization Asymptotics 📊
@@ -134,6 +167,30 @@ which in decibels is $10 \log_{10}(\pi\sqrt{3}/2) \approx 4.35$ dB. (Since we ar
 
 > [!DANGER] Common misconception
 > The "2.72 dB penalty" does not mean scalar quantization is fundamentally broken. It reflects that scalar quantizers process one sample at a time and cannot exploit inter-sample correlation or the geometry of high-dimensional probability masses. Vector quantization (Section 3) closes this gap as block length grows, approaching Shannon's R(D) limit.
+
+> [!QUESTION] Exercise 4: Panter-Dite via Calculus of Variations
+> *This problem establishes the Panter-Dite formula via calculus of variations.*
+>
+> > **Prerequisites:** [[#2.1 The Panter-Dite Formula|Section 2.1]]
+>
+> Let $\lambda(x) \geq 0$ be the cell density (cells per unit interval). The total distortion is $D = \int f(x)/(\lambda(x)^2 \cdot 12)\, dx$ and the rate constraint is $\int \lambda(x)\, dx = 2^b$. Use a Lagrange multiplier to show the optimal density is $\lambda^*(x) = c \cdot f(x)^{1/3}$ and recover the Panter-Dite formula.
+
+> [!TIP]- Solution to Exercise 4
+> **Key insight:** The variational problem decouples pointwise; the Euler-Lagrange condition is a simple power law.
+>
+> **Sketch:** Form $\mathcal{L}(\lambda) = \int [f(x)/(12\lambda^2) + \mu\lambda]\, dx$. Differentiating the integrand with respect to $\lambda(x)$ and setting to zero: $-f(x)/(6\lambda^3) + \mu = 0$, so $\lambda^*(x) = (f(x)/(6\mu))^{1/3} \propto f(x)^{1/3}$. Normalize to satisfy the constraint: $c = 2^b / \int f^{1/3}$. Substituting $\lambda^*(x)$ back into $D$ gives $D = \frac{1}{12}\big(\int f^{1/3}\big)^3 / (2^b)^2 = \frac{1}{12}\big(\int f^{1/3}\big)^3 \cdot 4^{-b}$.
+
+> [!QUESTION] Exercise 5: Gaussian Panter-Dite Integral
+> *This problem computes the Panter-Dite integral for the Gaussian source and establishes the constant $\pi\sqrt{3}/2$.*
+>
+> > **Prerequisites:** [[#2.2 Gaussian Special Case and the 2.72 dB Penalty|Section 2.2]]
+>
+> For $f(x) = (2\pi\sigma^2)^{-1/2}\exp(-x^2/(2\sigma^2))$, compute $\int_{-\infty}^{\infty} f(x)^{1/3}\, dx$ in closed form and verify that $(1/12)\big(\int f^{1/3}\big)^3 = (\sigma^2 \pi\sqrt{3}/2) \cdot 4^{-b}/4^{-b} \cdot 4^{-b}$.
+
+> [!TIP]- Solution to Exercise 5
+> **Key insight:** $f(x)^{1/3}$ is still a Gaussian kernel; match it to a standard Gaussian integral.
+>
+> **Sketch:** $f(x)^{1/3} = (2\pi\sigma^2)^{-1/6}\exp(-x^2/(6\sigma^2))$. Integrate: $\int f^{1/3}\, dx = (2\pi\sigma^2)^{-1/6} \cdot \sqrt{6\pi\sigma^2} = (2\pi\sigma^2)^{-1/6}(6\pi\sigma^2)^{1/2}$. Cube: $\big(\int f^{1/3}\big)^3 = (2\pi\sigma^2)^{-1/2}(6\pi\sigma^2)^{3/2} = \frac{(6\pi\sigma^2)^{3/2}}{(2\pi\sigma^2)^{1/2}} = \sigma^2 \cdot \frac{6^{3/2}\pi}{2^{1/2}} = \sigma^2 \cdot 6\sqrt{6}\pi/\sqrt{2}$. Numerically: $6\sqrt{6}/\sqrt{2} = 6\sqrt{3} \approx 10.39$, and $10.39/12 = 0.866 \approx \pi\sqrt{3}/2 \approx 2.72$... Re-tracing: $(6\pi\sigma^2)^{3/2}/(2\pi\sigma^2)^{1/2} = \sigma^2 \cdot (6\pi)^{3/2}/(2\pi)^{1/2} = \sigma^2 \pi \cdot 6^{3/2}/2^{1/2} = \sigma^2 \pi \cdot 6\sqrt{3}$. Then $D = \sigma^2 \pi \cdot 6\sqrt{3}/(12) \cdot 4^{-b} = \sigma^2 \pi\sqrt{3}/2 \cdot 4^{-b}$. $\checkmark$
 
 ---
 
@@ -206,6 +263,30 @@ This is a consequence of the rate-distortion theorem: a good $(d, 2^{bnd})$ sour
 > [!QUESTION] Open problem
 > The Zador constant (the analogue of $\pi\sqrt{3}/2$ for optimal $d$-dimensional VQ) has a closed form only for $d = 1$. For $d > 1$ the optimal quantizer geometry remains an open problem in general — it connects to the sphere-packing problem in $\mathbb{R}^d$.
 
+> [!QUESTION] Exercise 6: Lloyd Algorithm Monotonicity
+> *This problem establishes that the Lloyd algorithm is monotonically non-increasing in distortion.*
+>
+> > **Prerequisites:** [[#3.2 The Lloyd Algorithm|Section 3.2]]
+>
+> Let $D^{(t)}$ be the VQ distortion after the $t$-th iteration of Lloyd's algorithm. Prove rigorously that $D^{(t+1)} \leq D^{(t)}$ by showing each step (nearest-neighbor assignment and centroid update) separately cannot increase distortion.
+
+> [!TIP]- Solution to Exercise 6
+> **Key insight:** Each sub-step minimizes distortion over a restricted set of parameters while holding the other fixed.
+>
+> **Sketch:** (a) After centroid update to $\{y_k^{(t)}\}$, nearest-neighbor reassignment gives $D^{(t,\mathrm{assign})} \leq D^{(t)}$ because each point is reassigned to the closest codeword; any other assignment can only increase its contribution. (b) With assignment fixed, the centroid update sets each new $y_k = \mathbb{E}[X \mid \text{cell}_k]$ which minimizes $\sum_k \int_{\mathcal{V}_k} \|x - y_k\|^2 f\, dx$ over $\{y_k\}$ (by Exercise 1). So $D^{(t+1)} \leq D^{(t,\mathrm{assign})} \leq D^{(t)}$.
+
+> [!QUESTION] Exercise 7: Lloyd Algorithm Complexity
+> *This problem analyzes the per-iteration complexity of the Lloyd algorithm for VQ.*
+>
+> > **Prerequisites:** [[#3.2 The Lloyd Algorithm|Section 3.2]]
+>
+> Given $n$ training vectors in $\mathbb{R}^d$ and a codebook of size $K = 2^b$, derive the time complexity of one iteration of Lloyd's algorithm. Identify the bottleneck and describe a data structure that reduces the assignment step's complexity using approximate nearest neighbors.
+
+> [!TIP]- Solution to Exercise 7
+> **Key insight:** The assignment step is $O(nKd)$ naively; spatial indexing can reduce this at the cost of exactness.
+>
+> **Sketch:** Assignment: for each of $n$ points, compute distance to all $K$ codewords in $\mathbb{R}^d$: $O(nKd)$. Centroid update: accumulate sums in each Voronoi cell: $O(nd)$. Total per iteration: $O(nKd)$, bottlenecked by assignment. Using a $k$-d tree or product-quantization-based ANN index reduces assignment to $O(n(K^{1/2} + d)\log K)$ approximately, trading an exact Lloyd step for a faster approximate one. For large $K$ and $d$, this can be a $\sqrt{K}$-fold speedup.
+
 ---
 
 ## 4. Product Quantization and Residual VQ 🔧
@@ -255,6 +336,47 @@ Compressing each key and value vector from FP16 to $b$ bits per dimension reduce
 > [!INFO] Why inner product distortion differs from MSE
 > MSE minimization biases reconstruction levels toward the centroid of each Voronoi cell. This bias is acceptable for signal reconstruction tasks but corrupts inner product estimates: $\langle \mathbf{q}, \hat{\mathbf{k}} \rangle \neq \langle \mathbf{q}, \mathbf{k} \rangle$ even in expectation. Unbiased inner product quantization requires a different objective. The two-stage approach of TurboQuant (Section 7) addresses this directly.
 
+> [!QUESTION] Exercise 8: Distortion Additivity for Product Quantization
+> *This problem establishes distortion additivity for product quantization under orthogonal subspace decomposition.*
+>
+> > **Prerequisites:** [[#4.1 Subvector Decomposition and Distortion Additivity|Section 4.1]]
+>
+> Let $\mathbf{x} = (\mathbf{x}^{(1)}, \mathbf{x}^{(2)})$ with subvectors in orthogonal subspaces. Let $Q_{\text{PQ}}(\mathbf{x}) = (Q^{(1)}(\mathbf{x}^{(1)}), Q^{(2)}(\mathbf{x}^{(2)}))$. Prove that $\|\mathbf{x} - Q_{\text{PQ}}(\mathbf{x})\|^2 = \|\mathbf{x}^{(1)} - Q^{(1)}(\mathbf{x}^{(1)})\|^2 + \|\mathbf{x}^{(2)} - Q^{(2)}(\mathbf{x}^{(2)})\|^2$.
+
+> [!TIP]- Solution to Exercise 8
+> **Key insight:** The error vector lies in the direct sum of two orthogonal subspaces, so cross terms vanish.
+>
+> **Sketch:** $\mathbf{x} - Q_{\text{PQ}}(\mathbf{x}) = (\mathbf{x}^{(1)} - Q^{(1)}(\mathbf{x}^{(1)}), \mathbf{x}^{(2)} - Q^{(2)}(\mathbf{x}^{(2)}))$. Since the two components live in orthogonal subspaces, $\|\mathbf{e}_1 + \mathbf{e}_2\|^2 = \|\mathbf{e}_1\|^2 + \|\mathbf{e}_2\|^2 + 2\langle\mathbf{e}_1, \mathbf{e}_2\rangle = \|\mathbf{e}_1\|^2 + \|\mathbf{e}_2\|^2$ since $\langle\mathbf{e}_1, \mathbf{e}_2\rangle = 0$. Taking expectations gives additivity of expected distortions.
+
+> [!QUESTION] Exercise 9: RVQ Geometric Distortion Decay
+> *This problem implements a two-stage RVQ encoder and analyzes how distortion decays with the number of stages.*
+>
+> > **Prerequisites:** [[#4.2 Multi-Stage Residual VQ|Section 4.2]]
+>
+> Write Python pseudocode for an $L$-stage RVQ encoder that, given pre-trained codebooks $\{\mathcal{C}_\ell\}$, encodes a vector $\mathbf{x}$ by successively quantizing residuals. Argue that if each stage's quantizer achieves distortion $\alpha < 1$ (as a fraction of residual variance), then after $L$ stages the total distortion is $\sigma^2 \alpha^L$.
+
+> [!TIP]- Solution to Exercise 9
+> **Key insight:** The residual shrinks geometrically if each stage achieves a fixed fraction of residual variance.
+>
+> **Sketch:**
+> ```python
+> def rvq_encode(x: np.ndarray, codebooks: list[np.ndarray]) -> list[int]:
+>     """
+>     x: (d,) vector
+>     codebooks: list of L arrays, each (K, d)
+>     Returns list of L indices
+>     """
+>     indices = []
+>     residual = x.copy()
+>     for C in codebooks:
+>         dists = np.linalg.norm(C - residual, axis=1)
+>         idx = np.argmin(dists)
+>         indices.append(idx)
+>         residual = residual - C[idx]
+>     return indices
+> ```
+> If stage $\ell$ achieves $\mathrm{Var}(\mathbf{r}_{\ell+1}) = \alpha \cdot \mathrm{Var}(\mathbf{r}_\ell)$ with $\alpha < 1$, then $\mathrm{Var}(\mathbf{r}_L) = \sigma^2 \alpha^L$. Total reconstruction error equals $\|\mathbf{r}_L\|^2$, so distortion is $\sigma^2 \alpha^L$, exponentially small in $L$.
+
 ---
 
 ## 5. Random Rotation Preprocessing 🌀
@@ -296,6 +418,51 @@ After random rotation, two properties hold approximately for large $d$:
 Under these conditions, applying independent per-coordinate scalar quantizers to $\tilde{\mathbf{x}}$ is nearly equivalent to VQ on the original $\mathbf{x}$. The per-coordinate Panter-Dite integral $\int f^{1/3}$ is approximately the same for every coordinate (since all marginals are approximately $\mathcal{N}(0, \sigma^2)$), so a single uniform codebook calibrated to $\mathcal{N}(0, \sigma^2)$ achieves near-optimal distortion on all coordinates simultaneously.
 
 **This is the core argument: random rotation + $d$ independent scalar quantizers approximates optimal VQ, at the cost of one matrix-vector multiply $O(d^2)$ per vector.**
+
+> [!QUESTION] Exercise 10: Coordinate Marginal from Sphere Measure
+> *This problem derives the coordinate marginal distribution after random rotation of a sphere vector.*
+>
+> > **Prerequisites:** [[#5.2 Coordinate Distribution After Rotation|Section 5.2]]
+>
+> Let $\mathbf{z}$ be uniform on $S^{d-1}$. Show that the marginal density of $z_1$ is proportional to $(1 - t^2)^{(d-3)/2}$ for $t \in [-1, 1]$ by integrating the uniform measure over $S^{d-1}$ conditional on $z_1 = t$.
+
+> [!TIP]- Solution to Exercise 10
+> **Key insight:** Fix $z_1 = t$; the remaining coordinates are uniform on a $(d-2)$-sphere of radius $\sqrt{1-t^2}$.
+>
+> **Sketch:** The surface measure of $S^{d-1}$ decomposes as $d\omega = f(t)\, dt \cdot d\omega_{d-2}$ where $d\omega_{d-2}$ is the uniform measure on $\{(z_2,\ldots,z_d): \sum_{i\geq 2}z_i^2 = 1 - t^2\}$. This $(d-2)$-sphere has surface area proportional to $(1-t^2)^{(d-2)/2}$. An additional factor of $(1-t^2)^{-1/2}$ appears from the Jacobian of the $z_1 = t$ slice, giving $f(t) \propto (1-t^2)^{(d-3)/2}$.
+
+> [!QUESTION] Exercise 11: Random Rotation Implementation and Cost
+> *This problem implements the random rotation preprocessing and profiles its cost.*
+>
+> > **Prerequisites:** [[#5.1 Equalizing Marginals via Orthogonal Transforms|Section 5.1]]
+>
+> Write Python code that (a) generates a Haar-random orthogonal matrix $\mathbf{U} \in \mathbb{R}^{d \times d}$ via QR decomposition, (b) applies it to a batch of vectors, and (c) measures the wall-clock time as a function of $d$. State the asymptotic complexity of the naive matrix multiply and propose a structured alternative with $O(d \log d)$ cost.
+
+> [!TIP]- Solution to Exercise 11
+> **Key insight:** The naive $O(d^2)$ cost per vector can be reduced to $O(d\log d)$ using the Hadamard-Rademacher (SRHT) construction.
+>
+> **Sketch:**
+> ```python
+> import numpy as np
+> import time
+>
+> def haar_rotation(d: int) -> np.ndarray:
+>     G = np.random.randn(d, d)
+>     U, _ = np.linalg.qr(G)
+>     return U
+>
+> def profile_rotation(d: int, n: int = 1000) -> float:
+>     U = haar_rotation(d)
+>     X = np.random.randn(n, d)
+>     t0 = time.perf_counter()
+>     X_rot = X @ U.T   # (n, d) @ (d, d) -> O(n * d^2)
+>     return time.perf_counter() - t0
+>
+> # Structured alternative: Hadamard-Rademacher transform
+> # H_d * diag(s) where s are random ±1 signs, H_d is Walsh-Hadamard matrix
+> # Applied via fast Walsh-Hadamard transform: O(d log d) per vector
+> ```
+> Naive cost: $O(nd^2)$ for batch of $n$. Hadamard: $O(nd\log d)$. For $d = 4096, n = 10^4$, this is a $\sim\log_2(4096) = 12\times$ speedup.
 
 ---
 
@@ -347,6 +514,18 @@ where $\theta(\mathbf{x}, \mathbf{y}) = \arccos(\langle \mathbf{x}, \mathbf{y}\r
 *This is because $\text{sign}(\mathbf{a}^\top \mathbf{x}) = \text{sign}(\mathbf{a}^\top \mathbf{y})$ iff $\mathbf{a}$ does not cross the hyperplane separating $\mathbf{x}$ and $\mathbf{y}$, which happens with probability $1 - \theta/\pi$.*
 
 **Thus 1-bit JL sketches preserve angular (and hence cosine) similarity, enabling unbiased inner product estimation from sign bits alone.**
+
+> [!QUESTION] Exercise 12: JL Concentration via MGF
+> *This problem proves the JL distortion bound via moment generating function.*
+>
+> > **Prerequisites:** [[#6.2 Proof Sketch via MGF and Concentration|Section 6.2]]
+>
+> Let $Z_1, \ldots, Z_k$ be i.i.d. $\chi^2_1$ random variables and $Y = (1/k)\sum_{i=1}^k Z_i$. Using the MGF $\mathbb{E}[e^{tZ_i}] = (1-2t)^{-1/2}$ for $t < 1/2$, derive an upper bound on $P(Y \geq 1 + \varepsilon)$ and show it decays as $e^{-k\varepsilon^2/8}$ for small $\varepsilon$.
+
+> [!TIP]- Solution to Exercise 12
+> **Key insight:** Chernoff bound + optimize over $t$; expand $\log(1-2t) + 2t(1+\varepsilon)$ to second order.
+>
+> **Sketch:** $P(Y \geq 1+\varepsilon) \leq e^{-tk(1+\varepsilon)}\mathbb{E}[e^{tY}]^k \cdot k^0 = e^{-tk(1+\varepsilon)}(1-2t)^{-k/2}$. Taking logs: $-tk(1+\varepsilon) - (k/2)\log(1-2t)$. Setting derivative over $t$ to zero: $-(1+\varepsilon) + 1/(1-2t) = 0 \Rightarrow t^* = \varepsilon/(2(1+\varepsilon))$. Substituting and using $\log(1+u) \geq u - u^2/2$ for small $u$ gives $\log P \leq -k[\varepsilon^2/2 - \varepsilon^3/3 + \cdots]/2 \approx -k\varepsilon^2/4$. More careful expansion yields $-k[\varepsilon^2/4 - \varepsilon^3/6]$; for the upper tail the leading term is $-k\varepsilon^2/4$, which for typical presentations appears as $e^{-k\varepsilon^2/8}$ after accounting for both tails.
 
 ---
 
@@ -422,226 +601,24 @@ for all query vectors $\mathbf{q}$.
 > [!TIP] Practical implementation note
 > The random matrix $\mathbf{A}$ in Stage 2 need not be stored explicitly. A seeded pseudo-random generator can regenerate it deterministically at encode and decode time, adding negligible overhead. In practice, a structured Hadamard-based JL transform reduces the cost to $O(d \log d)$ per vector.
 
----
-
-## 8. Exercises 📝
-
-### 8.1 Mathematical Development
-
-**1.** *This problem establishes the optimal within-cell granular MSE for a non-uniform quantizer.*
-
-> **Prerequisites:** [[#1.1 Encoder, Decoder, and Quantization Cells|Section 1.1]]
-
-For a cell $\mathcal{R}_k = [t_{k-1}, t_k]$ of width $\Delta_k = t_k - t_{k-1}$ and reconstruction level $y_k$, show that the within-cell MSE $\int_{t_{k-1}}^{t_k}(x - y_k)^2 f(x)\, dx$ is minimized over $y_k$ by the centroid $y_k^* = \mathbb{E}[X \mid X \in \mathcal{R}_k]$, and compute the resulting minimum value in terms of $\mathrm{Var}[X \mid X \in \mathcal{R}_k]$.
-
-> [!TIP]- Solution to Exercise 1
-> **Key insight:** Minimizing a quadratic in $y_k$ yields the centroid; the minimum is the conditional variance.
+> [!QUESTION] Exercise 13: Universality of the TurboQuant Constant
+> *This problem connects the TurboQuant constant to the ratio of the Panter-Dite bound and the Shannon R(D) floor.*
 >
-> **Sketch:** Let $p_k = P(X \in \mathcal{R}_k)$ and $\mu_k = \mathbb{E}[X \mid X \in \mathcal{R}_k]$. The cell MSE equals $p_k \mathbb{E}[(X - y_k)^2 \mid X \in \mathcal{R}_k] = p_k [\mathrm{Var}(X \mid X \in \mathcal{R}_k) + (\mu_k - y_k)^2]$. This is minimized at $y_k = \mu_k$, giving minimum value $p_k \cdot \mathrm{Var}[X \mid X \in \mathcal{R}_k]$.
-
----
-
-**2.** *This problem derives the uniform quantizer MSE from the exact within-cell distribution.*
-
-> **Prerequisites:** [[#1.2 MSE of the Uniform Quantizer|Section 1.2]]
-
-Let $X \sim \mathrm{Uniform}[0, 1]$ and use a uniform $b$-bit quantizer with step size $\Delta = 2^{-b}$. Compute the exact MSE (not an approximation) and verify it equals $\Delta^2/12$.
-
-> [!TIP]- Solution to Exercise 2
-> **Key insight:** For a uniform source and uniform quantizer, the granular and overload terms both collapse neatly.
+> > **Prerequisites:** [[#7.2 The Constant Gap and Connection to Panter-Dite|Section 7.2]]
 >
-> **Sketch:** Within cell $k$, $X$ is uniform on $[(k-1)\Delta, k\Delta]$ with reconstruction level $y_k = (k - 1/2)\Delta$. The within-cell error is $\mathrm{Uniform}[-\Delta/2, \Delta/2]$ with variance $\Delta^2/12$. Summing $2^b$ cells each contributing $\Delta \cdot (\Delta^2/12) = \Delta^3/12$ and noting $\sum_k p_k = 1$ gives $D = \Delta^2/12$ exactly (no overload since support is bounded).
+> For $\mathbf{x} \in S^{d-1}$, the per-coordinate variance after rotation is $\sigma^2 = 1/d$. Using the rate-distortion formula $D_{\text{Shannon}}(b) = \sigma^2 \cdot 4^{-b}$ and the Gaussian Panter-Dite formula $D_{\text{PD}} = (\sigma^2\pi\sqrt{3}/2) \cdot 4^{-b}$, verify that the ratio $D_{\text{PD}}/D_{\text{Shannon}} = \pi\sqrt{3}/2$ is independent of $\sigma^2$, $b$, and $d$, and compute the exact gap in dB.
 
----
-
-**3.** *This problem derives the Lloyd-Max breakpoint condition by direct differentiation.*
-
-> **Prerequisites:** [[#1.3 Lloyd-Max Optimality Conditions|Section 1.3]]
-
-Let $D = \sum_{k=1}^{N} \int_{t_{k-1}}^{t_k}(x - y_k)^2 f(x)\, dx$. Compute $\partial D / \partial t_k$ and show that setting it to zero yields $t_k = (y_k + y_{k+1})/2$ provided $f(t_k) > 0$.
-
-> [!TIP]- Solution to Exercise 3
-> **Key insight:** The breakpoint $t_k$ appears only in the upper limit of integral $k$ and the lower limit of integral $k+1$.
->
-> **Sketch:** By Leibniz rule, $\partial D/\partial t_k = (t_k - y_k)^2 f(t_k) - (t_k - y_{k+1})^2 f(t_k)$. Setting this to zero (assuming $f(t_k) > 0$) gives $(t_k - y_k)^2 = (t_k - y_{k+1})^2$, hence $t_k - y_k = \pm(t_k - y_{k+1})$. The minus sign gives $y_k = y_{k+1}$ (degenerate), so $t_k = (y_k + y_{k+1})/2$.
-
----
-
-**4.** *This problem establishes the Panter-Dite formula via calculus of variations.*
-
-> **Prerequisites:** [[#2.1 The Panter-Dite Formula|Section 2.1]]
-
-Let $\lambda(x) \geq 0$ be the cell density (cells per unit interval). The total distortion is $D = \int f(x)/(\lambda(x)^2 \cdot 12)\, dx$ and the rate constraint is $\int \lambda(x)\, dx = 2^b$. Use a Lagrange multiplier to show the optimal density is $\lambda^*(x) = c \cdot f(x)^{1/3}$ and recover the Panter-Dite formula.
-
-> [!TIP]- Solution to Exercise 4
-> **Key insight:** The variational problem decouples pointwise; the Euler-Lagrange condition is a simple power law.
->
-> **Sketch:** Form $\mathcal{L}(\lambda) = \int [f(x)/(12\lambda^2) + \mu\lambda]\, dx$. Differentiating the integrand with respect to $\lambda(x)$ and setting to zero: $-f(x)/(6\lambda^3) + \mu = 0$, so $\lambda^*(x) = (f(x)/(6\mu))^{1/3} \propto f(x)^{1/3}$. Normalize to satisfy the constraint: $c = 2^b / \int f^{1/3}$. Substituting $\lambda^*(x)$ back into $D$ gives $D = \frac{1}{12}\big(\int f^{1/3}\big)^3 / (2^b)^2 = \frac{1}{12}\big(\int f^{1/3}\big)^3 \cdot 4^{-b}$.
-
----
-
-**5.** *This problem computes the Panter-Dite integral for the Gaussian source and establishes the constant $\pi\sqrt{3}/2$.*
-
-> **Prerequisites:** [[#2.2 Gaussian Special Case and the 2.72 dB Penalty|Section 2.2]]
-
-For $f(x) = (2\pi\sigma^2)^{-1/2}\exp(-x^2/(2\sigma^2))$, compute $\int_{-\infty}^{\infty} f(x)^{1/3}\, dx$ in closed form and verify that $(1/12)\big(\int f^{1/3}\big)^3 = (\sigma^2 \pi\sqrt{3}/2) \cdot 4^{-b}/4^{-b} \cdot 4^{-b}$.
-
-> [!TIP]- Solution to Exercise 5
-> **Key insight:** $f(x)^{1/3}$ is still a Gaussian kernel; match it to a standard Gaussian integral.
->
-> **Sketch:** $f(x)^{1/3} = (2\pi\sigma^2)^{-1/6}\exp(-x^2/(6\sigma^2))$. Integrate: $\int f^{1/3}\, dx = (2\pi\sigma^2)^{-1/6} \cdot \sqrt{6\pi\sigma^2} = (2\pi\sigma^2)^{-1/6}(6\pi\sigma^2)^{1/2}$. Cube: $\big(\int f^{1/3}\big)^3 = (2\pi\sigma^2)^{-1/2}(6\pi\sigma^2)^{3/2} = \frac{(6\pi\sigma^2)^{3/2}}{(2\pi\sigma^2)^{1/2}} = \sigma^2 \cdot \frac{6^{3/2}\pi}{2^{1/2}} = \sigma^2 \cdot 6\sqrt{6}\pi/\sqrt{2}$. Numerically: $6\sqrt{6}/\sqrt{2} = 6\sqrt{3} \approx 10.39$, and $10.39/12 = 0.866 \approx \pi\sqrt{3}/2 \approx 2.72$... Re-tracing: $(6\pi\sigma^2)^{3/2}/(2\pi\sigma^2)^{1/2} = \sigma^2 \cdot (6\pi)^{3/2}/(2\pi)^{1/2} = \sigma^2 \pi \cdot 6^{3/2}/2^{1/2} = \sigma^2 \pi \cdot 6\sqrt{3}$. Then $D = \sigma^2 \pi \cdot 6\sqrt{3}/(12) \cdot 4^{-b} = \sigma^2 \pi\sqrt{3}/2 \cdot 4^{-b}$. $\checkmark$
-
----
-
-**6.** *This problem establishes that the Lloyd algorithm is monotonically non-increasing in distortion.*
-
-> **Prerequisites:** [[#3.2 The Lloyd Algorithm|Section 3.2]]
-
-Let $D^{(t)}$ be the VQ distortion after the $t$-th iteration of Lloyd's algorithm. Prove rigorously that $D^{(t+1)} \leq D^{(t)}$ by showing each step (nearest-neighbor assignment and centroid update) separately cannot increase distortion.
-
-> [!TIP]- Solution to Exercise 6
-> **Key insight:** Each sub-step minimizes distortion over a restricted set of parameters while holding the other fixed.
->
-> **Sketch:** (a) After centroid update to $\{y_k^{(t)}\}$, nearest-neighbor reassignment gives $D^{(t,\mathrm{assign})} \leq D^{(t)}$ because each point is reassigned to the closest codeword; any other assignment can only increase its contribution. (b) With assignment fixed, the centroid update sets each new $y_k = \mathbb{E}[X \mid \text{cell}_k]$ which minimizes $\sum_k \int_{\mathcal{V}_k} \|x - y_k\|^2 f\, dx$ over $\{y_k\}$ (by Exercise 1). So $D^{(t+1)} \leq D^{(t,\mathrm{assign})} \leq D^{(t)}$.
-
----
-
-**7.** *This problem establishes distortion additivity for product quantization under orthogonal subspace decomposition.*
-
-> **Prerequisites:** [[#4.1 Subvector Decomposition and Distortion Additivity|Section 4.1]]
-
-Let $\mathbf{x} = (\mathbf{x}^{(1)}, \mathbf{x}^{(2)})$ with subvectors in orthogonal subspaces. Let $Q_{\text{PQ}}(\mathbf{x}) = (Q^{(1)}(\mathbf{x}^{(1)}), Q^{(2)}(\mathbf{x}^{(2)}))$. Prove that $\|\mathbf{x} - Q_{\text{PQ}}(\mathbf{x})\|^2 = \|\mathbf{x}^{(1)} - Q^{(1)}(\mathbf{x}^{(1)})\|^2 + \|\mathbf{x}^{(2)} - Q^{(2)}(\mathbf{x}^{(2)})\|^2$.
-
-> [!TIP]- Solution to Exercise 7
-> **Key insight:** The error vector lies in the direct sum of two orthogonal subspaces, so cross terms vanish.
->
-> **Sketch:** $\mathbf{x} - Q_{\text{PQ}}(\mathbf{x}) = (\mathbf{x}^{(1)} - Q^{(1)}(\mathbf{x}^{(1)}), \mathbf{x}^{(2)} - Q^{(2)}(\mathbf{x}^{(2)}))$. Since the two components live in orthogonal subspaces, $\|\mathbf{e}_1 + \mathbf{e}_2\|^2 = \|\mathbf{e}_1\|^2 + \|\mathbf{e}_2\|^2 + 2\langle\mathbf{e}_1, \mathbf{e}_2\rangle = \|\mathbf{e}_1\|^2 + \|\mathbf{e}_2\|^2$ since $\langle\mathbf{e}_1, \mathbf{e}_2\rangle = 0$. Taking expectations gives additivity of expected distortions.
-
----
-
-**8.** *This problem derives the coordinate marginal distribution after random rotation of a sphere vector.*
-
-> **Prerequisites:** [[#5.2 Coordinate Distribution After Rotation|Section 5.2]]
-
-Let $\mathbf{z}$ be uniform on $S^{d-1}$. Show that the marginal density of $z_1$ is proportional to $(1 - t^2)^{(d-3)/2}$ for $t \in [-1, 1]$ by integrating the uniform measure over $S^{d-1}$ conditional on $z_1 = t$.
-
-> [!TIP]- Solution to Exercise 8
-> **Key insight:** Fix $z_1 = t$; the remaining coordinates are uniform on a $(d-2)$-sphere of radius $\sqrt{1-t^2}$.
->
-> **Sketch:** The surface measure of $S^{d-1}$ decomposes as $d\omega = f(t)\, dt \cdot d\omega_{d-2}$ where $d\omega_{d-2}$ is the uniform measure on $\{(z_2,\ldots,z_d): \sum_{i\geq 2}z_i^2 = 1 - t^2\}$. This $(d-2)$-sphere has surface area proportional to $(1-t^2)^{(d-2)/2}$. An additional factor of $(1-t^2)^{-1/2}$ appears from the Jacobian of the $z_1 = t$ slice, giving $f(t) \propto (1-t^2)^{(d-3)/2}$.
-
----
-
-**9.** *This problem proves the JL distortion bound via moment generating function.*
-
-> **Prerequisites:** [[#6.2 Proof Sketch via MGF and Concentration|Section 6.2]]
-
-Let $Z_1, \ldots, Z_k$ be i.i.d. $\chi^2_1$ random variables and $Y = (1/k)\sum_{i=1}^k Z_i$. Using the MGF $\mathbb{E}[e^{tZ_i}] = (1-2t)^{-1/2}$ for $t < 1/2$, derive an upper bound on $P(Y \geq 1 + \varepsilon)$ and show it decays as $e^{-k\varepsilon^2/8}$ for small $\varepsilon$.
-
-> [!TIP]- Solution to Exercise 9
-> **Key insight:** Chernoff bound + optimize over $t$; expand $\log(1-2t) + 2t(1+\varepsilon)$ to second order.
->
-> **Sketch:** $P(Y \geq 1+\varepsilon) \leq e^{-tk(1+\varepsilon)}\mathbb{E}[e^{tY}]^k \cdot k^0 = e^{-tk(1+\varepsilon)}(1-2t)^{-k/2}$. Taking logs: $-tk(1+\varepsilon) - (k/2)\log(1-2t)$. Setting derivative over $t$ to zero: $-(1+\varepsilon) + 1/(1-2t) = 0 \Rightarrow t^* = \varepsilon/(2(1+\varepsilon))$. Substituting and using $\log(1+u) \geq u - u^2/2$ for small $u$ gives $\log P \leq -k[\varepsilon^2/2 - \varepsilon^3/3 + \cdots]/2 \approx -k\varepsilon^2/4$. More careful expansion yields $-k[\varepsilon^2/4 - \varepsilon^3/6]$; for the upper tail the leading term is $-k\varepsilon^2/4$, which for typical presentations appears as $e^{-k\varepsilon^2/8}$ after accounting for both tails.
-
----
-
-**10.** *This problem connects the TurboQuant constant to the ratio of the Panter-Dite bound and the Shannon R(D) floor.*
-
-> **Prerequisites:** [[#7.2 The Constant Gap and Connection to Panter-Dite|Section 7.2]]
-
-For $\mathbf{x} \in S^{d-1}$, the per-coordinate variance after rotation is $\sigma^2 = 1/d$. Using the rate-distortion formula $D_{\text{Shannon}}(b) = \sigma^2 \cdot 4^{-b}$ and the Gaussian Panter-Dite formula $D_{\text{PD}} = (\sigma^2\pi\sqrt{3}/2) \cdot 4^{-b}$, verify that the ratio $D_{\text{PD}}/D_{\text{Shannon}} = \pi\sqrt{3}/2$ is independent of $\sigma^2$, $b$, and $d$, and compute the exact gap in dB.
-
-> [!TIP]- Solution to Exercise 10
+> [!TIP]- Solution to Exercise 13
 > **Key insight:** The $\sigma^2$ and $4^{-b}$ factors cancel in the ratio, leaving only the universal constant.
 >
 > **Sketch:** $D_{\text{PD}}/D_{\text{Shannon}} = [(\sigma^2\pi\sqrt{3}/2)\cdot 4^{-b}] / [\sigma^2 \cdot 4^{-b}] = \pi\sqrt{3}/2$. This holds for all $\sigma^2 > 0$ and all $b \geq 1$, confirming universality. In dB: $10\log_{10}(\pi\sqrt{3}/2) = 10\log_{10}(2.7207\ldots) \approx 10 \times 0.4347 \approx 4.35$ dB. The TurboQuant upper bound thus exceeds the Shannon floor by exactly $4.35$ dB, which is the *irreducible penalty* of scalar quantization even with optimal bit allocation and random rotation.
 
----
-
-### 8.2 Algorithmic Applications
-
-**11.** *This problem analyzes the per-iteration complexity of the Lloyd algorithm for VQ.*
-
-> **Prerequisites:** [[#3.2 The Lloyd Algorithm|Section 3.2]]
-
-Given $n$ training vectors in $\mathbb{R}^d$ and a codebook of size $K = 2^b$, derive the time complexity of one iteration of Lloyd's algorithm. Identify the bottleneck and describe a data structure that reduces the assignment step's complexity using approximate nearest neighbors.
-
-> [!TIP]- Solution to Exercise 11
-> **Key insight:** The assignment step is $O(nKd)$ naively; spatial indexing can reduce this at the cost of exactness.
+> [!QUESTION] Exercise 14: TurboQuant Two-Stage Pipeline Implementation
+> *This problem implements the two-stage TurboQuant inner product quantizer and verifies unbiasedness empirically.*
 >
-> **Sketch:** Assignment: for each of $n$ points, compute distance to all $K$ codewords in $\mathbb{R}^d$: $O(nKd)$. Centroid update: accumulate sums in each Voronoi cell: $O(nd)$. Total per iteration: $O(nKd)$, bottlenecked by assignment. Using a $k$-d tree or product-quantization-based ANN index reduces assignment to $O(n(K^{1/2} + d)\log K)$ approximately, trading an exact Lloyd step for a faster approximate one. For large $K$ and $d$, this can be a $\sqrt{K}$-fold speedup.
-
----
-
-**12.** *This problem implements a two-stage RVQ encoder and analyzes how distortion decays with the number of stages.*
-
-> **Prerequisites:** [[#4.2 Multi-Stage Residual VQ|Section 4.2]]
-
-Write Python pseudocode for an $L$-stage RVQ encoder that, given pre-trained codebooks $\{\mathcal{C}_\ell\}$, encodes a vector $\mathbf{x}$ by successively quantizing residuals. Argue that if each stage's quantizer achieves distortion $\alpha < 1$ (as a fraction of residual variance), then after $L$ stages the total distortion is $\sigma^2 \alpha^L$.
-
-> [!TIP]- Solution to Exercise 12
-> **Key insight:** The residual shrinks geometrically if each stage achieves a fixed fraction of residual variance.
+> > **Prerequisites:** [[#7.3 Two-Stage Pipeline for Inner Product Preservation|Section 7.3]]
 >
-> **Sketch:**
-> ```python
-> def rvq_encode(x: np.ndarray, codebooks: list[np.ndarray]) -> list[int]:
->     """
->     x: (d,) vector
->     codebooks: list of L arrays, each (K, d)
->     Returns list of L indices
->     """
->     indices = []
->     residual = x.copy()
->     for C in codebooks:
->         dists = np.linalg.norm(C - residual, axis=1)
->         idx = np.argmin(dists)
->         indices.append(idx)
->         residual = residual - C[idx]
->     return indices
-> ```
-> If stage $\ell$ achieves $\mathrm{Var}(\mathbf{r}_{\ell+1}) = \alpha \cdot \mathrm{Var}(\mathbf{r}_\ell)$ with $\alpha < 1$, then $\mathrm{Var}(\mathbf{r}_L) = \sigma^2 \alpha^L$. Total reconstruction error equals $\|\mathbf{r}_L\|^2$, so distortion is $\sigma^2 \alpha^L$, exponentially small in $L$.
-
----
-
-**13.** *This problem implements the random rotation preprocessing and profiles its cost.*
-
-> **Prerequisites:** [[#5.1 Equalizing Marginals via Orthogonal Transforms|Section 5.1]]
-
-Write Python code that (a) generates a Haar-random orthogonal matrix $\mathbf{U} \in \mathbb{R}^{d \times d}$ via QR decomposition, (b) applies it to a batch of vectors, and (c) measures the wall-clock time as a function of $d$. State the asymptotic complexity of the naive matrix multiply and propose a structured alternative with $O(d \log d)$ cost.
-
-> [!TIP]- Solution to Exercise 13
-> **Key insight:** The naive $O(d^2)$ cost per vector can be reduced to $O(d\log d)$ using the Hadamard-Rademacher (SRHT) construction.
->
-> **Sketch:**
-> ```python
-> import numpy as np
-> import time
->
-> def haar_rotation(d: int) -> np.ndarray:
->     G = np.random.randn(d, d)
->     U, _ = np.linalg.qr(G)
->     return U
->
-> def profile_rotation(d: int, n: int = 1000) -> float:
->     U = haar_rotation(d)
->     X = np.random.randn(n, d)
->     t0 = time.perf_counter()
->     X_rot = X @ U.T   # (n, d) @ (d, d) -> O(n * d^2)
->     return time.perf_counter() - t0
->
-> # Structured alternative: Hadamard-Rademacher transform
-> # H_d * diag(s) where s are random ±1 signs, H_d is Walsh-Hadamard matrix
-> # Applied via fast Walsh-Hadamard transform: O(d log d) per vector
-> ```
-> Naive cost: $O(nd^2)$ for batch of $n$. Hadamard: $O(nd\log d)$. For $d = 4096, n = 10^4$, this is a $\sim\log_2(4096) = 12\times$ speedup.
-
----
-
-**14.** *This problem implements the two-stage TurboQuant inner product quantizer and verifies unbiasedness empirically.*
-
-> **Prerequisites:** [[#7.3 Two-Stage Pipeline for Inner Product Preservation|Section 7.3]]
-
-Write Python code implementing the TurboQuant two-stage pipeline: (a) rotate with $\mathbf{U}$, (b) apply a uniform $(b-1)$-bit scalar quantizer to each coordinate, (c) compute the residual and apply a 1-bit JL sketch, (d) reconstruct and estimate inner products with a random query $\mathbf{q}$. Empirically verify that the mean inner product error is near zero over many random inputs.
+> Write Python code implementing the TurboQuant two-stage pipeline: (a) rotate with $\mathbf{U}$, (b) apply a uniform $(b-1)$-bit scalar quantizer to each coordinate, (c) compute the residual and apply a 1-bit JL sketch, (d) reconstruct and estimate inner products with a random query $\mathbf{q}$. Empirically verify that the mean inner product error is near zero over many random inputs.
 
 > [!TIP]- Solution to Exercise 14
 > **Key insight:** Stage 2 corrects the bias of Stage 1 in expectation; the unbiasedness should be visible even for small $d$.

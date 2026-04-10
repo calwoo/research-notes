@@ -16,56 +16,64 @@ The repository uses a category-first layout. Each topic gets its own subdirector
 concepts/       ← explanations of ML/math concepts
   <topic>/
     <descriptive-name>.md   ← one or more note files, named meaningfully
-    exercises.md            ← problem set (optional, generate only when explicitly asked)
-    solutions.md            ← full answer key (optional, generate only when explicitly asked)
     figures/                ← images downloaded from cited papers (optional)
 papers/         ← summaries/analyses of specific papers
   <paper-slug>.md                    ← single standalone paper (flat file)
   <topic>/                           ← multi-paper topic cluster (folder only when ≥2 papers)
     <paper-slug>.md                  ← one named file per paper in the cluster
-    exercises.md                     ← optional, generate only when explicitly asked
-    solutions.md                     ← optional, generate only when explicitly asked
     figures/                         ← figures for papers in this cluster
   figures/
     <paper-slug>/                    ← figures for a flat single-paper file
 walkthroughs/   ← step-by-step derivations or implementations
   <topic>/
     note.md
-    exercises.md    ← optional, generate only when explicitly asked
-    solutions.md    ← optional, generate only when explicitly asked
 curricula/      ← structured multi-week learning curricula for a field or subfield
   <topic>/
     curriculum.md   ← week-by-week checklist of materials, concepts, learning goals, and milestones
-    exercises.md    ← optional, generate only when explicitly asked
-    solutions.md    ← optional, generate only when explicitly asked
 docs/           ← documentation and design docs
   plans/        ← implementation plans before execution
 ```
 
-**Naming convention for `concepts/`:** The topic slug is the folder name. Note files inside a concept folder should be named to reflect their content — use `note.md` only when a single file suffices; split into multiple descriptively-named files when a topic is broad enough to warrant it. If `exercises.md` and `solutions.md` exist, they must use those exact names — but only create them when explicitly requested.
+**Naming convention for `concepts/`:** The topic slug is the folder name. Note files inside a concept folder should be named to reflect their content — use `note.md` only when a single file suffices; split into multiple descriptively-named files when a topic is broad enough to warrant it.
 
 Example for a multi-file concept topic `attention-mechanisms`:
 - `concepts/attention-mechanisms/standard-attention.md` — softmax attention
 - `concepts/attention-mechanisms/linear-attention.md` — linear attention variants
 - `concepts/attention-mechanisms/history.md` — historical development
-- `concepts/attention-mechanisms/exercises.md` — problem set
-- `concepts/attention-mechanisms/solutions.md` — full answer key
 
 **Naming convention for `papers/`:** A folder under `papers/` is created only when two or more papers belong to the same topic cluster. A single standalone paper is always a flat `.md` file at the `papers/` root.
 - If a cluster later shrinks to one paper, leave the folder in place to avoid breaking wikilinks. A one-paper folder is an accepted exception.
-- Exercises and solutions for flat paper files use the names `<paper-slug>-exercises.md` and `<paper-slug>-solutions.md`. Inside cluster folders, use the exact names `exercises.md` and `solutions.md`.
 
 **Naming convention for `walkthroughs/`:** Single `note.md` is the default. Split only if the topic genuinely has distinct subtopics.
 
-**Exercise file structure** (when `exercises.md` is generated, it must follow this order):
-1. **Mathematical Development** — derivations, proofs, limit arguments, and mathematically sharp conceptual results (16–18 problems)
-2. **Algorithmic Applications** — pseudocode sketches, numerical implementation, complexity analysis (5–7 problems)
+**Exercises and solutions are inline.** Do not create separate `exercises.md` or `solutions.md` files. Exercises are distributed throughout the note — place them immediately after the section whose content they test, so each exercise appears after all its prerequisites. Do not batch all exercises at the end of the note.
 
-Problems are numbered continuously 1–N across both sections. Each problem requires:
+Each exercise is wrapped in a `[!QUESTION]` callout (yellow, non-collapsible). Inside the callout:
 - An italic 1–2 sentence preamble stating what the problem establishes
 - A `> **Prerequisites:**` blockquote linking to the relevant note section via Obsidian wikilink
+- The problem statement
 
-Solutions use **Key insight** + **Sketch** format (not full worked derivations).
+The solution immediately follows as a `[!TIP]-` collapsible callout (see Obsidian Callouts section). Example:
+
+```
+> [!QUESTION] Exercise N: Short Title
+> *Preamble sentence describing what this problem establishes.*
+>
+> > **Prerequisites:** [[#Section Title|Section Title]]
+>
+> Problem statement here.
+
+> [!TIP]- Solution to Exercise N
+> **Key insight:** ...
+>
+> **Sketch:** ...
+```
+
+Exercises should span two categories across the whole note, in order of appearance:
+1. **Mathematical Development** — derivations, proofs, limit arguments, and mathematically sharp conceptual results (16–18 problems total)
+2. **Algorithmic Applications** — pseudocode sketches, numerical implementation, complexity analysis (5–7 problems total)
+
+Problems are numbered continuously 1–N across both categories. Solutions use **Key insight** + **Sketch** format (not full worked derivations).
 
 ## Notes Format
 
@@ -194,7 +202,6 @@ Then read `/tmp/paper.md`. This applies to arXiv PDFs, textbooks, and any other 
 
 Specialized subagents are defined in `.claude/agents/`. Available agents:
 - `note-writer` — researches and writes note files following repo format
-- `exercise-writer` — writes `exercises.md` + `solutions.md` from a finished note
 - `image-extractor` — fetches figures from arXiv HTML (`ar5iv.org/html/{id}`) and embeds them
 - `reference-finder` — finds high-quality references for a topic via web search
 

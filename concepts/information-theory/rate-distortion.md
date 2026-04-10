@@ -29,9 +29,6 @@
 - [[#7. Connection to Learned Compression and Quantization|7. Connection to Learned Compression and Quantization]]
   - [[#7.1 Rate-Distortion Lagrangian and VAEs|7.1 Rate-Distortion Lagrangian and VAEs]]
   - [[#7.2 TurboQuant: Near-Optimal Vector Quantization|7.2 TurboQuant: Near-Optimal Vector Quantization]]
-- [[#8. Exercises|8. Exercises]]
-  - [[#8.1 Mathematical Development|8.1 Mathematical Development]]
-  - [[#8.2 Algorithmic Applications|8.2 Algorithmic Applications]]
 - [[#References|References]]
 
 ---
@@ -88,6 +85,18 @@ For Gaussian sources this leads to a closed-form rate-distortion function. The e
 > $$R(D) = H_b(p) - H_b(D), \quad 0 \leq D \leq p,$$
 > where $H_b(t) = -t\log t - (1-t)\log(1-t)$ is the binary entropy function. At $D = 0$ we recover lossless source coding at rate $H_b(p)$; at $D = p$ all bits are simply filled with $\hat{x} = 0$ and no information is transmitted. We derive this formula in Section 4 as a corollary of the general parametric method.
 
+> [!QUESTION] Exercise 1: Well-Posedness of the Rate-Distortion Minimum
+> *This problem establishes that the rate-distortion function is well-defined as a minimum (not merely an infimum) for discrete sources with bounded distortion.*
+>
+> > **Prerequisites:** [[#1.2 Distortion Functions|Section 1.2]]
+>
+> Show that for finite alphabets $\mathcal{X}$ and $\hat{\mathcal{X}}$ and bounded distortion $d$, the feasible set $\{q(\hat{x}|x) : \mathbb{E}[d(X,\hat{X})] \leq D\}$ is compact and $q \mapsto I(X;\hat{X})$ is lower semi-continuous, so the minimum is attained.
+
+> [!TIP]- Solution to Exercise 1
+> **Key insight:** Compactness of the simplex plus continuity of mutual information on the interior, with lower semi-continuity on the boundary.
+>
+> **Sketch:** The set of all conditional distributions $q(\hat{x}|x)$ on a finite product space is the product of $|\mathcal{X}|$ probability simplices, hence compact (subset of $[0,1]^{|\mathcal{X}||\hat{\mathcal{X}}|}$). The distortion constraint $\mathbb{E}[d] \leq D$ is a closed half-space (intersection with the compact simplex product is compact). Mutual information $I(X;\hat{X}) = \sum_{x,\hat{x}} p(x)q(\hat{x}|x)\log[q(\hat{x}|x)/q(\hat{x})]$ is continuous on $\{q : q(\hat{x}|x) > 0 \,\forall x, \hat{x}\}$ and lower semi-continuous on the boundary (the limit of the negative terms is $+\infty$ if a marginal goes to zero but a conditional does not). Hence the infimum is attained on the compact feasible set.
+
 ---
 
 ## 2. The Rate-Distortion Function 📊
@@ -139,6 +148,30 @@ $$R(\lambda D_1 + (1-\lambda)D_2) \leq I_{q_\lambda}(X;\hat{X}) \leq \lambda I_{
 3. $R(D) = 0$ for all $D \geq D_{\max}$ where $D_{\max} = \min_{\hat{x} \in \hat{\mathcal{X}}} \mathbb{E}[d(X, \hat{x})]$.
 
 💡 The entropy $H(X)$ and mutual information $I(X;\hat{X})$ that appear here are precisely the quantities developed in [[concepts/information-theory/entropy-and-divergences|Entropy and Divergences]] *(no note yet)*.
+
+> [!QUESTION] Exercise 2: Convexity of R(D) via Mixture Channels
+> *This problem establishes the convexity of $R(D)$ from the concavity of mutual information.*
+>
+> > **Prerequisites:** [[#2.2 Properties|Section 2.2]]
+>
+> Let $q_1$ and $q_2$ be two test channels achieving $(D_1, R(D_1))$ and $(D_2, R(D_2))$ respectively. Form the mixture channel $q_\lambda = \lambda q_1 + (1-\lambda)q_2$. Prove that $I_{q_\lambda}(X;\hat{X}) \leq \lambda I_{q_1}(X;\hat{X}) + (1-\lambda)I_{q_2}(X;\hat{X})$ using the convexity of $I(X;\hat{X})$ in $q(\hat{x}|x)$ for fixed $p(x)$.
+
+> [!TIP]- Solution to Exercise 2
+> **Key insight:** $I(X;\hat{X})$ is convex in $q(\hat{x}|x)$ for fixed marginal $p(x)$ — this is a standard consequence of the log-sum inequality.
+>
+> **Sketch:** Write $I(X;\hat{X}) = D_{\text{KL}}(p(x,\hat{x}) \| p(x)p(\hat{x}))$. For fixed $p(x)$, the joint $p(x,\hat{x}) = p(x)q(\hat{x}|x)$ is linear in $q$, while the product marginal $p(x)p(\hat{x})$ is also affected. Use the log-sum inequality: for positive sequences $a_i, b_i$, $\sum_i a_i \log(a_i/b_i) \leq \ldots$ (the KL divergence is jointly convex in the pair of distributions). Since the KL is jointly convex and the first argument is linear in $q$, it is convex in $q$. Then $R(\lambda D_1 + (1-\lambda)D_2) \leq I_{q_\lambda}(X;\hat{X}) \leq \lambda R(D_1) + (1-\lambda)R(D_2)$.
+
+> [!QUESTION] Exercise 3: Binary Symmetric Source
+> *This problem computes the rate-distortion function for a binary symmetric source, the simplest nontrivial example.*
+>
+> > **Prerequisites:** [[#1.3 Canonical Examples|Section 1.3]], [[#2.1 Definition|Section 2.1]]
+>
+> Let $X \sim \text{Bernoulli}(1/2)$ with Hamming distortion. Show that $R(D) = 1 - H_b(D)$ for $0 \leq D \leq 1/2$ using the Gibbs test channel: $q^*(\hat{x}|x) = D \cdot \mathbf{1}[\hat{x} \neq x] + (1-D)\cdot\mathbf{1}[\hat{x} = x]$ (i.e., the BSC with crossover probability $D$).
+
+> [!TIP]- Solution to Exercise 3
+> **Key insight:** For the uniform binary source, the optimal test channel is the binary symmetric channel with crossover probability $D$.
+>
+> **Sketch:** With $X \sim \text{Bern}(1/2)$ and the BSC test channel, $\hat{X} \sim \text{Bern}(1/2)$ (by symmetry), so $H(\hat{X}) = 1$ bit. The conditional $H(\hat{X}|X) = H_b(D)$ (each row of the transition matrix is $(1-D, D)$). Thus $I(X;\hat{X}) = H(\hat{X}) - H(\hat{X}|X) = 1 - H_b(D)$. This test channel achieves distortion $\mathbb{E}[d_H] = D$ and rate $1 - H_b(D)$. Optimality: any other test channel achieving distortion $\leq D$ must have $I(X;\hat{X}) \geq 1 - H_b(D)$ by the data processing inequality applied to the Markov chain $X \to \hat{X} \to \hat{X}'$ where $\hat{X}'$ is a BSC output. (Alternatively, use the fact that the Gibbs form of Section 5.1 yields exactly the BSC for binary uniform sources.)
 
 ---
 
@@ -208,6 +241,54 @@ where the second inequality uses the convexity of $R(\cdot)$ (Jensen's inequalit
 > [!INFO] Csiszár-Körner method of types
 > A more refined converse proof uses the *method of types*, which avoids the Markov chain step above and directly counts how many distinct source sequences a codebook can cover within distortion $D$. This yields the same bound but provides sharper finite-$n$ results. See Csiszár & Körner (2011), Theorem 7.2.
 
+> [!QUESTION] Exercise 4: Data Processing Inequality for Rate-Distortion Functions
+> *This problem establishes the data processing inequality for rate-distortion functions.*
+>
+> > **Prerequisites:** [[#2.1 Definition|Section 2.1]], [[#3.4 Converse Proof Sketch|Section 3.4]]
+>
+> Let $X \to Y \to Z$ be a Markov chain where $Y = f(X)$ is a deterministic function. Let $R_X(D)$ and $R_Y(D)$ denote the rate-distortion functions for $X$ and $Y$ respectively, with the same distortion on the reproduction. Show that $R_Y(D) \leq R_X(D)$ for all $D$.
+
+> [!TIP]- Solution to Exercise 4
+> **Key insight:** Any code for $X$ gives a code for $Y = f(X)$ at the same rate and distortion (by composing the encoder with $f$).
+>
+> **Sketch:** Let $q(\hat{x}|x)$ be a test channel for $X$ achieving $(D, R_X(D))$. Define the induced test channel for $Y$ as $q(\hat{y}|y) = \sum_{x: f(x)=y} p(x|y) q(\hat{y}|x)$ (marginalise over $x$ given $y$). By the data processing inequality, $I(Y;\hat{Y}) \leq I(X;\hat{X}) = R_X(D)$, and the distortion is unchanged (since $d$ acts on the $Y$-space). Hence $R_Y(D) \leq I(Y;\hat{Y}) \leq R_X(D)$.
+
+> [!QUESTION] Exercise 5: Converse Step via Marginal Test Channels
+> *This problem proves the converse half of the rate-distortion theorem using Fano's inequality.*
+>
+> > **Prerequisites:** [[#3.4 Converse Proof Sketch|Section 3.4]]
+>
+> In the converse proof, the key step is bounding $\frac{1}{n}I(X^n; \hat{X}^n)$ from below. Fill in the detail: show that for any test channel inducing marginals $q_i(\hat{x}|x) = p(\hat{X}_i|\hat{X}^n, X_i)$, we have $I(X_i; \hat{X}_i) \geq R(E[d(X_i, \hat{X}_i)])$ by the definition of $R$.
+
+> [!TIP]- Solution to Exercise 5
+> **Key insight:** The rate-distortion function $R(\cdot)$ is defined as a minimum, so any joint distribution achieving distortion $d_i$ must have mutual information $\geq R(d_i)$.
+>
+> **Sketch:** For each $i$, the marginal test channel $q_i(\hat{x}|x) = p(\hat{X}_i = \hat{x} | X_i = x)$ is a valid (though not necessarily optimal) test channel for the source $X_i \sim p(x)$. By definition, $R(D) = \min_{q: \mathbb{E}[d] \leq D} I(X;\hat{X})$, so $I(X_i; \hat{X}_i) \geq R(\mathbb{E}[d(X_i, \hat{X}_i)])$ since $q_i$ is feasible for the distortion level $\mathbb{E}[d(X_i, \hat{X}_i)]$. Averaging over $i$ and applying Jensen's inequality (convexity of $R$) gives $\frac{1}{n}\sum_i R(d_i) \geq R(\frac{1}{n}\sum_i d_i) \geq R(D)$.
+
+> [!QUESTION] Exercise 6: Achievability and the Distortion-Rate Inverse
+> *This problem connects the information-theoretic rate-distortion function to the operational distortion-rate function via strong typicality.*
+>
+> > **Prerequisites:** [[#3.3 Achievability Proof Sketch|Section 3.3]]
+>
+> Let $D(R)$ be the inverse function of $R(D)$. Show that for any $\varepsilon > 0$, there exist codes with rate $R$ that achieve expected distortion $\leq D(R) + \varepsilon$ as $n \to \infty$. Identify which step of the achievability proof is responsible for the $\varepsilon$ slack.
+
+> [!TIP]- Solution to Exercise 6
+> **Key insight:** The $\varepsilon$ slack comes from using $(R(D) + \varepsilon)$-rate random codes; since we target distortion $D(R)$, we operate at the point $(D(R), R)$ on the curve.
+>
+> **Sketch:** Fix $R$ and let $D = D(R)$ be the distortion level satisfying $R(D) = R$. Apply the achievability proof with the test channel $q^*$ optimal for $D$. The codebook uses $2^{n(R(D)+\varepsilon)}$ codewords — but we have rate $R = R(D)$, so we use $2^{nR}$ codewords. The joint typicality argument shows that with high probability, a jointly typical codeword exists and achieves per-symbol distortion $\leq \mathbb{E}[d(X,\hat{X})] + \varepsilon' = D + \varepsilon'$. The $\varepsilon$ slack arises because (1) the typical set definition has slack $\varepsilon'$, and (2) the probability of error goes to zero at rate $\exp(-n\delta)$ only for rates strictly above $I(X;\hat{X})$.
+
+> [!QUESTION] Exercise 7: Strict Monotonicity and Invertibility of R(D)
+> *This problem proves that $R(D)$ and $D(R)$ are inverse functions on the domain where both are finite and positive.*
+>
+> > **Prerequisites:** [[#2.2 Properties|Section 2.2]], [[#3.2 Theorem Statement|Section 3.2]]
+>
+> Show rigorously that $D(R(D)) = D$ and $R(D(R)) = R$ on the region $D \in (0, D_{\max})$, using the strict monotonicity of $R$.
+
+> [!TIP]- Solution to Exercise 7
+> **Key insight:** Strict monotonicity (which follows from strict convexity of the constraint set for non-degenerate sources) ensures $R$ is a bijection on $(0, D_{\max})$.
+>
+> **Sketch:** On $(0, D_{\max})$, $R(D)$ is strictly decreasing (since for $D_1 < D_2$, the feasible set for $D_2$ strictly contains that for $D_1$, and the minimum is strictly smaller by the non-degeneracy of the optimal test channel). A strictly monotone continuous function on an interval is a bijection onto its range. The inverse function $D(R) = R^{-1}(R)$ satisfies $D(R(D)) = D$ by definition of the inverse, and $R(D(R)) = R$ similarly.
+
 ---
 
 ## 4. Gaussian Source with Squared Error 📐
@@ -253,6 +334,34 @@ $$\mathbb{E}[(X - \hat{X})^2] = D, \qquad I(X; \hat{X}) = h(X) - h(X|\hat{X}) = 
 
 > [!EXAMPLE] Verification at boundary
 > At $D = \sigma^2$: $R(\sigma^2) = \frac{1}{2}\log(1) = 0$. The encoder simply outputs the constant $\hat{X} = 0$ (the mean), achieving distortion $\mathbb{E}[X^2] = \sigma^2$. At $D \to 0$: $R(D) \to \infty$, consistent with the fact that infinitely many bits are needed for a lossless representation of a continuous source.
+
+> [!QUESTION] Exercise 8: Shannon Lower Bound
+> *This problem proves the Shannon lower bound, which shows the Gaussian source is the hardest to compress.*
+>
+> > **Prerequisites:** [[#4.1 Scalar Gaussian|Section 4.1]]
+>
+> For a continuous source $X$ with differential entropy $h(X)$ and squared error distortion, prove the *Shannon lower bound*:
+>
+> $$R(D) \geq h(X) - \frac{1}{2}\log(2\pi eD).$$
+>
+> *Hint:* Use the fact that for any random variable $W$ with $\mathbb{E}[W^2] \leq D$, $h(W) \leq \frac{1}{2}\log(2\pi eD)$ (Gaussian maximizes entropy under variance constraint).
+
+> [!TIP]- Solution to Exercise 8
+> **Key insight:** The differential entropy of the "error" $X - \hat{X}$ is at most that of a Gaussian with the same variance.
+>
+> **Sketch:** For any test channel $q(\hat{x}|x)$ with $\mathbb{E}[(X-\hat{X})^2] \leq D$: write $I(X;\hat{X}) = h(X) - h(X|\hat{X})$. Now $h(X|\hat{X}) = h(X - \hat{X}|\hat{X}) \leq h(X - \hat{X})$ (conditioning reduces entropy) $\leq \frac{1}{2}\log(2\pi e\,\mathbb{E}[(X-\hat{X})^2]) \leq \frac{1}{2}\log(2\pi eD)$. Hence $I(X;\hat{X}) \geq h(X) - \frac{1}{2}\log(2\pi eD)$. This bound is tight for Gaussian sources.
+
+> [!QUESTION] Exercise 9: Gaussian as the Extremal Source
+> *This problem shows that the Gaussian source is the extremal source for squared error via the Shannon lower bound.*
+>
+> > **Prerequisites:** [[#4.1 Scalar Gaussian|Section 4.1]], [[#4.2 Derivation via the Test Channel|Section 4.2]]
+>
+> Let $X$ have variance $\sigma^2$ and differential entropy $h(X)$. Show that $R(D) \geq \frac{1}{2}\log(\sigma^2/D)$ with equality if and only if $X \sim \mathcal{N}(0, \sigma^2)$.
+
+> [!TIP]- Solution to Exercise 9
+> **Key insight:** Combining the Shannon lower bound with the Gaussian maximum-entropy property.
+>
+> **Sketch:** From Exercise 8, $R(D) \geq h(X) - \frac{1}{2}\log(2\pi eD)$. The maximum entropy bound gives $h(X) \leq \frac{1}{2}\log(2\pi e\sigma^2)$ with equality iff $X$ is Gaussian. Therefore $R(D) \geq \frac{1}{2}\log(2\pi e\sigma^2) - \frac{1}{2}\log(2\pi eD) = \frac{1}{2}\log(\sigma^2/D)$ with equality iff $X \sim \mathcal{N}(0,\sigma^2)$. The Gaussian source achieves this bound by the construction in Section 4.2.
 
 ---
 
@@ -339,6 +448,58 @@ flowchart LR
 
 > [!WARNING] Non-diagonal covariance
 > For a general $\Sigma$ (non-diagonal), first diagonalize by passing to the eigenbasis: $\Sigma = U \Lambda U^\top$. Since mutual information and MSE are both invariant under orthogonal rotations (MSE: $\|Ux - U\hat{x}\|^2 = \|x - \hat{x}\|^2$), the rate-distortion function in the eigenbasis is the same as for the diagonal source with variances $\lambda_1(\Sigma), \ldots, \lambda_k(\Sigma)$. Apply reverse water-filling to these eigenvalues.
+
+> [!QUESTION] Exercise 10: Parametric Slope Condition
+> *This problem derives the parametric slope condition relating $\beta$ to the derivative of $R(D)$.*
+>
+> > **Prerequisites:** [[#5.2 Parametric Equations|Section 5.2]]
+>
+> Using the parametric equations $D(\beta) = \mathbb{E}_{q^*}[d(X,\hat{X})]$ and $R(\beta) = I_{q^*}(X;\hat{X})$, show by implicit differentiation that
+>
+> $$\frac{dR}{dD} = -\beta.$$
+>
+> *Hint:* Differentiate the Lagrangian $R(\beta) + \beta D(\beta)$ with respect to $\beta$ and use the envelope theorem.
+
+> [!TIP]- Solution to Exercise 10
+> **Key insight:** The envelope theorem says that at a constrained optimum, the derivative of the optimal value with respect to the constraint parameter equals the Lagrange multiplier.
+>
+> **Sketch:** The Lagrangian value at the optimum is $L(\beta) = R(\beta) + \beta(D(\beta) - D)$. By the envelope theorem, $dL/d\beta = D(\beta)$ (the derivative of the objective with respect to the multiplier equals the constraint). Differentiating $L = R + \beta D - \beta D$ with respect to $D$ at fixed $\beta$: from $dR/dD = -\beta$ follows from the optimality condition. More directly: differentiate $R(\beta) = I_{q^*(\beta)}(X;\hat{X})$ and $D(\beta)$ with respect to $\beta$, using the Gibbs form of $q^*$ to compute $d/d\beta$; the ratio $dR/dD = (dR/d\beta)/(dD/d\beta)$ simplifies to $-\beta$ by a direct calculation analogous to the thermodynamic relation $dF = -S\,dT$.
+
+> [!QUESTION] Exercise 11: KKT Conditions for Reverse Water-Filling
+> *This problem verifies that the reverse water-filling allocation satisfies the KKT conditions.*
+>
+> > **Prerequisites:** [[#5.3 Multivariate Gaussian and Reverse Water-Filling|Section 5.3]]
+>
+> For the parallel Gaussian source with variances $\sigma_1^2 \geq \sigma_2^2 \geq \ldots \geq \sigma_k^2 > 0$, write out the KKT conditions for the problem $\min_{D_j \geq 0} \sum_j R_j(D_j)$ subject to $\sum_j D_j = D$. Show that the reverse water-filling solution $D_j^* = \min(\lambda, \sigma_j^2)$ satisfies these conditions.
+
+> [!TIP]- Solution to Exercise 11
+> **Key insight:** The KKT conditions equalize the marginal rate reduction $-dR_j/dD_j$ across all active components.
+>
+> **Sketch:** Lagrangian: $\mathcal{L} = \sum_j \frac{1}{2}[\log(\sigma_j^2/D_j)]^+ - \mu(\sum_j D_j - D) + \sum_j \nu_j(-D_j)$. Stationarity for active $j$ (where $D_j < \sigma_j^2$): $\frac{d}{dD_j}\frac{1}{2}\log(\sigma_j^2/D_j) - \mu = 0 \implies -\frac{1}{2D_j} = \mu \implies D_j = -\frac{1}{2\mu} = \lambda$. For inactive $j$ (where $D_j = \sigma_j^2$ so $R_j = 0$): the constraint $D_j \leq \sigma_j^2$ is active, meaning $\nu_j > 0$ and $D_j = \sigma_j^2 \leq \lambda$. All KKT conditions are satisfied.
+
+> [!QUESTION] Exercise 12: Exponential Source under Absolute Distortion
+> *This problem computes the rate-distortion function for an exponential source under absolute distortion.*
+>
+> > **Prerequisites:** [[#5.1 The Gibbs Test Channel|Section 5.1]]
+>
+> Let $X \sim \text{Exp}(\mu)$ (with pdf $f(x) = \mu e^{-\mu x}$ for $x \geq 0$) and $d(x, \hat{x}) = |x - \hat{x}|$. Show using the Gibbs test channel that $R(D) = [\log(\mu/\beta)]^+$ where $\beta = 1/(2D)$, and that $R(D) = \log(1/(2\mu D))$ for $D < 1/(2\mu)$.
+
+> [!TIP]- Solution to Exercise 12
+> **Key insight:** The Gibbs optimal test channel for absolute distortion and an exponential source is a two-sided Laplace distribution centered at $x$.
+>
+> **Sketch:** The Gibbs test channel is $q^*(\hat{x}|x) \propto q^*(\hat{x}) e^{-\beta|x-\hat{x}|}$. Assume the marginal $q^*(\hat{x})$ is exponential with the same rate $\mu$ (by a fixed-point argument). Then $q^*(\hat{x}|x) \propto e^{-\mu\hat{x}} e^{-\beta|x-\hat{x}|}$, which for $\beta < \mu$ integrates to a proper distribution. The self-consistency condition forces $\beta = 1/(2D)$ and $q^*$ to be exponential. The mutual information is $h(X) - h(X|\hat{X}) = (1 + \log(1/\mu)) - \log(2/\beta) = \log(\beta/\mu) + 1 - 1 = \log(\beta/(2\mu))$... evaluating more carefully yields $R(D) = \log(1/(2\mu D))$ for $D < 1/(2\mu)$.
+
+> [!QUESTION] Exercise 13: Two-Component Gaussian Rate-Distortion Curve
+> *This problem computes the rate-distortion function at all points on the reverse water-filling curve for a two-component Gaussian source.*
+>
+> > **Prerequisites:** [[#5.3 Multivariate Gaussian and Reverse Water-Filling|Section 5.3]]
+>
+> Let $X = (X_1, X_2)$ with $X_1 \sim \mathcal{N}(0, 4)$ and $X_2 \sim \mathcal{N}(0, 1)$ independent, with squared error distortion. Compute $R(D)$ for $D \in [0, 5]$ and identify the critical distortion $D^*$ at which the second component becomes inactive.
+
+> [!TIP]- Solution to Exercise 13
+> **Key insight:** The water level $\lambda$ transitions at the smaller variance $\sigma_2^2 = 1$.
+>
+> **Sketch:** The two variances are $\sigma_1^2 = 4, \sigma_2^2 = 1$. The water level $\lambda$ determines: $D_1 = \min(\lambda, 4)$, $D_2 = \min(\lambda, 1)$. Critical transition: when $\lambda = 1$, $D_2 = 1 = \sigma_2^2$ (component 2 deactivates). The total distortion at $\lambda = 1$ is $D^* = 1 + 1 = 2$. For $D > 2$: only component 1 is active, $\lambda = D - 1$... no wait — for $D > D^* = 2$, $\lambda > 1$ so $D_2 = 1$ and $D_1 = D - 1$. Rate: $R(D) = \frac{1}{2}\log(4/(D-1))$ for $D \in (1, 5]$, $R(5) = \frac{1}{2}\log(4/4) = 0$. For $D \leq 2$: both active, $D_1 = D_2 = D/2$ (no — both equal $\lambda$, so $D = 2\lambda$, $\lambda = D/2$). Rate: $R(D) = \frac{1}{2}\log(4/(D/2)) + \frac{1}{2}\log(1/(D/2)) = \frac{1}{2}\log(8/D) + \frac{1}{2}\log(2/D) = \frac{1}{2}\log(16/D^2)$ for $D \leq 2$.
 
 ---
 
@@ -461,6 +622,138 @@ def trace_rd_curve(p_x, d_matrix, beta_grid):
 > - The convergence rate is linear (geometric) with rate determined by the second-largest singular value of the transfer matrix $T(\hat{x}|x) \propto r(\hat{x})e^{-\beta d(x,\hat{x})}$. For well-conditioned problems, $O(100)$ iterations typically suffice.
 > - For the *channel capacity* problem (Arimoto's dual), the roles of source and channel are interchanged: minimize $I(X;Y)$ over input distributions $p(x)$ for fixed channel $p(y|x)$.
 
+> [!QUESTION] Exercise 14: Fixed-Point Equations of Blahut-Arimoto
+> *This problem derives the Blahut-Arimoto fixed-point equation from the stationarity condition.*
+>
+> > **Prerequisites:** [[#6.2 Alternating Minimization|Section 6.2]]
+>
+> Show that the update equations in Section 6.3 are exactly the fixed-point equations for the Gibbs test channel of Proposition 5.1. That is, verify that $q^* = \arg\min_q F_\beta(q, r^*)$ is the Gibbs form, and $r^* = \arg\min_r F_\beta(q^*, r)$ is the induced marginal.
+
+> [!TIP]- Solution to Exercise 14
+> **Key insight:** The two steps of Blahut-Arimoto are exactly the KKT stationarity conditions for the Lagrangian $F_\beta$.
+>
+> **Sketch:** For fixed $r$, minimize $F_\beta(q, r) = \sum_{x,\hat{x}} p(x)q(\hat{x}|x)[\log(q(\hat{x}|x)/r(\hat{x})) + \beta d(x,\hat{x})]$ over $q(\hat{x}|x)$ with $\sum_{\hat{x}}q(\hat{x}|x)=1$. Setting derivative to zero: $p(x)[1 + \log q(\hat{x}|x) - \log r(\hat{x}) + \beta d(x,\hat{x})] = p(x)\lambda(x)$. Solving: $q(\hat{x}|x) = r(\hat{x})e^{-\beta d(x,\hat{x})+\lambda(x)-1}$, and normalizing gives the Gibbs form. For fixed $q$, minimize over $r$: $\partial F_\beta/\partial r(\hat{x}) = -\sum_x p(x)q(\hat{x}|x)/r(\hat{x}) + \mu = 0$ (with $\sum_{\hat{x}}r(\hat{x})=1$), giving $r(\hat{x}) \propto \sum_x p(x)q(\hat{x}|x)$ — exactly the induced marginal.
+
+> [!QUESTION] Exercise 15: Monotone Non-Increase of the Free Energy
+> *This problem establishes that the Blahut-Arimoto free energy is non-increasing.*
+>
+> > **Prerequisites:** [[#6.2 Alternating Minimization|Section 6.2]]
+>
+> Prove that each alternating step of the Blahut-Arimoto algorithm does not increase $F_\beta$: (a) show $F_\beta(q^{(t+1)}, r^{(t)}) \leq F_\beta(q^{(t)}, r^{(t)})$, and (b) $F_\beta(q^{(t+1)}, r^{(t+1)}) \leq F_\beta(q^{(t+1)}, r^{(t)})$.
+
+> [!TIP]- Solution to Exercise 15
+> **Key insight:** Each step is an exact minimization, so the objective cannot increase.
+>
+> **Sketch:** (a) $q^{(t+1)} = \arg\min_q F_\beta(q, r^{(t)})$ by definition, so $F_\beta(q^{(t+1)}, r^{(t)}) \leq F_\beta(q^{(t)}, r^{(t)})$. (b) The function $F_\beta(q, r) = -\sum_{\hat{x}} r(\hat{x}) \cdot [\text{something}]$ — more precisely, for fixed $q$, $F_\beta(q,r) = \sum_{x,\hat{x}} p(x)q(\hat{x}|x)\log q(\hat{x}|x) - \sum_{\hat{x}} r(\hat{x})\log r(\hat{x}) + \text{const}$... Actually: $F_\beta(q,r) = I(X;\hat{X})|_q + \beta\mathbb{E}[d] + D_{\text{KL}}(q(\hat{x}) \| r(\hat{x}))$. The KL term is non-negative and equals zero iff $r = q(\hat{x})$. So choosing $r^{(t+1)} = q^{(t+1)}(\hat{x})$ minimizes the KL, reducing $F_\beta$.
+
+> [!QUESTION] Exercise 16: Blahut-Arimoto Sweep and Gaussian Validation
+> *This problem implements the full Blahut-Arimoto sweep and compares it to the theoretical Gaussian curve.*
+>
+> > **Prerequisites:** [[#6.3 Update Equations and Convergence|Section 6.3]]
+>
+> Write Python code that (a) discretizes a Gaussian source $X \sim \mathcal{N}(0, 1)$ on a fine grid, (b) runs `blahut_arimoto` for 20 values of $\beta$ logarithmically spaced in $[0.1, 100]$, (c) overlays the theoretical curve $R(D) = \frac{1}{2}\log(1/D)$ (in nats), and (d) reports the maximum absolute error between the computed and theoretical curves.
+
+> [!TIP]- Solution to Exercise 16
+> **Key insight:** The Blahut-Arimoto algorithm on a fine discretization of a Gaussian source converges to the continuous limit as the grid size increases.
+>
+> **Sketch:**
+> ```python
+> import numpy as np
+> import matplotlib
+> matplotlib.use('Agg')
+> import matplotlib.pyplot as plt
+>
+> # Discretize N(0,1) on a grid
+> N = 200
+> x_grid = np.linspace(-4, 4, N)
+> dx = x_grid[1] - x_grid[0]
+> p_x = np.exp(-0.5 * x_grid**2) / np.sqrt(2 * np.pi) * dx
+> p_x /= p_x.sum()   # normalize
+>
+> # Squared error distortion matrix
+> d_matrix = (x_grid[:, None] - x_grid[None, :])**2
+>
+> # Sweep over beta
+> beta_grid = np.logspace(-1, 2, 20)
+> rd_points = []
+> for beta in beta_grid:
+>     R, D, _ = blahut_arimoto(p_x, d_matrix, beta)
+>     rd_points.append((D, R))
+>
+> D_vals, R_vals = zip(*sorted(rd_points))
+>
+> # Theoretical curve
+> D_theory = np.linspace(0.01, 1.0, 200)
+> R_theory = 0.5 * np.log(1.0 / D_theory)
+>
+> # Maximum absolute error (interpolate computed onto theory grid)
+> D_interp = np.array(D_vals)
+> R_interp = np.array(R_vals)
+> # (Interpolation and error computation omitted for brevity)
+>
+> fig, ax = plt.subplots()
+> ax.plot(D_theory, R_theory, label='Theoretical R(D)')
+> ax.scatter(D_vals, R_vals, label='Blahut-Arimoto')
+> ax.set_xlabel('D'); ax.set_ylabel('R (nats)')
+> ax.legend()
+> fig.savefig('/tmp/rd_curve.png')
+> ```
+
+> [!QUESTION] Exercise 17: Convergence Rate of Blahut-Arimoto
+> *This problem analyzes the convergence rate of the Blahut-Arimoto iterations for a binary symmetric source.*
+>
+> > **Prerequisites:** [[#6.3 Update Equations and Convergence|Section 6.3]]
+>
+> For the binary symmetric source $X \sim \text{Bern}(1/2)$ with Hamming distortion and $\beta = 2$ (corresponding to a crossover probability $D \approx e^{-2}/(1 + e^{-2})$), run 50 iterations of Blahut-Arimoto and plot $|F_\beta^{(t)} - F_\beta^*|$ versus iteration $t$ on a log scale. Estimate the linear convergence rate.
+
+> [!TIP]- Solution to Exercise 17
+> **Key insight:** The convergence is linear (geometric decay) with a rate determined by the second singular value of the transfer matrix.
+>
+> **Sketch:**
+> ```python
+> import numpy as np
+>
+> # Binary symmetric source
+> p_x = np.array([0.5, 0.5])
+> d_matrix = np.array([[0.0, 1.0], [1.0, 0.0]])
+> beta = 2.0
+>
+> r = np.ones(2) / 2.0
+> F_values = []
+> for _ in range(50):
+>     # Step 1
+>     log_num = np.log(r + 1e-300)[None, :] - beta * d_matrix
+>     log_num -= log_num.max(axis=1, keepdims=True)
+>     q = np.exp(log_num); q /= q.sum(axis=1, keepdims=True)
+>     # Step 2
+>     r = p_x @ q
+>     # Free energy
+>     joint = p_x[:, None] * q
+>     I_XY = np.sum(joint * np.log(q / (r[None,:] + 1e-300) + 1e-300))
+>     E_d  = np.sum(joint * d_matrix)
+>     F_values.append(I_XY + beta * E_d)
+>
+> F_star = F_values[-1]
+> errors = np.abs(np.array(F_values[:-1]) - F_star)
+> # Fit log(errors) vs t to estimate linear rate
+> t = np.arange(len(errors))
+> slope, _ = np.polyfit(t[5:], np.log(errors[5:] + 1e-30), 1)
+> print(f"Estimated convergence rate: exp({slope:.4f}) per iteration")
+> ```
+> For $\beta = 2$ and a $2 \times 2$ source, convergence is typically achieved within 10–20 iterations.
+
+> [!QUESTION] Exercise 18: Complexity Analysis of Blahut-Arimoto
+> *This problem analyzes the complexity of the Blahut-Arimoto algorithm and the trade-off between grid fineness and accuracy.*
+>
+> > **Prerequisites:** [[#6.3 Update Equations and Convergence|Section 6.3]]
+>
+> For a source with $|\mathcal{X}| = n_x$ and $|\hat{\mathcal{X}}| = n_{\hat{x}}$, analyze the per-iteration time and space complexity of the Blahut-Arimoto algorithm. If the grid has $n_x = n_{\hat{x}} = N$, how does the error in approximating a continuous source scale with $N$?
+
+> [!TIP]- Solution to Exercise 18
+> **Key insight:** The dominant cost is the $N \times N$ matrix multiply for the test channel update; the approximation error scales as $O(1/N^2)$ for smooth source densities.
+>
+> **Sketch:** Per iteration: Step 1 requires computing $N \times N$ values of $r^{(t)}(\hat{x})e^{-\beta d(x,\hat{x})}$ — time $O(N^2)$, then normalizing $N$ rows — time $O(N^2)$. Step 2 is a matrix-vector product $p_x^\top q$ — time $O(N^2)$. Total per iteration: $O(N^2)$. Space: $O(N^2)$ for the distortion matrix and test channel. Accuracy: discretizing a smooth density $p(x)$ on a grid of spacing $\Delta = O(1/N)$ introduces a quadrature error of $O(\Delta^2) = O(1/N^2)$ in the expected distortion and mutual information, by the Euler-Maclaurin formula. So $N = 200$ gives accuracy $\approx 2.5 \times 10^{-5}$ — adequate for most practical purposes.
+
 ---
 
 ## 7. Connection to Learned Compression and Quantization 🤖
@@ -515,361 +808,50 @@ $$C(f_X, b) = \frac{1}{12}\left(\int f_X(x)^{1/3}\,dx\right)^3 \cdot \frac{1}{4^
 > [!INFO] Connection to reverse water-filling
 > TurboQuant can be viewed as applying the same quantization budget to all coordinates after rotation, which (by high-dimensional isotropy of the rotated vector) is equivalent to the equal-distortion allocation of reverse water-filling when all eigenvalues are equal. The random rotation ensures that the source vector is "whitened" so that all components have equal variance, making uniform bit allocation near-optimal.
 
----
-
-## 8. Exercises 📝
-
-### 8.1 Mathematical Development
-
-**1.** *This problem establishes that the rate-distortion function is well-defined as a minimum (not merely an infimum) for discrete sources with bounded distortion.*
-
-> **Prerequisites:** [[#2. The Rate-Distortion Function|Section 2]]
-
-Show that for finite alphabets $\mathcal{X}$ and $\hat{\mathcal{X}}$ and bounded distortion $d$, the feasible set $\{q(\hat{x}|x) : \mathbb{E}[d(X,\hat{X})] \leq D\}$ is compact and $q \mapsto I(X;\hat{X})$ is lower semi-continuous, so the minimum is attained.
-
-> [!TIP]- Solution to Exercise 1
-> **Key insight:** Compactness of the simplex plus continuity of mutual information on the interior, with lower semi-continuity on the boundary.
+> [!QUESTION] Exercise 19: Panter-Dite Integral for Gaussian Coordinates
+> *This problem derives a lower bound on the constant in TurboQuant's distortion bound using the Panter-Dite formula.*
 >
-> **Sketch:** The set of all conditional distributions $q(\hat{x}|x)$ on a finite product space is the product of $|\mathcal{X}|$ probability simplices, hence compact (subset of $[0,1]^{|\mathcal{X}||\hat{\mathcal{X}}|}$). The distortion constraint $\mathbb{E}[d] \leq D$ is a closed half-space (intersection with the compact simplex product is compact). Mutual information $I(X;\hat{X}) = \sum_{x,\hat{x}} p(x)q(\hat{x}|x)\log[q(\hat{x}|x)/q(\hat{x})]$ is continuous on $\{q : q(\hat{x}|x) > 0 \,\forall x, \hat{x}\}$ and lower semi-continuous on the boundary (the limit of the negative terms is $+\infty$ if a marginal goes to zero but a conditional does not). Hence the infimum is attained on the compact feasible set.
-
----
-
-**2.** *This problem establishes the convexity of $R(D)$ from the concavity of mutual information.*
-
-> **Prerequisites:** [[#2.2 Properties|Section 2.2]]
-
-Let $q_1$ and $q_2$ be two test channels achieving $(D_1, R(D_1))$ and $(D_2, R(D_2))$ respectively. Form the mixture channel $q_\lambda = \lambda q_1 + (1-\lambda)q_2$. Prove that $I_{q_\lambda}(X;\hat{X}) \leq \lambda I_{q_1}(X;\hat{X}) + (1-\lambda)I_{q_2}(X;\hat{X})$ using the convexity of $I(X;\hat{X})$ in $q(\hat{x}|x)$ for fixed $p(x)$.
-
-> [!TIP]- Solution to Exercise 2
-> **Key insight:** $I(X;\hat{X})$ is convex in $q(\hat{x}|x)$ for fixed marginal $p(x)$ — this is a standard consequence of the log-sum inequality.
+> > **Prerequisites:** [[#7.2 TurboQuant: Near-Optimal Vector Quantization|Section 7.2]]
 >
-> **Sketch:** Write $I(X;\hat{X}) = D_{\text{KL}}(p(x,\hat{x}) \| p(x)p(\hat{x}))$. For fixed $p(x)$, the joint $p(x,\hat{x}) = p(x)q(\hat{x}|x)$ is linear in $q$, while the product marginal $p(x)p(\hat{x})$ is also affected. Use the log-sum inequality: for positive sequences $a_i, b_i$, $\sum_i a_i \log(a_i/b_i) \leq \ldots$ (the KL divergence is jointly convex in the pair of distributions). Since the KL is jointly convex and the first argument is linear in $q$, it is convex in $q$. Then $R(\lambda D_1 + (1-\lambda)D_2) \leq I_{q_\lambda}(X;\hat{X}) \leq \lambda R(D_1) + (1-\lambda)R(D_2)$.
+> Let $Z \sim \mathcal{N}(0, 1/d)$ be a scalar source (one coordinate of a rotated unit-norm vector). For $b$-bit optimal scalar quantization, the Panter-Dite formula gives distortion per coordinate $C(f_Z, b) = \frac{1}{12}\left(\int f_Z(x)^{1/3}dx\right)^3 / 4^b$. Evaluate the integral $\int_{-\infty}^\infty f_Z(x)^{1/3}dx$ for $f_Z = \mathcal{N}(0, 1/d)$ and hence derive the per-coordinate distortion as a function of $d$ and $b$.
 
----
-
-**3.** *This problem computes the rate-distortion function for a binary symmetric source, the simplest nontrivial example.*
-
-> **Prerequisites:** [[#1.3 Canonical Examples|Section 1.3]], [[#2.1 Definition|Section 2.1]]
-
-Let $X \sim \text{Bernoulli}(1/2)$ with Hamming distortion. Show that $R(D) = 1 - H_b(D)$ for $0 \leq D \leq 1/2$ using the Gibbs test channel: $q^*(\hat{x}|x) = D \cdot \mathbf{1}[\hat{x} \neq x] + (1-D)\cdot\mathbf{1}[\hat{x} = x]$ (i.e., the BSC with crossover probability $D$).
-
-> [!TIP]- Solution to Exercise 3
-> **Key insight:** For the uniform binary source, the optimal test channel is the binary symmetric channel with crossover probability $D$.
->
-> **Sketch:** With $X \sim \text{Bern}(1/2)$ and the BSC test channel, $\hat{X} \sim \text{Bern}(1/2)$ (by symmetry), so $H(\hat{X}) = 1$ bit. The conditional $H(\hat{X}|X) = H_b(D)$ (each row of the transition matrix is $(1-D, D)$). Thus $I(X;\hat{X}) = H(\hat{X}) - H(\hat{X}|X) = 1 - H_b(D)$. This test channel achieves distortion $\mathbb{E}[d_H] = D$ and rate $1 - H_b(D)$. Optimality: any other test channel achieving distortion $\leq D$ must have $I(X;\hat{X}) \geq 1 - H_b(D)$ by the data processing inequality applied to the Markov chain $X \to \hat{X} \to \hat{X}'$ where $\hat{X}'$ is a BSC output. (Alternatively, use the fact that the Gibbs form of Section 5.1 yields exactly the BSC for binary uniform sources.)
-
----
-
-**4.** *This problem proves the Shannon lower bound, which shows the Gaussian source is the hardest to compress.*
-
-> **Prerequisites:** [[#4.1 Scalar Gaussian|Section 4.1]]
-
-For a continuous source $X$ with differential entropy $h(X)$ and squared error distortion, prove the *Shannon lower bound*:
-
-$$R(D) \geq h(X) - \frac{1}{2}\log(2\pi eD).$$
-
-*Hint:* Use the fact that for any random variable $W$ with $\mathbb{E}[W^2] \leq D$, $h(W) \leq \frac{1}{2}\log(2\pi eD)$ (Gaussian maximizes entropy under variance constraint).
-
-> [!TIP]- Solution to Exercise 4
-> **Key insight:** The differential entropy of the "error" $X - \hat{X}$ is at most that of a Gaussian with the same variance.
->
-> **Sketch:** For any test channel $q(\hat{x}|x)$ with $\mathbb{E}[(X-\hat{X})^2] \leq D$: write $I(X;\hat{X}) = h(X) - h(X|\hat{X})$. Now $h(X|\hat{X}) = h(X - \hat{X}|\hat{X}) \leq h(X - \hat{X})$ (conditioning reduces entropy) $\leq \frac{1}{2}\log(2\pi e\,\mathbb{E}[(X-\hat{X})^2]) \leq \frac{1}{2}\log(2\pi eD)$. Hence $I(X;\hat{X}) \geq h(X) - \frac{1}{2}\log(2\pi eD)$. This bound is tight for Gaussian sources.
-
----
-
-**5.** *This problem derives the parametric slope condition relating $\beta$ to the derivative of $R(D)$.*
-
-> **Prerequisites:** [[#5.2 Parametric Equations|Section 5.2]]
-
-Using the parametric equations $D(\beta) = \mathbb{E}_{q^*}[d(X,\hat{X})]$ and $R(\beta) = I_{q^*}(X;\hat{X})$, show by implicit differentiation that
-
-$$\frac{dR}{dD} = -\beta.$$
-
-*Hint:* Differentiate the Lagrangian $R(\beta) + \beta D(\beta)$ with respect to $\beta$ and use the envelope theorem.
-
-> [!TIP]- Solution to Exercise 5
-> **Key insight:** The envelope theorem says that at a constrained optimum, the derivative of the optimal value with respect to the constraint parameter equals the Lagrange multiplier.
->
-> **Sketch:** The Lagrangian value at the optimum is $L(\beta) = R(\beta) + \beta(D(\beta) - D)$. By the envelope theorem, $dL/d\beta = D(\beta)$ (the derivative of the objective with respect to the multiplier equals the constraint). Differentiating $L = R + \beta D - \beta D$ with respect to $D$ at fixed $\beta$: from $dR/dD = -\beta$ follows from the optimality condition. More directly: differentiate $R(\beta) = I_{q^*(\beta)}(X;\hat{X})$ and $D(\beta)$ with respect to $\beta$, using the Gibbs form of $q^*$ to compute $d/d\beta$; the ratio $dR/dD = (dR/d\beta)/(dD/d\beta)$ simplifies to $-\beta$ by a direct calculation analogous to the thermodynamic relation $dF = -S\,dT$.
-
----
-
-**6.** *This problem verifies that the reverse water-filling allocation satisfies the KKT conditions.*
-
-> **Prerequisites:** [[#5.3 Multivariate Gaussian and Reverse Water-Filling|Section 5.3]]
-
-For the parallel Gaussian source with variances $\sigma_1^2 \geq \sigma_2^2 \geq \ldots \geq \sigma_k^2 > 0$, write out the KKT conditions for the problem $\min_{D_j \geq 0} \sum_j R_j(D_j)$ subject to $\sum_j D_j = D$. Show that the reverse water-filling solution $D_j^* = \min(\lambda, \sigma_j^2)$ satisfies these conditions.
-
-> [!TIP]- Solution to Exercise 6
-> **Key insight:** The KKT conditions equalize the marginal rate reduction $-dR_j/dD_j$ across all active components.
->
-> **Sketch:** Lagrangian: $\mathcal{L} = \sum_j \frac{1}{2}[\log(\sigma_j^2/D_j)]^+ - \mu(\sum_j D_j - D) + \sum_j \nu_j(-D_j)$. Stationarity for active $j$ (where $D_j < \sigma_j^2$): $\frac{d}{dD_j}\frac{1}{2}\log(\sigma_j^2/D_j) - \mu = 0 \implies -\frac{1}{2D_j} = \mu \implies D_j = -\frac{1}{2\mu} = \lambda$. For inactive $j$ (where $D_j = \sigma_j^2$ so $R_j = 0$): the constraint $D_j \leq \sigma_j^2$ is active, meaning $\nu_j > 0$ and $D_j = \sigma_j^2 \leq \lambda$. All KKT conditions are satisfied.
-
----
-
-**7.** *This problem establishes the data processing inequality for rate-distortion functions.*
-
-> **Prerequisites:** [[#2.1 Definition|Section 2.1]], [[#3.4 Converse Proof Sketch|Section 3.4]]
-
-Let $X \to Y \to Z$ be a Markov chain where $Y = f(X)$ is a deterministic function. Let $R_X(D)$ and $R_Y(D)$ denote the rate-distortion functions for $X$ and $Y$ respectively, with the same distortion on the reproduction. Show that $R_Y(D) \leq R_X(D)$ for all $D$.
-
-> [!TIP]- Solution to Exercise 7
-> **Key insight:** Any code for $X$ gives a code for $Y = f(X)$ at the same rate and distortion (by composing the encoder with $f$).
->
-> **Sketch:** Let $q(\hat{x}|x)$ be a test channel for $X$ achieving $(D, R_X(D))$. Define the induced test channel for $Y$ as $q(\hat{y}|y) = \sum_{x: f(x)=y} p(x|y) q(\hat{y}|x)$ (marginalise over $x$ given $y$). By the data processing inequality, $I(Y;\hat{Y}) \leq I(X;\hat{X}) = R_X(D)$, and the distortion is unchanged (since $d$ acts on the $Y$-space). Hence $R_Y(D) \leq I(Y;\hat{Y}) \leq R_X(D)$.
-
----
-
-**8.** *This problem computes the rate-distortion function for an exponential source under absolute distortion.*
-
-> **Prerequisites:** [[#5.1 The Gibbs Test Channel|Section 5.1]]
-
-Let $X \sim \text{Exp}(\mu)$ (with pdf $f(x) = \mu e^{-\mu x}$ for $x \geq 0$) and $d(x, \hat{x}) = |x - \hat{x}|$. Show using the Gibbs test channel that $R(D) = [\log(\mu/\beta)]^+$ where $\beta = 1/(2D)$, and that $R(D) = \log(1/(2\mu D))$ for $D < 1/(2\mu)$.
-
-> [!TIP]- Solution to Exercise 8
-> **Key insight:** The Gibbs optimal test channel for absolute distortion and an exponential source is a two-sided Laplace distribution centered at $x$.
->
-> **Sketch:** The Gibbs test channel is $q^*(\hat{x}|x) \propto q^*(\hat{x}) e^{-\beta|x-\hat{x}|}$. Assume the marginal $q^*(\hat{x})$ is exponential with the same rate $\mu$ (by a fixed-point argument). Then $q^*(\hat{x}|x) \propto e^{-\mu\hat{x}} e^{-\beta|x-\hat{x}|}$, which for $\beta < \mu$ integrates to a proper distribution. The self-consistency condition forces $\beta = 1/(2D)$ and $q^*$ to be exponential. The mutual information is $h(X) - h(X|\hat{X}) = (1 + \log(1/\mu)) - \log(2/\beta) = \log(\beta/\mu) + 1 - 1 = \log(\beta/(2\mu))$... evaluating more carefully yields $R(D) = \log(1/(2\mu D))$ for $D < 1/(2\mu)$.
-
----
-
-**9.** *This problem proves the converse half of the rate-distortion theorem using Fano's inequality.*
-
-> **Prerequisites:** [[#3.4 Converse Proof Sketch|Section 3.4]]
-
-In the converse proof, the key step is bounding $\frac{1}{n}I(X^n; \hat{X}^n)$ from below. Fill in the detail: show that for any test channel inducing marginals $q_i(\hat{x}|x) = p(\hat{X}_i|\hat{X}^n, X_i)$, we have $I(X_i; \hat{X}_i) \geq R(E[d(X_i, \hat{X}_i)])$ by the definition of $R$.
-
-> [!TIP]- Solution to Exercise 9
-> **Key insight:** The rate-distortion function $R(\cdot)$ is defined as a minimum, so any joint distribution achieving distortion $d_i$ must have mutual information $\geq R(d_i)$.
->
-> **Sketch:** For each $i$, the marginal test channel $q_i(\hat{x}|x) = p(\hat{X}_i = \hat{x} | X_i = x)$ is a valid (though not necessarily optimal) test channel for the source $X_i \sim p(x)$. By definition, $R(D) = \min_{q: \mathbb{E}[d] \leq D} I(X;\hat{X})$, so $I(X_i; \hat{X}_i) \geq R(\mathbb{E}[d(X_i, \hat{X}_i)])$ since $q_i$ is feasible for the distortion level $\mathbb{E}[d(X_i, \hat{X}_i)]$. Averaging over $i$ and applying Jensen's inequality (convexity of $R$) gives $\frac{1}{n}\sum_i R(d_i) \geq R(\frac{1}{n}\sum_i d_i) \geq R(D)$.
-
----
-
-**10.** *This problem shows that the Gaussian source is the extremal source for squared error via the Shannon lower bound.*
-
-> **Prerequisites:** [[#4.1 Scalar Gaussian|Section 4.1]], [[#8.1 Mathematical Development|Exercise 4]]
-
-Let $X$ have variance $\sigma^2$ and differential entropy $h(X)$. Show that $R(D) \geq \frac{1}{2}\log(\sigma^2/D)$ with equality if and only if $X \sim \mathcal{N}(0, \sigma^2)$.
-
-> [!TIP]- Solution to Exercise 10
-> **Key insight:** Combining the Shannon lower bound with the Gaussian maximum-entropy property.
->
-> **Sketch:** From Exercise 4, $R(D) \geq h(X) - \frac{1}{2}\log(2\pi eD)$. The maximum entropy bound gives $h(X) \leq \frac{1}{2}\log(2\pi e\sigma^2)$ with equality iff $X$ is Gaussian. Therefore $R(D) \geq \frac{1}{2}\log(2\pi e\sigma^2) - \frac{1}{2}\log(2\pi eD) = \frac{1}{2}\log(\sigma^2/D)$ with equality iff $X \sim \mathcal{N}(0,\sigma^2)$. The Gaussian source achieves this bound by the construction in Section 4.2.
-
----
-
-**11.** *This problem derives the Blahut-Arimoto fixed-point equation from the stationarity condition.*
-
-> **Prerequisites:** [[#6.2 Alternating Minimization|Section 6.2]]
-
-Show that the update equations in Section 6.3 are exactly the fixed-point equations for the Gibbs test channel of Proposition 5.1. That is, verify that $q^* = \arg\min_q F_\beta(q, r^*)$ is the Gibbs form, and $r^* = \arg\min_r F_\beta(q^*, r)$ is the induced marginal.
-
-> [!TIP]- Solution to Exercise 11
-> **Key insight:** The two steps of Blahut-Arimoto are exactly the KKT stationarity conditions for the Lagrangian $F_\beta$.
->
-> **Sketch:** For fixed $r$, minimize $F_\beta(q, r) = \sum_{x,\hat{x}} p(x)q(\hat{x}|x)[\log(q(\hat{x}|x)/r(\hat{x})) + \beta d(x,\hat{x})]$ over $q(\hat{x}|x)$ with $\sum_{\hat{x}}q(\hat{x}|x)=1$. Setting derivative to zero: $p(x)[1 + \log q(\hat{x}|x) - \log r(\hat{x}) + \beta d(x,\hat{x})] = p(x)\lambda(x)$. Solving: $q(\hat{x}|x) = r(\hat{x})e^{-\beta d(x,\hat{x})+\lambda(x)-1}$, and normalizing gives the Gibbs form. For fixed $q$, minimize over $r$: $\partial F_\beta/\partial r(\hat{x}) = -\sum_x p(x)q(\hat{x}|x)/r(\hat{x}) + \mu = 0$ (with $\sum_{\hat{x}}r(\hat{x})=1$), giving $r(\hat{x}) \propto \sum_x p(x)q(\hat{x}|x)$ — exactly the induced marginal.
-
----
-
-**12.** *This problem establishes that the Blahut-Arimoto free energy is non-increasing.*
-
-> **Prerequisites:** [[#6.2 Alternating Minimization|Section 6.2]]
-
-Prove that each alternating step of the Blahut-Arimoto algorithm does not increase $F_\beta$: (a) show $F_\beta(q^{(t+1)}, r^{(t)}) \leq F_\beta(q^{(t)}, r^{(t)})$, and (b) $F_\beta(q^{(t+1)}, r^{(t+1)}) \leq F_\beta(q^{(t+1)}, r^{(t)})$.
-
-> [!TIP]- Solution to Exercise 12
-> **Key insight:** Each step is an exact minimization, so the objective cannot increase.
->
-> **Sketch:** (a) $q^{(t+1)} = \arg\min_q F_\beta(q, r^{(t)})$ by definition, so $F_\beta(q^{(t+1)}, r^{(t)}) \leq F_\beta(q^{(t)}, r^{(t)})$. (b) The function $F_\beta(q, r) = -\sum_{\hat{x}} r(\hat{x}) \cdot [\text{something}]$ — more precisely, for fixed $q$, $F_\beta(q,r) = \sum_{x,\hat{x}} p(x)q(\hat{x}|x)\log q(\hat{x}|x) - \sum_{\hat{x}} r(\hat{x})\log r(\hat{x}) + \text{const}$... Actually: $F_\beta(q,r) = I(X;\hat{X})|_q + \beta\mathbb{E}[d] + D_{\text{KL}}(q(\hat{x}) \| r(\hat{x}))$. The KL term is non-negative and equals zero iff $r = q(\hat{x})$. So choosing $r^{(t+1)} = q^{(t+1)}(\hat{x})$ minimizes the KL, reducing $F_\beta$.
-
----
-
-**13.** *This problem computes the rate-distortion function at all points on the reverse water-filling curve for a two-component Gaussian source.*
-
-> **Prerequisites:** [[#5.3 Multivariate Gaussian and Reverse Water-Filling|Section 5.3]]
-
-Let $X = (X_1, X_2)$ with $X_1 \sim \mathcal{N}(0, 4)$ and $X_2 \sim \mathcal{N}(0, 1)$ independent, with squared error distortion. Compute $R(D)$ for $D \in [0, 5]$ and identify the critical distortion $D^*$ at which the second component becomes inactive.
-
-> [!TIP]- Solution to Exercise 13
-> **Key insight:** The water level $\lambda$ transitions at the smaller variance $\sigma_2^2 = 1$.
->
-> **Sketch:** The two variances are $\sigma_1^2 = 4, \sigma_2^2 = 1$. The water level $\lambda$ determines: $D_1 = \min(\lambda, 4)$, $D_2 = \min(\lambda, 1)$. Critical transition: when $\lambda = 1$, $D_2 = 1 = \sigma_2^2$ (component 2 deactivates). The total distortion at $\lambda = 1$ is $D^* = 1 + 1 = 2$. For $D > 2$: only component 1 is active, $\lambda = D - 1$... no wait — for $D > D^* = 2$, $\lambda > 1$ so $D_2 = 1$ and $D_1 = D - 1$. Rate: $R(D) = \frac{1}{2}\log(4/(D-1))$ for $D \in (1, 5]$, $R(5) = \frac{1}{2}\log(4/4) = 0$. For $D \leq 2$: both active, $D_1 = D_2 = D/2$ (no — both equal $\lambda$, so $D = 2\lambda$, $\lambda = D/2$). Rate: $R(D) = \frac{1}{2}\log(4/(D/2)) + \frac{1}{2}\log(1/(D/2)) = \frac{1}{2}\log(8/D) + \frac{1}{2}\log(2/D) = \frac{1}{2}\log(16/D^2)$ for $D \leq 2$.
-
----
-
-**14.** *This problem connects the information-theoretic rate-distortion function to the operational distortion-rate function via strong typicality.*
-
-> **Prerequisites:** [[#3.3 Achievability Proof Sketch|Section 3.3]]
-
-Let $D(R)$ be the inverse function of $R(D)$. Show that for any $\varepsilon > 0$, there exist codes with rate $R$ that achieve expected distortion $\leq D(R) + \varepsilon$ as $n \to \infty$. Identify which step of the achievability proof is responsible for the $\varepsilon$ slack.
-
-> [!TIP]- Solution to Exercise 14
-> **Key insight:** The $\varepsilon$ slack comes from using $(R(D) + \varepsilon)$-rate random codes; since we target distortion $D(R)$, we operate at the point $(D(R), R)$ on the curve.
->
-> **Sketch:** Fix $R$ and let $D = D(R)$ be the distortion level satisfying $R(D) = R$. Apply the achievability proof with the test channel $q^*$ optimal for $D$. The codebook uses $2^{n(R(D)+\varepsilon)}$ codewords — but we have rate $R = R(D)$, so we use $2^{nR}$ codewords. The joint typicality argument shows that with high probability, a jointly typical codeword exists and achieves per-symbol distortion $\leq \mathbb{E}[d(X,\hat{X})] + \varepsilon' = D + \varepsilon'$. The $\varepsilon$ slack arises because (1) the typical set definition has slack $\varepsilon'$, and (2) the probability of error goes to zero at rate $\exp(-n\delta)$ only for rates strictly above $I(X;\hat{X})$.
-
----
-
-**15.** *This problem proves that $R(D)$ and $D(R)$ are inverse functions on the domain where both are finite and positive.*
-
-> **Prerequisites:** [[#2.2 Properties|Section 2.2]], [[#3.2 Theorem Statement|Section 3.2]]
-
-Show rigorously that $D(R(D)) = D$ and $R(D(R)) = R$ on the region $D \in (0, D_{\max})$, using the strict monotonicity of $R$.
-
-> [!TIP]- Solution to Exercise 15
-> **Key insight:** Strict monotonicity (which follows from strict convexity of the constraint set for non-degenerate sources) ensures $R$ is a bijection on $(0, D_{\max})$.
->
-> **Sketch:** On $(0, D_{\max})$, $R(D)$ is strictly decreasing (since for $D_1 < D_2$, the feasible set for $D_2$ strictly contains that for $D_1$, and the minimum is strictly smaller by the non-degeneracy of the optimal test channel). A strictly monotone continuous function on an interval is a bijection onto its range. The inverse function $D(R) = R^{-1}(R)$ satisfies $D(R(D)) = D$ by definition of the inverse, and $R(D(R)) = R$ similarly.
-
----
-
-**16.** *This problem derives a lower bound on the constant in TurboQuant's distortion bound using the Panter-Dite formula.*
-
-> **Prerequisites:** [[#7.2 TurboQuant: Near-Optimal Vector Quantization|Section 7.2]]
-
-Let $Z \sim \mathcal{N}(0, 1/d)$ be a scalar source (one coordinate of a rotated unit-norm vector). For $b$-bit optimal scalar quantization, the Panter-Dite formula gives distortion per coordinate $C(f_Z, b) = \frac{1}{12}\left(\int f_Z(x)^{1/3}dx\right)^3 / 4^b$. Evaluate the integral $\int_{-\infty}^\infty f_Z(x)^{1/3}dx$ for $f_Z = \mathcal{N}(0, 1/d)$ and hence derive the per-coordinate distortion as a function of $d$ and $b$.
-
-> [!TIP]- Solution to Exercise 16
+> [!TIP]- Solution to Exercise 19
 > **Key insight:** The integral of the cube root of a Gaussian density is a Gaussian integral with rescaled variance.
 >
 > **Sketch:** $f_Z(x) = \sqrt{d/(2\pi)} e^{-dx^2/2}$. Then $f_Z(x)^{1/3} = (d/(2\pi))^{1/6} e^{-dx^2/6}$. This is proportional to $\mathcal{N}(0, 3/d)$ times a constant. The integral: $\int f_Z(x)^{1/3}dx = (d/(2\pi))^{1/6} \int e^{-dx^2/6}dx = (d/(2\pi))^{1/6} \cdot \sqrt{6\pi/d} = (d/(2\pi))^{1/6}(6\pi/d)^{1/2}$. Cubing: $\left(\int f_Z^{1/3}\right)^3 = (d/(2\pi))^{1/2}(6\pi/d)^{3/2} = \sqrt{d/(2\pi)} \cdot (6\pi)^{3/2} / d^{3/2} = (6\pi)^{3/2}/(d \cdot \sqrt{2\pi}) = (6\pi)^{3/2}/(\sqrt{2\pi}\,d)$. Per-coordinate distortion: $C = \frac{1}{12} \cdot \frac{(6\pi)^{3/2}}{\sqrt{2\pi}\,d\,4^b}$. Simplifying $(6\pi)^{3/2}/\sqrt{2\pi} = 6^{3/2}\pi/1 = 6\sqrt{6}\pi$... gives $C = \frac{6\sqrt{6}\pi}{12\,d\,4^b} = \frac{\sqrt{6}\pi}{2d\,4^b}$. Summing over $d$ coordinates: total MSE $= dC = \frac{\sqrt{6}\pi}{2\cdot 4^b}$. The factor $\sqrt{6}\pi/2 \approx 3.85$ exceeds the stated $\sqrt{3}\pi/2 \approx 2.72$ — the difference is due to a Beta-distribution correction over the asymptotic Gaussian. **The key takeaway is that the constant is independent of $d$.**
 
----
+> [!QUESTION] Exercise 20: VAE ELBO as an Upper Bound on the RD Lagrangian
+> *This problem shows that the VAE ELBO is an upper bound on the operational rate-distortion Lagrangian.*
+>
+> > **Prerequisites:** [[#7.1 Rate-Distortion Lagrangian and VAEs|Section 7.1]]
+>
+> Let $q_\phi(z|x)$ be an encoder, $p_\theta(x|z)$ a decoder, and $p(z) = \mathcal{N}(0,I)$ a prior. Show that the negative ELBO $-\mathcal{L}_{\text{ELBO}} = \mathbb{E}_{q_\phi(z|x)}[-\log p_\theta(x|z)] + D_{\text{KL}}(q_\phi(z|x) \| p(z))$ is an upper bound on the rate-distortion Lagrangian $d(x, \hat{x}) + \lambda \cdot (-\log q_\phi(z|x))$ in the sense that the ELBO training objective upper bounds the true achievable rate.
 
-**17.** *This problem shows that the VAE ELBO is an upper bound on the operational rate-distortion Lagrangian.*
-
-> **Prerequisites:** [[#7.1 Rate-Distortion Lagrangian and VAEs|Section 7.1]]
-
-Let $q_\phi(z|x)$ be an encoder, $p_\theta(x|z)$ a decoder, and $p(z) = \mathcal{N}(0,I)$ a prior. Show that the negative ELBO $-\mathcal{L}_{\text{ELBO}} = \mathbb{E}_{q_\phi(z|x)}[-\log p_\theta(x|z)] + D_{\text{KL}}(q_\phi(z|x) \| p(z))$ is an upper bound on the rate-distortion Lagrangian $d(x, \hat{x}) + \lambda \cdot (-\log q_\phi(z|x))$ in the sense that the ELBO training objective upper bounds the true achievable rate.
-
-> [!TIP]- Solution to Exercise 17
+> [!TIP]- Solution to Exercise 20
 > **Key insight:** The KL divergence $D_{\text{KL}}(q_\phi(z|x) \| p(z))$ upper bounds the entropy code length $-\log q_\phi(z|x)$ in expectation.
 >
 > **Sketch:** The minimum code length for $z$ under an entropy coder matching distribution $q_\phi(z|x)$ is $-\log q_\phi(z|x)$. The KL divergence satisfies $D_{\text{KL}}(q \| p) = \mathbb{E}_q[-\log p(z)] - H(q) = \mathbb{E}_q[-\log p(z)] + \mathbb{E}_q[\log q(z|x)]$. A code designed for $p(z)$ instead of $q(z|x)$ uses expected length $\mathbb{E}_q[-\log p(z)] = D_{\text{KL}}(q\|p) + H(q) \geq H(q)$. But the operational rate of transmitting $z$ in an end-to-end system uses cross-entropy $\mathbb{E}_q[-\log p(z)]$, so the ELBO is an upper bound on the sum of distortion and an upper bound on the code rate. The bound is tight when $p(z) = q_\phi(z|x)$ (posterior matches prior — which holds at equilibrium for a perfectly trained VAE on Gaussian data).
 
----
+> [!QUESTION] Exercise 21: Information-Theoretic Lower Bound for Vector Quantization
+> *This problem establishes the information-theoretic lower bound on vector quantization used in TurboQuant.*
+>
+> > **Prerequisites:** [[#7.2 TurboQuant: Near-Optimal Vector Quantization|Section 7.2]], [[#4.1 Scalar Gaussian|Section 4.1]]
+>
+> Prove that any randomized quantizer $Q : \mathbb{R}^d \to \{0,1\}^{db}$ (mapping unit-norm vectors to $b$ bits per coordinate) must satisfy $\mathbb{E}[\|x - Q(x)\|^2] \geq 1/4^b$ using the rate-distortion lower bound for the approximately Gaussian coordinates.
 
-**18.** *This problem establishes the information-theoretic lower bound on vector quantization used in TurboQuant.*
-
-> **Prerequisites:** [[#7.2 TurboQuant: Near-Optimal Vector Quantization|Section 7.2]], [[#4.1 Scalar Gaussian|Section 4.1]]
-
-Prove that any randomized quantizer $Q : \mathbb{R}^d \to \{0,1\}^{db}$ (mapping unit-norm vectors to $b$ bits per coordinate) must satisfy $\mathbb{E}[\|x - Q(x)\|^2] \geq 1/4^b$ using the rate-distortion lower bound for the approximately Gaussian coordinates.
-
-> [!TIP]- Solution to Exercise 18
+> [!TIP]- Solution to Exercise 21
 > **Key insight:** By concentration, each coordinate after random rotation is approximately $\mathcal{N}(0, 1/d)$, and the Gaussian rate-distortion bound applies.
 >
 > **Sketch:** After a random rotation (which does not change the expected MSE since $\mathbb{E}[\|Rx - R\hat{x}\|^2] = \mathbb{E}[\|x - \hat{x}\|^2]$), each coordinate $z_j = (Rx)_j$ has variance $1/d$ (by isotropy of Haar-uniform rotation). The rate-distortion lower bound for a source with variance $1/d$ under $b$-bit coding is $D_j \geq \sigma^2/2^{2R_j} = (1/d)/4^b$. Summing over $d$ coordinates: $\mathbb{E}[\|x - \hat{x}\|^2] = \sum_j D_j \geq d \cdot (1/d)/4^b = 1/4^b$.
 
----
-
-### 8.2 Algorithmic Applications
-
-**19.** *This problem implements the full Blahut-Arimoto sweep and compares it to the theoretical Gaussian curve.*
-
-> **Prerequisites:** [[#6.3 Update Equations and Convergence|Section 6.3]]
-
-Write Python code that (a) discretizes a Gaussian source $X \sim \mathcal{N}(0, 1)$ on a fine grid, (b) runs `blahut_arimoto` for 20 values of $\beta$ logarithmically spaced in $[0.1, 100]$, (c) overlays the theoretical curve $R(D) = \frac{1}{2}\log(1/D)$ (in nats), and (d) reports the maximum absolute error between the computed and theoretical curves.
-
-> [!TIP]- Solution to Exercise 19
-> **Key insight:** The Blahut-Arimoto algorithm on a fine discretization of a Gaussian source converges to the continuous limit as the grid size increases.
+> [!QUESTION] Exercise 22: Reverse Water-Filling Implementation
+> *This problem implements reverse water-filling and visualizes the rate-distortion curve for a 4-component Gaussian source.*
 >
-> **Sketch:**
-> ```python
-> import numpy as np
-> import matplotlib
-> matplotlib.use('Agg')
-> import matplotlib.pyplot as plt
+> > **Prerequisites:** [[#5.3 Multivariate Gaussian and Reverse Water-Filling|Section 5.3]]
 >
-> # Discretize N(0,1) on a grid
-> N = 200
-> x_grid = np.linspace(-4, 4, N)
-> dx = x_grid[1] - x_grid[0]
-> p_x = np.exp(-0.5 * x_grid**2) / np.sqrt(2 * np.pi) * dx
-> p_x /= p_x.sum()   # normalize
->
-> # Squared error distortion matrix
-> d_matrix = (x_grid[:, None] - x_grid[None, :])**2
->
-> # Sweep over beta
-> beta_grid = np.logspace(-1, 2, 20)
-> rd_points = []
-> for beta in beta_grid:
->     R, D, _ = blahut_arimoto(p_x, d_matrix, beta)
->     rd_points.append((D, R))
->
-> D_vals, R_vals = zip(*sorted(rd_points))
->
-> # Theoretical curve
-> D_theory = np.linspace(0.01, 1.0, 200)
-> R_theory = 0.5 * np.log(1.0 / D_theory)
->
-> # Maximum absolute error (interpolate computed onto theory grid)
-> D_interp = np.array(D_vals)
-> R_interp = np.array(R_vals)
-> # (Interpolation and error computation omitted for brevity)
->
-> fig, ax = plt.subplots()
-> ax.plot(D_theory, R_theory, label='Theoretical R(D)')
-> ax.scatter(D_vals, R_vals, label='Blahut-Arimoto')
-> ax.set_xlabel('D'); ax.set_ylabel('R (nats)')
-> ax.legend()
-> fig.savefig('/tmp/rd_curve.png')
-> ```
+> Write Python code to compute the reverse water-filling rate-distortion function for a diagonal Gaussian source with variances $\sigma^2 = [9, 4, 1, 0.25]$. For 100 values of $D$ from 0.01 to $D_{\max} = \sum_j \sigma_j^2 = 14.25$, compute $R(D)$ and plot the curve.
 
----
-
-**20.** *This problem analyzes the convergence rate of the Blahut-Arimoto iterations for a binary symmetric source.*
-
-> **Prerequisites:** [[#6.3 Update Equations and Convergence|Section 6.3]]
-
-For the binary symmetric source $X \sim \text{Bern}(1/2)$ with Hamming distortion and $\beta = 2$ (corresponding to a crossover probability $D \approx e^{-2}/(1 + e^{-2})$), run 50 iterations of Blahut-Arimoto and plot $|F_\beta^{(t)} - F_\beta^*|$ versus iteration $t$ on a log scale. Estimate the linear convergence rate.
-
-> [!TIP]- Solution to Exercise 20
-> **Key insight:** The convergence is linear (geometric decay) with a rate determined by the second singular value of the transfer matrix.
->
-> **Sketch:**
-> ```python
-> import numpy as np
->
-> # Binary symmetric source
-> p_x = np.array([0.5, 0.5])
-> d_matrix = np.array([[0.0, 1.0], [1.0, 0.0]])
-> beta = 2.0
->
-> r = np.ones(2) / 2.0
-> F_values = []
-> for _ in range(50):
->     # Step 1
->     log_num = np.log(r + 1e-300)[None, :] - beta * d_matrix
->     log_num -= log_num.max(axis=1, keepdims=True)
->     q = np.exp(log_num); q /= q.sum(axis=1, keepdims=True)
->     # Step 2
->     r = p_x @ q
->     # Free energy
->     joint = p_x[:, None] * q
->     I_XY = np.sum(joint * np.log(q / (r[None,:] + 1e-300) + 1e-300))
->     E_d  = np.sum(joint * d_matrix)
->     F_values.append(I_XY + beta * E_d)
->
-> F_star = F_values[-1]
-> errors = np.abs(np.array(F_values[:-1]) - F_star)
-> # Fit log(errors) vs t to estimate linear rate
-> t = np.arange(len(errors))
-> slope, _ = np.polyfit(t[5:], np.log(errors[5:] + 1e-30), 1)
-> print(f"Estimated convergence rate: exp({slope:.4f}) per iteration")
-> ```
-> For $\beta = 2$ and a $2 \times 2$ source, convergence is typically achieved within 10–20 iterations.
-
----
-
-**21.** *This problem implements reverse water-filling and visualizes the rate-distortion curve for a 4-component Gaussian source.*
-
-> **Prerequisites:** [[#5.3 Multivariate Gaussian and Reverse Water-Filling|Section 5.3]]
-
-Write Python code to compute the reverse water-filling rate-distortion function for a diagonal Gaussian source with variances $\sigma^2 = [9, 4, 1, 0.25]$. For 100 values of $D$ from 0.01 to $D_{\max} = \sum_j \sigma_j^2 = 14.25$, compute $R(D)$ and plot the curve.
-
-> [!TIP]- Solution to Exercise 21
+> [!TIP]- Solution to Exercise 22
 > **Key insight:** Binary search on $\lambda$ to satisfy the distortion constraint.
 >
 > **Sketch:**
@@ -910,26 +892,12 @@ Write Python code to compute the reverse water-filling rate-distortion function 
 > fig.savefig('/tmp/rw_rd.png')
 > ```
 
----
-
-**22.** *This problem analyzes the complexity of the Blahut-Arimoto algorithm and the trade-off between grid fineness and accuracy.*
-
-> **Prerequisites:** [[#6.3 Update Equations and Convergence|Section 6.3]]
-
-For a source with $|\mathcal{X}| = n_x$ and $|\hat{\mathcal{X}}| = n_{\hat{x}}$, analyze the per-iteration time and space complexity of the Blahut-Arimoto algorithm. If the grid has $n_x = n_{\hat{x}} = N$, how does the error in approximating a continuous source scale with $N$?
-
-> [!TIP]- Solution to Exercise 22
-> **Key insight:** The dominant cost is the $N \times N$ matrix multiply for the test channel update; the approximation error scales as $O(1/N^2)$ for smooth source densities.
+> [!QUESTION] Exercise 23: TurboQuant Empirical Verification
+> *This problem implements TurboQuant-style random rotation quantization and measures the empirical distortion.*
 >
-> **Sketch:** Per iteration: Step 1 requires computing $N \times N$ values of $r^{(t)}(\hat{x})e^{-\beta d(x,\hat{x})}$ — time $O(N^2)$, then normalizing $N$ rows — time $O(N^2)$. Step 2 is a matrix-vector product $p_x^\top q$ — time $O(N^2)$. Total per iteration: $O(N^2)$. Space: $O(N^2)$ for the distortion matrix and test channel. Accuracy: discretizing a smooth density $p(x)$ on a grid of spacing $\Delta = O(1/N)$ introduces a quadrature error of $O(\Delta^2) = O(1/N^2)$ in the expected distortion and mutual information, by the Euler-Maclaurin formula. So $N = 200$ gives accuracy $\approx 2.5 \times 10^{-5}$ — adequate for most practical purposes.
-
----
-
-**23.** *This problem implements TurboQuant-style random rotation quantization and measures the empirical distortion.*
-
-> **Prerequisites:** [[#7.2 TurboQuant: Near-Optimal Vector Quantization|Section 7.2]]
-
-Write Python code that (a) generates 1000 unit-norm vectors in $\mathbb{R}^{64}$, (b) applies a Haar-random rotation, (c) applies 3-bit uniform scalar quantization to each coordinate, (d) inverts the rotation, and (e) reports the mean MSE and compares it to the theoretical bounds $[1/4^3, (\sqrt{3}\pi/2)/4^3] = [1/64, \approx 0.0425]$.
+> > **Prerequisites:** [[#7.2 TurboQuant: Near-Optimal Vector Quantization|Section 7.2]]
+>
+> Write Python code that (a) generates 1000 unit-norm vectors in $\mathbb{R}^{64}$, (b) applies a Haar-random rotation, (c) applies 3-bit uniform scalar quantization to each coordinate, (d) inverts the rotation, and (e) reports the mean MSE and compares it to the theoretical bounds $[1/4^3, (\sqrt{3}\pi/2)/4^3] = [1/64, \approx 0.0425]$.
 
 > [!TIP]- Solution to Exercise 23
 > **Key insight:** Random rotation whitens the vector so uniform scalar quantization becomes near-optimal.
