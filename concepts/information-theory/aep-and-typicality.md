@@ -2,6 +2,11 @@
 
 ## Table of Contents
 
+- [[#0. Motivation: What Is a Typical Sequence?|0. Motivation: What Is a Typical Sequence?]]
+  - [[#0.1 A Worked Example: The Biased Coin|0.1 A Worked Example: The Biased Coin]]
+  - [[#0.2 The Typicality Spectrum|0.2 The Typicality Spectrum]]
+  - [[#0.3 Two Competing Exponentials|0.3 Two Competing Exponentials]]
+  - [[#0.4 What Entropy Measures|0.4 What Entropy Measures]]
 - [[#1. The AEP: Statement and Proof|1. The AEP: Statement and Proof]]
   - [[#1.1 Setup and Notation|1.1 Setup and Notation]]
   - [[#1.2 Statement of the AEP|1.2 Statement of the AEP]]
@@ -34,6 +39,105 @@
   - [[#6.2 Rate-Distortion Theory|6.2 Rate-Distortion Theory]]
   - [[#6.3 Statistical Physics|6.3 Statistical Physics]]
 - [[#References|References]]
+
+---
+
+## 0. Motivation: What Is a Typical Sequence?
+
+### 0.1 A Worked Example: The Biased Coin
+
+Suppose $X \sim \mathrm{Bernoulli}(0.9)$ — heads (1) with probability $0.9$, tails (0) with probability $0.1$. Flip this coin $n = 1000$ times and observe a sequence $x^{1000} \in \{0,1\}^{1000}$.
+
+**Which sequence is most likely?**
+
+The single most probable sequence is all-heads $(1,1,\ldots,1)$. Its probability is
+$$p(\text{all-heads}) = 0.9^{1000} \approx 2^{-152}.$$
+
+Now take any sequence with exactly 900 heads and 100 tails, say the specific sequence $(1,1,\ldots,1,0,0,\ldots,0)$. It has probability
+$$p(\text{900 heads, 100 tails}) = 0.9^{900} \cdot 0.1^{100} \approx 2^{-469}.$$
+
+So the all-heads sequence is $2^{317}$ times more probable than any individual 900-heads sequence. Yet how many sequences have exactly 900 heads?
+
+$$\binom{1000}{900} \approx 2^{1000 \cdot H_2(0.9)} = 2^{469},$$
+
+where $H_2(f) = -f\log_2 f - (1-f)\log_2(1-f)$ is the binary entropy function. The combined probability of all 900-heads sequences is therefore
+
+$$\underbrace{2^{469}}_{\text{count}} \times \underbrace{2^{-469}}_{\text{individual}} = 2^0 = 1.$$
+
+The all-heads sequence, by contrast, accounts for just $2^{-152}$ of total probability — negligible.
+
+> [!DANGER] Common misconception
+> **"Typical sequences are the most likely sequences."** This is false. The all-heads sequence is the *single most probable* sequence for $\mathrm{Bernoulli}(0.9)$, yet it is *atypical*. Typicality is not about individual probability — it is about whether a sequence's empirical statistics match the source distribution.
+
+### 0.2 The Typicality Spectrum
+
+We can assign every sequence $x^n$ a *typicality score*: its *empirical entropy*, defined as
+$$\hat{H}(x^n) \;=\; -\frac{1}{n}\log_2 p(x^n).$$
+
+For binary sequences, if $x^n$ has fraction $f$ of ones, then
+$$\hat{H}(x^n) = -f\log_2(0.9) - (1-f)\log_2(0.1).$$
+
+A sequence is *typical* when $\hat{H}(x^n)$ is close to the true entropy $H(X)$. For $X \sim \mathrm{Bernoulli}(0.9)$:
+$$H(0.9) = -0.9\log_2(0.9) - 0.1\log_2(0.1) \approx 0.469 \text{ bits/symbol}.$$
+
+The table below shows the typicality spectrum across different sequence types (in $n = 1000$ flips):
+
+| Fraction of heads $f$ | Empirical entropy $\hat{H}$ | Distance $|\hat{H} - H(0.9)|$ | Typical? |
+|---|---|---|---|
+| 1.00 — all heads | 0.152 bits | 0.317 | ✗ atypical |
+| 0.95 | 0.310 bits | 0.159 | ✗ atypical |
+| **0.90** — expected fraction | **0.469 bits** | **0** | **✓ typical** |
+| 0.85 | 0.627 bits | 0.158 | ✗ atypical |
+| 0.50 — fair coin behaviour | 1.737 bits | 1.268 | ✗ atypical |
+| 0.00 — all tails | 3.322 bits | 2.853 | ✗ atypical |
+
+*The empirical entropy $\hat{H}$ is minimised at $f = 0.9$ (equal to $H(0.9)$) and grows as $f$ departs from the true parameter. Sequences near $f = 0.9$ are typical; those far from it are atypical — regardless of whether they individually seem "likely."*
+
+> [!NOTE] Why is all-heads atypical?
+> The all-heads sequence has empirical entropy $0.152$ bits/symbol, far below $H(0.9) = 0.469$. The formula $\hat{H} = -\log_2 0.9 \approx 0.152$ says the sequence was "too easy to predict": seeing a heads each time was unsurprising given the $0.9$ bias, so the sequence carries less information per symbol than a typical realisation would. A *typical* sequence has *some* tails in it — enough to match the average surprise $H(0.9)$.
+
+### 0.3 Two Competing Exponentials
+
+The reason typical sequences dominate can be understood through two competing exponentials:
+
+```mermaid
+flowchart LR
+    A["Sequences with<br/>fraction f of heads"]
+    A --> B["Count<br/>≈ 2^(n · H₂(f))<br/>how many"]
+    A --> C["Individual probability<br/>= 2^(-n · h(f))<br/>how likely each one is"]
+    B --> D["Total probability<br/>≈ 2^(n · (H₂(f) - h(f)))"]
+    C --> D
+    D --> E{"Is f = 0.9?"}
+    E -->|"yes"| F["Exponent = 0<br/>Total prob ≈ 1"]
+    E -->|"no"| G["Exponent < 0<br/>Total prob → 0 exponentially"]
+```
+
+Here $h(f) = -f\log_2(0.9) - (1-f)\log_2(0.1)$ is the *cross-entropy* of Bernoulli($f$) against the true Bernoulli(0.9), and $H_2(f)$ is the *self-entropy* of Bernoulli($f$). Their difference equals the negative KL divergence:
+
+$$H_2(f) - h(f) = -D_{\mathrm{KL}}(\mathrm{Bernoulli}(f)\,\|\,\mathrm{Bernoulli}(0.9)) \leq 0,$$
+
+with equality if and only if $f = 0.9$.
+
+**So the total probability of a "type" (sequences with fraction $f$ of heads) decays exponentially in $D_{\mathrm{KL}}(\text{empirical} \| \text{true})$.** The typical set is the type where this KL divergence is zero — where empirical statistics exactly match the source. This is Sanov's theorem in miniature (Section 4.5).
+
+> [!EXAMPLE] Counting the balance
+> For $n = 1000$, $p = 0.9$, $f = 0.95$:
+> - Count: $\binom{1000}{950} \approx 2^{310}$ sequences
+> - Individual probability: $0.9^{950} \cdot 0.1^{50} \approx 2^{-310} \cdot 2^{-165} = 2^{-475}$... wait, $-f\log_2(0.9) - (1-f)\log_2(0.1) = 0.95\times0.152 + 0.05\times3.322 = 0.144+0.166 = 0.310$ bits. So individual probability $\approx 2^{-310}$.
+> - Total: $2^{310} \times 2^{-310} \approx 1$? No — the KL divergence from Bernoulli(0.95) to Bernoulli(0.9) is $D = H_2(0.95) - h(0.95)$. We have $H_2(0.95) \approx 0.286$ and $h(0.95) = 0.310$, so $D = 0.286 - 0.310 = -0.024$. Thus total probability $\approx 2^{1000 \times (-0.024)} = 2^{-24} \approx 6 \times 10^{-8}$: exponentially small.
+
+### 0.4 What Entropy Measures
+
+The AEP and typicality sharpen the operational meaning of entropy $H(X)$:
+
+1. **Effective alphabet size.** Even though there are $2^n$ sequences of length $n$, almost all probability concentrates on $\approx 2^{nH(X)}$ of them. *Entropy governs the effective number of distinguishable outcomes per symbol.*
+
+2. **Compression rate.** To transmit a typical sequence losslessly, you need $nH(X)$ bits — no more, no less. The AEP makes this precise (Section 3).
+
+3. **Surprise per symbol.** $H(X) = \mathbb{E}[-\log p(X)]$ is the expected surprise per observation. Typical sequences are precisely those where the *realised* surprise $-\frac{1}{n}\log p(x^n)$ matches the *expected* surprise $H(X)$.
+
+> [!INFO] The fair coin: maximum typicality spread
+> For a fair coin ($p = 0.5$), $H(X) = 1$ bit and the typical set has size $\approx 2^n$ — nearly all $2^n$ sequences are typical! That is because every sequence has the same probability $2^{-n}$, so there is no "atypical" sequence — every sequence has empirical entropy exactly $1$ bit. Uniformity is the maximally typical case. Any bias ($p \neq 0.5$) shrinks the typical set to a vanishing fraction of $\{0,1\}^n$.
 
 ---
 
