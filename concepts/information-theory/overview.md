@@ -9,7 +9,7 @@ This file is the index for the `concepts/information-theory/` folder. It lists p
 | File | Status | Topic |
 |------|--------|-------|
 | `entropy-and-divergences.md` | 🔲 Planned | Entropy, KL divergence, f-divergences, mutual information, and core inequalities |
-| `aep-and-typicality.md` | 🔲 Planned | Asymptotic equipartition property, typical sets, lossless source coding |
+| `aep-and-typicality.md` | ✅ Written | Asymptotic equipartition property, typical sets, lossless source coding |
 | `channel-capacity.md` | 🔲 Planned | Channel capacity, Fano's inequality, Shannon's noisy channel coding theorem |
 | `rate-distortion.md` | ✅ Written | Rate-distortion function, Blahut–Arimoto algorithm, connection to learned quantization |
 | `quantization.md` | ✅ Written | Scalar/vector quantization, Panter–Dite, product quantization, random rotation, JL lemma, TurboQuant |
