@@ -214,6 +214,7 @@ Specialized subagents are defined in `.claude/agents/`. Available agents:
 
 ## Workflow
 
+- **After any document is updated, immediately create a commit and push it to the remote repo.** Do not wait to be asked. This applies to every note, plan, or doc change — no exceptions.
 - Commit notes with descriptive messages explaining what was added or changed.
   - Format: `feat: add <topic> concept note`, `docs: update <topic> references`, `fix: correct <section> in <topic>`
 - Store plans in `docs/plans/` before executing them.
