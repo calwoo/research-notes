@@ -9,13 +9,13 @@ This file is the index for the `concepts/category-theory/derived-categories/` fo
 | File | Status | Topic |
 |------|--------|-------|
 | `triangulated-categories.md` | ✅ Written | Axiomatic theory: additive categories, shift functor, TR1–TR4, octahedral axiom, homotopy category K(A) as the canonical example |
-| `construction.md` | 🔲 Planned | Explicit construction of D(A): complexes, homotopy category, Verdier localization at quasi-isomorphisms, boundedness conditions D⁺/D⁻/Dᵇ |
+| `construction.md` | ✅ Written | Explicit construction of D(A): complexes, homotopy category, Verdier localization at quasi-isomorphisms, boundedness conditions D⁺/D⁻/Dᵇ |
 | `derived-functors.md` | 🔲 Planned | Right/left derived functors RF and LF via injective/projective resolutions, δ-functor formalism, Grothendieck spectral sequence |
 | `geometric.md` | 🔲 Planned | Derived categories of sheaves on schemes/ringed spaces, Grothendieck's six functors (f∗, f∗, f!, f!, ⊗ᴸ, RHom), proper base change |
 | `verdier-duality.md` | 🔲 Planned | Poincaré/Verdier duality rephrased as a triangulated self-duality of D(X) for locally compact spaces; f! in the topological setting; intersection cohomology |
 | `t-structures-weight-structures.md` | 🔲 Planned | t-structures (BBD), truncation functors, hearts; Bondarko's weight structures (dual notion); Postnikov t-structure on spectra; examples in algebra and topology |
 | `model-categories.md` | 🔲 Planned | Quillen model structures; homotopy category as a derived category; cofibrant/fibrant replacements as resolutions; Quillen adjunctions and derived functors; the model structure on chain complexes |
-| `spectra.md` | 🔲 Planned | Stable homotopy category SH as the universal example; spectra as the homotopy-theoretic analogue of D(Ab); Eilenberg–MacLane spectra; smash product; ring spectra; relation D(Ab) ≃ HZ-modules |
+| `spectra.md` | ✅ Written | Stable homotopy category SH as the universal example; spectra as the homotopy-theoretic analogue of D(Ab); Eilenberg–MacLane spectra; smash product; ring spectra; relation D(Ab) ≃ HZ-modules |
 | `stable-infinity-categories.md` | 🔲 Planned | Lurie's stable ∞-cats (pointed + finite limits commute with colimits); fix non-functoriality of cones; presentable stable ∞-cats; relation to triangulated cats and spectra |
 
 ---
