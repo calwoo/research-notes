@@ -2,6 +2,7 @@
 
 ## Table of Contents
 
+- [[#Introduction|Introduction]]
 - [[#1. Setup and Distortion Measures|1. Setup and Distortion Measures]]
   - [[#1.1 Source and Reproduction Alphabets|1.1 Source and Reproduction Alphabets]]
   - [[#1.2 Distortion Functions|1.2 Distortion Functions]]
@@ -30,6 +31,42 @@
   - [[#7.1 Rate-Distortion Lagrangian and VAEs|7.1 Rate-Distortion Lagrangian and VAEs]]
   - [[#7.2 TurboQuant: Near-Optimal Vector Quantization|7.2 TurboQuant: Near-Optimal Vector Quantization]]
 - [[#References|References]]
+
+---
+
+## Introduction 🗜️
+
+*Rate-distortion theory* is the branch of information theory that answers a deceptively simple question: **how many bits per symbol are needed to represent a source, if we are willing to tolerate some error?**
+
+Shannon's lossless source coding theorem tells us that a source $X \sim p(x)$ with entropy $H(X)$ requires at least $H(X)$ bits per symbol for exact reconstruction. But exact reconstruction is often unnecessary — a compressed image, a quantized audio signal, a low-precision neural network weight all involve controlled distortion. Once we permit error, the minimum achievable rate drops below $H(X)$ and becomes a function of how much distortion we allow. Rate-distortion theory characterizes this trade-off precisely.
+
+### The core question
+
+Suppose we encode a long block $X^n$ into a codeword of rate $R$ bits per symbol, then decode to a reconstruction $\hat{X}^n$. We measure fidelity by an average distortion $\frac{1}{n}\sum_i d(X_i, \hat{X}_i)$. The *rate-distortion function* $R(D)$ is defined as the infimum over all rates $R$ for which there exists a sequence of codes achieving expected distortion $\leq D$:
+
+$$R(D) = \min_{\substack{q(\hat{x}|x) \\ \mathbb{E}[d(X,\hat{X})] \leq D}} I(X; \hat{X}).$$
+
+This is an information-theoretic quantity — a constrained mutual information minimization over *test channels* $q(\hat{x}|x)$. The rate-distortion theorem (Section 3) establishes that $R(D)$ is the exact operational threshold: rates above $R(D)$ are achievable, rates below $R(D)$ are not.
+
+### Why mutual information?
+
+The mutual information $I(X; \hat{X})$ emerges as the right quantity for the same reason it appears in channel capacity: it measures the essential information carried by the reconstruction about the source. The encoder-decoder system is, after all, a noisy channel in reverse — instead of asking how much information a channel can transmit, we ask how much information the encoder must transmit to achieve a given reconstruction quality. The two problems are Lagrangian duals of each other.
+
+### Main results to know
+
+| Result | Statement | Where |
+|--------|-----------|-------|
+| **Rate-distortion theorem** | $R(D)$ is the minimum achievable rate at distortion $D$; achievability via random codebooks + joint typicality | Section 3 |
+| **Gaussian source, squared error** | $R(D) = \frac{1}{2}\log\frac{\sigma^2}{D}$ for $0 \leq D \leq \sigma^2$, zero thereafter | Section 4 |
+| **Parametric / Gibbs form** | $R(D)$ traces a curve via slope parameter $s \leq 0$: the optimal test channel is $q^*(\hat{x}|x) \propto q(\hat{x})\,e^{s\,d(x,\hat{x})}$ | Section 5 |
+| **Reverse water-filling** | For a multivariate Gaussian with eigenvalues $\lambda_i$, allocate distortion $D_i = \min(\theta, \lambda_i)$ for a water level $\theta$ | Section 5.3 |
+| **Blahut-Arimoto** | An alternating minimization algorithm that provably converges to $R(D)$ | Section 6 |
+
+> [!INFO] Relation to channel capacity
+> Rate-distortion and channel capacity are Lagrangian duals. The capacity problem maximizes $I(X;Y)$ over input distributions $p(x)$ subject to a power constraint; rate-distortion minimizes $I(X;\hat{X})$ over test channels $q(\hat{x}|x)$ subject to a distortion constraint. This duality is made precise by the *information-theoretic saddle point* perspective and underlies algorithms like Blahut-Arimoto, which has a capacity-computing counterpart.
+
+> [!WARNING] Lossless compression as a special case
+> Shannon's source coding theorem is the $D = 0$ boundary: $R(0) = H(X)$ for a discrete source under Hamming distortion. As $D$ increases from zero, $R(D)$ decreases monotonically and convexly toward zero, reaching $R(D_{\max}) = 0$ at the distortion level where a single reconstruction symbol achieves the minimum expected distortion.
 
 ---
 
