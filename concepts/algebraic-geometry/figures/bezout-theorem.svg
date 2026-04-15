@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+
+<svg 
+     version="1.1"
+     baseProfile="full"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:ev="http://www.w3.org/2001/xml-events"
+     width="36.41691284200127cm"
+     height="37.29267026505539cm"
+     viewBox="0 0 498 510"
+     >
+<title>
+
+</title>
+<g stroke-linejoin="miter" stroke-dashoffset="0.0000" stroke-dasharray="none" stroke-width="1.0000" stroke-miterlimit="10.000" stroke-linecap="square">
+<clipPath id="clip624fad85-071e-4f34-a404-ea3e32510b87">
+  <path d="M 0.0000 0.0000 L 0.0000 511.00 L 499.00 511.00 L 499.00 0.0000 z"/>
+</clipPath>
+<g clip-path="url(#clip1)">
+<g stroke-linecap="butt" fill="none" stroke-opacity="1.0000" stroke="#000000">
+  <path d="M 235.16 2.0000 L 235.16 511.00"/>
+</g> <!-- drawing style -->
+</g> <!-- clip1 -->
+<clipPath id="clipcb636fbf-df8f-4101-98f6-0eafa4dcc45c">
+  <path d="M 0.0000 0.0000 L 0.0000 511.00 L 499.00 511.00 L 499.00 0.0000 z"/>
+</clipPath>
+<g clip-path="url(#clip2)">
+<g stroke-linecap="butt" fill="none" stroke-opacity="1.0000" stroke="#000000">
+  <path d="M 235.16 1.0000 L 232.16 4.0000"/>
+</g> <!-- drawing style -->
+</g> <!-- clip2 -->
+<clipPath id="clip0efc5b9d-326f-4477-b6ef-9f4a9c5640ad">
+  <path d="M 0.0000 0.0000 L 0.0000 511.00 L 499.00 511.00 L 499.00 0.0000 z"/>
+</clipPath>
+<g clip-path="url(#clip3)">
+<g stroke-linecap="butt" fill="none" stroke-opacity="1.0000" stroke="#000000">
+  <path d="M 235.16 1.0000 L 238.16 4.0000"/>
+</g> <!-- drawing style -->
+</g> <!-- clip3 -->
+<clipPath id="clip40dde19d-0f2d-4b41-bbfc-a8f90cf73f37">
+  <path d="M 0.0000 0.0000 L 0.0000 511.00 L 499.00 511.00 L 499.00 0.0000 z"/>
+</clipPath>
+<g clip-path="url(#clip4)">
+<g stroke-linecap="butt" fill="none" stroke-opacity="1.0000" stroke="#000000">
+  <path d="M 0.0000 251.16 L 497.00 251.16"/>
+</g> <!-- drawing style -->
+</g> <!-- clip4 -->
+<clipPath id="clipe2fd0b35-f1e0-416a-aa65-11291bdf7721">
+  <path d="M 0.0000 0.0000 L 0.0000 511.00 L 499.00 511.00 L 499.00 0.0000 z"/>
+</clipPath>
+<g clip-path="url(#clip5)">
+<g stroke-linecap="butt" fill="none" stroke-opacity="1.0000" stroke="#000000">
+  <path d="M 498.00 251.16 L 495.00 248.16"/>
+</g> <!-- drawing style -->
+</g> <!-- clip5 -->
+<clipPath id="clipf09120d3-6788-4787-8c0e-3cf1db71afc7">
+  <path d="M 0.0000 0.0000 L 0.0000 511.00 L 499.00 511.00 L 499.00 0.0000 z"/>
+</clipPath>
+<g clip-path="url(#clip6)">
+<g stroke-linecap="butt" fill="none" stroke-opacity="1.0000" stroke="#000000">
+  <path d="M 498.00 251.16 L 495.00 254.16"/>
+</g> <!-- drawing style -->
+</g> <!-- clip6 -->
+<clipPath id="clipc112a289-a9b6-48c2-b8d7-126619d36c88">
+  <path d="M 0.0000 0.0000 L 0.0000 511.00 L 499.00 511.00 L 499.00 0.0000 z"/>
+</clipPath>
+<g clip-path="url(#clip7)">
+<g stroke-linecap="butt" fill="none" stroke-opacity="1.0000" stroke="#000000">
+  <path d="M 235.16 251.16 L 235.16 254.16"/>
+</g> <!-- drawing style -->
+</g> <!-- clip7 -->
+<g id="misc">
+</g><!-- misc -->
+<g id="layer0">
+<clipPath id="clip04d530d8-b2c4-4961-99bf-de4bc1b7dbc0">
+  <path d="M 0.0000 0.0000 L 0.0000 511.00 L 499.00 511.00 L 499.00 0.0000 z"/>
+</clipPath>
+<g clip-path="url(#clip8)">
+<g stroke-linejoin="round" stroke-width="1.5000" stroke-linecap="round" fill="none" stroke-opacity=".74902" stroke="#000000">
+  <path d="M 372.18 251.16 C 372.18 326.84 310.84 388.18 235.16 388.18 C 159.48 388.18 98.135 326.84 98.135 251.16 C 98.135 175.48 159.48 114.14 235.16 114.14 C 310.84 114.14 372.18 175.48 372.18 251.16 z"/>
+<title>Kreis c</title>
+<desc>c: x² + y² = 1</desc>
+
+</g> <!-- drawing style -->
+</g> <!-- clip8 -->
+<clipPath id="clip1e6c9826-c901-4c18-a90a-20d9eedd8bf1">
+  <path d="M 0.0000 0.0000 L 0.0000 511.00 L 499.00 511.00 L 499.00 0.0000 z"/>
+</clipPath>
+<g clip-path="url(#clip9)">
+<g stroke-linejoin="round" stroke-width="1.5000" stroke-linecap="round" fill="none" stroke-opacity=".74902" stroke="#000000">
+  <path d="M 372.18 251.16 C 372.18 213.32 310.84 182.65 235.16 182.65 C 159.48 182.65 98.135 213.32 98.135 251.16 C 98.135 289.00 159.48 319.67 235.16 319.67 C 310.84 319.67 372.18 289.00 372.18 251.16 z"/>
+<title>Ellipse d</title>
+<desc>d: x² + 4y² = 1</desc>
+
+</g> <!-- drawing style -->
+</g> <!-- clip9 -->
+</g><!-- layer0 -->
+</g> <!-- default stroke -->
+</svg> <!-- bounding box -->
