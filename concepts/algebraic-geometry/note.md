@@ -606,8 +606,11 @@ The condition $xv = yu$ says $(x,y)$ and $[u:v]$ point in the same direction. On
 
 The *total transform* is $\pi^{-1}(C) = \tilde{C} \cup (m \cdot E)$ where $m = \mathrm{mult}_P(C)$.
 
-![Strict transform of the nodal cubic, from Math 137 lecture notes](figures/lec24-strict-transform.png)
-*From Ullery's Math 137 lecture notes. Blow-up of the nodal cubic $V(y^2 - x^2(x+1))$ at the origin. The strict transform $\tilde{C}$ (blue curve) is smooth; it meets the exceptional divisor $E \cong \mathbb{P}^1$ (vertical line) at two distinct points corresponding to the two tangent directions $y = \pm x$ at the node. The "side view" shows the local topology: the node is separated into two smooth branches.*
+![Total preimage of the nodal cubic in local chart U, from Math 137 lecture notes](figures/lec24-total-preimage.png)
+*From Ullery's Math 137 lecture notes. In the local affine chart $U$, the total preimage $\pi^{-1}(C)$ of the nodal cubic is the union of the strict transform $\tilde{C}$ (the non-compact branch passing through $U$) and the oval (the compact branch), meeting at the singular point marked in blue. The exceptional divisor $E$ is the vertical white line in the center.*
+
+![Side view of the strict transform, from Math 137 lecture notes](figures/lec24-strict-transform.png)
+*"Side view" from Ullery's Math 137 notes. The strict transform $\tilde{C}$ (purple) meets the exceptional divisor $L = E$ (blue vertical line) at two distinct points — the two blue dots — corresponding to the two tangent directions $y = \pm x$ at the node. A node requires exactly one blow-up to separate its two branches.*
 
 ### 14.3 Resolution Examples
 
