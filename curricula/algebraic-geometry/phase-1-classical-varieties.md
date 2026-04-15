@@ -51,6 +51,7 @@ The 24 lectures and 11 problem sets map naturally to a 6-week block at ~5–8 hr
 ### Week 1 — Math 137 Lectures 1–8
 
 **Concepts to understand:**
+
 - [ ] What algebraic geometry studies: solution sets of polynomial equations as geometric objects
 - [ ] Algebraic sets $V(f_1, \ldots, f_r) \subset \mathbb{A}^n$; the ideal $I(X)$ of a subset
 - [ ] Hilbert Basis Theorem: every ideal in $k[x_1, \ldots, x_n]$ is finitely generated
@@ -67,6 +68,7 @@ The 24 lectures and 11 problem sets map naturally to a 6-week block at ~5–8 hr
 ### Week 2 — Math 137 Lectures 9–12
 
 **Concepts to understand:**
+
 - [ ] Rational functions and local rings $\mathcal{O}_{X,P}$: functions defined near $P$
 - [ ] Affine plane curves: tangent lines, multiplicity of a point, branches
 - [ ] Discrete valuation rings (DVRs): uniformizers, valuation $v_P(f)$ = order of vanishing
@@ -83,6 +85,7 @@ The 24 lectures and 11 problem sets map naturally to a 6-week block at ~5–8 hr
 ### Week 3 — Math 137 Lectures 13–16
 
 **Concepts to understand:**
+
 - [ ] Projective $n$-space $\mathbb{P}^n_k$: homogeneous coordinates $[x_0 : \cdots : x_n]$
 - [ ] Projective algebraic sets: common zeros of homogeneous polynomials
 - [ ] Homogeneous coordinate ring $S(X)$: graded ring, NOT the ring of functions on $X$
@@ -97,6 +100,7 @@ The 24 lectures and 11 problem sets map naturally to a 6-week block at ~5–8 hr
 ### Week 4 — Math 137 Lectures 17–20
 
 **Concepts to understand:**
+
 - [ ] Morphisms of projective varieties: defined by homogeneous polynomials of the same degree
 - [ ] Projective plane curves: degree, tangent lines, singular points, intersection with lines
 - [ ] Linear systems of plane curves of degree $d$: a projective space parameterizing curves
@@ -112,6 +116,7 @@ The 24 lectures and 11 problem sets map naturally to a 6-week block at ~5–8 hr
 ### Week 5 — Math 137 Lectures 21–24
 
 **Concepts to understand:**
+
 - [ ] Abstract varieties: gluing affine pieces via transition maps; the correct intrinsic notion
 - [ ] Rational maps $f: X \dashrightarrow Y$: defined on a dense open subset; domain of definition
 - [ ] Birational equivalence: rational inverse in both directions; $k(X)$ is a birational invariant
@@ -131,6 +136,7 @@ Complete remaining problem sets and consolidate.
 **Problem sets:** PS9 (due Apr 10), PS10 (due Apr 17), PS11 (due Apr 29)
 
 **Consolidation checklist:**
+
 - [ ] For every affine object (coordinate ring, regular map, rational function, local ring), identify its projective analogue
 - [ ] Work through the Harvard qual collection: all problems tagged "affine variety," "projective variety," "morphism," "rational map"
 - [ ] State Bézout's theorem and use it to compute intersection numbers for 3 explicit pairs of plane curves
@@ -153,6 +159,7 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 **CA prerequisite:** A&M Ch 11 (discrete valuation rings) — read §11.1 this week.
 
 **Concepts to understand:**
+
 - [ ] Tangent space $T_{X,P}$ at a point: $(\mathfrak{m}_P/\mathfrak{m}_P^2)^\vee$ — dual of the cotangent space
 - [ ] Jacobian criterion: if $X = V(f_1, \ldots, f_m) \subset \mathbb{A}^n$, then $T_{X,P} = \ker(\partial f_i/\partial x_j)(P)$
 - [ ] A point $P \in X$ is smooth (nonsingular) iff $\dim T_{X,P} = \dim X$
@@ -160,9 +167,11 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] The smooth locus is open and dense in any irreducible variety
 
 **Reading:**
+
 - [ ] Shafarevich Vol 1, §II.1–II.2 *(~3.5 hrs)*
 
 **Problems:**
+
 - [ ] Shafarevich II.1 #1, 2, 3, 4, 5
 - [ ] Find the singular locus of $V(y^2 - x^2(x+1)) \subset \mathbb{A}^2$ (nodal cubic)
 - [ ] Find the singular locus of $V(y^2 - x^3) \subset \mathbb{A}^2$ (cuspidal cubic)
@@ -172,6 +181,7 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 ### Week 8 — Local Structure of Morphisms
 
 **Concepts to understand:**
+
 - [ ] Local ring map induced by $f: X \to Y$ at a point: $\mathcal{O}_{Y, f(P)} \to \mathcal{O}_{X,P}$
 - [ ] Finite morphisms: $k[Y] \to k[X]$ makes $k[X]$ a finite $k[Y]$-module
 - [ ] Ramification: when a finite map to a smooth curve is not étale at a point
@@ -179,9 +189,11 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Chevalley's theorem: the image of a constructible set is constructible
 
 **Reading:**
+
 - [ ] Shafarevich Vol 1, §II.3 *(~3 hrs)*
 
 **Problems:**
+
 - [ ] Shafarevich II.3 #1, 2, 3, 4
 
 ---
@@ -191,6 +203,7 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 **CA prerequisite:** A&M Ch 5 (integral dependence, Noether normalization) — read this week.
 
 **Concepts to understand:**
+
 - [ ] Normal domain: integrally closed in its fraction field
 - [ ] Normalization $\tilde{X}$ of $X$: variety corresponding to the integral closure of $k[X]$ in $k(X)$
 - [ ] Normalization is a birational finite morphism $\nu: \tilde{X} \to X$
@@ -198,10 +211,12 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] A curve is normal iff it is smooth (in dimension 1: regular = normal)
 
 **Reading:**
+
 - [ ] Shafarevich Vol 1, §II.4 *(~2.5 hrs)*
 - [ ] A&M Ch 5 *(~2.5 hrs)*
 
 **Problems:**
+
 - [ ] Shafarevich II.4 #1, 2, 3
 - [ ] A&M 5.1, 5.4, 5.16, 5.22
 - [ ] Compute the normalization of the cuspidal cubic $V(y^2 - x^3) \subset \mathbb{A}^2$
@@ -215,16 +230,19 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 *Math 137 Lec 24 introduced blowing up; this week goes further to resolution.*
 
 **Concepts to understand:**
+
 - [ ] Blowing up revisited: strict transform of a curve $C$ under blowing up at $P$
 - [ ] Resolution of the node $V(y^2 - x^2(x+1))$ and the cusp $V(y^2 - x^3)$ by successive blowing up
 - [ ] Every curve over a perfect field has a smooth projective model (resolution in dimension 1)
 - [ ] The smooth projective model is unique up to isomorphism
 
 **Reading:**
+
 - [ ] Shafarevich Vol 1, §II.4–II.5 *(~3 hrs)*
 - [ ] Reid, Ch 7 §7.1–7.2 *(~1 hr)*
 
 **Problems:**
+
 - [ ] Shafarevich II.5 #1, 2, 3, 4
 - [ ] Resolve the $A_2$ singularity $V(y^2 - x^3)$ by two blow-ups. Describe the exceptional locus.
 
@@ -235,6 +253,7 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 *Math 137 Lec 11 covered DVRs and valuations. This week builds the divisor theory on top of that.*
 
 **Concepts to understand:**
+
 - [ ] Divisor on a smooth projective curve $X$: $D = \sum_{P \in X} n_P [P]$ with finitely many nonzero $n_P$
 - [ ] Degree of a divisor: $\deg D = \sum n_P$
 - [ ] Principal divisor $(f)$ of $f \in k(X)^\times$: zeros minus poles with multiplicity (using the DVR valuation)
@@ -242,9 +261,11 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] $\text{Pic}^0(X)$ = degree-0 part; $\text{Pic}(X) \cong \mathbb{Z} \oplus \text{Pic}^0(X)$ for connected curves
 
 **Reading:**
+
 - [ ] Shafarevich Vol 1, §III.1 *(~3 hrs)*
 
 **Problems:**
+
 - [ ] Shafarevich III.1 #1, 2, 3, 4, 5
 - [ ] Show $\text{Pic}(\mathbb{A}^1) = 0$ and $\text{Pic}(\mathbb{P}^1) \cong \mathbb{Z}$
 
@@ -253,6 +274,7 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 ### Week 12 — Linear Systems and Maps to Projective Space
 
 **Concepts to understand:**
+
 - [ ] Linear system $|D|$: the projective space of effective divisors linearly equivalent to $D$
 - [ ] Complete linear system and the map $\phi_D: X \dashrightarrow \mathbb{P}(H^0(X, \mathcal{O}(D)))^\vee$
 - [ ] Base locus: points where all sections vanish; $\phi_D$ is a morphism iff base locus is empty
@@ -260,10 +282,12 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Connection to Math 137 Lec 19 (linear systems of plane curves): the same projective space, now intrinsically defined
 
 **Reading:**
+
 - [ ] Shafarevich Vol 1, §III.1 (continued) *(~2 hrs)*
 - [ ] Reid, Ch 9 §9.1–9.3 *(~2 hrs)*
 
 **Problems:**
+
 - [ ] Show that $\mathcal{O}(1)$ on $\mathbb{P}^1$ corresponds to the identity map $\mathbb{P}^1 \to \mathbb{P}^1$
 - [ ] Find all effective divisors linearly equivalent to $2[P]$ on a smooth conic $C \subset \mathbb{P}^2$
 
@@ -272,6 +296,7 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 ### Week 13 — Differential Forms on Curves
 
 **Concepts to understand:**
+
 - [ ] Module of Kähler differentials $\Omega_{k[X]/k}$; the sheaf $\Omega_{X/k}$
 - [ ] For a smooth curve: $\Omega_{X/k}$ is a line bundle, the canonical bundle $\omega_X$
 - [ ] Divisor of a differential form: $(\omega) = \sum v_P(\omega) [P]$ via the DVR valuation at each point
@@ -279,9 +304,11 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] On $\mathbb{P}^1$: $K_{\mathbb{P}^1} \sim -2[P]$, so $\deg K_{\mathbb{P}^1} = -2$
 
 **Reading:**
+
 - [ ] Shafarevich Vol 1, §III.3 *(~3 hrs)*
 
 **Problems:**
+
 - [ ] Shafarevich III.3 #1, 2, 3
 - [ ] On $\mathbb{P}^1$ with coordinate $t$, compute $\text{div}(dt)$. What is $\deg K_{\mathbb{P}^1}$?
 
@@ -290,6 +317,7 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 ### Week 14 — Genus and the Riemann-Roch Theorem
 
 **Concepts to understand:**
+
 - [ ] Geometric genus $g$: $g = \dim H^0(X, \omega_X)$ (holomorphic differentials)
 - [ ] Riemann-Roch theorem: $\ell(D) - \ell(K - D) = \deg D + 1 - g$
 - [ ] Special cases: $\ell(K) = g$, $\deg K = 2g - 2$
@@ -297,10 +325,12 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Genus formula for a smooth plane curve of degree $d$: $g = \binom{d-1}{2}$
 
 **Reading:**
+
 - [ ] Shafarevich Vol 1, §III.4 *(~3 hrs)*
 - [ ] Reid, Ch 9 §9.4–9.7 *(~1 hr)*
 
 **Problems:**
+
 - [ ] Shafarevich III.4 #1, 2, 3, 4
 - [ ] Compute $g$ for a smooth quartic in $\mathbb{P}^2$. Use RR to find $\ell(K)$.
 - [ ] Show: a smooth curve of genus 0 over $\bar{k}$ is isomorphic to $\mathbb{P}^1$
@@ -312,6 +342,7 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 ### Week 15 — Hurwitz's Theorem
 
 **Concepts to understand:**
+
 - [ ] A finite morphism of smooth projective curves $f: X \to Y$ of degree $n$
 - [ ] Ramification index $e_P$ at $P$; ramification divisor $R = \sum_P (e_P - 1)[P]$ on $X$
 - [ ] Hurwitz's theorem: $2g(X) - 2 = n(2g(Y) - 2) + \deg R$ (for separable $f$)
@@ -319,10 +350,12 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Purely inseparable maps in characteristic $p$: $g(X) = g(Y)$
 
 **Reading:**
+
 - [ ] Shafarevich Vol 1, §III.4 (Hurwitz) *(~2 hrs)*
 - [ ] Fulton, *Algebraic Curves*, Ch 7 *(~2 hrs)*
 
 **Problems:**
+
 - [ ] Deduce the genus formula for a smooth plane curve from Hurwitz by projecting from a point
 - [ ] Harvard qual: "Let's talk about Riemann-Hurwitz..." — work through the Ogus questions from the problem set
 
@@ -331,6 +364,7 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 ### Week 16 — Elliptic Curves: Classical Picture
 
 **Concepts to understand:**
+
 - [ ] An elliptic curve is a smooth projective curve of genus 1 with a marked point $O$
 - [ ] Weierstrass form: $y^2 = x^3 + ax + b$ (char $\neq 2, 3$); smoothness iff $\Delta \neq 0$
 - [ ] Group law: $P + Q + R = 0$ iff $P, Q, R$ are collinear; $O$ is the identity
@@ -338,10 +372,12 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Over $\mathbb{C}$: $E \cong \mathbb{C}/\Lambda$ for a lattice $\Lambda$; group law is addition in $\mathbb{C}/\Lambda$
 
 **Reading:**
+
 - [ ] Shafarevich Vol 1, §III.3 (elliptic curves), §III.4 *(~2 hrs)*
 - [ ] Silverman AEC, Ch 1 §1–3 (preview; return in Phase IV) *(~2 hrs)*
 
 **Problems:**
+
 - [ ] Harvard qual: "What are the involutions of an elliptic curve over $\mathbb{C}$?" — work the McMullen questions
 - [ ] Show the group law is associative using Riemann-Roch (sketch): $\text{Pic}^0(E) \cong E$ as sets
 
@@ -350,6 +386,7 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 ### Weeks 17–18 — Hyperelliptic Curves and Phase I Consolidation
 
 **Concepts to understand:**
+
 - [ ] Hyperelliptic curve of genus $g$: double cover of $\mathbb{P}^1$ branched at $2g + 2$ points
 - [ ] Canonical map $\phi_K: X \to \mathbb{P}^{g-1}$ (for $g \geq 2$): base-point-free when $X$ is not hyperelliptic
 - [ ] Every genus-2 curve is hyperelliptic; the canonical map is 2:1 onto $\mathbb{P}^1$
@@ -357,10 +394,12 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Every classical concept paired with its scheme-theoretic avatar (preview of Phase II)
 
 **Reading:**
+
 - [ ] Shafarevich Vol 1, §III.5 *(~2 hrs)*
 - [ ] Review Phase I notes; read the Phase II translation table *(~3 hrs)*
 
 **Problems:**
+
 - [ ] Show a genus-2 curve is always hyperelliptic using the canonical map
 - [ ] Work 3 more problems from the Harvard qual collection; identify which Phase II concepts they preview
 

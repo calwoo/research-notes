@@ -27,6 +27,7 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 ### Weeks 65–67 — Elliptic Curves over Arbitrary Fields
 
 **Concepts to understand:**
+
 - [ ] Weierstrass equations and the discriminant: $\Delta = -16(4a^3 + 27b^2) \neq 0$ for smoothness
 - [ ] Short Weierstrass form ($\text{char} \neq 2, 3$): $y^2 = x^3 + ax + b$
 - [ ] The group law over any field $k$: the chord-and-tangent construction works over any field
@@ -34,9 +35,11 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 - [ ] Isogenies over non-algebraically-closed fields: a finite morphism $\phi: E_1 \to E_2$ preserving the identity
 
 **Reading:**
+
 - [ ] Silverman AEC, Ch 1 (§1–4), Ch 2 (§1–4) *(~5 hrs)*
 
 **Problems:**
+
 - [ ] Silverman AEC: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 2.5, 2.6, 2.8, 2.11
 
 ---
@@ -44,6 +47,7 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 ### Weeks 68–69 — Isogenies and the Tate Module
 
 **Concepts to understand:**
+
 - [ ] Isogeny: nonzero morphism $\phi: E_1 \to E_2$ of elliptic curves (automatically surjective over $\bar{k}$)
 - [ ] Degree of an isogeny: degree as a finite morphism; $\deg([n]) = n^2$
 - [ ] The $n$-torsion $E[n](\bar{k}) \cong (\mathbb{Z}/n)^2$ for $\text{char}(k) \nmid n$
@@ -51,9 +55,11 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 - [ ] Galois acts on $T_\ell(E)$: the $\ell$-adic representation $\rho_\ell: G_k \to \text{GL}_2(\mathbb{Z}_\ell)$
 
 **Reading:**
+
 - [ ] Silverman AEC, Ch 3 (§1–7) *(~4 hrs)*
 
 **Problems:**
+
 - [ ] Silverman AEC: 3.1, 3.2, 3.5, 3.6, 3.7, 3.10
 
 ---
@@ -61,6 +67,7 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 ### Weeks 70–72 — Mordell-Weil Theorem
 
 **Concepts to understand:**
+
 - [ ] Mordell-Weil theorem: $E(\mathbb{Q}) \cong \mathbb{Z}^r \oplus E(\mathbb{Q})_{\text{tors}}$ (finitely generated abelian group)
 - [ ] The rank $r$: the number of independent generators of infinite order; can be 0, 1, 2, ...
 - [ ] Proof strategy: (1) $E(\mathbb{Q})/2E(\mathbb{Q})$ is finite (weak Mordell-Weil); (2) infinite descent via heights
@@ -68,9 +75,11 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 - [ ] Canonical (Néron-Tate) height $\hat{h}$: the unique quadratic form approximating $h$; positive definite on $E(\mathbb{Q}) \otimes \mathbb{R}$
 
 **Reading:**
+
 - [ ] Silverman AEC, Ch 4 (§1–5: heights), Ch 8 (§1–2: Mordell-Weil) *(~6 hrs)*
 
 **Problems:**
+
 - [ ] Silverman AEC: 4.1, 4.3, 4.4, 8.1, 8.2, 8.5
 - [ ] For $E: y^2 = x^3 - x$, show $E(\mathbb{Q})_{\text{tors}} \cong \mathbb{Z}/2 \times \mathbb{Z}/2$ and find a generator of infinite order if $r = 1$
 
@@ -81,6 +90,7 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 ### Weeks 73–74 — Torsion Subgroups over $\mathbb{Q}$
 
 **Concepts to understand:**
+
 - [ ] Nagell-Lutz theorem: if $E: y^2 = x^3 + ax + b$ with $a, b \in \mathbb{Z}$, then $E(\mathbb{Q})_{\text{tors}}$ has coordinates in $\mathbb{Z}$ and $y = 0$ or $y^2 \mid \Delta$
 - [ ] Using Nagell-Lutz to find all torsion points: a finite computation
 - [ ] Mazur's torsion theorem (statement): $E(\mathbb{Q})_{\text{tors}}$ is one of exactly 15 groups:
@@ -89,9 +99,11 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 - [ ] Reduction mod $p$: for good primes $p$, torsion injects into $\tilde{E}(\mathbb{F}_p)$
 
 **Reading:**
+
 - [ ] Silverman AEC, Ch 7 (§1–3: torsion) *(~3 hrs)*
 
 **Problems:**
+
 - [ ] Silverman AEC: 7.1, 7.2, 7.3, 7.5, 7.7
 - [ ] Find all rational torsion points of $E: y^2 = x^3 - x$ using Nagell-Lutz
 
@@ -100,6 +112,7 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 ### Weeks 75–76 — Elliptic Curves over Finite Fields
 
 **Concepts to understand:**
+
 - [ ] $E(\mathbb{F}_q)$: the group of $\mathbb{F}_q$-rational points; a finite abelian group
 - [ ] Hasse's theorem: $|E(\mathbb{F}_q)| = q + 1 - t$ where $|t| \leq 2\sqrt{q}$ (the "trace of Frobenius")
 - [ ] The Frobenius endomorphism $\phi_q: (x,y) \mapsto (x^q, y^q)$: an isogeny of degree $q$
@@ -107,10 +120,12 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 - [ ] $|E(\mathbb{F}_{q^n})| = q^n + 1 - \alpha^n - \bar{\alpha}^n$ for all $n$
 
 **Reading:**
+
 - [ ] Silverman AEC, Ch 5 (§1–4: finite fields) *(~4 hrs)*
 - [ ] Ireland-Rosen, Ch 8 §1–3 *(~2 hrs)*
 
 **Problems:**
+
 - [ ] Silverman AEC: 5.1, 5.2, 5.3, 5.4, 5.7, 5.9
 - [ ] For $E: y^2 = x^3 + x$ over $\mathbb{F}_p$, compute $|E(\mathbb{F}_p)|$ for $p = 5, 7, 11, 13$
 
@@ -119,6 +134,7 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 ### Weeks 77–78 — Zeta Functions of Curves
 
 **Concepts to understand:**
+
 - [ ] Zeta function of a curve $X/\mathbb{F}_q$: $Z(X, T) = \exp\left(\sum_{n=1}^\infty |X(\mathbb{F}_{q^n})| \frac{T^n}{n}\right)$
 - [ ] For a smooth projective curve of genus $g$ over $\mathbb{F}_q$:
   - $Z(X, T) = \frac{P(T)}{(1-T)(1-qT)}$ where $P(T) = \prod_{i=1}^{2g}(1 - \alpha_i T)$ is a polynomial of degree $2g$
@@ -128,10 +144,12 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 - [ ] For elliptic curves: $P(T) = 1 - tT + qT^2$ where $t$ is the trace of Frobenius
 
 **Reading:**
+
 - [ ] Ireland-Rosen, Ch 11 §1–4 *(~3 hrs)*
 - [ ] Milne, *Lectures on Étale Cohomology*, Ch 1 §1.1–1.3 (introduction) *(~2 hrs)*
 
 **Problems:**
+
 - [ ] Compute $Z(E, T)$ for $E: y^2 = x^3 + x$ over $\mathbb{F}_5$ by counting points for $n = 1, 2, 3$
 - [ ] Verify the functional equation for this example
 
@@ -140,6 +158,7 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 ### Weeks 79–80 — The Weil Conjectures
 
 **Concepts to understand:**
+
 - [ ] The Weil conjectures (1949) for a smooth projective variety $X/\mathbb{F}_q$ of dimension $n$:
   1. **Rationality:** $Z(X, T) = \prod_{i=0}^{2n} P_i(T)^{(-1)^{i+1}}$, each $P_i \in \mathbb{Z}[T]$
   2. **Functional equation:** $Z(X, \frac{1}{q^n T}) = \pm q^{n\chi/2} T^\chi Z(X, T)$ where $\chi = \chi_{\text{top}}(X)$
@@ -150,10 +169,12 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 - [ ] Deligne's proof of the Riemann hypothesis (1974): the deepest result; uses weights and Hard Lefschetz
 
 **Reading:**
+
 - [ ] Milne, *Lectures on Étale Cohomology*, Ch 1–2 (for statement, intuition, and Weil's proof for curves) *(~4 hrs)*
 - [ ] Ireland-Rosen, Ch 11 §5–6 (Weil's proof for curves) *(~2 hrs)*
 
 **Problems:**
+
 - [ ] Verify the Weil conjectures for $\mathbb{P}^n_{\mathbb{F}_q}$ directly: compute $Z(\mathbb{P}^n, T)$ and check all four properties
 - [ ] Verify the Weil conjectures for a smooth plane conic over $\mathbb{F}_q$ (genus 0, so $\mathbb{P}^1$ after base change)
 - [ ] Sketch Weil's proof of the Riemann hypothesis for curves: where does Riemann-Roch enter?
@@ -165,6 +186,7 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 ### Week 81 — The BSD Conjecture
 
 **Concepts to understand:**
+
 - [ ] The $L$-function of an elliptic curve $E/\mathbb{Q}$: $L(E, s) = \prod_{p \nmid N} \frac{1}{1 - a_p p^{-s} + p^{1-2s}} \prod_{p \mid N} (\text{bad factors})$
   where $a_p = p + 1 - |E(\mathbb{F}_p)|$
 - [ ] Modularity theorem (Wiles-Taylor-Wiles, 1995): every elliptic curve over $\mathbb{Q}$ is modular — $L(E,s) = L(f, s)$ for a modular form $f$
@@ -173,10 +195,12 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 - [ ] Why it is hard: the rank is "global" (points over $\mathbb{Q}$) while $L(E,s)$ is "local" (product over all primes)
 
 **Reading:**
+
 - [ ] Silverman AEC, Appendix C (BSD) *(~2 hrs)*
 - [ ] Silverman, *The Arithmetic of Elliptic Curves*, Ch 5 §5 (introduction to $L$-functions) *(~2 hrs)*
 
 **Problems:**
+
 - [ ] For $E: y^2 = x^3 - x$ (rank 0), verify numerically that $L(E, 1) \neq 0$
 - [ ] For $E: y^2 = x^3 - x^2 - 2x$ (rank 1), observe numerically that $L(E, s)$ has a simple zero at $s = 1$
 
@@ -187,6 +211,7 @@ Phase III closed with the full scheme-theoretic treatment of curves over an alge
 Use this week for a full mock qualifying exam.
 
 **Mock exam checklist:**
+
 - [ ] Work the complete Ritvik Ramkumar transcript from memory (algebraic geometry section)
 - [ ] Work the complete Will Fisher transcript from memory (algebraic geometry section)
 - [ ] Work all Harvard qualifying problems — aim for confidence on $> 80\%$
