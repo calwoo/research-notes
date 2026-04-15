@@ -19,36 +19,21 @@ Primary text for Math 137: Fulton, *Algebraic Curves* (free at [http://www.math.
 
 The 24 lectures and 11 problem sets map naturally to a 6-week block at ~5–8 hrs/week. Work through the lecture notes sequentially; the problem sets are the primary exercise source for this block.
 
-**Lecture notes** (all PDFs at `https://people.math.harvard.edu/~bullery/math137/`):
+All lecture PDFs and problem sets are at [https://people.math.harvard.edu/~bullery/math137/](https://people.math.harvard.edu/~bullery/math137/).
 
-| Lec | Title | Phase I week analogue |
-|-----|-------|-----------------------|
-| 1 | [What is algebraic geometry?](https://people.math.harvard.edu/~bullery/math137/Section%201_%20What%20is%20algebraic%20geometry.pdf) | orientation |
-| 2 | [Algebraic sets](https://people.math.harvard.edu/~bullery/math137/Section%202_%20Algebraic%20sets.pdf) | Wk 1 |
-| 3 | [The ideal of a subset of affine space](https://people.math.harvard.edu/~bullery/math137/Section%203_%20The%20ideal%20of%20a%20subset%20of%20affine%20space.pdf) | Wk 1 |
-| 4 | [Irreducibility and the Hilbert Basis Theorem](https://people.math.harvard.edu/~bullery/math137/Section%204_%20Irreducibility%20and%20the%20Hilbert%20Basis%20Theorem.pdf) | Wk 3 |
-| 5 | [Hilbert's Nullstellensatz](https://people.math.harvard.edu/~bullery/math137/Section%205_%20Hilberts%20Nullstellensatz.pdf) | Wk 1 |
-| 6 | [Algebra detour](https://people.math.harvard.edu/~bullery/math137/Section%206_%20Algebra%20detour.pdf) | CA supplement |
-| 7 | [Affine varieties and coordinate rings](https://people.math.harvard.edu/~bullery/math137/Section%207_%20Affine%20varieties%20and%20coordinate%20rings.pdf) | Wk 2 |
-| 8 | [Regular maps](https://people.math.harvard.edu/~bullery/math137/Section%208_%20Regular%20maps.pdf) | Wk 2 |
-| 9 | [Rational functions and local rings](https://people.math.harvard.edu/~bullery/math137/Section%209_%20Rational%20functions%20and%20local%20rings.pdf) | Wk 4 |
-| 10 | [Affine plane curves](https://people.math.harvard.edu/~bullery/math137/Section%2010_%20Affine%20plane%20curves.pdf) | Wk 1–2 |
-| 11 | [Discrete valuation rings and multiplicities](https://people.math.harvard.edu/~bullery/math137/Section%2011_%20Discrete%20valuation%20rings%20and%20multiplicities.pdf) | Wk 13 |
-| 12 | [Intersection numbers](https://people.math.harvard.edu/~bullery/math137/Section%2012_%20Intersection%20numbers.pdf) | *bonus — not in Shafarevich Phase I* |
-| 13 | [Projective space](https://people.math.harvard.edu/~bullery/math137/Section%2013_%20Projective%20space.pdf) | Wk 5 |
-| 14 | [Projective algebraic sets](https://people.math.harvard.edu/~bullery/math137/Section%2014_%20Projective%20algebraic%20sets.pdf) | Wk 5 |
-| 15 | [Homogeneous coordinate rings and rational functions](https://people.math.harvard.edu/~bullery/math137/Section%2015_%20Homogeneous%20coordinate%20rings%20and%20rational%20functions.pdf) | Wk 5 |
-| 16 | [Affine and projective varieties](https://people.math.harvard.edu/~bullery/math137/Section%2016_%20Affine%20and%20projective%20varieties.pdf) | Wk 5–6 |
-| 17 | [Morphisms of projective varieties](https://people.math.harvard.edu/~bullery/math137/Section%2017_%20Morphism%20of%20projective%20varieties.pdf) | Wk 6 |
-| 18 | [Projective plane curves](https://people.math.harvard.edu/~bullery/math137/Section%2018_%20Projective%20plane%20curves.pdf) | Wk 6 |
-| 19 | [Linear systems of curves](https://people.math.harvard.edu/~bullery/math137/Section%2019_%20Linear%20systems%20of%20curves.pdf) | Wk 15 |
-| 20 | [Bézout's Theorem](https://people.math.harvard.edu/~bullery/math137/Section%2020_%20Bezouts%20Theorem.pdf) | *bonus — not in Shafarevich Phase I* |
-| 21 | [Abstract varieties](https://people.math.harvard.edu/~bullery/math137/Section%2021_%20Abstract%20varieties.pdf) | Wk 6 |
-| 22 | [Rational maps and dimension](https://people.math.harvard.edu/~bullery/math137/Section%2022_%20Rational%20maps%20and%20dimension.pdf) | Wks 7–8 |
-| 23 | [Rational maps of curves](https://people.math.harvard.edu/~bullery/math137/Section%2023_%20Rational%20maps%20of%20curves.pdf) | Wk 7 |
-| 24 | [Blowing up a point in the plane](https://people.math.harvard.edu/~bullery/math137/Section%2024_%20Blowing%20up%20a%20point%20in%20the%20plane.pdf) | Wk 12 |
+---
 
-### Week 1 — Math 137 Lectures 1–8
+### Week 1 — Affine Varieties and the Nullstellensatz
+
+**Lectures:**
+- [Sec 1: What is algebraic geometry?](https://people.math.harvard.edu/~bullery/math137/Section%201_%20What%20is%20algebraic%20geometry.pdf)
+- [Sec 2: Algebraic sets](https://people.math.harvard.edu/~bullery/math137/Section%202_%20Algebraic%20sets.pdf)
+- [Sec 3: The ideal of a subset of affine space](https://people.math.harvard.edu/~bullery/math137/Section%203_%20The%20ideal%20of%20a%20subset%20of%20affine%20space.pdf)
+- [Sec 4: Irreducibility and the Hilbert Basis Theorem](https://people.math.harvard.edu/~bullery/math137/Section%204_%20Irreducibility%20and%20the%20Hilbert%20Basis%20Theorem.pdf)
+- [Sec 5: Hilbert's Nullstellensatz](https://people.math.harvard.edu/~bullery/math137/Section%205_%20Hilberts%20Nullstellensatz.pdf)
+- [Sec 6: Algebra detour](https://people.math.harvard.edu/~bullery/math137/Section%206_%20Algebra%20detour.pdf)
+- [Sec 7: Affine varieties and coordinate rings](https://people.math.harvard.edu/~bullery/math137/Section%207_%20Affine%20varieties%20and%20coordinate%20rings.pdf)
+- [Sec 8: Regular maps](https://people.math.harvard.edu/~bullery/math137/Section%208_%20Regular%20maps.pdf)
 
 **Concepts to understand:**
 
@@ -60,12 +45,17 @@ The 24 lectures and 11 problem sets map naturally to a 6-week block at ~5–8 hr
 - [ ] Coordinate ring $k[X] = k[x_1, \ldots, x_n]/I(X)$; regular functions; morphisms
 - [ ] Algebra–geometry duality: affine varieties $\leftrightarrow$ finitely generated reduced $k$-algebras
 
-**Lectures:** 1–8
-**Problem sets:** PS1 (due Feb 5), PS2 (due Feb 12)
+**Problem sets:** [PS1](https://people.math.harvard.edu/~bullery/math137/PS1.pdf), [PS2](https://people.math.harvard.edu/~bullery/math137/PS2.pdf)
 
 ---
 
-### Week 2 — Math 137 Lectures 9–12
+### Week 2 — Local Rings, Plane Curves, and Intersection Numbers
+
+**Lectures:**
+- [Sec 9: Rational functions and local rings](https://people.math.harvard.edu/~bullery/math137/Section%209_%20Rational%20functions%20and%20local%20rings.pdf)
+- [Sec 10: Affine plane curves](https://people.math.harvard.edu/~bullery/math137/Section%2010_%20Affine%20plane%20curves.pdf)
+- [Sec 11: Discrete valuation rings and multiplicities](https://people.math.harvard.edu/~bullery/math137/Section%2011_%20Discrete%20valuation%20rings%20and%20multiplicities.pdf)
+- [Sec 12: Intersection numbers](https://people.math.harvard.edu/~bullery/math137/Section%2012_%20Intersection%20numbers.pdf)
 
 **Concepts to understand:**
 
@@ -75,14 +65,19 @@ The 24 lectures and 11 problem sets map naturally to a 6-week block at ~5–8 hr
 - [ ] Intersection number $(C \cdot D)_P$ at a point: via $\dim_k \mathcal{O}_P/(f, g)$
 - [ ] Properties of intersection numbers: symmetry, additivity, invariance under linear equivalence
 
-**Lectures:** 9–12
-**Problem sets:** PS3 (due Feb 19)
+**Problem sets:** [PS3](https://people.math.harvard.edu/~bullery/math137/PS3.pdf)
 
-> **Bonus from Math 137:** Intersection numbers (Lec 12) are Fulton's key tool — not covered in Shafarevich at this stage. They foreshadow intersection theory in Phase III and will make Bézout's theorem feel inevitable.
+> **Bonus from Math 137:** Intersection numbers (Sec 12) are Fulton's key tool — not covered in Shafarevich at this stage. They foreshadow intersection theory in Phase III and will make Bézout's theorem feel inevitable.
 
 ---
 
-### Week 3 — Math 137 Lectures 13–16
+### Week 3 — Projective Space and Projective Varieties
+
+**Lectures:**
+- [Sec 13: Projective space](https://people.math.harvard.edu/~bullery/math137/Section%2013_%20Projective%20space.pdf)
+- [Sec 14: Projective algebraic sets](https://people.math.harvard.edu/~bullery/math137/Section%2014_%20Projective%20algebraic%20sets.pdf)
+- [Sec 15: Homogeneous coordinate rings and rational functions](https://people.math.harvard.edu/~bullery/math137/Section%2015_%20Homogeneous%20coordinate%20rings%20and%20rational%20functions.pdf)
+- [Sec 16: Affine and projective varieties](https://people.math.harvard.edu/~bullery/math137/Section%2016_%20Affine%20and%20projective%20varieties.pdf)
 
 **Concepts to understand:**
 
@@ -92,12 +87,17 @@ The 24 lectures and 11 problem sets map naturally to a 6-week block at ~5–8 hr
 - [ ] Standard affine cover: $\mathbb{P}^n = U_0 \cup \cdots \cup U_n$ with $U_i \cong \mathbb{A}^n$
 - [ ] Affine and projective varieties as a unified notion; quasiprojective varieties
 
-**Lectures:** 13–16
-**Problem sets:** PS4 (due Feb 26)
+**Problem sets:** [PS4](https://people.math.harvard.edu/~bullery/math137/PS4.pdf)
 
 ---
 
-### Week 4 — Math 137 Lectures 17–20
+### Week 4 — Morphisms, Projective Curves, and Bézout
+
+**Lectures:**
+- [Sec 17: Morphisms of projective varieties](https://people.math.harvard.edu/~bullery/math137/Section%2017_%20Morphism%20of%20projective%20varieties.pdf)
+- [Sec 18: Projective plane curves](https://people.math.harvard.edu/~bullery/math137/Section%2018_%20Projective%20plane%20curves.pdf)
+- [Sec 19: Linear systems of curves](https://people.math.harvard.edu/~bullery/math137/Section%2019_%20Linear%20systems%20of%20curves.pdf)
+- [Sec 20: Bézout's Theorem](https://people.math.harvard.edu/~bullery/math137/Section%2020_%20Bezouts%20Theorem.pdf)
 
 **Concepts to understand:**
 
@@ -106,14 +106,19 @@ The 24 lectures and 11 problem sets map naturally to a 6-week block at ~5–8 hr
 - [ ] Linear systems of plane curves of degree $d$: a projective space parameterizing curves
 - [ ] Bézout's Theorem: two projective plane curves of degrees $d$ and $e$ with no common component meet in exactly $de$ points (counted with intersection multiplicity)
 
-**Lectures:** 17–20
-**Problem sets:** PS5 (due Mar 4), PS6 (due Mar 11)
+**Problem sets:** [PS5](https://people.math.harvard.edu/~bullery/math137/PS5.pdf), [PS6](https://people.math.harvard.edu/~bullery/math137/PS6.pdf)
 
-> **Bonus from Math 137:** Bézout's theorem (Lec 20) with proof. This is used repeatedly in the Harvard qualifying exam collection.
+> **Bonus from Math 137:** Bézout's theorem (Sec 20) with proof. This is used repeatedly in the Harvard qualifying exam collection.
 
 ---
 
-### Week 5 — Math 137 Lectures 21–24
+### Week 5 — Abstract Varieties, Rational Maps, and Blowing Up
+
+**Lectures:**
+- [Sec 21: Abstract varieties](https://people.math.harvard.edu/~bullery/math137/Section%2021_%20Abstract%20varieties.pdf)
+- [Sec 22: Rational maps and dimension](https://people.math.harvard.edu/~bullery/math137/Section%2022_%20Rational%20maps%20and%20dimension.pdf)
+- [Sec 23: Rational maps of curves](https://people.math.harvard.edu/~bullery/math137/Section%2023_%20Rational%20maps%20of%20curves.pdf)
+- [Sec 24: Blowing up a point in the plane](https://people.math.harvard.edu/~bullery/math137/Section%2024_%20Blowing%20up%20a%20point%20in%20the%20plane.pdf)
 
 **Concepts to understand:**
 
@@ -124,8 +129,7 @@ The 24 lectures and 11 problem sets map naturally to a 6-week block at ~5–8 hr
 - [ ] Fiber dimension theorem: generic fiber has dimension $\dim X - \dim Y$
 - [ ] Blowing up a point in $\mathbb{A}^2$: $\text{Bl}_0 \mathbb{A}^2 \subset \mathbb{A}^2 \times \mathbb{P}^1$; exceptional divisor $E \cong \mathbb{P}^1$
 
-**Lectures:** 21–24
-**Problem sets:** PS7 (due Mar 27), PS8 (due Apr 3)
+**Problem sets:** [PS7](https://people.math.harvard.edu/~bullery/math137/PS7.pdf), [PS8](https://people.math.harvard.edu/~bullery/math137/PS8.pdf)
 
 ---
 
@@ -133,7 +137,7 @@ The 24 lectures and 11 problem sets map naturally to a 6-week block at ~5–8 hr
 
 Complete remaining problem sets and consolidate.
 
-**Problem sets:** PS9 (due Apr 10), PS10 (due Apr 17), PS11 (due Apr 29)
+**Problem sets:** [PS9](https://people.math.harvard.edu/~bullery/math137/PS9.pdf), [PS10](https://people.math.harvard.edu/~bullery/math137/PS10.pdf), [PS11](https://people.math.harvard.edu/~bullery/math137/PS11.pdf)
 
 **Consolidation checklist:**
 
