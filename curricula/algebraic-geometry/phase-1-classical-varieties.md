@@ -47,7 +47,8 @@ All lecture PDFs and problem sets are at [https://people.math.harvard.edu/~bulle
 
 **Problem sets:** [PS1](https://people.math.harvard.edu/~bullery/math137/PS1.pdf), [PS2](https://people.math.harvard.edu/~bullery/math137/PS2.pdf)
 
-> **Milestone:** Compute $\sqrt{(x^2, xy)} \subset k[x,y]$ and verify this equals $I(V(x^2, xy))$. Observe that $V(x^2, xy) = V(x)$ even though $(x^2, xy) \neq (x)$ — the radical accounts for the difference. Explain why the hypothesis that $k$ be algebraically closed cannot be dropped (give a counterexample over $\mathbb{R}$).
+> [!NOTE] Milestone
+> Compute $\sqrt{(x^2, xy)} \subset k[x,y]$ and verify this equals $I(V(x^2, xy))$. Observe that $V(x^2, xy) = V(x)$ even though $(x^2, xy) \neq (x)$ — the radical accounts for the difference. Explain why the hypothesis that $k$ be algebraically closed cannot be dropped (give a counterexample over $\mathbb{R}$).
 
 ---
 
@@ -71,7 +72,8 @@ All lecture PDFs and problem sets are at [https://people.math.harvard.edu/~bulle
 
 > **Bonus from Math 137:** Intersection numbers (Sec 12) are Fulton's key tool — not covered in Shafarevich at this stage. They foreshadow intersection theory in Phase III and will make Bézout's theorem feel inevitable.
 
-> **Milestone:** Compute $(C \cdot L)_O$ where $C = V(y - x^2)$ and $L = V(y)$ at $O = (0,0)$: $(C \cdot L)_O = \dim_k \mathcal{O}_O/(y - x^2,\, y) = \dim_k k[x]_{(x)}/(x^2) = 2$. The parabola is tangent to the $x$-axis — the intersection multiplicity of 2 detects the tangency that a naive count of distinct points would miss.
+> [!NOTE] Milestone
+> Compute $(C \cdot L)_O$ where $C = V(y - x^2)$ and $L = V(y)$ at $O = (0,0)$: $(C \cdot L)_O = \dim_k \mathcal{O}_O/(y - x^2,\, y) = \dim_k k[x]_{(x)}/(x^2) = 2$. The parabola is tangent to the $x$-axis — the intersection multiplicity of 2 detects the tangency that a naive count of distinct points would miss.
 
 ---
 
@@ -93,7 +95,8 @@ All lecture PDFs and problem sets are at [https://people.math.harvard.edu/~bulle
 
 **Problem sets:** [PS4](https://people.math.harvard.edu/~bullery/math137/PS4.pdf)
 
-> **Milestone:** Construct an explicit isomorphism $\mathbb{P}^1 \xrightarrow{\sim} V_+(x_0 x_2 - x_1^2) \subset \mathbb{P}^2$ via $[s:t] \mapsto [s^2 : st : t^2]$, and write down its inverse on the chart $x_0 \neq 0$ as $[x_0 : x_1 : x_2] \mapsto [x_0 : x_1]$. Verify both composites are the identity, and check that the image is exactly the conic $V_+(x_0 x_2 - x_1^2)$.
+> [!NOTE] Milestone
+> Construct an explicit isomorphism $\mathbb{P}^1 \xrightarrow{\sim} V_+(x_0 x_2 - x_1^2) \subset \mathbb{P}^2$ via $[s:t] \mapsto [s^2 : st : t^2]$, and write down its inverse on the chart $x_0 \neq 0$ as $[x_0 : x_1 : x_2] \mapsto [x_0 : x_1]$. Verify both composites are the identity, and check that the image is exactly the conic $V_+(x_0 x_2 - x_1^2)$.
 
 ---
 
@@ -116,7 +119,8 @@ All lecture PDFs and problem sets are at [https://people.math.harvard.edu/~bulle
 
 > **Bonus from Math 137:** Bézout's theorem (Sec 20) with proof. This is used repeatedly in the Harvard qualifying exam collection.
 
-> **Milestone:** A smooth cubic $C$ and a smooth conic $Q$ in $\mathbb{P}^2$ with no common component meet in exactly $3 \cdot 2 = 6$ points by Bézout. For $C = V_+(y^2 z - x^3 + xz^2)$ and $Q = V_+(x^2 + y^2 - z^2)$, verify that all intersection points are distinct (multiplicity 1 each) by checking the Jacobians are linearly independent at each solution.
+> [!NOTE] Milestone
+> A smooth cubic $C$ and a smooth conic $Q$ in $\mathbb{P}^2$ with no common component meet in exactly $3 \cdot 2 = 6$ points by Bézout. For $C = V_+(y^2 z - x^3 + xz^2)$ and $Q = V_+(x^2 + y^2 - z^2)$, verify that all intersection points are distinct (multiplicity 1 each) by checking the Jacobians are linearly independent at each solution.
 
 ---
 
@@ -139,7 +143,8 @@ All lecture PDFs and problem sets are at [https://people.math.harvard.edu/~bulle
 
 **Problem sets:** [PS7](https://people.math.harvard.edu/~bullery/math137/PS7.pdf), [PS8](https://people.math.harvard.edu/~bullery/math137/PS8.pdf)
 
-> **Milestone:** Show the Cremona involution $\phi: [x:y:z] \mapsto [yz:xz:xy]$ is birational by verifying $\phi \circ \phi = \text{id}$ wherever both are defined. Identify the three base points $[1:0:0], [0:1:0], [0:0:1]$ where $\phi$ is undefined, and describe the three lines $V(x), V(y), V(z)$ along which the image degenerates.
+> [!NOTE] Milestone
+> Show the Cremona involution $\phi: [x:y:z] \mapsto [yz:xz:xy]$ is birational by verifying $\phi \circ \phi = \text{id}$ wherever both are defined. Identify the three base points $[1:0:0], [0:1:0], [0:0:1]$ where $\phi$ is undefined, and describe the three lines $V(x), V(y), V(z)$ along which the image degenerates.
 
 ---
 
@@ -156,7 +161,8 @@ Complete remaining problem sets and consolidate.
 - [ ] State Bézout's theorem and use it to compute intersection numbers for 3 explicit pairs of plane curves
 - [ ] State and prove the Nullstellensatz from scratch without notes
 
-> **Math 137 Milestone:** You should now be fluent in the language of classical algebraic geometry — affine and projective varieties, morphisms, rational maps, dimension, and intersection numbers. The bridge to Shafarevich §II (which opens with tangent spaces) requires only the language of local rings, which Math 137 covered in Lec 9.
+> [!NOTE] Milestone
+> You should now be fluent in the language of classical algebraic geometry — affine and projective varieties, morphisms, rational maps, dimension, and intersection numbers. The bridge to Shafarevich §II (which opens with tangent spaces) requires only the language of local rings, which Math 137 covered in Lec 9.
 
 ---
 
@@ -190,7 +196,8 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Find the singular locus of $V(y^2 - x^2(x+1)) \subset \mathbb{A}^2$ (nodal cubic)
 - [ ] Find the singular locus of $V(y^2 - x^3) \subset \mathbb{A}^2$ (cuspidal cubic)
 
-> **Milestone:** For the nodal cubic $X = V(y^2 - x^2(x+1))$, apply the Jacobian criterion at $(0,0)$: $(\partial f/\partial x)(0,0) = 0$ and $(\partial f/\partial y)(0,0) = 0$, so $T_{X,(0,0)} = \mathbb{A}^2$ has dimension 2 while $\dim X = 1$. Then pick any smooth point, e.g., $(1, \sqrt{2})$: $\partial f/\partial y = 2y \neq 0$, so the Jacobian has rank 1 and $\dim T_{X,P} = 1 = \dim X$.
+> [!NOTE] Milestone
+> For the nodal cubic $X = V(y^2 - x^2(x+1))$, apply the Jacobian criterion at $(0,0)$: $(\partial f/\partial x)(0,0) = 0$ and $(\partial f/\partial y)(0,0) = 0$, so $T_{X,(0,0)} = \mathbb{A}^2$ has dimension 2 while $\dim X = 1$. Then pick any smooth point, e.g., $(1, \sqrt{2})$: $\partial f/\partial y = 2y \neq 0$, so the Jacobian has rank 1 and $\dim T_{X,P} = 1 = \dim X$.
 
 ---
 
@@ -212,7 +219,8 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 
 - [ ] Shafarevich II.3 #1, 2, 3, 4
 
-> **Milestone:** Show that $f: \mathbb{A}^1 \to V(y^2 - x^3),\ t \mapsto (t^2, t^3)$ is a bijection on points but not an isomorphism of varieties. The coordinate ring map $f^*: k[x,y]/(y^2 - x^3) \to k[t]$ sends $x \mapsto t^2, y \mapsto t^3$, but $t \notin \text{Im}(f^*)$ — so $f^*$ is not surjective, $f$ has no algebraic inverse, and the cusp is not isomorphic to $\mathbb{A}^1$ despite being homeomorphic (in the Zariski topology).
+> [!NOTE] Milestone
+> Show that $f: \mathbb{A}^1 \to V(y^2 - x^3),\ t \mapsto (t^2, t^3)$ is a bijection on points but not an isomorphism of varieties. The coordinate ring map $f^*: k[x,y]/(y^2 - x^3) \to k[t]$ sends $x \mapsto t^2, y \mapsto t^3$, but $t \notin \text{Im}(f^*)$ — so $f^*$ is not surjective, $f$ has no algebraic inverse, and the cusp is not isomorphic to $\mathbb{A}^1$ despite being homeomorphic (in the Zariski topology).
 
 ---
 
@@ -239,7 +247,8 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] A&M 5.1, 5.4, 5.16, 5.22
 - [ ] Compute the normalization of the cuspidal cubic $V(y^2 - x^3) \subset \mathbb{A}^2$
 
-> **Milestone:** Compute the normalization of $V(y^2 - x^3)$ explicitly: set $t = y/x \in k(X)$. Then $t^2 = y^2/x^2 = x^3/x^2 = x$, so $x = t^2$ and $y = t^3$ are in $k[t]$. This shows $k[t] = $ integral closure of $k[t^2, t^3]$ in $k(X)$, and the normalization map is $\mathbb{A}^1 \to V(y^2 - x^3),\ t \mapsto (t^2, t^3)$ — the same map from Week 8, now understood as the normalization.
+> [!NOTE] Milestone
+> Compute the normalization of $V(y^2 - x^3)$ explicitly: set $t = y/x \in k(X)$. Then $t^2 = y^2/x^2 = x^3/x^2 = x$, so $x = t^2$ and $y = t^3$ are in $k[t]$. This shows $k[t] = $ integral closure of $k[t^2, t^3]$ in $k(X)$, and the normalization map is $\mathbb{A}^1 \to V(y^2 - x^3),\ t \mapsto (t^2, t^3)$ — the same map from Week 8, now understood as the normalization.
 
 ---
 
@@ -264,7 +273,8 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Shafarevich II.5 #1, 2, 3, 4
 - [ ] Resolve the $A_2$ singularity $V(y^2 - x^3)$ by two blow-ups. Describe the exceptional locus.
 
-> **Milestone:** Resolve the cusp $V(y^2 - x^3)$ by a single blow-up at the origin. In the chart $y = tx$: total transform is $t^2 x^2 = x^3$, factoring as $x^2(t^2 - x) = 0$. The strict transform is $V(t^2 - x)$, which is smooth and isomorphic to $\mathbb{A}^1$ via the coordinate $t$. It meets the exceptional divisor $E = V(x)$ at the single point $(t, x) = (0, 0)$, confirming the cusp is resolved in one step.
+> [!NOTE] Milestone
+> Resolve the cusp $V(y^2 - x^3)$ by a single blow-up at the origin. In the chart $y = tx$: total transform is $t^2 x^2 = x^3$, factoring as $x^2(t^2 - x) = 0$. The strict transform is $V(t^2 - x)$, which is smooth and isomorphic to $\mathbb{A}^1$ via the coordinate $t$. It meets the exceptional divisor $E = V(x)$ at the single point $(t, x) = (0, 0)$, confirming the cusp is resolved in one step.
 
 ---
 
@@ -289,7 +299,8 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Shafarevich III.1 #1, 2, 3, 4, 5
 - [ ] Show $\text{Pic}(\mathbb{A}^1) = 0$ and $\text{Pic}(\mathbb{P}^1) \cong \mathbb{Z}$
 
-> **Milestone:** Compute $\text{div}(f)$ for $f = (x - a)/(x - b) \in k(\mathbb{P}^1)$ in affine coordinate $x$: $\text{div}(f) = [a:1] - [b:1]$. This shows every degree-0 divisor on $\mathbb{P}^1$ is principal, so $\text{Pic}^0(\mathbb{P}^1) = 0$. Since $\text{Pic}(\mathbb{P}^1) \cong \mathbb{Z} \oplus \text{Pic}^0(\mathbb{P}^1)$, conclude $\text{Pic}(\mathbb{P}^1) \cong \mathbb{Z}$, generated by the class of any point.
+> [!NOTE] Milestone
+> Compute $\text{div}(f)$ for $f = (x - a)/(x - b) \in k(\mathbb{P}^1)$ in affine coordinate $x$: $\text{div}(f) = [a:1] - [b:1]$. This shows every degree-0 divisor on $\mathbb{P}^1$ is principal, so $\text{Pic}^0(\mathbb{P}^1) = 0$. Since $\text{Pic}(\mathbb{P}^1) \cong \mathbb{Z} \oplus \text{Pic}^0(\mathbb{P}^1)$, conclude $\text{Pic}(\mathbb{P}^1) \cong \mathbb{Z}$, generated by the class of any point.
 
 ---
 
@@ -313,7 +324,8 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Show that $\mathcal{O}(1)$ on $\mathbb{P}^1$ corresponds to the identity map $\mathbb{P}^1 \to \mathbb{P}^1$
 - [ ] Find all effective divisors linearly equivalent to $2[P]$ on a smooth conic $C \subset \mathbb{P}^2$
 
-> **Milestone:** On $\mathbb{P}^1$, describe the complete linear system $|n[P]|$ for any point $P$: it is the set of all effective divisors of degree $n$, parameterized by $\mathbb{P}^n$ (via the $n+1$ monomials of degree $n$ in the homogeneous coordinates). Check $n = 1$: $|[P]| \cong \mathbb{P}^1$ and $\phi_{[P]}$ is the identity map on $\mathbb{P}^1$. Check $n = 2$: $|2[P]| \cong \mathbb{P}^2$ and $\phi_{2[P]}$ is the degree-2 Veronese $\mathbb{P}^1 \hookrightarrow \mathbb{P}^2$.
+> [!NOTE] Milestone
+> On $\mathbb{P}^1$, describe the complete linear system $|n[P]|$ for any point $P$: it is the set of all effective divisors of degree $n$, parameterized by $\mathbb{P}^n$ (via the $n+1$ monomials of degree $n$ in the homogeneous coordinates). Check $n = 1$: $|[P]| \cong \mathbb{P}^1$ and $\phi_{[P]}$ is the identity map on $\mathbb{P}^1$. Check $n = 2$: $|2[P]| \cong \mathbb{P}^2$ and $\phi_{2[P]}$ is the degree-2 Veronese $\mathbb{P}^1 \hookrightarrow \mathbb{P}^2$.
 
 ---
 
@@ -336,7 +348,8 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Shafarevich III.3 #1, 2, 3
 - [ ] On $\mathbb{P}^1$ with coordinate $t$, compute $\text{div}(dt)$. What is $\deg K_{\mathbb{P}^1}$?
 
-> **Milestone:** Compute $\text{div}(dt)$ on $\mathbb{P}^1$ explicitly: in the affine chart $t$, the form $dt$ is regular and nonvanishing. In the chart $s = 1/t$ near $\infty$, $dt = -ds/s^2$ has a double pole at $s = 0$. So $\text{div}(dt) = -2[\infty]$ and $\deg K_{\mathbb{P}^1} = -2 = 2(0) - 2$, confirming the formula $\deg K = 2g - 2$ for $g = 0$.
+> [!NOTE] Milestone
+> Compute $\text{div}(dt)$ on $\mathbb{P}^1$ explicitly: in the affine chart $t$, the form $dt$ is regular and nonvanishing. In the chart $s = 1/t$ near $\infty$, $dt = -ds/s^2$ has a double pole at $s = 0$. So $\text{div}(dt) = -2[\infty]$ and $\deg K_{\mathbb{P}^1} = -2 = 2(0) - 2$, confirming the formula $\deg K = 2g - 2$ for $g = 0$.
 
 ---
 
@@ -361,7 +374,8 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Compute $g$ for a smooth quartic in $\mathbb{P}^2$. Use RR to find $\ell(K)$.
 - [ ] Show: a smooth curve of genus 0 over $\bar{k}$ is isomorphic to $\mathbb{P}^1$
 
-> **Milestone:** For a smooth elliptic curve $E$ (genus 1) and origin $O$, compute $\ell(nO)$ for $n = 0, 1, 2, 3$ by Riemann-Roch: $\ell(0) = 1$, $\ell(O) = 1$, $\ell(2O) = 2$, $\ell(3O) = 3$. The jumps at $n = 2$ and $n = 3$ produce functions $x$ and $y$ with poles only at $O$; the relation $y^2 = x^3 + ax + b$ follows from $\ell(6O) = 6$ and the seven monomials $1, x, y, x^2, xy, y^2, x^3$ being linearly dependent — RR recovers Weierstrass form from scratch.
+> [!NOTE] Milestone
+> For a smooth elliptic curve $E$ (genus 1) and origin $O$, compute $\ell(nO)$ for $n = 0, 1, 2, 3$ by Riemann-Roch: $\ell(0) = 1$, $\ell(O) = 1$, $\ell(2O) = 2$, $\ell(3O) = 3$. The jumps at $n = 2$ and $n = 3$ produce functions $x$ and $y$ with poles only at $O$; the relation $y^2 = x^3 + ax + b$ follows from $\ell(6O) = 6$ and the seven monomials $1, x, y, x^2, xy, y^2, x^3$ being linearly dependent — RR recovers Weierstrass form from scratch.
 
 ---
 
@@ -385,7 +399,8 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Deduce the genus formula for a smooth plane curve from Hurwitz by projecting from a point
 - [ ] Harvard qual: "Let's talk about Riemann-Hurwitz..." — work through the Ogus questions from the problem set
 
-> **Milestone:** For the hyperelliptic map $f: C \to \mathbb{P}^1$ of degree 2 from a genus-2 curve, apply Hurwitz: $2(2) - 2 = 2 \cdot (2(0) - 2) + \deg R$, giving $\deg R = 6$. Since each branch point has $e_P = 2$ (contributing $e_P - 1 = 1$ to $R$), there are exactly 6 branch points. For $C: y^2 = f(x)$ with $\deg f = 5$, these are the 5 finite roots of $f$ plus the point at infinity.
+> [!NOTE] Milestone
+> For the hyperelliptic map $f: C \to \mathbb{P}^1$ of degree 2 from a genus-2 curve, apply Hurwitz: $2(2) - 2 = 2 \cdot (2(0) - 2) + \deg R$, giving $\deg R = 6$. Since each branch point has $e_P = 2$ (contributing $e_P - 1 = 1$ to $R$), there are exactly 6 branch points. For $C: y^2 = f(x)$ with $\deg f = 5$, these are the 5 finite roots of $f$ plus the point at infinity.
 
 ---
 
@@ -409,7 +424,8 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Harvard qual: "What are the involutions of an elliptic curve over $\mathbb{C}$?" — work the McMullen questions
 - [ ] Show the group law is associative using Riemann-Roch (sketch): $\text{Pic}^0(E) \cong E$ as sets
 
-> **Milestone:** For $E: y^2 = x(x-1)(x+1)$, the three 2-torsion points are $(0,0), (1,0), (-1,0)$ (where $y = 0$, so each equals its own inverse since $(x,y)^{-1} = (x,-y)$). Verify the group law: the line through $(0,0)$ and $(1,0)$ is $y = 0$, which also passes through $(-1, 0)$, so $(0,0) + (1,0) + (-1, 0) = O$, confirming $E[2] \cong (\mathbb{Z}/2)^2$.
+> [!NOTE] Milestone
+> For $E: y^2 = x(x-1)(x+1)$, the three 2-torsion points are $(0,0), (1,0), (-1,0)$ (where $y = 0$, so each equals its own inverse since $(x,y)^{-1} = (x,-y)$). Verify the group law: the line through $(0,0)$ and $(1,0)$ is $y = 0$, which also passes through $(-1, 0)$, so $(0,0) + (1,0) + (-1, 0) = O$, confirming $E[2] \cong (\mathbb{Z}/2)^2$.
 
 ---
 
@@ -433,7 +449,8 @@ From here the primary text is Shafarevich, *Basic Algebraic Geometry* Vol 1. Cha
 - [ ] Show a genus-2 curve is always hyperelliptic using the canonical map
 - [ ] Work 3 more problems from the Harvard qual collection; identify which Phase II concepts they preview
 
-> **Milestone:** For a smooth genus-2 curve $C$, the canonical map $\phi_K: C \to \mathbb{P}^1$ has degree 2 (since $\ell(K) = g = 2$ and $\deg K = 2g-2 = 2$, so the target is $\mathbb{P}^1$). By Hurwitz applied to $\phi_K$: $2(2) - 2 = 2(-2) + \deg R$, so $\deg R = 6$ and $\phi_K$ has exactly 6 ramification points — the Weierstrass points of $C$, where the hyperelliptic involution fixes the curve.
+> [!NOTE] Milestone
+> For a smooth genus-2 curve $C$, the canonical map $\phi_K: C \to \mathbb{P}^1$ has degree 2 (since $\ell(K) = g = 2$ and $\deg K = 2g-2 = 2$, so the target is $\mathbb{P}^1$). By Hurwitz applied to $\phi_K$: $2(2) - 2 = 2(-2) + \deg R$, so $\deg R = 6$ and $\phi_K$ has exactly 6 ramification points — the Weierstrass points of $C$, where the hyperelliptic involution fixes the curve.
 
 ---
 
@@ -453,4 +470,5 @@ Use these two weeks for intensive qualifying exam problem work on Phase I materi
 - [ ] "Describe Weil divisors and Cartier divisors on curves"
 - [ ] All McMullen elliptic curve questions
 
-> **Phase I Milestone:** You should now be able to: (1) define varieties, morphisms, divisors, and the Picard group from scratch; (2) state and apply Riemann-Roch and Hurwitz; (3) compute intersection numbers and apply Bézout; (4) work problems from the Harvard qual involving divisors, Pic, and curves. Open Ritvik's qual transcript — the question on Hurwitz's theorem should now be followable end-to-end.
+> [!NOTE] Milestone
+> You should now be able to: (1) define varieties, morphisms, divisors, and the Picard group from scratch; (2) state and apply Riemann-Roch and Hurwitz; (3) compute intersection numbers and apply Bézout; (4) work problems from the Harvard qual involving divisors, Pic, and curves. Open Ritvik's qual transcript — the question on Hurwitz's theorem should now be followable end-to-end.
