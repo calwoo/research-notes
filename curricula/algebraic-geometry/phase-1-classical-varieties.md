@@ -37,13 +37,13 @@ All lecture PDFs and problem sets are at [https://people.math.harvard.edu/~bulle
 
 **Concepts to understand:**
 
-- [ ] What algebraic geometry studies: solution sets of polynomial equations as geometric objects
-- [ ] Algebraic sets $V(f_1, \ldots, f_r) \subset \mathbb{A}^n$; the ideal $I(X)$ of a subset
-- [ ] Hilbert Basis Theorem: every ideal in $k[x_1, \ldots, x_n]$ is finitely generated
-- [ ] Weak and strong Nullstellensatz: $I(V(J)) = \sqrt{J}$ over algebraically closed $k$
-- [ ] Irreducibility; algebraic set is irreducible iff $I(X)$ is prime
-- [ ] Coordinate ring $k[X] = k[x_1, \ldots, x_n]/I(X)$; regular functions; morphisms
-- [ ] Algebra–geometry duality: affine varieties $\leftrightarrow$ finitely generated reduced $k$-algebras
+- [x] What algebraic geometry studies: solution sets of polynomial equations as geometric objects
+- [x] Algebraic sets $V(f_1, \ldots, f_r) \subset \mathbb{A}^n$; the ideal $I(X)$ of a subset
+- [x] Hilbert Basis Theorem: every ideal in $k[x_1, \ldots, x_n]$ is finitely generated
+- [x] Weak and strong Nullstellensatz: $I(V(J)) = \sqrt{J}$ over algebraically closed $k$
+- [x] Irreducibility; algebraic set is irreducible iff $I(X)$ is prime
+- [x] Coordinate ring $k[X] = k[x_1, \ldots, x_n]/I(X)$; regular functions; morphisms
+- [x] Algebra–geometry duality: affine varieties $\leftrightarrow$ finitely generated reduced $k$-algebras
 
 **Problem sets:** [PS1](https://people.math.harvard.edu/~bullery/math137/PS1.pdf), [PS2](https://people.math.harvard.edu/~bullery/math137/PS2.pdf)
 
@@ -62,11 +62,11 @@ All lecture PDFs and problem sets are at [https://people.math.harvard.edu/~bulle
 
 **Concepts to understand:**
 
-- [ ] Rational functions and local rings $\mathcal{O}_{X,P}$: functions defined near $P$
-- [ ] Affine plane curves: tangent lines, multiplicity of a point, branches
-- [ ] Discrete valuation rings (DVRs): uniformizers, valuation $v_P(f)$ = order of vanishing
-- [ ] Intersection number $(C \cdot D)_P$ at a point: via $\dim_k \mathcal{O}_P/(f, g)$
-- [ ] Properties of intersection numbers: symmetry, additivity, invariance under linear equivalence
+- [x] Rational functions and local rings $\mathcal{O}_{X,P}$: functions defined near $P$
+- [x] Affine plane curves: tangent lines, multiplicity of a point, branches
+- [x] Discrete valuation rings (DVRs): uniformizers, valuation $v_P(f)$ = order of vanishing
+- [x] Intersection number $(C \cdot D)_P$ at a point: via $\dim_k \mathcal{O}_P/(f, g)$
+- [x] Properties of intersection numbers: symmetry, additivity, invariance under linear equivalence
 
 **Problem sets:** [PS3](https://people.math.harvard.edu/~bullery/math137/PS3.pdf)
 
@@ -87,11 +87,11 @@ All lecture PDFs and problem sets are at [https://people.math.harvard.edu/~bulle
 
 **Concepts to understand:**
 
-- [ ] Projective $n$-space $\mathbb{P}^n_k$: homogeneous coordinates $[x_0 : \cdots : x_n]$
-- [ ] Projective algebraic sets: common zeros of homogeneous polynomials
-- [ ] Homogeneous coordinate ring $S(X)$: graded ring, NOT the ring of functions on $X$
-- [ ] Standard affine cover: $\mathbb{P}^n = U_0 \cup \cdots \cup U_n$ with $U_i \cong \mathbb{A}^n$
-- [ ] Affine and projective varieties as a unified notion; quasiprojective varieties
+- [x] Projective $n$-space $\mathbb{P}^n_k$: homogeneous coordinates $[x_0 : \cdots : x_n]$
+- [x] Projective algebraic sets: common zeros of homogeneous polynomials
+- [x] Homogeneous coordinate ring $S(X)$: graded ring, NOT the ring of functions on $X$
+- [x] Standard affine cover: $\mathbb{P}^n = U_0 \cup \cdots \cup U_n$ with $U_i \cong \mathbb{A}^n$
+- [x] Affine and projective varieties as a unified notion; quasiprojective varieties
 
 **Problem sets:** [PS4](https://people.math.harvard.edu/~bullery/math137/PS4.pdf)
 
@@ -110,10 +110,10 @@ All lecture PDFs and problem sets are at [https://people.math.harvard.edu/~bulle
 
 **Concepts to understand:**
 
-- [ ] Morphisms of projective varieties: defined by homogeneous polynomials of the same degree
-- [ ] Projective plane curves: degree, tangent lines, singular points, intersection with lines
-- [ ] Linear systems of plane curves of degree $d$: a projective space parameterizing curves
-- [ ] Bézout's Theorem: two projective plane curves of degrees $d$ and $e$ with no common component meet in exactly $de$ points (counted with intersection multiplicity)
+- [x] Morphisms of projective varieties: defined by homogeneous polynomials of the same degree
+- [x] Projective plane curves: degree, tangent lines, singular points, intersection with lines
+- [x] Linear systems of plane curves of degree $d$: a projective space parameterizing curves
+- [x] Bézout's Theorem: two projective plane curves of degrees $d$ and $e$ with no common component meet in exactly $de$ points (counted with intersection multiplicity)
 
 **Problem sets:** [PS5](https://people.math.harvard.edu/~bullery/math137/PS5.pdf), [PS6](https://people.math.harvard.edu/~bullery/math137/PS6.pdf)
 
@@ -134,12 +134,12 @@ All lecture PDFs and problem sets are at [https://people.math.harvard.edu/~bulle
 
 **Concepts to understand:**
 
-- [ ] Abstract varieties: gluing affine pieces via transition maps; the correct intrinsic notion
-- [ ] Rational maps $f: X \dashrightarrow Y$: defined on a dense open subset; domain of definition
-- [ ] Birational equivalence: rational inverse in both directions; $k(X)$ is a birational invariant
-- [ ] Dimension via transcendence degree: $\dim X = \text{trdeg}_k k(X)$
-- [ ] Fiber dimension theorem: generic fiber has dimension $\dim X - \dim Y$
-- [ ] Blowing up a point in $\mathbb{A}^2$: $\text{Bl}_0 \mathbb{A}^2 \subset \mathbb{A}^2 \times \mathbb{P}^1$; exceptional divisor $E \cong \mathbb{P}^1$
+- [x] Abstract varieties: gluing affine pieces via transition maps; the correct intrinsic notion
+- [x] Rational maps $f: X \dashrightarrow Y$: defined on a dense open subset; domain of definition
+- [x] Birational equivalence: rational inverse in both directions; $k(X)$ is a birational invariant
+- [x] Dimension via transcendence degree: $\dim X = \text{trdeg}_k k(X)$
+- [x] Fiber dimension theorem: generic fiber has dimension $\dim X - \dim Y$
+- [x] Blowing up a point in $\mathbb{A}^2$: $\text{Bl}_0 \mathbb{A}^2 \subset \mathbb{A}^2 \times \mathbb{P}^1$; exceptional divisor $E \cong \mathbb{P}^1$
 
 **Problem sets:** [PS7](https://people.math.harvard.edu/~bullery/math137/PS7.pdf), [PS8](https://people.math.harvard.edu/~bullery/math137/PS8.pdf)
 
@@ -156,10 +156,10 @@ Complete remaining problem sets and consolidate.
 
 **Consolidation checklist:**
 
-- [ ] For every affine object (coordinate ring, regular map, rational function, local ring), identify its projective analogue
-- [ ] Work through the Harvard qual collection: all problems tagged "affine variety," "projective variety," "morphism," "rational map"
-- [ ] State Bézout's theorem and use it to compute intersection numbers for 3 explicit pairs of plane curves
-- [ ] State and prove the Nullstellensatz from scratch without notes
+- [x] For every affine object (coordinate ring, regular map, rational function, local ring), identify its projective analogue
+- [x] Work through the Harvard qual collection: all problems tagged "affine variety," "projective variety," "morphism," "rational map"
+- [x] State Bézout's theorem and use it to compute intersection numbers for 3 explicit pairs of plane curves
+- [x] State and prove the Nullstellensatz from scratch without notes
 
 > [!NOTE] Milestone
 > You should now be fluent in the language of classical algebraic geometry — affine and projective varieties, morphisms, rational maps, dimension, and intersection numbers. The bridge to Shafarevich §II (which opens with tangent spaces) requires only the language of local rings, which Math 137 covered in Lec 9.
