@@ -209,11 +209,11 @@ Elements of $\hat{\mathcal{O}}_{X,P}$ are coherent sequences $(\phi_n)_{n \geq 0
 
 **Theorem (Cohen Structure Theorem, smooth case).** If $P \in X$ is a smooth point of dimension $n$ with local parameters $t_1,\ldots,t_n$, then
 
-$$\hat{\mathcal{O}}_{X,P} \cong k\llbracket t_1,\ldots,t_n\rrbracket,$$
+$$\hat{\mathcal{O}}_{X,P} \cong k[\![t_1,\ldots,t_n]\!],$$
 
 the ring of formal power series in $n$ variables over $k$.
 
-*Proof sketch.* Since $P$ is smooth, $\mathcal{O}_{X,P}$ is a regular local ring of dimension $n$. The general Cohen structure theorem states that every complete equicharacteristic Noetherian local ring $(R, \mathfrak{m}, k)$ is a quotient $k\llbracket x_1,\ldots,x_N\rrbracket/I$ for some $N$ and ideal $I$. For a *regular* local ring, the minimal number of generators of $\mathfrak{m}$ equals $n = \dim R$, so $I = 0$ and $\hat{\mathcal{O}}_{X,P} \cong k\llbracket t_1,\ldots,t_n\rrbracket$. $\square$
+*Proof sketch.* Since $P$ is smooth, $\mathcal{O}_{X,P}$ is a regular local ring of dimension $n$. The general Cohen structure theorem states that every complete equicharacteristic Noetherian local ring $(R, \mathfrak{m}, k)$ is a quotient $k[\![x_1,\ldots,x_N]\!]/I$ for some $N$ and ideal $I$. For a *regular* local ring, the minimal number of generators of $\mathfrak{m}$ equals $n = \dim R$, so $I = 0$ and $\hat{\mathcal{O}}_{X,P} \cong k[\![t_1,\ldots,t_n]\!]$. $\square$
 
 > [!NOTE] Universal property
 > The completion $\hat{\mathcal{O}}_{X,P}$ is the universal ring to which $\mathcal{O}_{X,P}$ maps and where the $\mathfrak{m}$-adic topology is complete (every Cauchy sequence converges). It captures all local data "to all orders."
@@ -222,11 +222,11 @@ the ring of formal power series in $n$ variables over $k$.
 
 **Proposition (Unique Power Series Expansion).** Let $P \in X$ be smooth with local parameters $t_1,\ldots,t_n$, and let $f \in \mathcal{O}_{X,P}$. Then $f$ admits a unique expansion
 
-$$f = \sum_{\alpha \in \mathbb{Z}_{\geq 0}^n} c_\alpha t^\alpha \in k\llbracket t_1,\ldots,t_n\rrbracket, \qquad c_\alpha \in k,$$
+$$f = \sum_{\alpha \in \mathbb{Z}_{\geq 0}^n} c_\alpha t^\alpha \in k[\![t_1,\ldots,t_n]\!], \qquad c_\alpha \in k,$$
 
-where $t^\alpha = t_1^{\alpha_1}\cdots t_n^{\alpha_n}$, via the injective map $\mathcal{O}_{X,P} \hookrightarrow \hat{\mathcal{O}}_{X,P} \cong k\llbracket t_1,\ldots,t_n\rrbracket$.
+where $t^\alpha = t_1^{\alpha_1}\cdots t_n^{\alpha_n}$, via the injective map $\mathcal{O}_{X,P} \hookrightarrow \hat{\mathcal{O}}_{X,P} \cong k[\![t_1,\ldots,t_n]\!]$.
 
-*Derivation.* Since $t_1,\ldots,t_n$ generate $\mathfrak{m}_{X,P}$ and $\mathcal{O}_{X,P}/\mathfrak{m}^{m+1}$ is spanned by monomials $t^\alpha$ with $|\alpha| \leq m$, any $f \in \mathcal{O}_{X,P}$ determines, for each $m$, a polynomial of degree $\leq m$ that is the truncation of the expansion. These truncations are compatible, giving the formal series. Injectivity of $\mathcal{O}_{X,P} \to k\llbracket t_1,\ldots,t_n\rrbracket$ follows from $\bigcap_m \mathfrak{m}^m = 0$.
+*Derivation.* Since $t_1,\ldots,t_n$ generate $\mathfrak{m}_{X,P}$ and $\mathcal{O}_{X,P}/\mathfrak{m}^{m+1}$ is spanned by monomials $t^\alpha$ with $|\alpha| \leq m$, any $f \in \mathcal{O}_{X,P}$ determines, for each $m$, a polynomial of degree $\leq m$ that is the truncation of the expansion. These truncations are compatible, giving the formal series. Injectivity of $\mathcal{O}_{X,P} \to k[\![t_1,\ldots,t_n]\!]$ follows from $\bigcap_m \mathfrak{m}^m = 0$.
 
 **Geometric interpretation.** The local parameters $t_1,\ldots,t_n$ play the role of "local coordinates" centered at $P$. The power series expansion of $f$ is the analogue of the Taylor series expansion in differential geometry. Unlike the complex-analytic setting, this series need not converge in any metric sense — it lives in the *formal* power series ring — but it contains complete local information about $f$.
 
@@ -238,10 +238,10 @@ where $t^\alpha = t_1^{\alpha_1}\cdots t_n^{\alpha_n}$, via the injective map $\
 >
 > > **Prerequisites:** [[#2.1 Local Parameters|2.1 Local Parameters]], [[#2.2 The Formal Completion|2.2 The Formal Completion]]
 >
-> Let $X = \mathbb{A}^2$, $P = (0,0)$, and consider two systems of local parameters: $(t_1,t_2) = (x,y)$ and $(s_1,s_2) = (x+y, x-y)$. Express $f = e^x \sin(y)$ (formally) in both systems and verify that the two completions $k\llbracket t_1,t_2\rrbracket$ and $k\llbracket s_1,s_2\rrbracket$ are isomorphic via the change of variables $t_1 = (s_1+s_2)/2$, $t_2 = (s_1-s_2)/2$.
+> Let $X = \mathbb{A}^2$, $P = (0,0)$, and consider two systems of local parameters: $(t_1,t_2) = (x,y)$ and $(s_1,s_2) = (x+y, x-y)$. Express $f = e^x \sin(y)$ (formally) in both systems and verify that the two completions $k[\![t_1,t_2]\!]$ and $k[\![s_1,s_2]\!]$ are isomorphic via the change of variables $t_1 = (s_1+s_2)/2$, $t_2 = (s_1-s_2)/2$.
 
 > [!TIP]- Solution to Exercise 3
-> **Key insight:** The completion isomorphism $k\llbracket t_1,t_2\rrbracket \cong k\llbracket s_1,s_2\rrbracket$ is given by any automorphism of formal power series rings induced by a linear change of variables with invertible Jacobian at the origin.
+> **Key insight:** The completion isomorphism $k[\![t_1,t_2]\!] \cong k[\![s_1,s_2]\!]$ is given by any automorphism of formal power series rings induced by a linear change of variables with invertible Jacobian at the origin.
 >
 > **Sketch:** The change $(t_1,t_2) = ((s_1+s_2)/2, (s_1-s_2)/2)$ has Jacobian matrix $\begin{pmatrix}1/2 & 1/2 \\ 1/2 & -1/2\end{pmatrix}$ with determinant $-1/2 \neq 0$. By the formal implicit function theorem (valid over any field), any such invertible linear substitution extends to an isomorphism of formal power series rings. For the expansion of $f = xy + \cdots$ (the formal version): in $(t_1,t_2)$ coordinates, $f = t_1 t_2 + \cdots$; substituting $t_1 = (s_1+s_2)/2$, $t_2 = (s_1-s_2)/2$ gives $f = (s_1^2 - s_2^2)/4 + \cdots$, a valid formal series in $s_1, s_2$.
 
@@ -250,12 +250,12 @@ where $t^\alpha = t_1^{\alpha_1}\cdots t_n^{\alpha_n}$, via the injective map $\
 >
 > > **Prerequisites:** [[#1.4 Regular Local Rings|1.4 Regular Local Rings]], [[#2.2 The Formal Completion|2.2 The Formal Completion]]
 >
-> Let $R = k[x,y]/(y^2 - x^3)$ localized at the maximal ideal $(x,y)$. Show that $\hat{R} \not\cong k\llbracket t\rrbracket$ (i.e., the completion is not a power series ring in one variable), hence $(0,0)$ is not a smooth point of $V(y^2 - x^3)$.
+> Let $R = k[x,y]/(y^2 - x^3)$ localized at the maximal ideal $(x,y)$. Show that $\hat{R} \not\cong k[\![t]\!]$ (i.e., the completion is not a power series ring in one variable), hence $(0,0)$ is not a smooth point of $V(y^2 - x^3)$.
 
 > [!TIP]- Solution to Exercise 4
-> **Key insight:** If $(0,0)$ were smooth on the curve $V(y^2-x^3)$, the completion would be $k\llbracket t\rrbracket$. But $k\llbracket t\rrbracket$ is a domain, while $\hat{R}$ has a specific structure that can be analyzed.
+> **Key insight:** If $(0,0)$ were smooth on the curve $V(y^2-x^3)$, the completion would be $k[\![t]\!]$. But $k[\![t]\!]$ is a domain, while $\hat{R}$ has a specific structure that can be analyzed.
 >
-> **Sketch:** In $R$, we have $y^2 = x^3$. In the completion $\hat{R}$, suppose $\hat{R} \cong k\llbracket t\rrbracket$; then $x = u(t) t^2$ and $y = v(t) t^3$ for units $u, v$ (matching valuations $v(x) = 2, v(y) = 3$ implied by $y^2 = x^3$). But these valuations show $\mathfrak{m}_R = (x,y)$ requires two generators with $v(x) = 2, v(y) = 3$, so $\mathfrak{m}_R \not\cong (t)$ — the minimal generator of $\mathfrak{m}$ in $k\llbracket t\rrbracket$ has valuation 1. More formally, $\dim_k \mathfrak{m}/\mathfrak{m}^2 = 2$ (since $[x]$ and $[y]$ are linearly independent in $\mathfrak{m}/\mathfrak{m}^2$) while $\dim R = 1$, so $R$ is not regular.
+> **Sketch:** In $R$, we have $y^2 = x^3$. In the completion $\hat{R}$, suppose $\hat{R} \cong k[\![t]\!]$; then $x = u(t) t^2$ and $y = v(t) t^3$ for units $u, v$ (matching valuations $v(x) = 2, v(y) = 3$ implied by $y^2 = x^3$). But these valuations show $\mathfrak{m}_R = (x,y)$ requires two generators with $v(x) = 2, v(y) = 3$, so $\mathfrak{m}_R \not\cong (t)$ — the minimal generator of $\mathfrak{m}$ in $k[\![t]\!]$ has valuation 1. More formally, $\dim_k \mathfrak{m}/\mathfrak{m}^2 = 2$ (since $[x]$ and $[y]$ are linearly independent in $\mathfrak{m}/\mathfrak{m}^2$) while $\dim R = 1$, so $R$ is not regular.
 
 ---
 
@@ -269,9 +269,9 @@ where $t^\alpha = t_1^{\alpha_1}\cdots t_n^{\alpha_n}$, via the injective map $\
 
 **Theorem (Smooth points are analytically irreducible).** If $P \in X$ is a smooth point of an irreducible variety $X$, then $\mathcal{O}_{X,P}$ is analytically irreducible.
 
-*Proof sketch.* By the Cohen structure theorem, $\hat{\mathcal{O}}_{X,P} \cong k\llbracket t_1,\ldots,t_n\rrbracket$, which is an integral domain (formal power series rings over a field are domains: if $fg = 0$ in $k\llbracket t_1,\ldots,t_n\rrbracket$, compare leading terms). $\square$
+*Proof sketch.* By the Cohen structure theorem, $\hat{\mathcal{O}}_{X,P} \cong k[\![t_1,\ldots,t_n]\!]$, which is an integral domain (formal power series rings over a field are domains: if $fg = 0$ in $k[\![t_1,\ldots,t_n]\!]$, compare leading terms). $\square$
 
-**Geometric meaning.** Analytically irreducible means the formal neighborhood of $P$ in $X$ is connected: the variety does not locally look like two (or more) branches crossing at $P$. This fails at singular points like nodes. For example, the nodal cubic $V(y^2 - x^2(x+1))$ at the origin: the completion of its local ring factors as $k\llbracket t_1\rrbracket \times k\llbracket t_2\rrbracket$ (one factor per branch), which is not a domain.
+**Geometric meaning.** Analytically irreducible means the formal neighborhood of $P$ in $X$ is connected: the variety does not locally look like two (or more) branches crossing at $P$. This fails at singular points like nodes. For example, the nodal cubic $V(y^2 - x^2(x+1))$ at the origin: the completion of its local ring factors as $k[\![t_1]\!] \times k[\![t_2]\!]$ (one factor per branch), which is not a domain.
 
 > [!INFO] Zariski's theorem
 > Zariski (1948) proved more: if $\mathcal{O}_{X,P}$ is a *normal* local ring (i.e., integrally closed in its fraction field), then it is analytically irreducible. Since regular local rings are normal (a theorem of Serre), this recovers the above result. The node is not normal at the singular point, which is the algebraic reason for its analytic reducibility.
@@ -318,7 +318,7 @@ the quotient of tangent spaces, which is a $k$-vector space of dimension $n - r$
 *Other direction.* Suppose $P$ is smooth. If $X \subset \mathbb{A}^N$ and $X$ has codimension $c = N - n$, the Jacobian matrix $J(P)$ has rank $c$. By an implicit function theorem argument in the local ring: $c$ of the defining equations $f_1,\ldots,f_c$ form a regular sequence in $\mathcal{O}_{\mathbb{A}^N,P}$, and the quotient $\mathcal{O}_{\mathbb{A}^N,P}/(f_1,\ldots,f_c) = \mathcal{O}_{X,P}$ is a regular local ring of dimension $n$ generated by the remaining $n$ coordinates. These $n$ coordinates, restricted to $X$, form an étale (locally biholomorphic in the algebraic sense) map $X \to \mathbb{A}^n$ on some Zariski open neighborhood of $P$. $\square$
 
 > [!WARNING] Étale vs. isomorphism
-> The correct algebraic analogue is that $X$ is *étale-locally* isomorphic to $\mathbb{A}^n$ at a smooth point — not literally Zariski-locally isomorphic in general (the Zariski topology is coarser than the complex topology). However, the local ring $\mathcal{O}_{X,P}$ is *formally isomorphic* to $k\llbracket t_1,\ldots,t_n\rrbracket$, which is the algebraic substitute for the classical chart map.
+> The correct algebraic analogue is that $X$ is *étale-locally* isomorphic to $\mathbb{A}^n$ at a smooth point — not literally Zariski-locally isomorphic in general (the Zariski topology is coarser than the complex topology). However, the local ring $\mathcal{O}_{X,P}$ is *formally isomorphic* to $k[\![t_1,\ldots,t_n]\!]$, which is the algebraic substitute for the classical chart map.
 
 ### 3.4 Local Factoriality
 
@@ -489,7 +489,7 @@ A ring $R$ is a *discrete valuation ring* (DVR) if it arises this way for some d
 *Proof sketch (3 $\Rightarrow$ 1).* Regularity of dimension 1 means $\mathfrak{m} = (t)$ for a single generator. By the unique factorization property of regular local rings (which are UFDs), every nonzero $f \in R$ writes as $f = u t^{v(f)}$ for a unit $u$ and $v(f) \geq 0$. Extending to $\mathrm{Frac}(R)$ by $v(f/g) = v(f) - v(g)$ gives a discrete valuation. $\square$
 
 > [!NOTE] DVRs and completions
-> The completion of a DVR $R$ with uniformizer $t$ and residue field $k$ is $\hat{R} \cong k\llbracket t\rrbracket$ (formal power series), by the Cohen structure theorem. This is the source of the connection between DVRs and formal power series.
+> The completion of a DVR $R$ with uniformizer $t$ and residue field $k$ is $\hat{R} \cong k[\![t]\!]$ (formal power series), by the Cohen structure theorem. This is the source of the connection between DVRs and formal power series.
 
 ### 5.2 Smooth Points of Curves are DVRs
 
@@ -499,7 +499,7 @@ A ring $R$ is a *discrete valuation ring* (DVR) if it arises this way for some d
 
 **Explicit construction.** In an affine model $C \subset \mathbb{A}^2$ near $P$: a local parameter $t$ is any function in $A(C)$ that vanishes to exactly first order at $P$. For example, if $C = V(f)$ with $(\partial f/\partial y)(P) \neq 0$, one may take $t = x - P_x$ (restricted to $C$).
 
-The *formal completion* satisfies $\hat{\mathcal{O}}_{C,P} \cong k\llbracket t\rrbracket$.
+The *formal completion* satisfies $\hat{\mathcal{O}}_{C,P} \cong k[\![t]\!]$.
 
 > [!EXAMPLE] DVR on the parabola
 > Let $C = V(y - x^2) \subset \mathbb{A}^2$ and $P = (0,0)$. The coordinate ring is $k[x,y]/(y-x^2) \cong k[x]$, so $\mathcal{O}_{C,P} = k[x]_{(x)}$, with maximal ideal $(x)$. The uniformizer is $t = x$. Every function $f \in \mathcal{O}_{C,P}$ can be written as $f = x^n \cdot u$ for a unit $u$ and $n = v_P(f) \geq 0$.
@@ -594,12 +594,12 @@ i.e. the unique integer $n$ such that $f = u t^n$ for a unit $u \in \mathcal{O}_
 >
 > > **Prerequisites:** [[#5.1 DVRs: Definitions and Characterizations|5.1 DVRs: Definitions and Characterizations]], [[#2.2 The Formal Completion|2.2 The Formal Completion]]
 >
-> Let $R = k[t]_{(t)}$ (the local ring of $\mathbb{A}^1$ at the origin). Show directly that $\hat{R} \cong k\llbracket t\rrbracket$ by constructing a ring isomorphism.
+> Let $R = k[t]_{(t)}$ (the local ring of $\mathbb{A}^1$ at the origin). Show directly that $\hat{R} \cong k[\![t]\!]$ by constructing a ring isomorphism.
 
 > [!TIP]- Solution to Exercise 14
 > **Key insight:** Elements of the completion are coherent sequences of polynomials modulo $t^n$, which precisely encode the coefficients of a formal power series.
 >
-> **Sketch:** By definition, $\hat{R} = \varprojlim_n R/(t^n) = \varprojlim_n k[t]/(t^n)$. An element of $\hat{R}$ is a compatible sequence $(a_0, a_0 + a_1 t, a_0 + a_1 t + a_2 t^2, \ldots)$ of polynomials modulo successive powers of $t$. This is precisely a formal power series $\sum_{n \geq 0} a_n t^n \in k\llbracket t\rrbracket$. The map $\hat{R} \to k\llbracket t\rrbracket$ sending such a sequence to $\sum a_n t^n$ is clearly a ring isomorphism (adding and multiplying sequences corresponds to adding and multiplying formal power series).
+> **Sketch:** By definition, $\hat{R} = \varprojlim_n R/(t^n) = \varprojlim_n k[t]/(t^n)$. An element of $\hat{R}$ is a compatible sequence $(a_0, a_0 + a_1 t, a_0 + a_1 t + a_2 t^2, \ldots)$ of polynomials modulo successive powers of $t$. This is precisely a formal power series $\sum_{n \geq 0} a_n t^n \in k[\![t]\!]$. The map $\hat{R} \to k[\![t]\!]$ sending such a sequence to $\sum a_n t^n$ is clearly a ring isomorphism (adding and multiplying sequences corresponds to adding and multiplying formal power series).
 
 > [!QUESTION] Exercise 15: Multiplicity from the Hilbert Function
 > *This problem derives the multiplicity from the Hilbert function of the associated graded ring.*
@@ -906,7 +906,7 @@ i.e. the unique integer $n$ such that $f = u t^n$ for a unit $u \in \mathcal{O}_
 | [Wikipedia: Zariski Tangent Space](https://en.wikipedia.org/wiki/Zariski_tangent_space) | Definition via $\mathfrak{m}/\mathfrak{m}^2$, dual numbers interpretation, Jacobian connection. | https://en.wikipedia.org/wiki/Zariski_tangent_space |
 | [Wikipedia: Tangent Cone](https://en.wikipedia.org/wiki/Tangent_cone) | Associated graded ring definition, initial ideal, multiplicity, examples. | https://en.wikipedia.org/wiki/Tangent_cone |
 | [Wikipedia: Discrete Valuation Ring](https://en.wikipedia.org/wiki/Discrete_valuation_ring) | Ten equivalent characterizations of DVRs; uniformizer; smooth curves. | https://en.wikipedia.org/wiki/Discrete_valuation_ring |
-| [Wikipedia: Cohen Structure Theorem](https://en.wikipedia.org/wiki/Cohen_structure_theorem) | Classification of complete Noetherian local rings; equicharacteristic case gives $k\llbracket x_1,\ldots,x_n\rrbracket$. | https://en.wikipedia.org/wiki/Cohen_structure_theorem |
+| [Wikipedia: Cohen Structure Theorem](https://en.wikipedia.org/wiki/Cohen_structure_theorem) | Classification of complete Noetherian local rings; equicharacteristic case gives $k[\![x_1,\ldots,x_n]\!]$. | https://en.wikipedia.org/wiki/Cohen_structure_theorem |
 | [Stacks Project: Tangent Spaces (Tag 0B28)](https://stacks.math.columbia.edu/tag/0B28) | Scheme-theoretic treatment of Zariski tangent spaces. | https://stacks.math.columbia.edu/tag/0B28 |
 | [Stacks Project: Cohen Structure Theorem (Tag 0323)](https://stacks.math.columbia.edu/tag/0323) | Formal statement and proof of the Cohen structure theorem. | https://stacks.math.columbia.edu/tag/0323 |
 | [Vakil, *Foundations of Algebraic Geometry* (Stanford notes)](https://math.stanford.edu/~vakil/0708-216/216class21.pdf) | Class 21: Zariski tangent space, regularity, Jacobian criterion derivation. | https://math.stanford.edu/~vakil/0708-216/216class21.pdf |
