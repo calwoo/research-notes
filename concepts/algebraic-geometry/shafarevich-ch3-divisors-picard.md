@@ -5,7 +5,7 @@
 ## Relations
 
 **Builds on:** [[concepts/algebraic-geometry/shafarevich-ch2-local-properties|Shafarevich Ch. II: Local Properties]], [[concepts/algebraic-geometry/shafarevich-ch2-normalization-resolution|Normalization and Resolution]]
-**Extended by:** *(Riemann-Roch note — no note yet)*
+**Extended by:** [[concepts/algebraic-geometry/shafarevich-ch3-differentials-riemann-roch|Differential Forms, Riemann-Roch, and Hurwitz's Formula]]
 **Concepts used:** [[concepts/algebraic-geometry/note|Classical Algebraic Geometry]]
 
 ---
