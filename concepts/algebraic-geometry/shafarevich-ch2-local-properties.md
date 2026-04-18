@@ -1,4 +1,4 @@
-# Shafarevich Ch. II: Local Properties
+# Local Properties of Varieties
 
 ## Table of Contents
 

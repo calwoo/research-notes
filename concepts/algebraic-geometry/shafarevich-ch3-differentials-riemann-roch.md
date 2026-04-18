@@ -4,7 +4,7 @@
 
 ## Relations
 
-**Builds on:** [[concepts/algebraic-geometry/shafarevich-ch3-divisors-picard|Divisors and the Picard Group]], [[concepts/algebraic-geometry/shafarevich-ch2-local-properties|Shafarevich Ch. II: Local Properties]]
+**Builds on:** [[concepts/algebraic-geometry/shafarevich-ch3-divisors-picard|Divisors and the Picard Group]], [[concepts/algebraic-geometry/shafarevich-ch2-local-properties|Local Properties of Varieties]]
 **Extended by:** *(Elliptic curves note — no note yet)*
 **Concepts used:** [[concepts/algebraic-geometry/note|Classical Algebraic Geometry]]
 

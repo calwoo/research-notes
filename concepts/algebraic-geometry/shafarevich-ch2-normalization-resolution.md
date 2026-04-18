@@ -1,4 +1,4 @@
-# Shafarevich Ch. II: Normalization and Resolution of Curve Singularities
+# Normalization and Resolution of Curve Singularities
 
 ## Table of Contents
 
@@ -31,7 +31,7 @@
 
 ---
 
-Throughout, $k$ denotes an algebraically closed field and all varieties are over $k$. Coordinate rings are written $A(X) = k[x_1,\ldots,x_n]/I(X)$ for affine $X \subset \mathbb{A}^n$. For background on local rings, singularity, tangent cones, and multiplicity, see [[concepts/algebraic-geometry/shafarevich-ch2-local-properties|Shafarevich Ch. II: Local Properties]]; for projective varieties and rational maps, see [[concepts/algebraic-geometry/note|Classical Algebraic Geometry]].
+Throughout, $k$ denotes an algebraically closed field and all varieties are over $k$. Coordinate rings are written $A(X) = k[x_1,\ldots,x_n]/I(X)$ for affine $X \subset \mathbb{A}^n$. For background on local rings, singularity, tangent cones, and multiplicity, see [[concepts/algebraic-geometry/shafarevich-ch2-local-properties|Local Properties of Varieties]]; for projective varieties and rational maps, see [[concepts/algebraic-geometry/note|Classical Algebraic Geometry]].
 
 ---
 
