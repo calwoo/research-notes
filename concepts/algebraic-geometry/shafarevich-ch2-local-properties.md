@@ -54,6 +54,22 @@ is the unique maximal ideal of $\mathcal{O}_{X,P}$. The residue field is $\mathc
 > [!INFO] Invariance under open embeddings
 > The local ring $\mathcal{O}_{X,P}$ depends only on the variety $X$ and the point $P$, not on any ambient affine embedding. If $U \subset X$ is any open affine neighborhood of $P$, then $\mathcal{O}_{X,P} \cong \mathcal{O}_{U,P}$. This makes local ring data intrinsic to the abstract variety.
 
+
+> [!QUESTION] Exercise 1: Computing a Local Ring Concretely
+> *This problem makes the local ring definition concrete by comparing a smooth point and a crossing point on the same variety.*
+>
+> > **Prerequisites:** [[#1.1 The Local Ring at a Point|1.1 The Local Ring at a Point]]
+>
+> Let $X = V(xy) \subset \mathbb{A}^2$ (the union of the two coordinate axes) with coordinate ring $A(X) = k[x,y]/(xy)$.
+> (a) For $P = (1,0)$, compute $\mathcal{O}_{X,P}$ and show it is isomorphic to $k[u]_{(u)}$ for a suitable $u$, hence is a domain.
+> (b) For $O = (0,0)$, exhibit a zero divisor in $\mathcal{O}_{X,O}$, showing it is not a domain.
+
+> [!TIP]- Solution to Exercise 1
+> **Key insight:** The local ring detects local branch structure — at a smooth branch point it is a DVR (domain), while at a crossing the two branches produce zero divisors.
+>
+> **Sketch:** (a) Near $P = (1,0)$ the variety lies on the $x$-axis branch $V(y)$. Set $u = x-1$; then $\mathcal{O}_{X,P} \cong k[x]_{(x-1)} \cong k[u]_{(u)}$, a DVR and in particular a domain (near $P$, the relation $xy=0$ forces $y=0$ since $x \approx 1 \neq 0$). (b) At $O=(0,0)$: in $\mathcal{O}_{X,O} = k[x,y]_{(x,y)}/(xy)$, the classes $\bar{x}$ and $\bar{y}$ satisfy $\bar{x}\cdot\bar{y} = \overline{xy} = 0$ while each is nonzero (since $x, y \notin (xy)$ in $k[x,y]_{(x,y)}$). So $\mathcal{O}_{X,O}$ is not a domain — it sees both branches simultaneously.
+
+
 ### 1.2 The Cotangent Space and Zariski Tangent Space
 
 🔑 The *cotangent space* of $X$ at $P$ is the $k$-vector space $\mathfrak{m}_{X,P}/\mathfrak{m}_{X,P}^2$. Its dual encodes the first-order linear geometry of $X$ at $P$.
@@ -70,6 +86,34 @@ The space $\mathfrak{m}_{X,P}/\mathfrak{m}_{X,P}^2$ is the *Zariski cotangent sp
 
 > [!EXAMPLE] Affine space
 > For $X = \mathbb{A}^n$ and $P = 0$, we have $\mathcal{O}_{\mathbb{A}^n,0} = k[x_1,\ldots,x_n]_{(x_1,\ldots,x_n)}$ and $\mathfrak{m} = (x_1,\ldots,x_n)$. Then $\mathfrak{m}/\mathfrak{m}^2$ is freely spanned by the classes $[x_1],\ldots,[x_n]$, so $T_{\mathbb{A}^n, 0} \cong k^n$. This matches the naive geometric notion: affine space is its own tangent space at every point.
+
+
+> [!QUESTION] Exercise 2: Derivation Description of Tangent Space
+> *This problem establishes the equivalence between the dual-of-cotangent-space and the derivation descriptions of the tangent space.*
+>
+> > **Prerequisites:** [[#1.2 The Cotangent Space and Zariski Tangent Space|1.2 The Cotangent Space and Zariski Tangent Space]]
+>
+> Let $(R, \mathfrak{m}, k)$ be a local $k$-algebra. Show that there is a natural isomorphism
+> $$(\mathfrak{m}/\mathfrak{m}^2)^\vee \cong \mathrm{Der}_k(R, k),$$
+> where $k$ is viewed as an $R$-module via the quotient $R \to R/\mathfrak{m} \cong k$.
+
+> [!TIP]- Solution to Exercise 2
+> **Key insight:** A derivation $\delta : R \to k$ must kill constants ($\delta(k) = 0$ by linearity and $\delta(1) = 0$ from Leibniz) and kills $\mathfrak{m}^2$ by Leibniz, so it factors through $\mathfrak{m}/\mathfrak{m}^2$.
+>
+> **Sketch:** Given $\delta \in \mathrm{Der}_k(R,k)$: for $c \in k \subset R$, $\delta(c) = \delta(c \cdot 1) = c\delta(1)$ and $\delta(1) = \delta(1 \cdot 1) = 1 \cdot \delta(1) + 1 \cdot \delta(1) = 2\delta(1)$, forcing $\delta(1) = 0$. For $f, g \in \mathfrak{m}$: $\delta(fg) = f(P)\delta(g) + g(P)\delta(f) = 0 + 0 = 0$ (since $f(P) = g(P) = 0$). Thus $\delta|_{\mathfrak{m}^2} = 0$, and $\delta$ factors through $\mathfrak{m}/\mathfrak{m}^2$, giving a $k$-linear functional. Conversely, any linear functional $\lambda : \mathfrak{m}/\mathfrak{m}^2 \to k$ extends to a derivation via $\delta(f) = \lambda(f - f(P) \bmod \mathfrak{m}^2)$. These maps are mutually inverse, establishing the isomorphism.
+
+> [!QUESTION] Exercise 3: Invariance of the Tangent Space
+> *This problem shows that the tangent space is intrinsic to the variety, independent of the embedding.*
+>
+> > **Prerequisites:** [[#1.2 The Cotangent Space and Zariski Tangent Space|1.2 The Cotangent Space and Zariski Tangent Space]]
+>
+> Let $\phi : X \to Y$ be an isomorphism of varieties and $P \in X$, $Q = \phi(P) \in Y$. Show that $\phi$ induces a $k$-linear isomorphism $d\phi_P : T_{X,P} \xrightarrow{\sim} T_{Y,Q}$.
+
+> [!TIP]- Solution to Exercise 3
+> **Key insight:** An isomorphism of varieties induces an isomorphism on local rings, hence on maximal ideals and their squares, hence on cotangent and tangent spaces.
+>
+> **Sketch:** The isomorphism $\phi$ induces an isomorphism on sheaves of regular functions, hence an isomorphism of local rings $\phi^* : \mathcal{O}_{Y,Q} \xrightarrow{\sim} \mathcal{O}_{X,P}$ with $\phi^*(\mathfrak{m}_{Y,Q}) = \mathfrak{m}_{X,P}$. This descends to an isomorphism $\mathfrak{m}_{Y,Q}/\mathfrak{m}_{Y,Q}^2 \xrightarrow{\sim} \mathfrak{m}_{X,P}/\mathfrak{m}_{X,P}^2$ of cotangent spaces. Taking duals gives the tangent space isomorphism $d\phi_P : T_{X,P} \xrightarrow{\sim} T_{Y,Q}$.
+
 
 ### 1.3 The Jacobian Criterion
 
@@ -98,6 +142,32 @@ where the Jacobian matrix $J(P) = \bigl((\partial f_i/\partial x_j)(P)\bigr) \in
 > [!WARNING] The criterion depends on the choice of equations
 > The Jacobian matrix $J(P)$ depends on the chosen generators $f_1,\ldots,f_m$. However, the kernel of $J(P)$ — i.e. $T_{X,P}$ — is intrinsic to $X$ and $P$. Different choices of generators give the same subspace of $k^n$.
 
+
+> [!QUESTION] Exercise 4: Singular Locus of a Surface
+> *This problem asks you to compute the singular locus of a specific surface and verify the dimension bound.*
+>
+> > **Prerequisites:** [[#1.3 The Jacobian Criterion|1.3 The Jacobian Criterion]]
+>
+> Let $X = V(x^2y + y^2z + z^2x) \subset \mathbb{A}^3$. Compute $\mathrm{Sing}(X)$ using the Jacobian criterion, and verify that $\dim \mathrm{Sing}(X) < 2 = \dim X$.
+
+> [!TIP]- Solution to Exercise 4
+> **Key insight:** The singular locus of a surface in $\mathbb{A}^3$ defined by $f$ is $V(f, \partial f/\partial x, \partial f/\partial y, \partial f/\partial z)$.
+>
+> **Sketch:** Let $f = x^2y + y^2z + z^2x$. Compute $\partial f/\partial x = 2xy + z^2$, $\partial f/\partial y = x^2 + 2yz$, $\partial f/\partial z = y^2 + 2zx$. Setting all three to zero along with $f = 0$: from $\partial f/\partial x = 0$ we get $z^2 = -2xy$; from $\partial f/\partial y = 0$ we get $x^2 = -2yz$; from $\partial f/\partial z = 0$ we get $y^2 = -2xz$. Multiplying: $(xyz)^2 = -8(xyz)^2$, so $9(xyz)^2 = 0$, hence $xyz = 0$. Examining cases ($x=0$, $y=0$, $z=0$) and substituting back shows the only solution is $P = (0,0,0)$. Thus $\mathrm{Sing}(X) = \{(0,0,0)\}$, which has dimension $0 < 2$.
+
+> [!QUESTION] Exercise 5: Tangent Space Computation
+> *This problem asks you to compute the Zariski tangent space at a smooth point and verify the dimension formula.*
+>
+> > **Prerequisites:** [[#1.2 The Cotangent Space and Zariski Tangent Space|1.2 The Cotangent Space and Zariski Tangent Space]], [[#1.3 The Jacobian Criterion|1.3 The Jacobian Criterion]]
+>
+> Let $X = V(x^2 + y^2 + z^2 - 1) \subset \mathbb{A}^3$ (the unit sphere, valid over $\mathbb{C}$). Compute $T_{X,P}$ for $P = (1,0,0)$ using both the cotangent-space definition and the Jacobian criterion, and verify they agree.
+
+> [!TIP]- Solution to Exercise 5
+> **Key insight:** Both definitions give the kernel of $J(P)$, which is the hyperplane of vectors perpendicular (in the linearized sense) to $\nabla f(P)$.
+>
+> **Sketch:** With $f = x^2 + y^2 + z^2 - 1$, we have $J(P) = (2x, 2y, 2z)|_P = (2, 0, 0)$. The Jacobian criterion gives $T_{X,P} = \ker(2, 0, 0) = \{(a,b,c) : 2a = 0\} = \{0\} \times k^2$, a 2-dimensional space. Since $\dim X = 2$, $P$ is smooth. For the cotangent-space approach: $\mathfrak{m}_P = (x-1, y, z)/I(X)$ and $\mathfrak{m}_P^2$ kills all degree-$\geq 2$ terms in the shifted variables; modding out by $I(X)$ and $\mathfrak{m}^2$ uses $x^2 - 1 \equiv 2(x-1) \pmod{\mathfrak{m}^2}$ to eliminate $x-1$ in favor of $y^2, z^2$ (both in $\mathfrak{m}^2$). Hence $\mathfrak{m}_P/\mathfrak{m}_P^2$ is spanned by $[y], [z]$, confirming $T_{X,P} \cong k^2$.
+
+
 ### 1.4 Regular Local Rings
 
 **Definition (Smooth and Singular Points).** A point $P \in X$ is *smooth* (or *nonsingular*, or *regular*) if
@@ -119,6 +189,20 @@ where $\dim R$ is the Krull dimension. The left side is at least $\dim R$ for an
 > [!TIP] Regularity implies integrality
 > A regular local ring is an integral domain (Serre's theorem). This has geometric content: at a smooth point, the local ring has no zero divisors, meaning the variety is "locally irreducible." (At a singular point, the variety may look locally like two crossing branches, introducing zero divisors in the local ring.)
 
+
+> [!QUESTION] Exercise 6: The Singular Locus is Closed
+> *This problem gives a direct algebraic proof that the singular locus is Zariski closed.*
+>
+> > **Prerequisites:** [[#1.3 The Jacobian Criterion|1.3 The Jacobian Criterion]], [[#1.4 Regular Local Rings|1.4 Regular Local Rings]]
+>
+> Let $X = V(f_1,\ldots,f_m) \subset \mathbb{A}^n$ (not necessarily irreducible). Show that $\mathrm{Sing}(X) = V(f_1,\ldots,f_m,\, \text{all } (n-\dim X) \times (n-\dim X) \text{ minors of } J)$, where $J = (\partial f_i/\partial x_j)$, and conclude that $\mathrm{Sing}(X)$ is Zariski closed in $X$.
+
+> [!TIP]- Solution to Exercise 6
+> **Key insight:** Smoothness is characterized by the non-vanishing of at least one maximal minor of the Jacobian — so singularity is the vanishing of *all* maximal minors, a closed condition.
+>
+> **Sketch:** A point $P \in X$ is smooth iff $\mathrm{rank}(J(P)) \geq c = n - \dim X$ (the codimension). Equivalently, $P$ is singular iff every $(c \times c)$-minor of $J$ vanishes at $P$. Each minor is a polynomial function of the coordinates of $P$, so the locus where all such minors vanish is a closed algebraic set. The singular locus equals this closed set intersected with $X$, hence is closed in $X$.
+
+
 ### 1.5 The Smooth Locus is Open and Dense
 
 🔑 Singular points are isolated in a precise topological sense.
@@ -133,6 +217,48 @@ where $\dim R$ is the Krull dimension. The left side is at least $\dim R$ for an
 
 > [!NOTE] Singular locus has lower dimension
 > Since $\mathrm{Sing}(X)$ is a proper closed subvariety of the irreducible variety $X$, it satisfies $\dim \mathrm{Sing}(X) < \dim X$. Singularities are always "of lower dimension" than the variety itself.
+
+
+> [!QUESTION] Exercise 7: Computing the Smooth Locus
+> *This problem implements the Jacobian criterion to compute the smooth locus of a given variety.*
+>
+> > **Prerequisites:** [[#1.3 The Jacobian Criterion|1.3 The Jacobian Criterion]], [[#1.5 The Smooth Locus is Open and Dense|1.5 The Smooth Locus is Open and Dense]]
+>
+> Design a Python pseudocode algorithm that, given a polynomial $f \in \mathbb{Z}[x_1,\ldots,x_n]$ defining a hypersurface $X = V(f) \subset \mathbb{A}^n$, outputs the ideal $I(\mathrm{Sing}(X)) = (f, \partial f/\partial x_1, \ldots, \partial f/\partial x_n)$ and uses a Gröbner basis computation to determine whether $\mathrm{Sing}(X)$ is empty (i.e., $X$ is smooth).
+
+> [!TIP]- Solution to Exercise 7
+> **Key insight:** The singular locus of a hypersurface is cut out by $f$ together with all its partials; a Gröbner basis computation checks if the resulting ideal is the unit ideal (empty variety).
+>
+> **Sketch:**
+> ```python
+> from sympy import symbols, diff, groebner, Poly, S
+>
+> def singular_locus_hypersurface(f, variables):
+>     """
+>     Input: f - polynomial in variables (as sympy expression)
+>            variables - list of sympy symbols [x1, ..., xn]
+>     Output: (generators of Sing(X) ideal, is_smooth bool)
+>     """
+>     # Build the ideal generators: f and all partial derivatives
+>     generators = [f] + [diff(f, xi) for xi in variables]
+>
+>     # Compute Gröbner basis over QQ
+>     G = groebner(generators, *variables, domain='QQ')
+>
+>     # X is smooth iff the ideal is the unit ideal, i.e. 1 is in the basis
+>     is_smooth = (S.One in G)
+>
+>     return generators, is_smooth
+>
+> # Example: nodal cubic y^2 - x^2*(x+1)
+> x, y = symbols('x y')
+> f = y**2 - x**2 * (x + 1)
+> gens, smooth = singular_locus_hypersurface(f, [x, y])
+> # gens = [y^2 - x^3 - x^2, -3x^2 - 2x, 2y]
+> # Groebner basis will contain {x, y}, not 1, so is_smooth = False
+> ```
+> The Gröbner basis of $(f, -3x^2-2x, 2y)$ over $\mathbb{Q}$ contains $\{y, x\}$ (or $\{y, x(3x+2)\}$), not $\{1\}$, so $\mathrm{Sing}(X) = \{(0,0)\}$ is nonempty and $X$ is singular.
+
 
 ### 1.6 Examples: Nodal and Cuspidal Cubics
 
@@ -153,30 +279,6 @@ At $P = (0,0)$: both vanish, so the origin is singular — a *cusp*.
 $$\frac{\partial f}{\partial x} = 2x, \quad \frac{\partial f}{\partial y} = -2yz, \quad \frac{\partial f}{\partial z} = -y^2.$$
 
 The Jacobian vanishes when $x = 0$, $yz = 0$, $y = 0$, i.e. when $x = 0$ and $y = 0$. So $\mathrm{Sing}(X) = V(x,y) \cap X$ is the $z$-axis $\{x = y = 0\}$, which has dimension $1 < 2 = \dim X$, confirming the density theorem.
-
-> [!QUESTION] Exercise 1: Singular Locus of a Surface
-> *This problem asks you to compute the singular locus of a specific surface and verify the dimension bound.*
->
-> > **Prerequisites:** [[#1.3 The Jacobian Criterion|1.3 The Jacobian Criterion]]
->
-> Let $X = V(x^2y + y^2z + z^2x) \subset \mathbb{A}^3$. Compute $\mathrm{Sing}(X)$ using the Jacobian criterion, and verify that $\dim \mathrm{Sing}(X) < 2 = \dim X$.
-
-> [!TIP]- Solution to Exercise 1
-> **Key insight:** The singular locus of a surface in $\mathbb{A}^3$ defined by $f$ is $V(f, \partial f/\partial x, \partial f/\partial y, \partial f/\partial z)$.
->
-> **Sketch:** Let $f = x^2y + y^2z + z^2x$. Compute $\partial f/\partial x = 2xy + z^2$, $\partial f/\partial y = x^2 + 2yz$, $\partial f/\partial z = y^2 + 2zx$. Setting all three to zero along with $f = 0$: from $\partial f/\partial x = 0$ we get $z^2 = -2xy$; from $\partial f/\partial y = 0$ we get $x^2 = -2yz$; from $\partial f/\partial z = 0$ we get $y^2 = -2xz$. Multiplying: $(xyz)^2 = -8(xyz)^2$, so $9(xyz)^2 = 0$, hence $xyz = 0$. Examining cases ($x=0$, $y=0$, $z=0$) and substituting back shows the only solution is $P = (0,0,0)$. Thus $\mathrm{Sing}(X) = \{(0,0,0)\}$, which has dimension $0 < 2$.
-
-> [!QUESTION] Exercise 2: Tangent Space Computation
-> *This problem asks you to compute the Zariski tangent space at a smooth point and verify the dimension formula.*
->
-> > **Prerequisites:** [[#1.2 The Cotangent Space and Zariski Tangent Space|1.2 The Cotangent Space and Zariski Tangent Space]], [[#1.3 The Jacobian Criterion|1.3 The Jacobian Criterion]]
->
-> Let $X = V(x^2 + y^2 + z^2 - 1) \subset \mathbb{A}^3$ (the unit sphere, valid over $\mathbb{C}$). Compute $T_{X,P}$ for $P = (1,0,0)$ using both the cotangent-space definition and the Jacobian criterion, and verify they agree.
-
-> [!TIP]- Solution to Exercise 2
-> **Key insight:** Both definitions give the kernel of $J(P)$, which is the hyperplane of vectors perpendicular (in the linearized sense) to $\nabla f(P)$.
->
-> **Sketch:** With $f = x^2 + y^2 + z^2 - 1$, we have $J(P) = (2x, 2y, 2z)|_P = (2, 0, 0)$. The Jacobian criterion gives $T_{X,P} = \ker(2, 0, 0) = \{(a,b,c) : 2a = 0\} = \{0\} \times k^2$, a 2-dimensional space. Since $\dim X = 2$, $P$ is smooth. For the cotangent-space approach: $\mathfrak{m}_P = (x-1, y, z)/I(X)$ and $\mathfrak{m}_P^2$ kills all degree-$\geq 2$ terms in the shifted variables; modding out by $I(X)$ and $\mathfrak{m}^2$ uses $x^2 - 1 \equiv 2(x-1) \pmod{\mathfrak{m}^2}$ to eliminate $x-1$ in favor of $y^2, z^2$ (both in $\mathfrak{m}^2$). Hence $\mathfrak{m}_P/\mathfrak{m}_P^2$ is spanned by $[y], [z]$, confirming $T_{X,P} \cong k^2$.
 
 ---
 
@@ -218,6 +320,32 @@ the ring of formal power series in $n$ variables over $k$.
 > [!NOTE] Universal property
 > The completion $\hat{\mathcal{O}}_{X,P}$ is the universal ring to which $\mathcal{O}_{X,P}$ maps and where the $\mathfrak{m}$-adic topology is complete (every Cauchy sequence converges). It captures all local data "to all orders."
 
+
+> [!QUESTION] Exercise 8: Detecting Smoothness via Completion
+> *This problem shows that regularity of the completion characterizes smooth points.*
+>
+> > **Prerequisites:** [[#1.4 Regular Local Rings|1.4 Regular Local Rings]], [[#2.2 The Formal Completion|2.2 The Formal Completion]]
+>
+> Let $R = k[x,y]/(y^2 - x^3)$ localized at the maximal ideal $(x,y)$. Show that $\hat{R} \not\cong k[\![t]\!]$ (i.e., the completion is not a power series ring in one variable), hence $(0,0)$ is not a smooth point of $V(y^2 - x^3)$.
+
+> [!TIP]- Solution to Exercise 8
+> **Key insight:** If $(0,0)$ were smooth on the curve $V(y^2-x^3)$, the completion would be $k[\![t]\!]$. But $k[\![t]\!]$ is a domain, while $\hat{R}$ has a specific structure that can be analyzed.
+>
+> **Sketch:** In $R$, we have $y^2 = x^3$. In the completion $\hat{R}$, suppose $\hat{R} \cong k[\![t]\!]$; then $x = u(t) t^2$ and $y = v(t) t^3$ for units $u, v$ (matching valuations $v(x) = 2, v(y) = 3$ implied by $y^2 = x^3$). But these valuations show $\mathfrak{m}_R = (x,y)$ requires two generators with $v(x) = 2, v(y) = 3$, so $\mathfrak{m}_R \not\cong (t)$ — the minimal generator of $\mathfrak{m}$ in $k[\![t]\!]$ has valuation 1. More formally, $\dim_k \mathfrak{m}/\mathfrak{m}^2 = 2$ (since $[x]$ and $[y]$ are linearly independent in $\mathfrak{m}/\mathfrak{m}^2$) while $\dim R = 1$, so $R$ is not regular.
+
+> [!QUESTION] Exercise 9: Local Parameters and Expansion
+> *This problem establishes that different choices of local parameters yield the same formal germ of a function.*
+>
+> > **Prerequisites:** [[#2.1 Local Parameters|2.1 Local Parameters]], [[#2.2 The Formal Completion|2.2 The Formal Completion]]
+>
+> Let $X = \mathbb{A}^2$, $P = (0,0)$, and consider two systems of local parameters: $(t_1,t_2) = (x,y)$ and $(s_1,s_2) = (x+y, x-y)$. Express $f = e^x \sin(y)$ (formally) in both systems and verify that the two completions $k[\![t_1,t_2]\!]$ and $k[\![s_1,s_2]\!]$ are isomorphic via the change of variables $t_1 = (s_1+s_2)/2$, $t_2 = (s_1-s_2)/2$.
+
+> [!TIP]- Solution to Exercise 9
+> **Key insight:** The completion isomorphism $k[\![t_1,t_2]\!] \cong k[\![s_1,s_2]\!]$ is given by any automorphism of formal power series rings induced by a linear change of variables with invertible Jacobian at the origin.
+>
+> **Sketch:** The change $(t_1,t_2) = ((s_1+s_2)/2, (s_1-s_2)/2)$ has Jacobian matrix $\begin{pmatrix}1/2 & 1/2 \\ 1/2 & -1/2\end{pmatrix}$ with determinant $-1/2 \neq 0$. By the formal implicit function theorem (valid over any field), any such invertible linear substitution extends to an isomorphism of formal power series rings. For the expansion of $f = xy + \cdots$ (the formal version): in $(t_1,t_2)$ coordinates, $f = t_1 t_2 + \cdots$; substituting $t_1 = (s_1+s_2)/2$, $t_2 = (s_1-s_2)/2$ gives $f = (s_1^2 - s_2^2)/4 + \cdots$, a valid formal series in $s_1, s_2$.
+
+
 ### 2.3 Power Series Expansion of Regular Functions
 
 **Proposition (Unique Power Series Expansion).** Let $P \in X$ be smooth with local parameters $t_1,\ldots,t_n$, and let $f \in \mathcal{O}_{X,P}$. Then $f$ admits a unique expansion
@@ -233,31 +361,61 @@ where $t^\alpha = t_1^{\alpha_1}\cdots t_n^{\alpha_n}$, via the injective map $\
 > [!TIP] Comparing coefficients
 > The coefficient $c_\alpha$ in the expansion of $f$ can be computed as: $c_\alpha = \frac{1}{\alpha!} \cdot [\text{image of } f \text{ in } \mathfrak{m}^{|\alpha|}/\mathfrak{m}^{|\alpha|+1}]$ in the associated graded. More concretely, $c_0 = f(P)$ and the linear coefficients $c_{e_i}$ encode the "partial derivatives" of $f$ in the directions $t_i$.
 
-> [!QUESTION] Exercise 3: Local Parameters and Expansion
-> *This problem establishes that different choices of local parameters yield the same formal germ of a function.*
->
-> > **Prerequisites:** [[#2.1 Local Parameters|2.1 Local Parameters]], [[#2.2 The Formal Completion|2.2 The Formal Completion]]
->
-> Let $X = \mathbb{A}^2$, $P = (0,0)$, and consider two systems of local parameters: $(t_1,t_2) = (x,y)$ and $(s_1,s_2) = (x+y, x-y)$. Express $f = e^x \sin(y)$ (formally) in both systems and verify that the two completions $k[\![t_1,t_2]\!]$ and $k[\![s_1,s_2]\!]$ are isomorphic via the change of variables $t_1 = (s_1+s_2)/2$, $t_2 = (s_1-s_2)/2$.
-
-> [!TIP]- Solution to Exercise 3
-> **Key insight:** The completion isomorphism $k[\![t_1,t_2]\!] \cong k[\![s_1,s_2]\!]$ is given by any automorphism of formal power series rings induced by a linear change of variables with invertible Jacobian at the origin.
->
-> **Sketch:** The change $(t_1,t_2) = ((s_1+s_2)/2, (s_1-s_2)/2)$ has Jacobian matrix $\begin{pmatrix}1/2 & 1/2 \\ 1/2 & -1/2\end{pmatrix}$ with determinant $-1/2 \neq 0$. By the formal implicit function theorem (valid over any field), any such invertible linear substitution extends to an isomorphism of formal power series rings. For the expansion of $f = xy + \cdots$ (the formal version): in $(t_1,t_2)$ coordinates, $f = t_1 t_2 + \cdots$; substituting $t_1 = (s_1+s_2)/2$, $t_2 = (s_1-s_2)/2$ gives $f = (s_1^2 - s_2^2)/4 + \cdots$, a valid formal series in $s_1, s_2$.
-
-> [!QUESTION] Exercise 4: Detecting Smoothness via Completion
-> *This problem shows that regularity of the completion characterizes smooth points.*
->
-> > **Prerequisites:** [[#1.4 Regular Local Rings|1.4 Regular Local Rings]], [[#2.2 The Formal Completion|2.2 The Formal Completion]]
->
-> Let $R = k[x,y]/(y^2 - x^3)$ localized at the maximal ideal $(x,y)$. Show that $\hat{R} \not\cong k[\![t]\!]$ (i.e., the completion is not a power series ring in one variable), hence $(0,0)$ is not a smooth point of $V(y^2 - x^3)$.
-
-> [!TIP]- Solution to Exercise 4
-> **Key insight:** If $(0,0)$ were smooth on the curve $V(y^2-x^3)$, the completion would be $k[\![t]\!]$. But $k[\![t]\!]$ is a domain, while $\hat{R}$ has a specific structure that can be analyzed.
->
-> **Sketch:** In $R$, we have $y^2 = x^3$. In the completion $\hat{R}$, suppose $\hat{R} \cong k[\![t]\!]$; then $x = u(t) t^2$ and $y = v(t) t^3$ for units $u, v$ (matching valuations $v(x) = 2, v(y) = 3$ implied by $y^2 = x^3$). But these valuations show $\mathfrak{m}_R = (x,y)$ requires two generators with $v(x) = 2, v(y) = 3$, so $\mathfrak{m}_R \not\cong (t)$ — the minimal generator of $\mathfrak{m}$ in $k[\![t]\!]$ has valuation 1. More formally, $\dim_k \mathfrak{m}/\mathfrak{m}^2 = 2$ (since $[x]$ and $[y]$ are linearly independent in $\mathfrak{m}/\mathfrak{m}^2$) while $\dim R = 1$, so $R$ is not regular.
-
 ---
+
+
+> [!QUESTION] Exercise 10: Power Series Truncation
+> *This problem implements the power series expansion of a regular function up to a given order.*
+>
+> > **Prerequisites:** [[#2.3 Power Series Expansion of Regular Functions|2.3 Power Series Expansion of Regular Functions]], [[#2.1 Local Parameters|2.1 Local Parameters]]
+>
+> Design a Python pseudocode algorithm that, given a rational function $f = p/q$ with $q(P) \neq 0$, a smooth point $P$, and local parameters $t_1,\ldots,t_n$, computes the Taylor expansion of $f$ in $t_1,\ldots,t_n$ up to total degree $d$.
+
+> [!TIP]- Solution to Exercise 10
+> **Key insight:** A rational function $f = p/q$ with $q(P) \neq 0$ can be expanded by substituting $t_i = x_i - P_i$ (or more general local parameters) and using polynomial division modulo $\mathfrak{m}^{d+1}$.
+>
+> **Sketch:**
+> ```python
+> from sympy import symbols, series, Poly, expand, factor
+>
+> def power_series_expansion(p, q, point, local_params, ambient_vars, degree):
+>     """
+>     Input: p, q - polynomials (f = p/q), q(point) != 0
+>            point - dict {xi: P_i} giving coordinates of P
+>            local_params - list of expressions for t_i in terms of ambient_vars
+>            ambient_vars - list of sympy symbols [x1, ..., xn]
+>            degree - truncation degree d
+>     Output: polynomial in local_params representing expansion up to degree d
+>     """
+>     # Substitute ambient coords in terms of local params centered at P
+>     # e.g. x_i = P_i + t_i if local_params = [x1-P1, ..., xn-Pn]
+>     subs_map = {x: p_val + t
+>                 for x, p_val, t in zip(ambient_vars,
+>                                        [point[x] for x in ambient_vars],
+>                                        local_params)}
+>     p_shifted = p.subs(subs_map).expand()
+>     q_shifted = q.subs(subs_map).expand()
+>
+>     # q_shifted = q(P) * (1 + r) where r is in m, expand (1+r)^{-1} to degree d
+>     q0 = q_shifted.subs({t: 0 for t in local_params})  # = q(P) != 0
+>     r = (q_shifted / q0 - 1).expand()  # r in m
+>
+>     # Geometric series: 1/(1+r) = sum_{k=0}^{d} (-r)^k mod m^{d+1}
+>     inv_q_series = sum(
+>         ((-r)**k).expand() for k in range(degree + 1)
+>     )
+>     # Truncate to total degree <= d
+>     result = (p_shifted * inv_q_series / q0).expand()
+>     # Drop monomials of degree > d
+>     result_poly = Poly(result, *local_params)
+>     truncated = sum(
+>         coeff * monom
+>         for coeff, monom in zip(result_poly.coeffs(), result_poly.monoms())
+>         if sum(monom) <= degree
+>     )
+>     return truncated
+> ```
+
 
 ## 3. Properties of Nonsingular Points
 
@@ -275,6 +433,20 @@ where $t^\alpha = t_1^{\alpha_1}\cdots t_n^{\alpha_n}$, via the injective map $\
 
 > [!INFO] Zariski's theorem
 > Zariski (1948) proved more: if $\mathcal{O}_{X,P}$ is a *normal* local ring (i.e., integrally closed in its fraction field), then it is analytically irreducible. Since regular local rings are normal (a theorem of Serre), this recovers the above result. The node is not normal at the singular point, which is the algebraic reason for its analytic reducibility.
+
+
+> [!QUESTION] Exercise 11: Regularity vs. Normality
+> *This problem illustrates that regular implies normal, but not conversely, with an explicit example.*
+>
+> > **Prerequisites:** [[#1.4 Regular Local Rings|1.4 Regular Local Rings]], [[#3.1 Analytical Irreducibility|3.1 Analytical Irreducibility]]
+>
+> Let $R = k[x,y]/(y^2 - x^3 - x^2)$ localized at $(x,y)$ (local ring of the nodal cubic at the origin), and let $\tilde{R}$ be its integral closure in $\mathrm{Frac}(R)$. Show $R \subsetneq \tilde{R}$, so $R$ is not normal. Then let $S = k[x,y]/(y^2 - x^3)$ localized at $(x,y)$ (cuspidal cubic). Show $S$ is also not normal, but that the normalization of $S$ is a DVR (hence regular).
+
+> [!TIP]- Solution to Exercise 11
+> **Key insight:** Normalization of a singular curve replaces the singular point by smooth points on the branches; the node's normalization separates two branches, while the cusp's normalization smooths the single branch.
+>
+> **Sketch:** For the node $R$: in $\mathrm{Frac}(R)$, we have $y^2 = x^2(x+1)$, so $t = y/x$ satisfies $t^2 = x+1$, hence $t^2 - 1 = x$ and $t^3 - t = y$. So $t \in \mathrm{Frac}(R)$ is integral over $R$ ($t^2 = x + 1 \in R$) but $t \notin R$ (since $R$ does not contain $y/x$). The normalization is $k[t]_{(t-1)} \times k[t]_{(t+1)}$ (two DVRs). For the cusp $S$: $y^2 = x^3$, so $s = y/x$ satisfies $s^2 = x$, giving $s^3 = y$. Thus $s \in \mathrm{Frac}(S)$ is integral over $S$ with $k[s] \cong$ the normalization; localized at $(s)$ this gives $k[s]_{(s)}$, a DVR (regular), so the normalization of the cusp is smooth.
+
 
 ### 3.2 Smooth Subvarieties and the Normal Bundle
 
@@ -309,6 +481,32 @@ the quotient of tangent spaces, which is a $k$-vector space of dimension $n - r$
 > [!EXAMPLE] Normal bundle of a curve in a surface
 > If $Y$ is a smooth curve on a smooth surface $X$ (so $n=2, r=1$), then $\mathcal{N}_{Y/X}$ is a line bundle on $Y$. Its degree (as a divisor on $Y$) equals the self-intersection number $Y \cdot Y$ in the surface $X$. This is the starting point of intersection theory on surfaces.
 
+
+> [!QUESTION] Exercise 12: Normal Bundle of a Hyperplane
+> *This problem computes the normal bundle in a concrete case and connects it to intersection numbers.*
+>
+> > **Prerequisites:** [[#3.2 Smooth Subvarieties and the Normal Bundle|3.2 Smooth Subvarieties and the Normal Bundle]]
+>
+> Let $Y = V(x_0) \subset \mathbb{P}^n$ be a hyperplane (a smooth hypersurface). Compute $\mathcal{I}_Y/\mathcal{I}_Y^2$ on $Y \cong \mathbb{P}^{n-1}$ and identify it as a line bundle. What is its degree?
+
+> [!TIP]- Solution to Exercise 12
+> **Key insight:** The ideal sheaf of a hyperplane in projective space is a line bundle, and $\mathcal{I}_Y/\mathcal{I}_Y^2 \cong \mathcal{O}_Y(-1)$ twisted to the correct degree.
+>
+> **Sketch:** On $\mathbb{P}^n$, the ideal sheaf of $Y = \{x_0 = 0\}$ is $\mathcal{I}_Y = \mathcal{O}_{\mathbb{P}^n}(-1)$ (the tautological line bundle). The conormal sheaf is $\mathcal{I}_Y/\mathcal{I}_Y^2 = \mathcal{I}_Y \otimes \mathcal{O}_Y = \mathcal{O}_Y(-1)$, which is a line bundle of degree $-1$ on $Y \cong \mathbb{P}^{n-1}$. Thus $\mathcal{N}_{Y/\mathbb{P}^n} = \mathcal{O}_Y(1)$, of degree $+1$. This matches the self-intersection: $Y \cdot Y = 1$ in the Chow ring of $\mathbb{P}^n$ (the hyperplane meets itself in one point up to rational equivalence).
+
+> [!QUESTION] Exercise 13: Cotangent Sequence at a Smooth Subvariety
+> *This problem derives the conormal sequence from first principles and uses it to compute the normal bundle.*
+>
+> > **Prerequisites:** [[#3.2 Smooth Subvarieties and the Normal Bundle|3.2 Smooth Subvarieties and the Normal Bundle]]
+>
+> Let $X = \mathbb{A}^n$ and $Y = V(x_1,\ldots,x_r) \cong \mathbb{A}^{n-r}$ (a coordinate linear subspace). Write down the conormal sequence $0 \to \mathcal{I}_Y/\mathcal{I}_Y^2 \to \Omega_{X/k}|_Y \to \Omega_{Y/k} \to 0$ explicitly in terms of coordinates, and verify that $\mathcal{I}_Y/\mathcal{I}_Y^2$ is free of rank $r$.
+
+> [!TIP]- Solution to Exercise 13
+> **Key insight:** For a linear subspace, all sheaves in the conormal sequence are trivial vector bundles, and the sequence splits.
+>
+> **Sketch:** $\mathcal{I}_Y = (x_1,\ldots,x_r)$ and $\mathcal{I}_Y^2 = (x_ix_j : 1 \leq i,j \leq r)$. So $\mathcal{I}_Y/\mathcal{I}_Y^2$ is freely generated over $\mathcal{O}_Y$ by $[x_1],\ldots,[x_r]$ (no relation since $x_ix_j \in \mathcal{I}_Y^2$ for all $i,j$). This is free of rank $r$. The sheaf $\Omega_{X/k}|_Y$ is free of rank $n$ on $Y$ with basis $\{dx_1,\ldots,dx_n\}$, and $\Omega_{Y/k}$ is free of rank $n-r$ with basis $\{dx_{r+1},\ldots,dx_n\}$. The conormal sequence is $0 \to \mathcal{O}_Y^{\oplus r} \to \mathcal{O}_Y^{\oplus n} \to \mathcal{O}_Y^{\oplus (n-r)} \to 0$ (split exact, via the direct sum decomposition of $\Omega_{X/k}$).
+
+
 ### 3.3 The Algebraic Implicit Function Theorem
 
 **Theorem (Algebraic Implicit Function Theorem).** Let $X$ be an $n$-dimensional variety. Then $P \in X$ is smooth if and only if there exists a Zariski open neighborhood $U \ni P$ in $X$ and a closed immersion $U \hookrightarrow \mathbb{A}^n$ that is an isomorphism onto its image (i.e., $U$ is isomorphic to an open subset of $\mathbb{A}^n$).
@@ -320,6 +518,23 @@ the quotient of tangent spaces, which is a $k$-vector space of dimension $n - r$
 > [!WARNING] Étale vs. isomorphism
 > The correct algebraic analogue is that $X$ is *étale-locally* isomorphic to $\mathbb{A}^n$ at a smooth point — not literally Zariski-locally isomorphic in general (the Zariski topology is coarser than the complex topology). However, the local ring $\mathcal{O}_{X,P}$ is *formally isomorphic* to $k[\![t_1,\ldots,t_n]\!]$, which is the algebraic substitute for the classical chart map.
 
+
+> [!QUESTION] Exercise 14: Applying the Algebraic Implicit Function Theorem
+> *This problem works through the IFT concretely, identifying local parameters and the local isomorphism to affine space.*
+>
+> > **Prerequisites:** [[#3.3 The Algebraic Implicit Function Theorem|3.3 The Algebraic Implicit Function Theorem]]
+>
+> Let $X = V(x^2 + y^2 + z^2 - 1) \subset \mathbb{A}^3$ (the algebraic 2-sphere over $k = \mathbb{C}$) and $P = (0,0,1)$.
+> (a) Verify $P$ is smooth using the Jacobian criterion and compute $T_{X,P}$.
+> (b) The algebraic IFT guarantees $X$ is locally isomorphic to $\mathbb{A}^2$ near $P$. Identify $x, y$ as local parameters at $P$ and write $z - 1$ as a formal power series in $x, y$ on $X$.
+> (c) Verify that $[x], [y] \in \mathfrak{m}_P/\mathfrak{m}_P^2$ form a $k$-basis.
+
+> [!TIP]- Solution to Exercise 14
+> **Key insight:** When one partial derivative of the defining equation is nonzero at $P$, the IFT lets you solve for that variable — the remaining coordinates become local parameters giving the local isomorphism.
+>
+> **Sketch:** (a) With $f = x^2+y^2+z^2-1$: $J(P) = (0,0,2)$ at $P=(0,0,1)$, which has rank $1 = \mathrm{codim}(X)$. So $P$ is smooth and $T_{X,P} = \ker(0,0,2) = \{(a,b,0)\} \cong k^2$. (b) Since $\partial f/\partial z = 2 \neq 0$ at $P$, the IFT guarantees $z$ is locally a function of $(x,y)$. Setting $z = 1+w$ and substituting into $f=0$: $x^2 + y^2 + 1 + 2w + w^2 = 1$, so $w = -\frac{x^2+y^2}{2} - \frac{w^2}{2}$. Solving iteratively: $z - 1 = -\frac{x^2+y^2}{2} + O(4)$ in $k[\![x,y]\!]$. (c) The element $[z-1] = [-\frac{x^2+y^2}{2}+\cdots] \in \mathfrak{m}_P^2$, so $\mathfrak{m}_P/\mathfrak{m}_P^2$ is spanned by $[x],[y]$. They are linearly independent (no nonzero $\alpha x + \beta y$ vanishes on $X$ to first order at $P$), confirming $\{[x],[y]\}$ is a $k$-basis for the cotangent space.
+
+
 ### 3.4 Local Factoriality
 
 **Theorem (Regular local rings are UFDs).** If $P \in X$ is a smooth point, then $\mathcal{O}_{X,P}$ is a unique factorization domain (UFD).
@@ -328,31 +543,21 @@ the quotient of tangent spaces, which is a $k$-vector space of dimension $n - r$
 
 **Geometric consequence.** Every *codimension-1 subvariety* (Weil divisor) through a smooth point $P \in X$ is *locally a principal divisor* — it is the zero locus of a single regular function in $\mathcal{O}_{X,P}$. This fails at singular points (e.g. the Weil divisors on a cone need not be Cartier).
 
-> [!QUESTION] Exercise 5: Normal Bundle of a Hyperplane
-> *This problem computes the normal bundle in a concrete case and connects it to intersection numbers.*
->
-> > **Prerequisites:** [[#3.2 Smooth Subvarieties and the Normal Bundle|3.2 Smooth Subvarieties and the Normal Bundle]]
->
-> Let $Y = V(x_0) \subset \mathbb{P}^n$ be a hyperplane (a smooth hypersurface). Compute $\mathcal{I}_Y/\mathcal{I}_Y^2$ on $Y \cong \mathbb{P}^{n-1}$ and identify it as a line bundle. What is its degree?
+---
 
-> [!TIP]- Solution to Exercise 5
-> **Key insight:** The ideal sheaf of a hyperplane in projective space is a line bundle, and $\mathcal{I}_Y/\mathcal{I}_Y^2 \cong \mathcal{O}_Y(-1)$ twisted to the correct degree.
->
-> **Sketch:** On $\mathbb{P}^n$, the ideal sheaf of $Y = \{x_0 = 0\}$ is $\mathcal{I}_Y = \mathcal{O}_{\mathbb{P}^n}(-1)$ (the tautological line bundle). The conormal sheaf is $\mathcal{I}_Y/\mathcal{I}_Y^2 = \mathcal{I}_Y \otimes \mathcal{O}_Y = \mathcal{O}_Y(-1)$, which is a line bundle of degree $-1$ on $Y \cong \mathbb{P}^{n-1}$. Thus $\mathcal{N}_{Y/\mathbb{P}^n} = \mathcal{O}_Y(1)$, of degree $+1$. This matches the self-intersection: $Y \cdot Y = 1$ in the Chow ring of $\mathbb{P}^n$ (the hyperplane meets itself in one point up to rational equivalence).
 
-> [!QUESTION] Exercise 6: Factoriality Failure at a Node
+> [!QUESTION] Exercise 15: Factoriality Failure at a Node
 > *This problem shows that the local ring at a node is not a UFD, illustrating the failure of local factoriality at singular points.*
 >
 > > **Prerequisites:** [[#3.4 Local Factoriality|3.4 Local Factoriality]], [[#1.6 Examples: Nodal and Cuspidal Cubics|1.6 Examples: Nodal and Cuspidal Cubics]]
 >
 > Let $R = k[x,y]/(y^2 - x^2(x+1))$ localized at $(x,y)$. Show that $R$ is not a UFD by exhibiting two distinct factorizations of $y^2$ in $R$.
 
-> [!TIP]- Solution to Exercise 6
+> [!TIP]- Solution to Exercise 15
 > **Key insight:** At a node, the two branches of the curve give two distinct elements that multiply to $y^2$, breaking unique factorization.
 >
 > **Sketch:** In $R$, we have $y^2 = x^2(x+1)$. Near the origin, $x+1$ is a unit (since $(x+1)(0) = 1 \neq 0$), so $x^2(x+1) = x \cdot x(x+1)^{1/2} \cdot (x+1)^{1/2}$ formally. More concretely: the two branches of the node are $y = x\sqrt{x+1}$ and $y = -x\sqrt{x+1}$, corresponding to elements $\alpha = y - x\sqrt{x+1}$ and $\beta = y + x\sqrt{x+1}$ in an étale cover. Then $\alpha \beta = y^2 - x^2(x+1) = 0$ in $R$, so $\alpha$ and $\beta$ are zero divisors in the normalization — but in $R$ itself, the factorization $y^2 = y \cdot y$ and $y^2 = x \cdot x(x+1)$ are two genuinely different factorizations not related by units in $R$, since $y$ and $x$ are not associate in $R$.
 
----
 
 ## 4. The Tangent Cone
 
@@ -397,6 +602,84 @@ $$\mathrm{gr}_\mathfrak{m}\, \mathcal{O}_{X,P} \cong k[x_1,\ldots,x_n]/\mathrm{i
 
 **Relationship to the tangent space.** At a smooth point $P$, $\mathrm{gr}_\mathfrak{m}\, \mathcal{O}_{X,P} \cong k[t_1,\ldots,t_n]$ (the polynomial ring in the local parameters), since the associated graded of a regular local ring is a polynomial ring. This means $C_{X,P} = T_{X,P}$ at smooth points — the tangent cone equals the tangent space.
 
+
+> [!QUESTION] Exercise 16: Associated Graded of a Regular Ring
+> *This problem computes the associated graded ring at a smooth point and confirms it is a polynomial ring.*
+>
+> > **Prerequisites:** [[#4.2 The Associated Graded Ring|4.2 The Associated Graded Ring]], [[#2.1 Local Parameters|2.1 Local Parameters]]
+>
+> Let $R = k[x,y]_{(x,y)}$ (the local ring of $\mathbb{A}^2$ at the origin). Compute $\mathrm{gr}_\mathfrak{m} R$ where $\mathfrak{m} = (x,y)$, and show it is isomorphic to $k[s,t]$ (a polynomial ring in two variables).
+
+> [!TIP]- Solution to Exercise 16
+> **Key insight:** For a regular local ring, the associated graded is always a polynomial ring, confirming that the tangent cone at a smooth point is the tangent space.
+>
+> **Sketch:** We have $\mathfrak{m}^d/\mathfrak{m}^{d+1} \cong k^{\binom{d+1}{1}} = $ the space of homogeneous polynomials of degree $d$ in $x, y$. The graded pieces are $\mathfrak{m}^0/\mathfrak{m}^1 = k$ (degree 0), $\mathfrak{m}/\mathfrak{m}^2 = k \cdot [x] \oplus k \cdot [y]$ (degree 1), $\mathfrak{m}^2/\mathfrak{m}^3 = k[x]^2 \oplus k[x][y] \oplus k[y]^2$ (degree 2), etc. Thus $\mathrm{gr}_\mathfrak{m} R = \bigoplus_d \mathfrak{m}^d/\mathfrak{m}^{d+1} \cong k[x,y]$ (the polynomial ring), where $[x], [y]$ are the degree-1 generators. No relations arise because $k[x,y]_{(x,y)}$ is a domain and the monomials $x^a y^b$ remain linearly independent in each graded piece.
+
+> [!QUESTION] Exercise 17: Tangent Cone and Blowing Up
+> *This problem connects the tangent cone to the exceptional divisor of the blow-up, linking the local and global theories.*
+>
+> > **Prerequisites:** [[#4.2 The Associated Graded Ring|4.2 The Associated Graded Ring]]
+>
+> Let $\widetilde{\mathbb{A}^2}$ be the blow-up of $\mathbb{A}^2$ at the origin, with exceptional divisor $E \cong \mathbb{P}^1$. Show that the strict transform of a curve $C \subset \mathbb{A}^2$ passing through $P = (0,0)$ meets $E$ at the points corresponding to the tangent directions of the tangent cone $C_{C,P}$.
+
+> [!TIP]- Solution to Exercise 17
+> **Key insight:** The blow-up replaces a point by the projectivization of its tangent space; the strict transform of a curve approaches the blown-up point along the tangent directions of its initial form.
+>
+> **Sketch:** Recall $\widetilde{\mathbb{A}^2} = \{(x,y; [u:v]) \in \mathbb{A}^2 \times \mathbb{P}^1 : xv = yu\}$ with $E = \{0\} \times \mathbb{P}^1$. In the chart $v = 1$: coordinates $(u, y)$ with $x = uy$, and $E \cap U_v = \{y = 0\}$. If $C = V(f)$ with $f = f_m + \text{h.o.t.}$, then in the chart $v=1$: $f(uy, y) = y^m(f_m(u,1) + y(\cdots))$. The factor $y^m$ gives $E^m$ (the exceptional divisor with multiplicity $m$), and the strict transform is $V(f_m(u,1) + y(\cdots))$. At $y = 0$, this meets $E$ at the zeros of $f_m(u,1) = 0$, i.e. the slopes $u = x/y$ solving the leading form — exactly the directions in the tangent cone.
+
+> [!QUESTION] Exercise 18: Gröbner Basis for Tangent Cone
+> *This problem implements the computation of the tangent cone via the initial ideal.*
+>
+> > **Prerequisites:** [[#4.1 Definition via Initial Forms|4.1 Definition via Initial Forms]], [[#4.2 The Associated Graded Ring|4.2 The Associated Graded Ring]]
+>
+> Design a Python pseudocode algorithm that, given an ideal $I = (f_1,\ldots,f_m) \subset k[x_1,\ldots,x_n]$ with $P = 0 \in V(I)$, computes the initial ideal $\mathrm{in}(I)$ (hence the tangent cone) using a degree-reverse-lexicographic Gröbner basis.
+
+> [!TIP]- Solution to Exercise 18
+> **Key insight:** The initial ideal with respect to a graded monomial order (such as the graded reverse lexicographic order) is computed directly from a Gröbner basis: for each basis element $g$, take its leading monomial in the graded sense.
+>
+> **Sketch:**
+> ```python
+> from sympy import symbols, groebner, Poly, degree
+>
+> def tangent_cone_ideal(generators, variables):
+>     """
+>     Input: generators - list of polynomials generating I
+>            variables - list of sympy symbols
+>     Output: generators of the initial ideal in(I) (tangent cone ideal)
+>
+>     Uses: degree-reverse-lex (grlex) Gröbner basis; leading forms
+>     give generators of in(I).
+>     """
+>     # Compute Gröbner basis with grlex order (graded reverse lex)
+>     G = groebner(generators, *variables, order='grlex', domain='QQ')
+>
+>     # For each basis element, extract its lowest-degree homogeneous part
+>     def leading_form(f, vars):
+>         poly = Poly(f, *vars, domain='QQ')
+>         min_deg = min(sum(m) for m in poly.monoms())
+>         # Sum all monomials of degree min_deg
+>         leading = sum(
+>             c * Poly.from_dict({m: 1}, *vars, domain='QQ').as_expr()
+>             for c, m in zip(poly.coeffs(), poly.monoms())
+>             if sum(m) == min_deg
+>         )
+>         return leading
+>
+>     initial_gens = [leading_form(g, variables) for g in G]
+>
+>     # Remove redundant generators
+>     initial_gens = list(set(initial_gens))
+>     return initial_gens
+>
+> # Example: nodal cubic
+> x, y = symbols('x y')
+> I_gens = [y**2 - x**2*(x + 1)]  # y^2 - x^3 - x^2
+> tc_gens = tangent_cone_ideal(I_gens, [x, y])
+> # Expected: [y^2 - x^2] (the leading form y^2 - x^2)
+> print(tc_gens)
+> ```
+
+
 ### 4.3 Multiplicity
 
 **Definition (Multiplicity).** The *multiplicity* of $X$ at $P$, denoted $\mathrm{mult}_P(X)$, is the degree of the Hilbert polynomial of the associated graded ring $\mathrm{gr}_\mathfrak{m}\,\mathcal{O}_{X,P}$. Equivalently, it is the *degree* of the tangent cone $C_{X,P}$ as a projective variety (via the projectivization of the leading ideal).
@@ -412,6 +695,32 @@ the order of vanishing of the defining polynomial at $P$.
 *Proof sketch.* $\mathrm{mult}_P(X) = 1$ means the leading form $f_1$ is linear, i.e. $\nabla f(P) \neq 0$, which is exactly the Jacobian criterion for smoothness of the hypersurface. For the general case, $\mathrm{mult}_P(X) = 1$ iff $\mathrm{gr}_\mathfrak{m}\,\mathcal{O}_{X,P}$ is generated in degree 1, iff $\dim_k(\mathfrak{m}/\mathfrak{m}^2) = \dim X$, i.e. regularity. $\square$
 
 **Remark (semicontinuity of multiplicity).** *Multiplicity is upper semicontinuous in families:* in a flat family $\mathcal{X} \to T$, the function $P \mapsto \mathrm{mult}_P(\mathcal{X}_t)$ can only jump up at special values of $t$. This is the algebraic version of "singularities can be created but not destroyed by specialization."
+
+
+> [!QUESTION] Exercise 19: Tangent Cone of a Quartic
+> *This problem asks for the tangent cone at a singular point and identification of its components.*
+>
+> > **Prerequisites:** [[#4.1 Definition via Initial Forms|4.1 Definition via Initial Forms]], [[#4.3 Multiplicity|4.3 Multiplicity]]
+>
+> Let $X = V(x^4 + y^4 - x^2y^2) \subset \mathbb{A}^2$ at $P = (0,0)$. Compute the tangent cone $C_{X,P}$ and the multiplicity $\mathrm{mult}_P(X)$. How many branches does $X$ have at $P$?
+
+> [!TIP]- Solution to Exercise 19
+> **Key insight:** The initial form determines both the tangent cone and the multiplicity; its irreducible factors over $k$ correspond to the branches.
+>
+> **Sketch:** The polynomial is $f = x^4 + y^4 - x^2y^2$. The terms of degree 2 are: $-x^2y^2$ (degree 4 — wait, $-x^2y^2$ has degree 4, not 2). In fact, $f_2 = 0$, $f_3 = 0$, and $f_4 = x^4 - x^2y^2 + y^4$. So the initial form is $f_4 = x^4 - x^2y^2 + y^4$ and $\mathrm{mult}_P(X) = 4$. Factoring over $\mathbb{C}$: $f_4 = x^4 - x^2y^2 + y^4$. Setting $u = x/y$: $u^4 - u^2 + 1 = 0$, so $u^2 = (1 \pm \sqrt{-3})/2 = e^{\pm i\pi/3}$ or $e^{\pm 2i\pi/3}$ (complex roots of unity). Thus $f_4$ factors into 4 distinct linear factors over $\mathbb{C}$, giving $C_{X,P}$ as a union of 4 lines. The variety $X$ has 4 branches at $P$.
+
+> [!QUESTION] Exercise 20: Multiplicity from the Hilbert Function
+> *This problem derives the multiplicity from the Hilbert function of the associated graded ring.*
+>
+> > **Prerequisites:** [[#4.2 The Associated Graded Ring|4.2 The Associated Graded Ring]], [[#4.3 Multiplicity|4.3 Multiplicity]]
+>
+> For the node $X = V(y^2 - x^2(x+1))$ at $P = (0,0)$, compute $\dim_k(\mathfrak{m}^n/\mathfrak{m}^{n+1})$ for $n = 0, 1, 2$, where $\mathfrak{m} = \mathfrak{m}_{X,P}$. Verify that the Hilbert function stabilizes with value $\mathrm{mult}_P(X) = 2$.
+
+> [!TIP]- Solution to Exercise 20
+> **Key insight:** The associated graded ring of the node is $k[x,y]/(y^2-x^2)$, and its graded pieces have Hilbert function eventually equal to the multiplicity.
+>
+> **Sketch:** The tangent cone is $C = V(y^2-x^2)$ and $\mathrm{gr}_\mathfrak{m}\,\mathcal{O}_{X,P} \cong k[x,y]/(y^2-x^2)$. In degree 0: $k[x,y]/(y^2-x^2)$ in degree 0 is $k$, so $\dim = 1$. In degree 1: basis $\{x, y\}$ (no relations in degree 1), $\dim = 2$. In degree 2: basis $\{x^2, xy, y^2\} = \{x^2, xy, x^2\}$ — but $y^2 = x^2$ in the quotient, so $\{x^2, xy\}$, giving $\dim = 2$. For all $n \geq 1$, $\dim_k(\mathfrak{m}^n/\mathfrak{m}^{n+1}) = 2$. The Hilbert polynomial is the constant $2 = \mathrm{mult}_P(X)$.
+
 
 ### 4.4 Examples
 
@@ -434,316 +743,8 @@ The polynomial $f = x^2 - y^2z$ has lowest-degree term $f_2 = x^2$ (since $y^2 z
 > [!NOTE] Tangent space vs. tangent cone
 > For the cusp: $T_{X,(0,0)} = k^2$ (the full plane, since $J = (0,0)$ at the origin), while $C_{X,(0,0)} = V(y^2)$ is a (double) line. The tangent space sees dimension but misses the directional structure; the tangent cone sees both.
 
-> [!QUESTION] Exercise 7: Tangent Cone of a Quartic
-> *This problem asks for the tangent cone at a singular point and identification of its components.*
->
-> > **Prerequisites:** [[#4.1 Definition via Initial Forms|4.1 Definition via Initial Forms]], [[#4.3 Multiplicity|4.3 Multiplicity]]
->
-> Let $X = V(x^4 + y^4 - x^2y^2) \subset \mathbb{A}^2$ at $P = (0,0)$. Compute the tangent cone $C_{X,P}$ and the multiplicity $\mathrm{mult}_P(X)$. How many branches does $X$ have at $P$?
-
-> [!TIP]- Solution to Exercise 7
-> **Key insight:** The initial form determines both the tangent cone and the multiplicity; its irreducible factors over $k$ correspond to the branches.
->
-> **Sketch:** The polynomial is $f = x^4 + y^4 - x^2y^2$. The terms of degree 2 are: $-x^2y^2$ (degree 4 — wait, $-x^2y^2$ has degree 4, not 2). In fact, $f_2 = 0$, $f_3 = 0$, and $f_4 = x^4 - x^2y^2 + y^4$. So the initial form is $f_4 = x^4 - x^2y^2 + y^4$ and $\mathrm{mult}_P(X) = 4$. Factoring over $\mathbb{C}$: $f_4 = x^4 - x^2y^2 + y^4$. Setting $u = x/y$: $u^4 - u^2 + 1 = 0$, so $u^2 = (1 \pm \sqrt{-3})/2 = e^{\pm i\pi/3}$ or $e^{\pm 2i\pi/3}$ (complex roots of unity). Thus $f_4$ factors into 4 distinct linear factors over $\mathbb{C}$, giving $C_{X,P}$ as a union of 4 lines. The variety $X$ has 4 branches at $P$.
-
-> [!QUESTION] Exercise 8: Associated Graded of a Regular Ring
-> *This problem computes the associated graded ring at a smooth point and confirms it is a polynomial ring.*
->
-> > **Prerequisites:** [[#4.2 The Associated Graded Ring|4.2 The Associated Graded Ring]], [[#2.1 Local Parameters|2.1 Local Parameters]]
->
-> Let $R = k[x,y]_{(x,y)}$ (the local ring of $\mathbb{A}^2$ at the origin). Compute $\mathrm{gr}_\mathfrak{m} R$ where $\mathfrak{m} = (x,y)$, and show it is isomorphic to $k[s,t]$ (a polynomial ring in two variables).
-
-> [!TIP]- Solution to Exercise 8
-> **Key insight:** For a regular local ring, the associated graded is always a polynomial ring, confirming that the tangent cone at a smooth point is the tangent space.
->
-> **Sketch:** We have $\mathfrak{m}^d/\mathfrak{m}^{d+1} \cong k^{\binom{d+1}{1}} = $ the space of homogeneous polynomials of degree $d$ in $x, y$. The graded pieces are $\mathfrak{m}^0/\mathfrak{m}^1 = k$ (degree 0), $\mathfrak{m}/\mathfrak{m}^2 = k \cdot [x] \oplus k \cdot [y]$ (degree 1), $\mathfrak{m}^2/\mathfrak{m}^3 = k[x]^2 \oplus k[x][y] \oplus k[y]^2$ (degree 2), etc. Thus $\mathrm{gr}_\mathfrak{m} R = \bigoplus_d \mathfrak{m}^d/\mathfrak{m}^{d+1} \cong k[x,y]$ (the polynomial ring), where $[x], [y]$ are the degree-1 generators. No relations arise because $k[x,y]_{(x,y)}$ is a domain and the monomials $x^a y^b$ remain linearly independent in each graded piece.
-
 ---
 
-## 5. Discrete Valuation Rings and Smooth Curves
-
-### 5.1 DVRs: Definitions and Characterizations
-
-🔑 Discrete valuation rings are the algebraic avatars of smooth points on curves.
-
-**Definition (Discrete Valuation).** A *discrete valuation* on a field $K$ is a surjective homomorphism $v : K^\times \to \mathbb{Z}$ satisfying the ultrametric inequality:
-
-$$v(a + b) \geq \min(v(a), v(b)) \quad \text{for all } a, b \in K^\times.$$
-
-(Extend to $K$ by $v(0) = +\infty$.)
-
-**Definition (Discrete Valuation Ring).** The *ring of integers* (or *valuation ring*) of $v$ is
-
-$$R = \{ a \in K : v(a) \geq 0 \} \cup \{0\}.$$
-
-A ring $R$ is a *discrete valuation ring* (DVR) if it arises this way for some discrete valuation on $K = \mathrm{Frac}(R)$.
-
-**Theorem (Equivalent Characterizations).** For a Noetherian local domain $(R, \mathfrak{m})$, the following are equivalent:
-
-1. $R$ is a DVR.
-2. $R$ is a principal ideal domain with a unique nonzero prime ideal.
-3. $R$ is a regular local ring of Krull dimension 1.
-4. $\mathfrak{m}$ is principal (generated by a single element $t$, the *uniformizer* or *local parameter*).
-5. Every nonzero element $f \in R$ can be written uniquely as $f = u \cdot t^n$ for $u \in R^\times$ and $n \geq 0$.
-
-*Proof sketch (3 $\Rightarrow$ 1).* Regularity of dimension 1 means $\mathfrak{m} = (t)$ for a single generator. By the unique factorization property of regular local rings (which are UFDs), every nonzero $f \in R$ writes as $f = u t^{v(f)}$ for a unit $u$ and $v(f) \geq 0$. Extending to $\mathrm{Frac}(R)$ by $v(f/g) = v(f) - v(g)$ gives a discrete valuation. $\square$
-
-> [!NOTE] DVRs and completions
-> The completion of a DVR $R$ with uniformizer $t$ and residue field $k$ is $\hat{R} \cong k[\![t]\!]$ (formal power series), by the Cohen structure theorem. This is the source of the connection between DVRs and formal power series.
-
-### 5.2 Smooth Points of Curves are DVRs
-
-**Theorem.** Let $C$ be an irreducible curve and $P \in C$ a smooth point. Then $\mathcal{O}_{C,P}$ is a DVR.
-
-*Proof.* Since $\dim C = 1$ and $P$ is smooth, $\mathcal{O}_{C,P}$ is a regular local ring of Krull dimension 1. By characterization 3 in the theorem above, $\mathcal{O}_{C,P}$ is a DVR. The uniformizer is any local parameter $t \in \mathfrak{m}_{C,P} \setminus \mathfrak{m}_{C,P}^2$. $\square$
-
-**Explicit construction.** In an affine model $C \subset \mathbb{A}^2$ near $P$: a local parameter $t$ is any function in $A(C)$ that vanishes to exactly first order at $P$. For example, if $C = V(f)$ with $(\partial f/\partial y)(P) \neq 0$, one may take $t = x - P_x$ (restricted to $C$).
-
-The *formal completion* satisfies $\hat{\mathcal{O}}_{C,P} \cong k[\![t]\!]$.
-
-> [!EXAMPLE] DVR on the parabola
-> Let $C = V(y - x^2) \subset \mathbb{A}^2$ and $P = (0,0)$. The coordinate ring is $k[x,y]/(y-x^2) \cong k[x]$, so $\mathcal{O}_{C,P} = k[x]_{(x)}$, with maximal ideal $(x)$. The uniformizer is $t = x$. Every function $f \in \mathcal{O}_{C,P}$ can be written as $f = x^n \cdot u$ for a unit $u$ and $n = v_P(f) \geq 0$.
-
-### 5.3 The Valuation and Order of Vanishing
-
-**Definition (Order of Vanishing).** For $P$ a smooth point of a curve $C$ and $f \in \mathcal{O}_{C,P}$, the *order of vanishing* of $f$ at $P$ is
-
-$$v_P(f) = \max\{ n \geq 0 : f \in \mathfrak{m}_{C,P}^n \},$$
-
-i.e. the unique integer $n$ such that $f = u t^n$ for a unit $u \in \mathcal{O}_{C,P}^\times$ and uniformizer $t$. Extend to rational functions $\phi = f/g \in k(C)$ by $v_P(\phi) = v_P(f) - v_P(g)$.
-
-**Properties of the valuation:**
-
-1. $v_P(\phi \psi) = v_P(\phi) + v_P(\psi)$
-2. $v_P(\phi + \psi) \geq \min(v_P(\phi), v_P(\psi))$, with equality when $v_P(\phi) \neq v_P(\psi)$
-3. $v_P(\phi) > 0$ iff $\phi$ has a zero at $P$; $v_P(\phi) < 0$ iff $\phi$ has a pole at $P$
-
-**Connection to intersection numbers.** The intersection number of a curve $D$ (defined by $f = 0$) with $C$ at $P$ is $I_P(C,D) = v_P(f|_C)$, the order of vanishing of $f$ on $C$ at $P$. This connects DVR valuations to intersection theory from Chapter I of Shafarevich (see [[concepts/algebraic-geometry/note|Classical Algebraic Geometry]], §6 on intersection numbers).
-
-> [!INFO] Global picture: Weil divisors on a smooth curve
-> For a smooth projective curve $C$, summing the local data gives a global *Weil divisor* associated to a nonzero rational function $\phi \in k(C)^\times$: the *principal divisor* $(\phi) = \sum_{P \in C} v_P(\phi) \cdot [P]$. Since $\phi$ has only finitely many zeros and poles, this is a well-defined divisor. **The product formula $\sum_P v_P(\phi) = 0$ is the algebraic version of the fact that a meromorphic function on a compact Riemann surface has as many zeros as poles** (counting multiplicities). This is the foundational result of divisor theory on smooth curves.
-
-> [!QUESTION] Exercise 9: Uniformizer on a Twisted Cubic
-> *This problem computes the local parameter and the DVR structure at a smooth point of a space curve.*
->
-> > **Prerequisites:** [[#5.2 Smooth Points of Curves are DVRs|5.2 Smooth Points of Curves are DVRs]], [[#5.3 The Valuation and Order of Vanishing|5.3 The Valuation and Order of Vanishing]]
->
-> Let $C = \{(t, t^2, t^3) : t \in k\} \subset \mathbb{A}^3$ be the twisted cubic, parametrized by $t$. The coordinate ring is $A(C) = k[x,y,z]/(y-x^2, z-x^3) \cong k[x]$. Fix the smooth point $P = (0,0,0)$. Show that $\mathcal{O}_{C,P} \cong k[x]_{(x)}$ is a DVR with uniformizer $x$, and compute $v_P(y)$ and $v_P(z)$.
-
-> [!TIP]- Solution to Exercise 9
-> **Key insight:** The parametrization $t \mapsto (t, t^2, t^3)$ shows that $x$ generates the maximal ideal at $P$, while $y = x^2$ and $z = x^3$ have higher-order vanishing.
->
-> **Sketch:** Since $A(C) \cong k[x]$ (an isomorphism of rings), we have $\mathcal{O}_{C,P} = k[x]_{(x)}$. The maximal ideal is $(x)$, so $t = x$ is the uniformizer. Then $v_P(x) = 1$, and since $y = x^2$ in $A(C)$, we get $v_P(y) = v_P(x^2) = 2$. Similarly, $z = x^3$, so $v_P(z) = 3$. This illustrates the general principle: for a rational normal curve parametrized by $t$, the valuation at the origin assigns $v_P(x_i) = i+1$ for coordinate $x_i = t^{i+1}$.
-
-> [!QUESTION] Exercise 10: Valuation and Intersection
-> *This problem connects the DVR valuation to intersection numbers from Chapter I.*
->
-> > **Prerequisites:** [[#5.3 The Valuation and Order of Vanishing|5.3 The Valuation and Order of Vanishing]]
->
-> Let $C = V(y - x^2) \subset \mathbb{A}^2$ and $L = V(y) \subset \mathbb{A}^2$. Compute $v_P(y|_C)$ at $P = (0,0)$ using the DVR structure on $\mathcal{O}_{C,P}$, and interpret the result as the intersection number $I_P(C,L)$.
-
-> [!TIP]- Solution to Exercise 10
-> **Key insight:** Restricting the equation of $L$ to $C$ and computing its order of vanishing gives the intersection multiplicity directly.
->
-> **Sketch:** On $C$, we have $y = x^2$ (the defining relation). The uniformizer at $P$ is $t = x$. So $y|_C = x^2 = t^2$ in $\mathcal{O}_{C,P} = k[x]_{(x)}$. Thus $v_P(y|_C) = 2$. This gives $I_P(C,L) = 2$, meaning $C$ and $L$ meet at the origin with intersection multiplicity 2 — geometrically, the parabola is tangent to the $x$-axis, and they meet to second order.
-
----
-
-## Mathematical Development Exercises
-
-> [!QUESTION] Exercise 11: Derivation Description of Tangent Space
-> *This problem establishes the equivalence between the dual-of-cotangent-space and the derivation descriptions of the tangent space.*
->
-> > **Prerequisites:** [[#1.2 The Cotangent Space and Zariski Tangent Space|1.2 The Cotangent Space and Zariski Tangent Space]]
->
-> Let $(R, \mathfrak{m}, k)$ be a local $k$-algebra. Show that there is a natural isomorphism
-> $$(\mathfrak{m}/\mathfrak{m}^2)^\vee \cong \mathrm{Der}_k(R, k),$$
-> where $k$ is viewed as an $R$-module via the quotient $R \to R/\mathfrak{m} \cong k$.
-
-> [!TIP]- Solution to Exercise 11
-> **Key insight:** A derivation $\delta : R \to k$ must kill constants ($\delta(k) = 0$ by linearity and $\delta(1) = 0$ from Leibniz) and kills $\mathfrak{m}^2$ by Leibniz, so it factors through $\mathfrak{m}/\mathfrak{m}^2$.
->
-> **Sketch:** Given $\delta \in \mathrm{Der}_k(R,k)$: for $c \in k \subset R$, $\delta(c) = \delta(c \cdot 1) = c\delta(1)$ and $\delta(1) = \delta(1 \cdot 1) = 1 \cdot \delta(1) + 1 \cdot \delta(1) = 2\delta(1)$, forcing $\delta(1) = 0$. For $f, g \in \mathfrak{m}$: $\delta(fg) = f(P)\delta(g) + g(P)\delta(f) = 0 + 0 = 0$ (since $f(P) = g(P) = 0$). Thus $\delta|_{\mathfrak{m}^2} = 0$, and $\delta$ factors through $\mathfrak{m}/\mathfrak{m}^2$, giving a $k$-linear functional. Conversely, any linear functional $\lambda : \mathfrak{m}/\mathfrak{m}^2 \to k$ extends to a derivation via $\delta(f) = \lambda(f - f(P) \bmod \mathfrak{m}^2)$. These maps are mutually inverse, establishing the isomorphism.
-
-> [!QUESTION] Exercise 12: Invariance of the Tangent Space
-> *This problem shows that the tangent space is intrinsic to the variety, independent of the embedding.*
->
-> > **Prerequisites:** [[#1.2 The Cotangent Space and Zariski Tangent Space|1.2 The Cotangent Space and Zariski Tangent Space]]
->
-> Let $\phi : X \to Y$ be an isomorphism of varieties and $P \in X$, $Q = \phi(P) \in Y$. Show that $\phi$ induces a $k$-linear isomorphism $d\phi_P : T_{X,P} \xrightarrow{\sim} T_{Y,Q}$.
-
-> [!TIP]- Solution to Exercise 12
-> **Key insight:** An isomorphism of varieties induces an isomorphism on local rings, hence on maximal ideals and their squares, hence on cotangent and tangent spaces.
->
-> **Sketch:** The isomorphism $\phi$ induces an isomorphism on sheaves of regular functions, hence an isomorphism of local rings $\phi^* : \mathcal{O}_{Y,Q} \xrightarrow{\sim} \mathcal{O}_{X,P}$ with $\phi^*(\mathfrak{m}_{Y,Q}) = \mathfrak{m}_{X,P}$. This descends to an isomorphism $\mathfrak{m}_{Y,Q}/\mathfrak{m}_{Y,Q}^2 \xrightarrow{\sim} \mathfrak{m}_{X,P}/\mathfrak{m}_{X,P}^2$ of cotangent spaces. Taking duals gives the tangent space isomorphism $d\phi_P : T_{X,P} \xrightarrow{\sim} T_{Y,Q}$.
-
-> [!QUESTION] Exercise 13: The Singular Locus is Closed
-> *This problem gives a direct algebraic proof that the singular locus is Zariski closed.*
->
-> > **Prerequisites:** [[#1.3 The Jacobian Criterion|1.3 The Jacobian Criterion]], [[#1.4 Regular Local Rings|1.4 Regular Local Rings]]
->
-> Let $X = V(f_1,\ldots,f_m) \subset \mathbb{A}^n$ (not necessarily irreducible). Show that $\mathrm{Sing}(X) = V(f_1,\ldots,f_m,\, \text{all } (n-\dim X) \times (n-\dim X) \text{ minors of } J)$, where $J = (\partial f_i/\partial x_j)$, and conclude that $\mathrm{Sing}(X)$ is Zariski closed in $X$.
-
-> [!TIP]- Solution to Exercise 13
-> **Key insight:** Smoothness is characterized by the non-vanishing of at least one maximal minor of the Jacobian — so singularity is the vanishing of *all* maximal minors, a closed condition.
->
-> **Sketch:** A point $P \in X$ is smooth iff $\mathrm{rank}(J(P)) \geq c = n - \dim X$ (the codimension). Equivalently, $P$ is singular iff every $(c \times c)$-minor of $J$ vanishes at $P$. Each minor is a polynomial function of the coordinates of $P$, so the locus where all such minors vanish is a closed algebraic set. The singular locus equals this closed set intersected with $X$, hence is closed in $X$.
-
-> [!QUESTION] Exercise 14: Completion of a DVR
-> *This problem verifies the Cohen structure theorem in the concrete DVR case.*
->
-> > **Prerequisites:** [[#5.1 DVRs: Definitions and Characterizations|5.1 DVRs: Definitions and Characterizations]], [[#2.2 The Formal Completion|2.2 The Formal Completion]]
->
-> Let $R = k[t]_{(t)}$ (the local ring of $\mathbb{A}^1$ at the origin). Show directly that $\hat{R} \cong k[\![t]\!]$ by constructing a ring isomorphism.
-
-> [!TIP]- Solution to Exercise 14
-> **Key insight:** Elements of the completion are coherent sequences of polynomials modulo $t^n$, which precisely encode the coefficients of a formal power series.
->
-> **Sketch:** By definition, $\hat{R} = \varprojlim_n R/(t^n) = \varprojlim_n k[t]/(t^n)$. An element of $\hat{R}$ is a compatible sequence $(a_0, a_0 + a_1 t, a_0 + a_1 t + a_2 t^2, \ldots)$ of polynomials modulo successive powers of $t$. This is precisely a formal power series $\sum_{n \geq 0} a_n t^n \in k[\![t]\!]$. The map $\hat{R} \to k[\![t]\!]$ sending such a sequence to $\sum a_n t^n$ is clearly a ring isomorphism (adding and multiplying sequences corresponds to adding and multiplying formal power series).
-
-> [!QUESTION] Exercise 15: Multiplicity from the Hilbert Function
-> *This problem derives the multiplicity from the Hilbert function of the associated graded ring.*
->
-> > **Prerequisites:** [[#4.2 The Associated Graded Ring|4.2 The Associated Graded Ring]], [[#4.3 Multiplicity|4.3 Multiplicity]]
->
-> For the node $X = V(y^2 - x^2(x+1))$ at $P = (0,0)$, compute $\dim_k(\mathfrak{m}^n/\mathfrak{m}^{n+1})$ for $n = 0, 1, 2$, where $\mathfrak{m} = \mathfrak{m}_{X,P}$. Verify that the Hilbert function stabilizes with value $\mathrm{mult}_P(X) = 2$.
-
-> [!TIP]- Solution to Exercise 15
-> **Key insight:** The associated graded ring of the node is $k[x,y]/(y^2-x^2)$, and its graded pieces have Hilbert function eventually equal to the multiplicity.
->
-> **Sketch:** The tangent cone is $C = V(y^2-x^2)$ and $\mathrm{gr}_\mathfrak{m}\,\mathcal{O}_{X,P} \cong k[x,y]/(y^2-x^2)$. In degree 0: $k[x,y]/(y^2-x^2)$ in degree 0 is $k$, so $\dim = 1$. In degree 1: basis $\{x, y\}$ (no relations in degree 1), $\dim = 2$. In degree 2: basis $\{x^2, xy, y^2\} = \{x^2, xy, x^2\}$ — but $y^2 = x^2$ in the quotient, so $\{x^2, xy\}$, giving $\dim = 2$. For all $n \geq 1$, $\dim_k(\mathfrak{m}^n/\mathfrak{m}^{n+1}) = 2$. The Hilbert polynomial is the constant $2 = \mathrm{mult}_P(X)$.
-
-> [!QUESTION] Exercise 16: Cotangent Sequence at a Smooth Subvariety
-> *This problem derives the conormal sequence from first principles and uses it to compute the normal bundle.*
->
-> > **Prerequisites:** [[#3.2 Smooth Subvarieties and the Normal Bundle|3.2 Smooth Subvarieties and the Normal Bundle]]
->
-> Let $X = \mathbb{A}^n$ and $Y = V(x_1,\ldots,x_r) \cong \mathbb{A}^{n-r}$ (a coordinate linear subspace). Write down the conormal sequence $0 \to \mathcal{I}_Y/\mathcal{I}_Y^2 \to \Omega_{X/k}|_Y \to \Omega_{Y/k} \to 0$ explicitly in terms of coordinates, and verify that $\mathcal{I}_Y/\mathcal{I}_Y^2$ is free of rank $r$.
-
-> [!TIP]- Solution to Exercise 16
-> **Key insight:** For a linear subspace, all sheaves in the conormal sequence are trivial vector bundles, and the sequence splits.
->
-> **Sketch:** $\mathcal{I}_Y = (x_1,\ldots,x_r)$ and $\mathcal{I}_Y^2 = (x_ix_j : 1 \leq i,j \leq r)$. So $\mathcal{I}_Y/\mathcal{I}_Y^2$ is freely generated over $\mathcal{O}_Y$ by $[x_1],\ldots,[x_r]$ (no relation since $x_ix_j \in \mathcal{I}_Y^2$ for all $i,j$). This is free of rank $r$. The sheaf $\Omega_{X/k}|_Y$ is free of rank $n$ on $Y$ with basis $\{dx_1,\ldots,dx_n\}$, and $\Omega_{Y/k}$ is free of rank $n-r$ with basis $\{dx_{r+1},\ldots,dx_n\}$. The conormal sequence is $0 \to \mathcal{O}_Y^{\oplus r} \to \mathcal{O}_Y^{\oplus n} \to \mathcal{O}_Y^{\oplus (n-r)} \to 0$ (split exact, via the direct sum decomposition of $\Omega_{X/k}$).
-
-> [!QUESTION] Exercise 17: Tangent Cone and Blowing Up
-> *This problem connects the tangent cone to the exceptional divisor of the blow-up, linking the local and global theories.*
->
-> > **Prerequisites:** [[#4.2 The Associated Graded Ring|4.2 The Associated Graded Ring]]
->
-> Let $\widetilde{\mathbb{A}^2}$ be the blow-up of $\mathbb{A}^2$ at the origin, with exceptional divisor $E \cong \mathbb{P}^1$. Show that the strict transform of a curve $C \subset \mathbb{A}^2$ passing through $P = (0,0)$ meets $E$ at the points corresponding to the tangent directions of the tangent cone $C_{C,P}$.
-
-> [!TIP]- Solution to Exercise 17
-> **Key insight:** The blow-up replaces a point by the projectivization of its tangent space; the strict transform of a curve approaches the blown-up point along the tangent directions of its initial form.
->
-> **Sketch:** Recall $\widetilde{\mathbb{A}^2} = \{(x,y; [u:v]) \in \mathbb{A}^2 \times \mathbb{P}^1 : xv = yu\}$ with $E = \{0\} \times \mathbb{P}^1$. In the chart $v = 1$: coordinates $(u, y)$ with $x = uy$, and $E \cap U_v = \{y = 0\}$. If $C = V(f)$ with $f = f_m + \text{h.o.t.}$, then in the chart $v=1$: $f(uy, y) = y^m(f_m(u,1) + y(\cdots))$. The factor $y^m$ gives $E^m$ (the exceptional divisor with multiplicity $m$), and the strict transform is $V(f_m(u,1) + y(\cdots))$. At $y = 0$, this meets $E$ at the zeros of $f_m(u,1) = 0$, i.e. the slopes $u = x/y$ solving the leading form — exactly the directions in the tangent cone.
-
-> [!QUESTION] Exercise 18: Regularity vs. Normality
-> *This problem illustrates that regular implies normal, but not conversely, with an explicit example.*
->
-> > **Prerequisites:** [[#1.4 Regular Local Rings|1.4 Regular Local Rings]], [[#3.1 Analytical Irreducibility|3.1 Analytical Irreducibility]]
->
-> Let $R = k[x,y]/(y^2 - x^3 - x^2)$ localized at $(x,y)$ (local ring of the nodal cubic at the origin), and let $\tilde{R}$ be its integral closure in $\mathrm{Frac}(R)$. Show $R \subsetneq \tilde{R}$, so $R$ is not normal. Then let $S = k[x,y]/(y^2 - x^3)$ localized at $(x,y)$ (cuspidal cubic). Show $S$ is also not normal, but that the normalization of $S$ is a DVR (hence regular).
-
-> [!TIP]- Solution to Exercise 18
-> **Key insight:** Normalization of a singular curve replaces the singular point by smooth points on the branches; the node's normalization separates two branches, while the cusp's normalization smooths the single branch.
->
-> **Sketch:** For the node $R$: in $\mathrm{Frac}(R)$, we have $y^2 = x^2(x+1)$, so $t = y/x$ satisfies $t^2 = x+1$, hence $t^2 - 1 = x$ and $t^3 - t = y$. So $t \in \mathrm{Frac}(R)$ is integral over $R$ ($t^2 = x + 1 \in R$) but $t \notin R$ (since $R$ does not contain $y/x$). The normalization is $k[t]_{(t-1)} \times k[t]_{(t+1)}$ (two DVRs). For the cusp $S$: $y^2 = x^3$, so $s = y/x$ satisfies $s^2 = x$, giving $s^3 = y$. Thus $s \in \mathrm{Frac}(S)$ is integral over $S$ with $k[s] \cong$ the normalization; localized at $(s)$ this gives $k[s]_{(s)}$, a DVR (regular), so the normalization of the cusp is smooth.
-
----
-
-## Algorithmic Applications Exercises
-
-> [!QUESTION] Exercise 19: Computing the Smooth Locus
-> *This problem implements the Jacobian criterion to compute the smooth locus of a given variety.*
->
-> > **Prerequisites:** [[#1.3 The Jacobian Criterion|1.3 The Jacobian Criterion]], [[#1.5 The Smooth Locus is Open and Dense|1.5 The Smooth Locus is Open and Dense]]
->
-> Design a Python pseudocode algorithm that, given a polynomial $f \in \mathbb{Z}[x_1,\ldots,x_n]$ defining a hypersurface $X = V(f) \subset \mathbb{A}^n$, outputs the ideal $I(\mathrm{Sing}(X)) = (f, \partial f/\partial x_1, \ldots, \partial f/\partial x_n)$ and uses a Gröbner basis computation to determine whether $\mathrm{Sing}(X)$ is empty (i.e., $X$ is smooth).
-
-> [!TIP]- Solution to Exercise 19
-> **Key insight:** The singular locus of a hypersurface is cut out by $f$ together with all its partials; a Gröbner basis computation checks if the resulting ideal is the unit ideal (empty variety).
->
-> **Sketch:**
-> ```python
-> from sympy import symbols, diff, groebner, Poly, S
->
-> def singular_locus_hypersurface(f, variables):
->     """
->     Input: f - polynomial in variables (as sympy expression)
->            variables - list of sympy symbols [x1, ..., xn]
->     Output: (generators of Sing(X) ideal, is_smooth bool)
->     """
->     # Build the ideal generators: f and all partial derivatives
->     generators = [f] + [diff(f, xi) for xi in variables]
->
->     # Compute Gröbner basis over QQ
->     G = groebner(generators, *variables, domain='QQ')
->
->     # X is smooth iff the ideal is the unit ideal, i.e. 1 is in the basis
->     is_smooth = (S.One in G)
->
->     return generators, is_smooth
->
-> # Example: nodal cubic y^2 - x^2*(x+1)
-> x, y = symbols('x y')
-> f = y**2 - x**2 * (x + 1)
-> gens, smooth = singular_locus_hypersurface(f, [x, y])
-> # gens = [y^2 - x^3 - x^2, -3x^2 - 2x, 2y]
-> # Groebner basis will contain {x, y}, not 1, so is_smooth = False
-> ```
-> The Gröbner basis of $(f, -3x^2-2x, 2y)$ over $\mathbb{Q}$ contains $\{y, x\}$ (or $\{y, x(3x+2)\}$), not $\{1\}$, so $\mathrm{Sing}(X) = \{(0,0)\}$ is nonempty and $X$ is singular.
-
-> [!QUESTION] Exercise 20: Power Series Truncation
-> *This problem implements the power series expansion of a regular function up to a given order.*
->
-> > **Prerequisites:** [[#2.3 Power Series Expansion of Regular Functions|2.3 Power Series Expansion of Regular Functions]], [[#2.1 Local Parameters|2.1 Local Parameters]]
->
-> Design a Python pseudocode algorithm that, given a rational function $f = p/q$ with $q(P) \neq 0$, a smooth point $P$, and local parameters $t_1,\ldots,t_n$, computes the Taylor expansion of $f$ in $t_1,\ldots,t_n$ up to total degree $d$.
-
-> [!TIP]- Solution to Exercise 20
-> **Key insight:** A rational function $f = p/q$ with $q(P) \neq 0$ can be expanded by substituting $t_i = x_i - P_i$ (or more general local parameters) and using polynomial division modulo $\mathfrak{m}^{d+1}$.
->
-> **Sketch:**
-> ```python
-> from sympy import symbols, series, Poly, expand, factor
->
-> def power_series_expansion(p, q, point, local_params, ambient_vars, degree):
->     """
->     Input: p, q - polynomials (f = p/q), q(point) != 0
->            point - dict {xi: P_i} giving coordinates of P
->            local_params - list of expressions for t_i in terms of ambient_vars
->            ambient_vars - list of sympy symbols [x1, ..., xn]
->            degree - truncation degree d
->     Output: polynomial in local_params representing expansion up to degree d
->     """
->     # Substitute ambient coords in terms of local params centered at P
->     # e.g. x_i = P_i + t_i if local_params = [x1-P1, ..., xn-Pn]
->     subs_map = {x: p_val + t
->                 for x, p_val, t in zip(ambient_vars,
->                                        [point[x] for x in ambient_vars],
->                                        local_params)}
->     p_shifted = p.subs(subs_map).expand()
->     q_shifted = q.subs(subs_map).expand()
->
->     # q_shifted = q(P) * (1 + r) where r is in m, expand (1+r)^{-1} to degree d
->     q0 = q_shifted.subs({t: 0 for t in local_params})  # = q(P) != 0
->     r = (q_shifted / q0 - 1).expand()  # r in m
->
->     # Geometric series: 1/(1+r) = sum_{k=0}^{d} (-r)^k mod m^{d+1}
->     inv_q_series = sum(
->         ((-r)**k).expand() for k in range(degree + 1)
->     )
->     # Truncate to total degree <= d
->     result = (p_shifted * inv_q_series / q0).expand()
->     # Drop monomials of degree > d
->     result_poly = Poly(result, *local_params)
->     truncated = sum(
->         coeff * monom
->         for coeff, monom in zip(result_poly.coeffs(), result_poly.monoms())
->         if sum(monom) <= degree
->     )
->     return truncated
-> ```
 
 > [!QUESTION] Exercise 21: Multiplicity via Dimension Counting
 > *This problem implements multiplicity computation using the dimension of graded pieces.*
@@ -790,14 +791,117 @@ i.e. the unique integer $n$ such that $f = u t^n$ for a unit $u \in \mathcal{O}_
 > print(multiplicity_at_origin(g, [x, y]))  # Output: 4
 > ```
 
-> [!QUESTION] Exercise 22: DVR Valuation Algorithm
+
+## 5. Discrete Valuation Rings and Smooth Curves
+
+### 5.1 DVRs: Definitions and Characterizations
+
+🔑 Discrete valuation rings are the algebraic avatars of smooth points on curves.
+
+**Definition (Discrete Valuation).** A *discrete valuation* on a field $K$ is a surjective homomorphism $v : K^\times \to \mathbb{Z}$ satisfying the ultrametric inequality:
+
+$$v(a + b) \geq \min(v(a), v(b)) \quad \text{for all } a, b \in K^\times.$$
+
+(Extend to $K$ by $v(0) = +\infty$.)
+
+**Definition (Discrete Valuation Ring).** The *ring of integers* (or *valuation ring*) of $v$ is
+
+$$R = \{ a \in K : v(a) \geq 0 \} \cup \{0\}.$$
+
+A ring $R$ is a *discrete valuation ring* (DVR) if it arises this way for some discrete valuation on $K = \mathrm{Frac}(R)$.
+
+**Theorem (Equivalent Characterizations).** For a Noetherian local domain $(R, \mathfrak{m})$, the following are equivalent:
+
+1. $R$ is a DVR.
+2. $R$ is a principal ideal domain with a unique nonzero prime ideal.
+3. $R$ is a regular local ring of Krull dimension 1.
+4. $\mathfrak{m}$ is principal (generated by a single element $t$, the *uniformizer* or *local parameter*).
+5. Every nonzero element $f \in R$ can be written uniquely as $f = u \cdot t^n$ for $u \in R^\times$ and $n \geq 0$.
+
+*Proof sketch (3 $\Rightarrow$ 1).* Regularity of dimension 1 means $\mathfrak{m} = (t)$ for a single generator. By the unique factorization property of regular local rings (which are UFDs), every nonzero $f \in R$ writes as $f = u t^{v(f)}$ for a unit $u$ and $v(f) \geq 0$. Extending to $\mathrm{Frac}(R)$ by $v(f/g) = v(f) - v(g)$ gives a discrete valuation. $\square$
+
+> [!NOTE] DVRs and completions
+> The completion of a DVR $R$ with uniformizer $t$ and residue field $k$ is $\hat{R} \cong k[\![t]\!]$ (formal power series), by the Cohen structure theorem. This is the source of the connection between DVRs and formal power series.
+
+
+> [!QUESTION] Exercise 22: Completion of a DVR
+> *This problem verifies the Cohen structure theorem in the concrete DVR case.*
+>
+> > **Prerequisites:** [[#5.1 DVRs: Definitions and Characterizations|5.1 DVRs: Definitions and Characterizations]], [[#2.2 The Formal Completion|2.2 The Formal Completion]]
+>
+> Let $R = k[t]_{(t)}$ (the local ring of $\mathbb{A}^1$ at the origin). Show directly that $\hat{R} \cong k[\![t]\!]$ by constructing a ring isomorphism.
+
+> [!TIP]- Solution to Exercise 22
+> **Key insight:** Elements of the completion are coherent sequences of polynomials modulo $t^n$, which precisely encode the coefficients of a formal power series.
+>
+> **Sketch:** By definition, $\hat{R} = \varprojlim_n R/(t^n) = \varprojlim_n k[t]/(t^n)$. An element of $\hat{R}$ is a compatible sequence $(a_0, a_0 + a_1 t, a_0 + a_1 t + a_2 t^2, \ldots)$ of polynomials modulo successive powers of $t$. This is precisely a formal power series $\sum_{n \geq 0} a_n t^n \in k[\![t]\!]$. The map $\hat{R} \to k[\![t]\!]$ sending such a sequence to $\sum a_n t^n$ is clearly a ring isomorphism (adding and multiplying sequences corresponds to adding and multiplying formal power series).
+
+
+### 5.2 Smooth Points of Curves are DVRs
+
+**Theorem.** Let $C$ be an irreducible curve and $P \in C$ a smooth point. Then $\mathcal{O}_{C,P}$ is a DVR.
+
+*Proof.* Since $\dim C = 1$ and $P$ is smooth, $\mathcal{O}_{C,P}$ is a regular local ring of Krull dimension 1. By characterization 3 in the theorem above, $\mathcal{O}_{C,P}$ is a DVR. The uniformizer is any local parameter $t \in \mathfrak{m}_{C,P} \setminus \mathfrak{m}_{C,P}^2$. $\square$
+
+**Explicit construction.** In an affine model $C \subset \mathbb{A}^2$ near $P$: a local parameter $t$ is any function in $A(C)$ that vanishes to exactly first order at $P$. For example, if $C = V(f)$ with $(\partial f/\partial y)(P) \neq 0$, one may take $t = x - P_x$ (restricted to $C$).
+
+The *formal completion* satisfies $\hat{\mathcal{O}}_{C,P} \cong k[\![t]\!]$.
+
+> [!EXAMPLE] DVR on the parabola
+> Let $C = V(y - x^2) \subset \mathbb{A}^2$ and $P = (0,0)$. The coordinate ring is $k[x,y]/(y-x^2) \cong k[x]$, so $\mathcal{O}_{C,P} = k[x]_{(x)}$, with maximal ideal $(x)$. The uniformizer is $t = x$. Every function $f \in \mathcal{O}_{C,P}$ can be written as $f = x^n \cdot u$ for a unit $u$ and $n = v_P(f) \geq 0$.
+
+### 5.3 The Valuation and Order of Vanishing
+
+**Definition (Order of Vanishing).** For $P$ a smooth point of a curve $C$ and $f \in \mathcal{O}_{C,P}$, the *order of vanishing* of $f$ at $P$ is
+
+$$v_P(f) = \max\{ n \geq 0 : f \in \mathfrak{m}_{C,P}^n \},$$
+
+i.e. the unique integer $n$ such that $f = u t^n$ for a unit $u \in \mathcal{O}_{C,P}^\times$ and uniformizer $t$. Extend to rational functions $\phi = f/g \in k(C)$ by $v_P(\phi) = v_P(f) - v_P(g)$.
+
+**Properties of the valuation:**
+
+1. $v_P(\phi \psi) = v_P(\phi) + v_P(\psi)$
+2. $v_P(\phi + \psi) \geq \min(v_P(\phi), v_P(\psi))$, with equality when $v_P(\phi) \neq v_P(\psi)$
+3. $v_P(\phi) > 0$ iff $\phi$ has a zero at $P$; $v_P(\phi) < 0$ iff $\phi$ has a pole at $P$
+
+**Connection to intersection numbers.** The intersection number of a curve $D$ (defined by $f = 0$) with $C$ at $P$ is $I_P(C,D) = v_P(f|_C)$, the order of vanishing of $f$ on $C$ at $P$. This connects DVR valuations to intersection theory from Chapter I of Shafarevich (see [[concepts/algebraic-geometry/note|Classical Algebraic Geometry]], §6 on intersection numbers).
+
+> [!INFO] Global picture: Weil divisors on a smooth curve
+> For a smooth projective curve $C$, summing the local data gives a global *Weil divisor* associated to a nonzero rational function $\phi \in k(C)^\times$: the *principal divisor* $(\phi) = \sum_{P \in C} v_P(\phi) \cdot [P]$. Since $\phi$ has only finitely many zeros and poles, this is a well-defined divisor. **The product formula $\sum_P v_P(\phi) = 0$ is the algebraic version of the fact that a meromorphic function on a compact Riemann surface has as many zeros as poles** (counting multiplicities). This is the foundational result of divisor theory on smooth curves.
+
+
+> [!QUESTION] Exercise 23: Uniformizer on a Twisted Cubic
+> *This problem computes the local parameter and the DVR structure at a smooth point of a space curve.*
+>
+> > **Prerequisites:** [[#5.2 Smooth Points of Curves are DVRs|5.2 Smooth Points of Curves are DVRs]], [[#5.3 The Valuation and Order of Vanishing|5.3 The Valuation and Order of Vanishing]]
+>
+> Let $C = \{(t, t^2, t^3) : t \in k\} \subset \mathbb{A}^3$ be the twisted cubic, parametrized by $t$. The coordinate ring is $A(C) = k[x,y,z]/(y-x^2, z-x^3) \cong k[x]$. Fix the smooth point $P = (0,0,0)$. Show that $\mathcal{O}_{C,P} \cong k[x]_{(x)}$ is a DVR with uniformizer $x$, and compute $v_P(y)$ and $v_P(z)$.
+
+> [!TIP]- Solution to Exercise 23
+> **Key insight:** The parametrization $t \mapsto (t, t^2, t^3)$ shows that $x$ generates the maximal ideal at $P$, while $y = x^2$ and $z = x^3$ have higher-order vanishing.
+>
+> **Sketch:** Since $A(C) \cong k[x]$ (an isomorphism of rings), we have $\mathcal{O}_{C,P} = k[x]_{(x)}$. The maximal ideal is $(x)$, so $t = x$ is the uniformizer. Then $v_P(x) = 1$, and since $y = x^2$ in $A(C)$, we get $v_P(y) = v_P(x^2) = 2$. Similarly, $z = x^3$, so $v_P(z) = 3$. This illustrates the general principle: for a rational normal curve parametrized by $t$, the valuation at the origin assigns $v_P(x_i) = i+1$ for coordinate $x_i = t^{i+1}$.
+
+> [!QUESTION] Exercise 24: Valuation and Intersection
+> *This problem connects the DVR valuation to intersection numbers from Chapter I.*
+>
+> > **Prerequisites:** [[#5.3 The Valuation and Order of Vanishing|5.3 The Valuation and Order of Vanishing]]
+>
+> Let $C = V(y - x^2) \subset \mathbb{A}^2$ and $L = V(y) \subset \mathbb{A}^2$. Compute $v_P(y|_C)$ at $P = (0,0)$ using the DVR structure on $\mathcal{O}_{C,P}$, and interpret the result as the intersection number $I_P(C,L)$.
+
+> [!TIP]- Solution to Exercise 24
+> **Key insight:** Restricting the equation of $L$ to $C$ and computing its order of vanishing gives the intersection multiplicity directly.
+>
+> **Sketch:** On $C$, we have $y = x^2$ (the defining relation). The uniformizer at $P$ is $t = x$. So $y|_C = x^2 = t^2$ in $\mathcal{O}_{C,P} = k[x]_{(x)}$. Thus $v_P(y|_C) = 2$. This gives $I_P(C,L) = 2$, meaning $C$ and $L$ meet at the origin with intersection multiplicity 2 — geometrically, the parabola is tangent to the $x$-axis, and they meet to second order.
+
+> [!QUESTION] Exercise 25: DVR Valuation Algorithm
 > *This problem implements the valuation $v_P$ on a smooth curve given its parametrization.*
 >
 > > **Prerequisites:** [[#5.3 The Valuation and Order of Vanishing|5.3 The Valuation and Order of Vanishing]], [[#5.2 Smooth Points of Curves are DVRs|5.2 Smooth Points of Curves are DVRs]]
 >
 > Let $C$ be a smooth affine curve with a parametrization $\gamma : \mathbb{A}^1 \to C$, $\gamma(0) = P$, such that $\mathcal{O}_{C,P} \cong k[s]_{(s)}$ where $s$ is the parameter. Design an algorithm that, given a rational function $f \in k(C)$ (presented as a ratio of polynomials in the ambient coordinates), computes $v_P(f)$.
 
-> [!TIP]- Solution to Exercise 22
+> [!TIP]- Solution to Exercise 25
 > **Key insight:** Composing $f$ with the parametrization $\gamma$ converts a rational function on $C$ to a rational function in $s$, and the valuation at $s = 0$ is the standard order of vanishing.
 >
 > **Sketch:**
@@ -841,59 +945,6 @@ i.e. the unique integer $n$ such that $f = u t^n$ for a unit $u \in \mathcal{O}_
 > print(curve_valuation(y, 1, param_map, s))  # v_P(y) = 2
 > ```
 
-> [!QUESTION] Exercise 23: Gröbner Basis for Tangent Cone
-> *This problem implements the computation of the tangent cone via the initial ideal.*
->
-> > **Prerequisites:** [[#4.1 Definition via Initial Forms|4.1 Definition via Initial Forms]], [[#4.2 The Associated Graded Ring|4.2 The Associated Graded Ring]]
->
-> Design a Python pseudocode algorithm that, given an ideal $I = (f_1,\ldots,f_m) \subset k[x_1,\ldots,x_n]$ with $P = 0 \in V(I)$, computes the initial ideal $\mathrm{in}(I)$ (hence the tangent cone) using a degree-reverse-lexicographic Gröbner basis.
-
-> [!TIP]- Solution to Exercise 23
-> **Key insight:** The initial ideal with respect to a graded monomial order (such as the graded reverse lexicographic order) is computed directly from a Gröbner basis: for each basis element $g$, take its leading monomial in the graded sense.
->
-> **Sketch:**
-> ```python
-> from sympy import symbols, groebner, Poly, degree
->
-> def tangent_cone_ideal(generators, variables):
->     """
->     Input: generators - list of polynomials generating I
->            variables - list of sympy symbols
->     Output: generators of the initial ideal in(I) (tangent cone ideal)
->
->     Uses: degree-reverse-lex (grlex) Gröbner basis; leading forms
->     give generators of in(I).
->     """
->     # Compute Gröbner basis with grlex order (graded reverse lex)
->     G = groebner(generators, *variables, order='grlex', domain='QQ')
->
->     # For each basis element, extract its lowest-degree homogeneous part
->     def leading_form(f, vars):
->         poly = Poly(f, *vars, domain='QQ')
->         min_deg = min(sum(m) for m in poly.monoms())
->         # Sum all monomials of degree min_deg
->         leading = sum(
->             c * Poly.from_dict({m: 1}, *vars, domain='QQ').as_expr()
->             for c, m in zip(poly.coeffs(), poly.monoms())
->             if sum(m) == min_deg
->         )
->         return leading
->
->     initial_gens = [leading_form(g, variables) for g in G]
->
->     # Remove redundant generators
->     initial_gens = list(set(initial_gens))
->     return initial_gens
->
-> # Example: nodal cubic
-> x, y = symbols('x y')
-> I_gens = [y**2 - x**2*(x + 1)]  # y^2 - x^3 - x^2
-> tc_gens = tangent_cone_ideal(I_gens, [x, y])
-> # Expected: [y^2 - x^2] (the leading form y^2 - x^2)
-> print(tc_gens)
-> ```
-
----
 
 ## References
 
