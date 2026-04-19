@@ -110,6 +110,17 @@ The construction globalizes: for a $k$-scheme $X$, the *sheaf of Kähler differe
 
 **Definition (Canonical bundle).** The line bundle $\omega_X := \Omega_{X/k}$ is the *canonical bundle* of $X$. We write $K_X$ for the divisor class $[\omega_X] \in \mathrm{Pic}(X)$, the *canonical class*.
 
+> [!INFO] Why the canonical bundle is special
+> Among all line bundles on $X$, $\omega_X$ is distinguished by a single property: it is the *dualizing sheaf*, the unique line bundle making Serre duality hold:
+> $$H^i(X, \mathcal{F}) \cong H^{n-i}(X, \mathcal{F}^\vee \otimes \omega_X)^\vee$$
+> for all coherent $\mathcal{F}$ and all $i$. Every other line bundle fails this. Riemann-Roch is a direct consequence: the "correction term" $\ell(K-D)$ equals $h^1(\mathcal{O}(D))$ by Serre duality, so RR is just the statement that the Euler characteristic $h^0 - h^1$ is linear in $\deg D$.
+>
+> **Why is the dualizing sheaf the top differential forms?** On a compact complex manifold of dimension $n$, Stokes' theorem gives a canonical integration map $\int_X: H^n(X, \Omega^n_X) \to \mathbb{C}$, and the pairing
+> $$H^0(X, \mathcal{F}) \times H^n(X, \mathcal{F}^\vee \otimes \Omega^n_X) \to \mathbb{C}$$
+> is perfect because you are literally integrating an $n$-form over an $n$-dimensional compact manifold. The dualizing object is whatever you can integrate — on an $n$-dimensional space, that is top-degree forms. The canonical bundle is not special because of an arbitrary convention; it is special because it is *what integration picks out*.
+>
+> **Why Kähler differentials?** Three angles: (1) $\Omega_{X/k} = \mathcal{I}_\Delta/\mathcal{I}_\Delta^2$ where $\Delta: X \to X \times X$ is the diagonal — it measures first-order infinitesimal changes along $X$, the algebraic analog of $df$. (2) Adjunction $\omega_X = (\omega_Y \otimes \mathcal{O}(X))|_X$ builds $\omega_X$ inductively from $\omega_{\mathbb{P}^n} = \mathcal{O}(-n-1)$, which itself comes from the Euler sequence. (3) In Grothendieck's abstract framework, the dualizing sheaf is $\omega_X = f^!\,\mathcal{O}_{\mathrm{Spec}\,k}$ (exceptional pullback along the structure map); for smooth $X$, this abstract object coincides with $\Omega^n_{X/k}$ — the smoothness is essential, as singular varieties can have dualizing sheaves that are not line bundles at all.
+
 **Transition functions.** On an overlap $U_\alpha \cap U_\beta$ with local parameters $t_\alpha, t_\beta$ respectively: the two trivializations $\omega_X|_{U_\alpha} \cong \mathcal{O}_{U_\alpha} \cdot dt_\alpha$ and $\omega_X|_{U_\beta} \cong \mathcal{O}_{U_\beta} \cdot dt_\beta$ are related by
 $$dt_\alpha = \frac{dt_\alpha}{dt_\beta} \cdot dt_\beta,$$
 where $dt_\alpha/dt_\beta \in \mathcal{O}_{U_\alpha \cap U_\beta}^\times$ is the Jacobian. These form the transition cocycle of $\omega_X$.
