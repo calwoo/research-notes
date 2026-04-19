@@ -119,7 +119,18 @@ The construction globalizes: for a $k$-scheme $X$, the *sheaf of Kähler differe
 >
 > **The diagonal perspective.** Since $\Omega_{X/k} = \mathcal{I}_\Delta/\mathcal{I}_\Delta^2$, restricting to a point $P$ via the inclusion $\{P\} \hookrightarrow X$ gives $\mathfrak{m}_P/\mathfrak{m}_P^2$ directly: the same "first-order thickening," now of the point inside $X$ rather than the diagonal inside $X \times X$.
 
-**Definition (Canonical bundle).** The line bundle $\omega_X := \Omega_{X/k}$ is the *canonical bundle* of $X$. We write $K_X$ for the divisor class $[\omega_X] \in \mathrm{Pic}(X)$, the *canonical class*.
+**Definition (Canonical bundle).** The *canonical bundle* of a smooth variety $X$ of dimension $n$ is $\omega_X := \bigwedge^n \Omega_{X/k} = \Omega^n_{X/k}$, the top exterior power of the cotangent sheaf. It is always a line bundle. We write $K_X$ for the divisor class $[\omega_X] \in \mathrm{Pic}(X)$, the *canonical class*. For curves ($n = 1$), $\bigwedge^1 \Omega_{X/k} = \Omega_{X/k}$, so the distinction disappears.
+
+> [!INFO] Kahler differentials in higher dimensions: the Hodge tower
+> For a smooth variety of dimension $n \geq 2$, $\Omega_{X/k}$ is a locally free sheaf of rank $n$ — a genuine rank-$n$ vector bundle, not a line bundle. The canonical bundle is only its top exterior power. The full structure is the **de Rham / Hodge tower**:
+> $$\mathcal{O}_X = \Omega^0_{X/k}, \quad \Omega^1_{X/k}, \quad \Omega^2_{X/k}, \quad \ldots, \quad \Omega^n_{X/k} = \omega_X,$$
+> where $\Omega^p_{X/k} = \bigwedge^p \Omega_{X/k}$ is locally free of rank $\binom{n}{p}$. On a surface ($n=2$), sections of $\Omega^1_{X/k}$ are expressions $f\,dx + g\,dy$ (holomorphic 1-forms), while sections of $\omega_X = \Omega^2_{X/k}$ are expressions $h\,dx \wedge dy$ (holomorphic 2-forms); these are genuinely different bundles.
+>
+> The **Hodge numbers** $h^{p,q} = \dim H^q(X, \Omega^p_{X/k})$ organise into the Hodge diamond, which is symmetric about both axes by Serre duality ($H^q(X, \Omega^p) \cong H^{n-q}(X, \Omega^{n-p})^\vee$) and complex conjugation ($h^{p,q} = h^{q,p}$ over $\mathbb{C}$). For curves, the Hodge diamond degenerates to just $h^{0,0} = h^{1,1} = 1$ and $h^{1,0} = h^{0,1} = g$.
+>
+> **Riemann-Roch in higher dimensions.** The curve formula $\chi(\mathcal{O}(D)) = \deg D + 1 - g$ generalises to the Hirzebruch-Riemann-Roch theorem:
+> $$\chi(X, \mathcal{F}) = \int_X \mathrm{ch}(\mathcal{F}) \cdot \mathrm{td}(\Omega_{X/k}),$$
+> where $\mathrm{ch}$ is the Chern character of $\mathcal{F}$ and $\mathrm{td}$ is the Todd class, built from all the intermediate Chern classes $c_1(\Omega_{X/k}), c_2(\Omega_{X/k}), \ldots$. For curves, $\mathrm{td}(\Omega_{X/k}) = 1 - \tfrac{1}{2}c_1(\Omega_{X/k}) = 1 - \tfrac{1}{2}K_X$, and integrating recovers the $1-g$ term.
 
 > [!INFO] Why the canonical bundle is special
 > Among all line bundles on $X$, $\omega_X$ is distinguished by a single property: it is the *dualizing sheaf*, the unique line bundle making Serre duality hold:
