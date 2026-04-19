@@ -14,6 +14,7 @@
 | [Marcolli (2018)](https://arxiv.org/abs/1807.05314) | paper | Gamma spaces and information loss; homotopy-theoretic perspective on entropy functors | arXiv:1807.05314 |
 | Marcolli, Ma148b Winter 2025 | course | Comprehensive treatment: categorical, geometric, and quantum information theory | [course page](https://www.its.caltech.edu/~matilde/Ma148bWinter2025.html) |
 | Marcolli, Ma148a Fall 2021 | course | Emphasis on categorical formulations of entropy and Hochschild cohomology | [course page](https://www.its.caltech.edu/~matilde/Ma148aFall2021.html) |
+| [Leinster, *Entropy and Diversity* (2021)](https://arxiv.org/abs/2012.02113) | textbook | Book-length treatment of entropy via category theory; cleanest exposition of the operad of probability distributions and the BFL theorem | arXiv:2012.02113 |
 
 ---
 
@@ -69,6 +70,84 @@ The higher groups $H^n$ classify *$n$-point dependencies*. The 2-cocycle conditi
 
 ## The Algebraic/Operad Approach
 
+### 📐 Baez-Fritz-Leinster: information loss as a functor
+
+#### The category FinProb
+
+**Definition (FinProb).** The category $\mathbf{FinProb}$ has:
+- **Objects:** finite probability spaces $(X, p)$ where $X$ is a finite set and $p : X \to [0,1]$ with $\sum_{x} p(x) = 1$.
+- **Morphisms:** measure-preserving maps $f : (X, p) \to (Y, q)$, i.e. functions $f : X \to Y$ with $q_j = \sum_{i \in f^{-1}(j)} p_i$ for all $j \in Y$.
+
+A morphism $f$ represents a *deterministic process* that collapses the distribution $p$ onto $q$ by grouping outcomes. Note that $q$ is completely determined by $p$ and $f$ — so the morphism data is just the function $f$, but the measure-preserving condition forces $q = f_* p$.
+
+> [!EXAMPLE] A simple morphism
+> Let $X = \{H, T\}$ with $p = (1/2, 1/2)$ and $Y = \{*\}$ with $q = (1)$. The unique function $f : X \to Y$ is measure-preserving. This morphism represents *complete erasure* of a fair coin flip. The information lost is $H(p) - H(q) = 1 - 0 = 1$ bit.
+
+#### Information loss as a functor
+
+The key move of BFL is to study **information loss** $F(f) := H(p) - H(q)$ rather than entropy itself. This is a non-negative quantity measuring how much is forgotten by the process $f$.
+
+Critically, $F$ is **functorial**: for composable morphisms $g : (X, p) \to (Y, q)$ and $f : (Y, q) \to (Z, r)$,
+
+$$F(f \circ g) = H(p) - H(r) = \bigl(H(p) - H(q)\bigr) + \bigl(H(q) - H(r)\bigr) = F(g) + F(f).$$
+
+**This is the chain rule.** Entropy itself is recovered as the loss of the terminal morphism $!: (X, p) \to (\{*\}, 1)$:
+
+$$H(p) = F\bigl(! : (X,p) \to (\{*\},1)\bigr).$$
+
+So entropy is not an intrinsic property of an object but rather the *information lost in the maximally destructive process* — total erasure. This reframing is what makes the categorical treatment clean: once $F$ is defined on morphisms, everything else follows.
+
+#### The main theorem
+
+**Theorem (Baez-Fritz-Leinster 2011).** Suppose $F$ assigns a value in $[0, \infty)$ to each morphism in $\mathbf{FinProb}$, satisfying:
+1. **Functoriality:** $F(f \circ g) = F(f) + F(g)$
+2. **Convex-linearity:** $F(\lambda f \oplus (1{-}\lambda) g) = \lambda F(f) + (1{-}\lambda) F(g)$
+3. **Continuity:** $F$ is continuous in the probabilities
+
+Then there exists $c \geq 0$ such that $F(f) = c\bigl(H(p) - H(q)\bigr)$ for all morphisms $f : (X,p) \to (Y,q)$, where $H$ is Shannon entropy.
+
+*Uniqueness up to scalar.* The three axioms force $F$ to be Shannon information loss. There is no other consistent, convex-linear, continuous way to assign a "how much was forgotten" number to a measure-preserving process.
+
+> [!NOTE] What convex-linearity says
+> The operation $\lambda f \oplus (1-\lambda)g$ forms the *mixture* of two processes: with probability $\lambda$ run process $f$, with probability $1-\lambda$ run process $g$. Convex-linearity says information loss scales linearly under this mixing — which is what distinguishes Shannon entropy from Rényi entropy (see below).
+
+#### The operad of probability distributions
+
+The theorem has a cleaner restatement in operadic language, spelled out in Leinster's *Entropy and Diversity*. Define the **operad of probability distributions** $\mathcal{P}$:
+
+- **Arity-$n$ operations:** $\mathcal{P}(n) = \Delta^{n-1}$ = the standard $(n{-}1)$-simplex, i.e. probability distributions on $n$ outcomes.
+- **Operadic composition:** given $(p_1, \ldots, p_n) \in \mathcal{P}(n)$ and $(q^{(i)}_1, \ldots, q^{(i)}_{k_i}) \in \mathcal{P}(k_i)$ for $i = 1, \ldots, n$, the composite is the *joint distribution*:
+
+$$\bigl(p_1 q^{(1)}_1,\ \ldots,\ p_1 q^{(1)}_{k_1},\ p_2 q^{(2)}_1,\ \ldots,\ p_n q^{(n)}_{k_n}\bigr) \in \mathcal{P}(k_1 + \cdots + k_n).$$
+
+This is exactly *mixing*: first choose outcome $i$ with probability $p_i$, then outcome $j$ within group $i$ with probability $q^{(i)}_j$.
+
+An **algebra** for $\mathcal{P}$ with values in a set $A$ is a family of maps $\alpha_n : \mathcal{P}(n) \times A^n \to A$ compatible with operadic composition. Taking $A = \mathbb{R}$ and $\alpha_n(p, h_1, \ldots, h_n) = \sum_i p_i h_i$ gives the *expected value* algebra. Shannon entropy is a **derivation** of this algebra: the deviation of $H$ from being an algebra map is precisely the entropic term.
+
+**Key identity:** Shannon entropy satisfies the operadic composition rule
+
+$$H(p_1 q^{(1)}_1, \ldots, p_n q^{(n)}_{k_n}) = H(p_1, \ldots, p_n) + \sum_{i=1}^n p_i\, H(q^{(i)}_1, \ldots, q^{(i)}_{k_i}),$$
+
+which is the **chain rule** written as a *morphism condition* for the operad $\mathcal{P}$. This is the operadic content of BFL: entropy is the unique (up to scalar) continuous map $H : \mathcal{P}(n) \to \mathbb{R}$ satisfying this composition identity for all $n$ and all choices of distributions.
+
+> [!NOTE] Why "derivation" and not "algebra map"?
+> A true algebra map would satisfy $H(\text{composite}) = H(p)$ (ignoring the second argument entirely) or something similarly degenerate. Instead, entropy satisfies a *twisted* composition rule — it measures the deviation from being a constant. This is analogous to a *derivation* in algebra: $D(fg) = D(f)g + fD(g)$ rather than $D(fg) = D(f)D(g)$.
+
+#### Tsallis entropy from relaxing convex-linearity
+
+If axiom (2) is replaced by **$\alpha$-homogeneity:**
+
+$$F(\lambda f \oplus (1{-}\lambda)g) = \lambda^\alpha F(f) + (1{-}\lambda)^\alpha F(g), \quad \alpha > 0,$$
+
+then the unique solution (Theorem 7 of BFL) is the **Tsallis entropy** of order $\alpha$:
+
+$$H_\alpha(p) = \frac{1}{\alpha - 1}\Bigl(1 - \sum_i p_i^\alpha\Bigr), \qquad H_1(p) = \lim_{\alpha \to 1} H_\alpha(p) = H_\text{Shannon}(p).$$
+
+The parameter $\alpha$ measures how information loss scales under probabilistic mixing. Shannon entropy is the unique case where this scaling is linear ($\alpha = 1$), which is precisely what makes it additive over independent systems.
+
+> [!QUESTION] What distinguishes $\alpha = 1$ physically?
+> From the BFL perspective, Shannon entropy is singled out by *linear* scaling under mixing. From a physics perspective, $\alpha = 1$ corresponds to *extensive* thermodynamic systems (entropy scales with system size). Is there a categorical explanation for why extensivity forces $\alpha = 1$?
+
 ### Thermodynamic semirings
 
 A *semiring* $(R, \oplus, \otimes)$ satisfies the ring axioms except subtraction. The *tropical semiring* is $(\mathbb{R} \cup \{+\infty\}, \min, +)$, which arises as the $\beta \to \infty$ (zero-temperature) limit of the *log-sum-exp* operation:
@@ -113,13 +192,13 @@ The claim is that information loss functors naturally define $\Gamma$-space stru
 
 Both approaches identify entropy via a *universal property*:
 
-| | Cohomological | Algebraic/Operad |
-|--|--------------|------------------|
-| **Setting** | Sheaves on $\mathcal{P}$ | Hopf algebras, semirings |
-| **Entropy as** | Generator of $H^1$ | Character / deformation derivative |
-| **Chain rule** | Cocycle condition $\delta H = 0$ | Semiring homomorphism axiom |
-| **Uniqueness** | $H^1 \cong \mathbb{R}$ | Birkhoff factorization is unique |
-| **Generalizations** | Different coefficient modules | Different deformation parameters |
+| | Cohomological (B-B/Vigneaux) | Categorical (BFL) | Algebraic (Marcolli) |
+|--|------------------------------|-------------------|----------------------|
+| **Setting** | Sheaves on $\mathcal{P}$ | $\mathbf{FinProb}$, operad $\mathcal{P}$ | Hopf algebras, semirings |
+| **Entropy as** | Generator of $H^1$ | Unique functorial information loss | Character / deformation derivative |
+| **Chain rule** | Cocycle condition $\delta H = 0$ | Functoriality $F(f \circ g) = F(f) + F(g)$ | Semiring homomorphism axiom |
+| **Uniqueness** | $H^1 \cong \mathbb{R}$ | Functorial + convex-linear + continuous | Birkhoff factorization is unique |
+| **Generalizations** | Different coefficient modules | $\alpha$-homogeneity → Tsallis $H_\alpha$ | Different deformation parameters |
 
 The chain rule appears in both as the *central constraint*. The cohomological approach treats it as a *differential-geometric* datum (closed form), while the algebraic approach treats it as an *algebraic* datum (homomorphism condition). These should be related by a version of the *de Rham theorem* for information structures — cohomology computed via differential forms vs. singular cohomology.
 
