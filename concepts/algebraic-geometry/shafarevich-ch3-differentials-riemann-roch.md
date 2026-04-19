@@ -293,6 +293,17 @@ We state this without proof. The key ingredients are: (i) identifying $\omega_X$
 > [!NOTE] The dualizing sheaf
 > For a smooth projective variety $X$ of dimension $n$, the dualizing sheaf is $\omega_X = \Omega_{X/k}^n = \bigwedge^n \Omega_{X/k}$. For curves ($n=1$), $\Omega^1_{X/k} = \Omega_{X/k}$, so $\omega_X = \Omega_{X/k}$ as expected. Serre duality then states $H^i(X, \mathcal{F}) \cong H^{n-i}(X, \mathcal{F}^\vee \otimes \omega_X)^\vee$ for any locally free $\mathcal{F}$.
 
+> [!INFO] Serre duality is Poincare duality on the Hodge decomposition
+> Over $k = \mathbb{C}$, a smooth projective variety $X$ of complex dimension $n$ is also a compact oriented real manifold of real dimension $2n$. **Poincaré duality** gives a perfect pairing via integration:
+> $$H^k(X, \mathbb{C}) \times H^{2n-k}(X, \mathbb{C}) \to \mathbb{C}, \qquad (\alpha, \beta) \mapsto \int_X \alpha \wedge \beta.$$
+> The **Hodge decomposition** splits cohomology into pure types: $H^k(X, \mathbb{C}) = \bigoplus_{p+q=k} H^{p,q}(X)$, where $H^{p,q}(X) \cong H^q(X, \Omega^p_{X/\mathbb{C}})$ by the Dolbeault theorem. For the Poincaré pairing $(\alpha, \beta) \mapsto \int_X \alpha \wedge \beta$ to be nonzero, $\alpha \wedge \beta$ must be an $(n,n)$-form — so a class in $H^{p,q}$ can only pair nontrivially with a class in $H^{n-p,\,n-q}$. The Poincaré pairing therefore restricts to perfect pairings on each Hodge piece:
+> $$H^{p,q}(X) \times H^{n-p,\,n-q}(X) \to \mathbb{C}.$$
+> Via Dolbeault this is $H^q(X, \Omega^p) \times H^{n-q}(X, \Omega^{n-p}) \to \mathbb{C}$, and since $(\Omega^p)^\vee \otimes \Omega^n \cong \Omega^{n-p}$, this is exactly Serre duality with $\mathcal{F} = \Omega^p$. **Serre duality is Poincaré duality, sorted by Hodge type.**
+>
+> **The canonical bundle as orientation class.** Poincaré duality uses the fundamental class $[X]$ (the orientation) to produce the trace map $H^{2n}(X, \mathbb{R}) \xrightarrow{\sim} \mathbb{R}$. Its algebraic counterpart is the trace map $H^n(X, \omega_X) \xrightarrow{\sim} k$ from integration of $(n,n)$-forms — this is why $\omega_X$ is the dualizing sheaf.
+>
+> **Over other fields.** For $k \neq \mathbb{C}$ there is no Poincaré duality in the classical topological sense, but Serre duality holds over any algebraically closed field by a purely algebraic argument. The canonical bundle still plays the role of the dualizing sheaf; its job is to make $H^n(X, \omega_X) \cong k$ work as a trace, even without any underlying topology.
+
 > [!QUESTION] Exercise 7: Serre duality for the trivial bundle
 > *This problem verifies Serre duality in the simplest case and deduces the definition of the arithmetic genus.*
 >
