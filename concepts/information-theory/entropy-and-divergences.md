@@ -15,8 +15,9 @@
   - [[#2.2 Non-Negativity: Gibbs' Inequality|2.2 Non-Negativity: Gibbs' Inequality]]
   - [[#2.3 Asymmetry|2.3 Asymmetry]]
   - [[#2.4 Operational Meaning: Log-Likelihood Ratios and Stein's Lemma|2.4 Operational Meaning: Log-Likelihood Ratios and Stein's Lemma]]
-  - [[#2.5 Extension to Continuous Distributions|2.5 Extension to Continuous Distributions]]
-  - [[#2.6 Chain Rule for KL Divergence|2.6 Chain Rule for KL Divergence]]
+  - [[#2.5 The Radon-Nikodym Formulation|2.5 The Radon-Nikodym Formulation]]
+  - [[#2.6 Coordinate Invariance|2.6 Coordinate Invariance]]
+  - [[#2.7 Chain Rule for KL Divergence|2.7 Chain Rule for KL Divergence]]
 - [[#3. Mutual Information|3. Mutual Information]]
   - [[#3.1 Definition via KL Divergence|3.1 Definition via KL Divergence]]
   - [[#3.2 Equivalent Expressions|3.2 Equivalent Expressions]]
@@ -318,17 +319,56 @@ $$-\frac{1}{n}\log \beta_n \;\xrightarrow{n \to \infty}\; D_{\mathrm{KL}}(P \,\|
 
 **This is the central operational interpretation of KL divergence: it is the optimal error exponent for one-sided hypothesis testing.** See [[concepts/information-theory/channel-capacity|Channel Capacity]] for Fano's inequality, which uses KL in the converse proof.
 
-### 2.5 Extension to Continuous Distributions
+### 2.5 The Radon-Nikodym Formulation 📐
 
-For continuous distributions with densities $p$ and $q$ on $\mathbb{R}^d$ (with respect to Lebesgue measure $\lambda$),
-$$D_{\mathrm{KL}}(P \,\|\, Q) \;=\; \int_{\mathbb{R}^d} p(x) \log \frac{p(x)}{q(x)} \,d\lambda(x) \;=\; \mathbb{E}_P\!\left[\log\frac{p(X)}{q(X)}\right].$$
+The discrete definition of KL writes $p(x)/q(x)$ — a ratio of probability masses. For general (possibly continuous or mixed) distributions this ratio is not well-defined, and the right replacement is the *Radon–Nikodym derivative*.
 
-All properties (non-negativity, chain rules) carry over verbatim via the Radon–Nikodym theorem: the ratio $p(x)/q(x)$ is the Radon–Nikodym derivative $dP/dQ$ evaluated with respect to the dominating measure $\lambda$.
+**Theorem 2.3 (Radon–Nikodym).** Let $P \ll Q$ be $\sigma$-finite measures on $(\mathcal{X}, \mathcal{F})$. Then there exists a measurable function $f : \mathcal{X} \to [0,\infty)$, unique $Q$-a.e., such that for every $A \in \mathcal{F}$:
+$$P(A) \;=\; \int_A f \, dQ.$$
+This $f$ is called the *Radon–Nikodym derivative* of $P$ with respect to $Q$, written $f = dP/dQ$.
+
+The Radon–Nikodym derivative generalises familiar density ratios:
+
+| Setting | $dP/dQ$ |
+|---------|---------|
+| Both discrete, $q(x) > 0$ on $\mathrm{supp}(p)$ | $p(x)/q(x)$ (ratio of pmfs) |
+| Both absolutely continuous w.r.t. Lebesgue $\lambda$ | $p(x)/q(x)$ (ratio of pdfs) |
+| $P = \delta_x$ (point mass), $Q$ has density $q$ | Does not exist — $P \not\ll Q$ if $q(x) = 0$ |
+| $P$ continuous, $Q$ discrete | $P \not\ll Q$ (continuous measure cannot dominate continuous) |
+
+> [!NOTE] Existence and the absolute-continuity condition
+> The condition $P \ll Q$ is necessary: without it, $P$ assigns positive mass to a set that $Q$ calls null, and no $L^1(Q)$ function can recover that mass. The convention $D_{\mathrm{KL}}(P\|Q) = +\infty$ when $P \not\ll Q$ is precisely the statement that such configurations carry infinite information cost.
+
+**Definition 2.4 (KL divergence, measure-theoretic).** For any $P \ll Q$,
+$$D_{\mathrm{KL}}(P \,\|\, Q) \;=\; \int \frac{dP}{dQ}\log\frac{dP}{dQ}\,dQ \;=\; \mathbb{E}_P\!\left[\log\frac{dP}{dQ}\right].$$
+
+This single formula subsumes both the discrete sum and the continuous integral. When both $P$ and $Q$ have densities $p, q$ w.r.t. a common dominating measure $\mu$ (e.g., Lebesgue or counting measure), $dP/dQ = p/q$ $\mu$-a.e., and the formula reduces to $\int p \log(p/q)\,d\mu$.
 
 > [!NOTE] Differential entropy
-> For continuous distributions, the analogue of Shannon entropy is *differential entropy* $h(X) = -\int p(x)\log p(x)\,dx$. Unlike $H(X)$, it can be negative, is not invariant under reparametrisation, and depends on the choice of base measure. See [[#1.7 Differential Entropy: Subtleties|§1.7]] for a full treatment. The cross-entropy relation $D_{\mathrm{KL}}(P \,\|\, Q) = h_{\times}(P, Q) - h(P)$, where $h_{\times}(P,Q) = -\int p \log q$, holds with the same sign conventions as the discrete case.
+> For continuous distributions, the analogue of Shannon entropy is *differential entropy* $h(X) = -\int p(x)\log p(x)\,dx$. Unlike $H(X)$, it can be negative, is not invariant under reparametrisation, and depends on the choice of base measure. See [[#1.7 Differential Entropy: Subtleties|§1.7]] for a full treatment. The relation $h(X) = -D_{\mathrm{KL}}(P\|\lambda)$ (where $\lambda$ is Lebesgue measure) makes the reference-measure dependence explicit.
 
-### 2.6 Chain Rule for KL Divergence
+### 2.6 Coordinate Invariance 🔑
+
+The Radon–Nikodym formulation immediately implies that KL divergence is independent of the coordinate system used to represent the distributions — a property that differential entropy lacks.
+
+**Proposition 2.5 (Coordinate invariance of KL).** Let $g : \mathcal{X} \to \mathcal{Y}$ be a measurable bijection (e.g., a diffeomorphism on $\mathbb{R}^d$). Let $P' = g_*P$ and $Q' = g_*Q$ denote the pushforward measures. Then
+$$D_{\mathrm{KL}}(P' \,\|\, Q') \;=\; D_{\mathrm{KL}}(P \,\|\, Q).$$
+
+*Proof.* The Radon–Nikodym derivative transforms as $\frac{dP'}{dQ'}(g(x)) = \frac{dP}{dQ}(x)$ — this follows from the definition: for any $B \in \mathcal{F}_\mathcal{Y}$,
+$$P'(B) = P(g^{-1}(B)) = \int_{g^{-1}(B)} \frac{dP}{dQ}\,dQ = \int_B \frac{dP}{dQ}(g^{-1}(y))\,dQ'(y),$$
+so $dP'/dQ' = (dP/dQ) \circ g^{-1}$ $Q'$-a.e. Therefore, by the change-of-variables formula ($y = g(x)$, $dQ' = g_*Q$):
+$$D_{\mathrm{KL}}(P' \,\|\, Q') = \int \frac{dP'}{dQ'}\log\frac{dP'}{dQ'}\,dQ' = \int \frac{dP}{dQ}(x)\log\frac{dP}{dQ}(x)\,dQ(x) = D_{\mathrm{KL}}(P \,\|\, Q). \;\square$$
+
+**Why differential entropy breaks this.** Differential entropy $h(X) = -D_{\mathrm{KL}}(P \| \lambda)$ fixes the second argument to Lebesgue measure $\lambda$. Under $g$, the first argument transforms to $g_*P$, but $\lambda$ stays fixed — yet $g_*\lambda \neq \lambda$ for a general diffeomorphism. So
+$$h(g(X)) = -D_{\mathrm{KL}}(g_*P \| \lambda) \neq -D_{\mathrm{KL}}(g_*P \| g_*\lambda) = h(X).$$
+The invariant quantity $D_{\mathrm{KL}}(g_*P \| g_*\lambda)$ would equal $h(X)$, but the actual computation $-D_{\mathrm{KL}}(g_*P \| \lambda)$ shifts by $\mathbb{E}[\log|g'(X)|]$, precisely the Jacobian term in Proposition 1.9.
+
+**Mutual information as a corollary.** Since $I(X;Y) = D_{\mathrm{KL}}(p_{XY} \| p_X \otimes p_Y)$, Proposition 2.5 immediately gives $I(g(X); Y) = I(X; Y)$ for any diffeomorphism $g$ — no separate argument needed. The coordinate invariance of MI is a special case, not an independent fact.
+
+> [!INFO] Why this matters for information geometry
+> The coordinate-independence of KL is the starting point for *information geometry*: the Fisher–Rao metric on a statistical manifold is the unique Riemannian metric (up to scale) that is invariant under sufficient statistics, and it arises as the second-order expansion of $D_{\mathrm{KL}}$. See the planned `information-geometry.md` note for the full construction.
+
+### 2.7 Chain Rule for KL Divergence
 
 **Proposition 2.3 (Chain rule for KL).** Let $P_{XY}$ and $Q_{XY}$ be joint distributions with marginals $P_X, Q_X$ and conditionals $P_{Y|X}, Q_{Y|X}$. Then
 $$D_{\mathrm{KL}}(P_{XY} \,\|\, Q_{XY}) \;=\; D_{\mathrm{KL}}(P_X \,\|\, Q_X) \;+\; \mathbb{E}_{P_X}\!\left[D_{\mathrm{KL}}(P_{Y|X} \,\|\, Q_{Y|X})\right].$$
@@ -356,7 +396,7 @@ Taking expectation under $P_{XY} = P_X \cdot P_{Y|X}$ gives the result. $\square
 > [!QUESTION] Exercise 5: KL Divergence Between Gaussians
 > *This is a closed-form computation that appears repeatedly in variational inference and the ELBO.*
 >
-> > **Prerequisites:** [[#2.5 Extension to Continuous Distributions|2.5 Extension to Continuous Distributions]]
+> > **Prerequisites:** [[#2.5 The Radon-Nikodym Formulation|2.5 The Radon-Nikodym Formulation]]
 >
 > Let $P = \mathcal{N}(\mu_1, \sigma_1^2)$ and $Q = \mathcal{N}(\mu_2, \sigma_2^2)$. Derive the closed form
 > $$D_{\mathrm{KL}}(P \,\|\, Q) = \log\frac{\sigma_2}{\sigma_1} + \frac{\sigma_1^2 + (\mu_1 - \mu_2)^2}{2\sigma_2^2} - \frac{1}{2}.$$
@@ -738,7 +778,7 @@ $$f''(\delta) = \frac{1}{q+\delta} + \frac{1}{1-q-\delta} - 4 = \frac{1}{(q+\del
 > [!QUESTION] Exercise 16: The KL Chain Rule and Bayes
 > *This problem connects the KL chain rule to Bayes' theorem and the notion of prior-to-posterior information gain.*
 >
-> > **Prerequisites:** [[#2.6 Chain Rule for KL Divergence|2.6 Chain Rule for KL Divergence]]
+> > **Prerequisites:** [[#2.7 Chain Rule for KL Divergence|2.7 Chain Rule for KL Divergence]]
 >
 > Let $X$ be an unknown parameter with prior $\pi(x)$ and likelihood $p(y|x)$. Let $p(x|y)$ be the posterior and $p(y)$ the marginal. Using the KL chain rule (Proposition 2.3), show that
 > $$D_{\mathrm{KL}}(p(x,y) \,\|\, \pi(x)p(y)) \;=\; I(X\,;\,Y),$$
