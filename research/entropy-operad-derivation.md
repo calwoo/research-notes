@@ -28,6 +28,9 @@ Bradley (2021) adds a third, structurally distinct characterization: entropy is 
 
 ## The Operad of Topological Simplices
 
+![[research/figures/bradley-simplices.jpg]]
+*The topological simplices $\Delta^0, \Delta^1, \Delta^2$ that form the arity components of $\boldsymbol{\Delta}$.*
+
 The setting is the topological operad $\boldsymbol{\Delta}$ with:
 
 - **Arity-$n$ operations:** $\boldsymbol{\Delta}(n) = \Delta^{n-1}$, the standard $(n-1)$-simplex of probability distributions on $n$ outcomes.
@@ -79,6 +82,9 @@ The starting point is the function $D: [0,1] \to \mathbb{R}$ defined by
 
 $$D(x) = -x\log x \qquad (D(0) := 0).$$
 
+![[research/figures/bradley-derivation-D.jpeg]]
+*The Leibniz rule $D(xy) = xD(y) + yD(x)$ for $D(x) = -x\log x$.*
+
 $D$ satisfies a *classical* Leibniz rule for multiplication:
 
 $$D(xy) = x\, D(y) + y\, D(x).$$
@@ -89,9 +95,14 @@ Shannon entropy is built from $D$ pointwise: $H(p_1, \ldots, p_n) = \sum_i D(p_i
 
 ### Main theorem
 
+![[research/figures/bradley-main-theorem.jpg]]
+
 **Theorem (Bradley 2021).** Shannon entropy $H$ defines a derivation of $\boldsymbol{\Delta}$ with values in the bimodule $M = C(\mathbb{R}^-, \mathbb{R})$. Moreover, every derivation of $\boldsymbol{\Delta}$ with values in this bimodule is, at each point, a constant multiple of $H$.
 
 The proof proceeds by showing that the Leibniz rule for $d$ on $\boldsymbol{\Delta}$, when unpacked via the bimodule actions, reduces to a functional equation for $d_n$ that is solved uniquely (up to scalar) by $H$. The key step: the Leibniz rule forces $d_n(p_1, \ldots, p_n) = \sum_i f(p_i)$ for some function $f: [0,1] \to \mathbb{R}$ satisfying $f(xy) = xf(y) + yf(x)$ — i.e., $f = D$ up to scalar.
+
+![[research/figures/bradley-proof.jpg]]
+*Proof sketch from Bradley (2021, p. 9): the Leibniz rule forces $d_n(p) = \sum_i f(p_i)$ where $f$ satisfies a classical derivation equation.*
 
 > [!NOTE] "At each point" vs. "globally"
 > The theorem says every derivation equals $cH$ *at each point*, with the constant $c$ potentially varying. This is slightly weaker than the BFL theorem, which forces a single global constant. Bradley notes this gap and it is not fully closed in the paper.
