@@ -15,6 +15,7 @@
 | Marcolli, Ma148b Winter 2025 | course | Comprehensive treatment: categorical, geometric, and quantum information theory | [course page](https://www.its.caltech.edu/~matilde/Ma148bWinter2025.html) |
 | Marcolli, Ma148a Fall 2021 | course | Emphasis on categorical formulations of entropy and Hochschild cohomology | [course page](https://www.its.caltech.edu/~matilde/Ma148aFall2021.html) |
 | [Leinster, *Entropy and Diversity* (2021)](https://arxiv.org/abs/2012.02113) | textbook | Book-length treatment of entropy via category theory; cleanest exposition of the operad of probability distributions and the BFL theorem | arXiv:2012.02113 |
+| [Baez, "An Operadic Introduction to Entropy" (2011)](https://golem.ph.utexas.edu/category/2011/05/an_operadic_introduction_to_en.html) | blog | Explicit internal $\mathcal{P}$-algebra definition; derivation formula $H = D(\Sigma) - \Sigma D$; binary cocycle equation bridging to cohomology | n-Category Café |
 
 ---
 
@@ -132,6 +133,56 @@ which is the **chain rule** written as a *morphism condition* for the operad $\m
 
 > [!NOTE] Why "derivation" and not "algebra map"?
 > A true algebra map would satisfy $H(\text{composite}) = H(p)$ (ignoring the second argument entirely) or something similarly degenerate. Instead, entropy satisfies a *twisted* composition rule — it measures the deviation from being a constant. This is analogous to a *derivation* in algebra: $D(fg) = D(f)g + fD(g)$ rather than $D(fg) = D(f)D(g)$.
+
+#### The internal $\mathcal{P}$-algebra formulation
+
+The blog post by Baez gives the sharpest purely operadic statement. An **internal $\mathcal{P}$-algebra** in $\mathbb{R}_{\geq 0}$ is a continuous family of maps $\alpha = \{\alpha_n : \mathcal{P}(n) \to \mathbb{R}_{\geq 0}\}_{n \geq 1}$ satisfying:
+
+1. **Twisted composition:** $\alpha_k(p \circ (r_1, \ldots, r_n)) = \alpha_n(p) + \sum_i p_i\, \alpha_{k_i}(r_i)$ where $k = \sum_i k_i$
+2. **Normalization:** $\alpha_1((1)) = 0$
+3. **Symmetry:** $\alpha_n(\sigma \cdot p) = \alpha_n(p)$ for all permutations $\sigma \in S_n$
+
+**Faddeev's theorem (operadic form):** The only internal $\mathcal{P}$-algebra in $\mathbb{R}_{\geq 0}$ is $\alpha_n = c \cdot H$ for some constant $c \geq 0$.
+
+Axiom (1) is the chain rule verbatim. Axiom (2) says: a certain outcome has no entropy. Axiom (3) says: entropy doesn't depend on labeling of outcomes. *These three axioms, with continuity, are necessary and sufficient.*
+
+The relation to the BFL functor theorem is that BFL derives this from the more primitive data of $\mathbf{FinProb}$ — the internal $\mathcal{P}$-algebra formulation is the distilled result, with the categorical machinery stripped away.
+
+#### Entropy as an additivity defect
+
+There is a completely explicit construction of $H$ that makes the "derivation" intuition precise. Define
+
+$$D : [0,1] \to \mathbb{R}, \qquad D(x) = x \ln x \quad (D(0) := 0).$$
+
+Then Shannon entropy is exactly the **additivity defect** of $D$ with respect to $\mathcal{P}$-algebra structure:
+
+$$H(p_1, \ldots, p_n) = D\!\left(\sum_i p_i\right) - \sum_i D(p_i) = D(1) - \sum_i D(p_i) = -\sum_i p_i \ln p_i.$$
+
+Why is this interesting? Because $D$ itself is *not* an internal $\mathcal{P}$-algebra map — it fails the twisted composition condition. The entropy $H$ is precisely the *correction term* that measures this failure. In the language of algebra, if $A \xrightarrow{D} B$ is not a homomorphism, then $\partial(f,g) = D(fg) - D(f) - D(g)$ is a 2-cochain measuring the failure, and requiring $\partial$ to be a cocycle yields constraints. Here:
+
+$$H(p_1, \ldots, p_n) = D(1) - \sum_i D(p_i)$$
+
+is the failure of $D$ to be additive over $\mathcal{P}$-composition with the uniform distribution. *Entropy arises because $x \ln x$ is not linear.*
+
+> [!INFO] Connection to the Leibniz rule
+> In differential algebra, a *derivation* $\partial$ on a ring $R$ satisfies $\partial(ab) = a\partial(b) + \partial(a)b$. The function $D(x) = x\ln x$ satisfies $D(xy) = xD(y) + D(x)y + D(x)D(y)/\text{(lower order)}$ — not quite a derivation, but the leading "defect" is linear in $\ln$. Shannon entropy is the integrated version of this defect over a probability simplex.
+
+#### The binary cocycle equation: bridge to cohomology
+
+🔑 The single most important identity connecting the operad and cohomology approaches is the **binary cocycle equation** for Shannon entropy. For any $a, b, c \geq 0$ with $a + b + c = 1$:
+
+$$H(a,\ b) + H(a+b,\ c) = H(b,\ c) + H(a,\ b+c).$$
+
+This says: the two ways to *sequentially coarsen* a three-outcome distribution agree. Starting from $(a, b, c)$:
+- *Left side:* first group $\{a, b\}$ vs $\{c\}$, then split $\{a,b\}$ — entropy of the first split plus conditional entropy of the second.
+- *Right side:* first group $\{a\}$ vs $\{b, c\}$, then split $\{b,c\}$ — entropy of the first split plus conditional entropy of the second.
+
+The equality is the chain rule applied twice. But written this way, it is a **cocycle condition** $\delta H = 0$ for the 1-cochain $H$ on the simplicial complex of probability spaces — exactly the Baudot-Bennequin formulation. 
+
+**This is the explicit bridge between the BFL operad approach and information cohomology:** the internal $\mathcal{P}$-algebra axiom (twisted composition) implies the binary cocycle equation, and the binary cocycle equation, extended to all arities via symmetry and continuity, reconstructs the internal $\mathcal{P}$-algebra axiom. They are equivalent formulations of the same constraint on $H$.
+
+> [!QUESTION] Does the binary cocycle equation determine a simplicial structure?
+> The equation $H(a,b) + H(a+b,c) = H(b,c) + H(a,b+c)$ looks like a 1-cocycle on a 2-simplex (three vertices $a, b, c$, three edges). Is there a natural simplicial set $\mathcal{S}_\bullet$ built from probability simplices such that $H$ defines a class in $H^1(\mathcal{S}_\bullet; \mathbb{R})$? If so, this would make the BFL-to-Baudot-Bennequin bridge into a theorem rather than an analogy.
 
 #### Tsallis entropy from relaxing convex-linearity
 
