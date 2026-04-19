@@ -13,6 +13,7 @@
 | [Baez, "An Operadic Introduction to Entropy" (2011)](https://golem.ph.utexas.edu/category/2011/05/an_operadic_introduction_to_en.html) | blog | Explicit internal $\mathcal{P}$-algebra definition; derivation formula $H = D(\Sigma) - \Sigma D$; binary cocycle equation bridging to cohomology | n-Category Café |
 | Marcolli, Ma148b Winter 2025 | course | Comprehensive treatment: categorical, geometric, and quantum information theory | [course page](https://www.its.caltech.edu/~matilde/Ma148bWinter2025.html) |
 | Marcolli, Ma148a Fall 2021 | course | Emphasis on categorical formulations of entropy and Hochschild cohomology | [course page](https://www.its.caltech.edu/~matilde/Ma148aFall2021.html) |
+| [Baez, "Entropy as a Functor" (nLab)](https://ncatlab.org/johnbaez/show/Entropy+as+a+functor) | notes | FinMeas generalization; module-category axiomatization of Tsallis via degree-$\alpha$ homogeneity; partition function as complete invariant; slice-category constructions for mutual information | nLab |
 
 ---
 
@@ -178,6 +179,74 @@ then the unique solution (Theorem 7 of BFL) is the **Tsallis entropy** of order 
 $$H_\alpha(p) = \frac{1}{\alpha - 1}\Bigl(1 - \sum_i p_i^\alpha\Bigr), \qquad \lim_{\alpha \to 1} H_\alpha = H_\text{Shannon}.$$
 
 The parameter $\alpha$ controls how information loss scales under probabilistic mixing. Shannon entropy is singled out by *linear* scaling ($\alpha = 1$), which is what makes it additive over independent systems.
+
+---
+
+## The FinMeas Generalization
+
+### From probability spaces to finite measures
+
+BFL work in $\mathbf{FinProb}$, where objects are probability distributions — measures summing to 1. Baez's nLab notes generalize to **$\mathbf{FinMeas}$**:
+
+- **Objects:** finite sets $S$ equipped with a measure $\mu: S \to [0, \infty)$ (no normalization required)
+- **Morphisms:** measure-preserving maps $f: (S, \mu) \to (T, \nu)$ with $\nu_j = \sum_{i \in f^{-1}(j)} \mu_i$
+
+The critical new feature is **scalar multiplication**: for $\lambda \geq 0$, set $\lambda \cdot (S, \mu) := (S, \lambda\mu)$. This action is not available in $\mathbf{FinProb}$ — scaling a probability distribution by $\lambda \neq 1$ leaves the category.
+
+### Module-category axiomatization and Tsallis entropy
+
+$\mathbf{FinMeas}$ is a $[0,\infty)$-**module category**: the multiplicative monoid $[0,\infty)$ acts on $\mathbf{FinMeas}$ by scaling measures, and this action is compatible with composition. For each $\alpha > 0$, there is a corresponding target $\mathbb{R}_+^\alpha$ where $\lambda$ acts on morphisms by $\lambda^\alpha$.
+
+A functor $F: \mathbf{FinMeas} \to \mathbb{R}_+^\alpha$ that respects this module structure satisfies **degree-$\alpha$ homogeneity:**
+
+$$F(\lambda \cdot f) = \lambda^\alpha F(f) \quad \text{for all } \lambda \geq 0.$$
+
+**Theorem (Baez).** Any functor $F: \mathbf{FinMeas} \to \mathbb{R}_+^\alpha$ satisfying functoriality, degree-$\alpha$ homogeneity, additivity under disjoint union, and continuity must have the form $F(f) = c\bigl(H_\alpha(\mu) - H_\alpha(\nu)\bigr)$ for some $c \geq 0$, where $H_\alpha$ is the **Tsallis entropy of order $\alpha$.**
+
+This replaces the convex-linearity axiom of BFL with a cleaner module-theoretic condition. The family parameter $\alpha$ is now the *degree* of the module-category morphism — a purely categorical datum. Shannon entropy ($\alpha = 1$) is the unique degree-1 case, i.e. the unique *linear* module functor.
+
+> [!NOTE] Why FinMeas is the right setting for Tsallis
+> In $\mathbf{FinProb}$, the Tsallis characterization required the ad hoc axiom of $\alpha$-homogeneity under convex mixing (BFL Theorem 7). In $\mathbf{FinMeas}$, the same family arises naturally as degree-$\alpha$ module functors — no ad hoc axiom needed. The scalar action on measures is the structural reason the Tsallis parameter exists.
+
+### The partition function as a complete invariant
+
+For a finite measure space $(S, \mu)$ with all $\mu_i > 0$, define the **partition function**
+
+$$Z(S, \mu)(\alpha) := \sum_{i \in S} \mu_i^\alpha, \qquad \alpha > 0.$$
+
+**Proposition.** Two positive finite measure spaces $(S, \mu)$ and $(T, \nu)$ are isomorphic in $\mathbf{FinMeas}$ if and only if $Z(S, \mu)(\alpha) = Z(T, \nu)(\alpha)$ for all $\alpha > 0$.
+
+*Proof sketch.* Write $Z(S, \mu)(\alpha) = \sum_i e^{\alpha \ln \mu_i}$. This is the **Laplace transform** of the discrete measure $\tilde{\mu} = \sum_i \delta_{\ln \mu_i}$ on $\mathbb{R}$. Since the Laplace transform is injective on finite discrete measures, $Z(S) = Z(T)$ iff the multisets $\{\ln \mu_i\}$ agree iff $\{\mu_i\}$ agree as multisets iff $(S,\mu) \cong (T,\nu)$. $\square$
+
+The entropy families are recoverable from $Z$:
+
+$$H_\text{Shannon}(p) = -\frac{d}{d\alpha}\bigg|_{\alpha=1} Z(S, p)(\alpha), \qquad H_\alpha^\text{Tsallis}(p) = \frac{1 - Z(S,p)(\alpha)}{\alpha - 1}.$$
+
+So the partition function $Z$ is a *generating function* for all entropy families simultaneously — and it completely determines the probability space up to isomorphism.
+
+> [!QUESTION] What is $Z$ categorically?
+> The partition function $Z(S,\mu): (0,\infty) \to [0,\infty)$ assigns to each measure space a function of $\alpha$. Is there a natural functor $\mathbf{FinMeas} \to \mathbf{Fun}((0,\infty), [0,\infty))$ sending $(S,\mu) \mapsto Z(S,\mu)$? If so, is it fully faithful on isomorphism classes (which the proposition says it is)? This would make $Z$ a *fully faithful embedding* of $\mathbf{FinMeas}$ into a function category.
+
+### Derived information quantities via slice categories
+
+The BFL/FinMeas framework generates mutual information and conditional entropy *categorically*, without separate definitions. The construction uses standard category-theoretic tools:
+
+**Conditional entropy via slice categories.** The *slice category* $\mathbf{FinMeas}/X$ over a fixed object $X = (T, \nu)$ has as objects all morphisms $f: (S, \mu) \to (T, \nu)$ in $\mathbf{FinMeas}$. The information loss functor restricted to $\mathbf{FinMeas}/X$ gives the *conditional entropy*:
+
+$$H(S \mid X) = F(f: S \to X) = H(\mu) - H(\nu).$$
+
+The conditioning on $X$ is enforced by working in the slice — every object in $\mathbf{FinMeas}/X$ is "above" $X$.
+
+**Mutual information via coslice categories.** The *coslice category* $X/\mathbf{FinMeas}$ has as objects all morphisms $g: X \to (S, \mu)$ out of $X$. The joint space $(X \times Y, p_{XY})$ together with the two projection morphisms $\pi_X, \pi_Y$ lives naturally in a coslice construction. The mutual information
+
+$$I(X; Y) = H(X) + H(Y) - H(X, Y)$$
+
+arises as the information loss along the map $(X \times Y, p_{XY}) \to (X, p_X) \times (Y, p_Y)$ — the coarsening from the joint to the product of marginals. Functoriality of $F$ then gives the standard chain rules for $I$ automatically.
+
+**Conditional mutual information via bislice.** $I(X; Y \mid Z)$ arises from the *bislice category* over both $X$ and $Z$ simultaneously — the fiber of the joint $(X \times Y \times Z)$ over $Z$ gives the conditional joint, and the information loss from that fiber to its marginals over $Z$ is $I(X; Y \mid Z)$.
+
+> [!NOTE] Why this matters
+> The standard information-theory derivations of chain rules, data-processing inequalities, and subadditivity all follow from *functoriality of $F$* applied in these slice/coslice categories — rather than requiring separate proofs. The categorical setup unifies them.
 
 ---
 
