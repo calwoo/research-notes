@@ -72,6 +72,9 @@ In the classical Witt vectors construction, one lifts a ring $R$ of characterist
 > $$H_q(p) = \frac{1}{1-q} \log \sum_i p_i^q.$$
 > Different entropy families correspond to different choices of *deformation parameter* — they are different points in the moduli space of thermodynamic semirings.
 
+> [!INFO] Witt deformations and Shannon uniqueness
+> The classical Witt construction lifts a characteristic-$p$ ring to characteristic zero by encoding the Frobenius lift. Here, "characteristic $\infty$" (tropical, zero-temperature) is being lifted to finite temperature, with Boltzmann weights $e^{-\beta E_i}$ playing the role of Teichmüller representatives. This means entropy families are literally the *deformation theory* of the tropical semiring in the sense of algebraic geometry. The moduli space of first-order deformations at a point is controlled by a tangent space — and if that tangent space is one-dimensional (spanned by $\partial/\partial T$ at $T = 0$), this would be a precise algebraic-geometric proof that Shannon entropy is the *unique* first-order deformation, recovering Faddeev's uniqueness theorem from deformation theory rather than functional equations.
+
 > [!QUESTION] What is the moduli space of thermodynamic semirings?
 > The parameter $\beta$ (or equivalently $q$ for Rényi) suggests a one-dimensional moduli space. But Vigneaux's work on coefficient modules (see [[research/categorical-entropy|Categorical Entropy]]) suggests the space of entropy families is richer. Is there a precise algebraic-geometric description of the moduli space of "entropy-producing" semiring deformations?
 
