@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository
 
-This is a personal knowledge repository for agent-created notes, walkthroughs, and summaries of papers and research topics. Content spans machine learning, modern deep learning, and related fields.
+This is a personal knowledge repository for agent-created notes, walkthroughs, summaries of papers, and active research notes. Content spans machine learning, modern deep learning, and related fields.
 
 **Style preference:** Always approach topics with a mathematical bent — favor rigorous definitions, formal notation, and derivations over high-level hand-waving, even for applied ML/DL topics.
 
@@ -30,6 +30,10 @@ walkthroughs/   ← step-by-step derivations or implementations
 curricula/      ← structured multi-week learning curricula for a field or subfield
   <topic>/
     curriculum.md   ← week-by-week checklist of materials, concepts, learning goals, and milestones
+research/       ← active research notes: synthesis-in-progress across sources
+  <topic>/
+    note.md     ← single note per research thread (default)
+    figures/    ← figures pulled from source papers (optional)
 docs/           ← documentation and design docs
   plans/        ← implementation plans before execution
 ```
@@ -45,6 +49,8 @@ Example for a multi-file concept topic `attention-mechanisms`:
 - If a cluster later shrinks to one paper, leave the folder in place to avoid breaking wikilinks. A one-paper folder is an accepted exception.
 
 **Naming convention for `walkthroughs/`:** Single `note.md` is the default. Split only if the topic genuinely has distinct subtopics.
+
+**Naming convention for `research/`:** Single `note.md` per research thread. A thread is a focused line of inquiry (e.g. a specific problem, conjecture, or synthesis goal) — not a broad field. Split into multiple files only if two genuinely distinct threads emerge.
 
 **Exercises and solutions are inline.** Do not create separate `exercises.md` or `solutions.md` files. Exercises are distributed throughout the note — place them immediately after the section whose content they test, so each exercise appears after all its prerequisites. Do not batch all exercises at the end of the note.
 
@@ -97,10 +103,57 @@ Problems are numbered continuously 1–N across both categories. Solutions use *
   ````
 
   Placeholder links for papers or concepts without notes yet are marked with `*(no note yet)*`.
+- **For research notes:** see the dedicated **Research Notes Format** section below for structure and workflow rules.
 - When researching a topic, always include a references table at the end of the note with columns: "Reference Name", "Brief Summary", "Link to Reference".
 - After writing a note, fetch figures and diagrams from the cited references and embed them inline at relevant locations to improve exposition. Use the `image-extractor` agent for this.
 - **Paper note header order:** For paper notes specifically, the header order is: Title → Authors/venue line → TL;DR table → Relations section → Table of Contents. This supersedes the general "TOC immediately after the title" rule for paper notes only.
 - **Inline wikilinks** to related paper notes and concept notes should appear throughout the body — link on the first mention of a related paper or concept within each major section (`##` heading level). Do not re-link the same target within the same section.
+
+## Research Notes Format
+
+Research notes live in `research/<topic>/note.md`. They are synthesis-in-progress documents: the goal is to understand and connect results from multiple sources toward new insight, not to teach settled material.
+
+### Structure
+
+Research notes have **one fixed section** and otherwise evolve freely:
+
+```
+# Title
+
+## Sources
+
+| Source | Type | Key Contribution | Link |
+|--------|------|-----------------|------|
+| ...    | paper/textbook/talk | ... | ... |
+
+## <Section — user-defined, free-form>
+
+...
+```
+
+The `## Sources` table is always present and always first after the title. It is a live registry: add rows as new sources are incorporated. Columns: **Source** (author + short title), **Type** (paper / textbook / blog / talk), **Key Contribution** (one-line summary of what this source adds to the thread), **Link**.
+
+All other sections are free-form and driven by the research thread. Common patterns (use as needed, not as a template):
+- `## Context and Motivation` — what problem or gap is this thread addressing
+- `## Key Results` — theorem/result summaries drawn from sources, with attribution
+- `## Synthesis` — cross-source connections, tensions, and emerging insights
+- `## Open Questions` — unresolved points, conjectures, things to investigate
+- `## Scratchpad` — rough working space, back-of-envelope arguments, fragments
+
+Use `[!QUESTION]` callouts (non-collapsible) for conjectures and open questions inline. Use `[!WARNING]` for tensions or contradictions between sources. Do not add exercises.
+
+### Workflow: injecting new content from a source
+
+**Before writing up material from a new source, always ask the user probing questions about it.** Use `AskUserQuestion` to surface 3–5 targeted questions that clarify:
+- Which specific results or ideas from the source are most relevant to this thread
+- What the user finds surprising, unclear, or most worth dwelling on
+- How the source connects to or tensions with material already in the note
+
+Only after the user answers should you draft new content. This is a hard rule — never silently ingest a source and write it up without interrogating the user first.
+
+### Promotion
+
+Research notes are never automatically promoted to concept notes. The user decides when a thread has crystallized enough to become a `concepts/` entry. Do not suggest promotion unless asked.
 
 ### Typographic Style Rules
 
@@ -173,6 +226,7 @@ Notes are viewed in Obsidian. Use Obsidian's wikilink syntax for all TOC links �
 **Cross-file wikilinks** (for Relations blocks and inline body links) use vault-relative paths without the `.md` extension:
 - Paper links: `[[papers/paper-slug|Display Name]]` (flat) or `[[papers/topic/paper-slug|Display Name]]` (cluster)
 - Concept links: `[[concepts/topic/filename|Display Name]]`
+- Research links: `[[research/topic/note|Display Name]]`
 
 This differs from intra-document TOC links (`[[#Exact Heading Text|Display Text]]`). Do not mix the two forms.
 
