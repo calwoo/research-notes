@@ -1,0 +1,143 @@
+# Categorical Entropy
+
+## Sources
+
+| Source | Type | Key Contribution | Link |
+|--------|------|-----------------|------|
+| [Baez, Fritz & Leinster (2011)](https://arxiv.org/abs/1106.1791) | paper | Entropy characterized as the unique functor measuring information loss; operadic / categorical uniqueness theorem | arXiv:1106.1791 |
+| [Baudot & Bennequin (2015)](https://www.mdpi.com/1099-4300/17/5/3253) | paper | Shannon entropy is a 1-cocycle in an explicitly constructed information cohomology; chain rule = cocycle condition | *Entropy* 17(5):3253–3318 |
+| [Vigneaux (2017)](https://arxiv.org/abs/1709.07807) | paper | Extends information cohomology to generalized information structures; axiomatizes the coefficient module | arXiv:1709.07807 |
+| [Vigneaux (2020)](https://arxiv.org/abs/2003.02021) | paper | Homological characterization of generalized multinomial coefficients via the entropic chain rule | arXiv:2003.02021 |
+| [Vigneaux (2019)](https://arxiv.org/abs/1807.05152) | paper | Information theory over finite vector spaces; q-analogs of entropy in the finite-field setting | arXiv:1807.05152 |
+| [Marcolli & Thorngren (2011)](https://arxiv.org/abs/1108.2874) | paper | Thermodynamic semirings: entropy axioms as a deformation of the tropical semiring | arXiv:1108.2874 |
+| [Marcolli & Tedeschi (2014)](https://arxiv.org/abs/1412.0247) | paper | Entropy algebras and Birkhoff factorization in Hopf algebras of rooted trees | arXiv:1412.0247 |
+| [Marcolli (2018)](https://arxiv.org/abs/1807.05314) | paper | Gamma spaces and information loss; homotopy-theoretic perspective on entropy functors | arXiv:1807.05314 |
+| Marcolli, Ma148b Winter 2025 | course | Comprehensive treatment: categorical, geometric, and quantum information theory | [course page](https://www.its.caltech.edu/~matilde/Ma148bWinter2025.html) |
+| Marcolli, Ma148a Fall 2021 | course | Emphasis on categorical formulations of entropy and Hochschild cohomology | [course page](https://www.its.caltech.edu/~matilde/Ma148aFall2021.html) |
+
+---
+
+## Context and Motivation
+
+💡 The central puzzle: Shannon entropy $H(p) = -\sum_i p_i \log p_i$ satisfies a *chain rule*
+
+$$H(X, Y) = H(X) + H(Y \mid X),$$
+
+which uniquely characterizes it (up to scalar) among continuous, symmetric, normalized functionals — this is the content of the Khinchin/Faddeev uniqueness theorem. But *why* does such a characterization exist? What is the "correct" mathematical home for entropy?
+
+Two research programs give different but potentially equivalent answers:
+
+1. **Information cohomology** (Baudot-Bennequin, Vigneaux): the chain rule is a *cocycle condition*, Shannon entropy is the generator of $H^1$, and higher cohomology groups classify higher-order dependencies.
+
+2. **Thermodynamic semirings / entropy operads** (Marcolli-Thorngren, Marcolli-Tedeschi): entropy axioms arise as *deformations* of algebraic structure (tropical semirings, Hopf algebras of trees), placing entropy in the world of algebraic geometry and renormalization.
+
+> [!INFO] Why categorical machinery?
+> The uniqueness theorems for entropy (Faddeev 1956, Baez-Fritz-Leinster 2011) say: entropy is the *unique* solution to a system of functional equations. Category theory makes this precise by identifying entropy as a *universal* object — either an initial algebra, a terminal coalgebra, or a unique cohomology class. This is stronger than "the only solution": it says entropy is canonical in a structural sense.
+
+---
+
+## The Cohomological Approach
+
+### Setup: the information category
+
+Baudot and Bennequin construct a category $\mathcal{P}$ whose objects are finite probability spaces $(X, p)$ and whose morphisms encode *refinements* (conditioning). A *functional* $f$ on this category assigns a real number to each object. The key definition is a *coboundary operator* $\delta$ that encodes the chain rule:
+
+$$(\delta f)(X, Y) := f(X) + f(Y \mid X) - f(X, Y).$$
+
+The chain rule $H(X, Y) = H(X) + H(Y \mid X)$ then says exactly that $\delta H = 0$: **Shannon entropy is a 1-cocycle**.
+
+> [!NOTE] Cocycles vs coboundaries
+> In any cohomology theory, 1-cocycles $Z^1$ are closed 1-forms and 1-coboundaries $B^1 = \delta(C^0)$ are exact. The cohomology $H^1 = Z^1 / B^1$ measures the "non-trivial" closed forms. The claim is that $[H_\text{Shannon}]$ generates $H^1$ — and is the *only* generator up to scalar.
+
+### The coefficient module
+
+The cohomology depends on a choice of *coefficient module* $\mathcal{A}$ — a sheaf of abelian groups over $\mathcal{P}$ specifying what values the cochains take. Baudot-Bennequin use the module of *measurable functions* on probability spaces. Vigneaux (2017) axiomatizes which modules $\mathcal{A}$ give rise to entropy-like cocycles, showing that the structure of $\mathcal{A}$ determines which entropy *family* (Shannon, Tsallis, Rényi) appears as $H^1$.
+
+**Key result (Baudot-Bennequin):** With the standard coefficient module, $H^1(\mathcal{P}; \mathcal{A}) \cong \mathbb{R}$, generated by $H_\text{Shannon}$. Shannon entropy is, up to scalar, the *unique* 1-cocycle.
+
+### Higher cohomology and mutual information
+
+The higher groups $H^n$ classify *$n$-point dependencies*. The 2-cocycle condition gives mutual information $I(X; Y)$, and $H^2$ being nontrivial would indicate irreducible three-way interactions. This connects to:
+
+- The *interaction information* $I(X; Y; Z) = H(X) + H(Y) + H(Z) - H(X,Y) - H(X,Z) - H(Y,Z) + H(X,Y,Z)$, which can be negative (unlike pairwise MI), potentially signaling a nontrivial class in $H^2$.
+- Vigneaux (2020): the *multinomial coefficients* $\binom{n}{k_1, \ldots, k_r}$ satisfy a cocycle condition in this framework, giving a purely combinatorial shadow of the cohomology.
+
+> [!QUESTION] Open: what does $H^n$ classify for $n \geq 2$?
+> The Baudot-Bennequin paper leaves the computation of $H^n$ for $n \geq 2$ largely open. Is $H^2$ related to specific multivariate dependencies? Can one construct a "entropy spectral sequence" for hierarchical models?
+
+---
+
+## The Algebraic/Operad Approach
+
+### Thermodynamic semirings
+
+A *semiring* $(R, \oplus, \otimes)$ satisfies the ring axioms except subtraction. The *tropical semiring* is $(\mathbb{R} \cup \{+\infty\}, \min, +)$, which arises as the $\beta \to \infty$ (zero-temperature) limit of the *log-sum-exp* operation:
+
+$$a \oplus_\beta b := -\frac{1}{\beta} \log(e^{-\beta a} + e^{-\beta b}).$$
+
+Marcolli and Thorngren (2011) observe that the *Boltzmann entropy* emerges as the derivative of $\oplus_\beta$ with respect to $\beta$ at the tropical point $\beta = \infty$. More precisely: if we track the "correction" to the tropical semiring as $\beta^{-1} \to 0^+$, entropy appears as the first-order deformation term.
+
+**Key structure:** The Witt vectors construction provides the algebraic framework — $\oplus_\beta$ is the addition law of a family of Witt vector semirings parametrized by temperature $\beta^{-1}$. The entropy axioms (positivity, symmetry, chain rule) correspond to the *axioms of a semiring homomorphism* from this deformed structure to $\mathbb{R}$.
+
+> [!EXAMPLE] Rényi entropy from $q$-deformation
+> Setting $\beta = 1/(1-q)$ and deforming the coefficient module gives the *Rényi entropy*
+> $$H_q(p) = \frac{1}{1-q} \log \sum_i p_i^q.$$
+> The $q \to 1$ limit recovers Shannon. In the semiring language, different entropy families correspond to different *deformation parameters* of the same algebraic structure.
+
+### Entropy operads and rooted trees
+
+An *operad* $\mathcal{O}$ consists of spaces $\mathcal{O}(n)$ of "$n$-ary operations" with composition maps satisfying associativity. The *operad of rooted trees* encodes iterated binary operations.
+
+Marcolli-Tedeschi (2014) construct a *Hopf algebra* $\mathcal{H}$ on rooted trees (the Connes-Kreimer algebra from renormalization theory) and show:
+
+1. Shannon entropy is a *character* of $\mathcal{H}$ — a multiplicative functional $\phi: \mathcal{H} \to \mathbb{R}$.
+2. The *Birkhoff factorization* $\phi = \phi_- \star \phi_+$ (standard in renormalization) applied to the entropy character extracts the "entropic content" from a probability tree in a canonical way.
+
+This connects information theory to the *algebraic renormalization* program (Connes-Kreimer), suggesting that entropy extraction from hierarchical models is structurally identical to the renormalization of divergences in QFT.
+
+> [!WARNING] Caveat on the QFT analogy
+> The Connes-Kreimer Hopf algebra controls *subdivergences* of Feynman diagrams. The Birkhoff factorization separates "pole part" from "finite part." In the entropy setting, the analogy is suggestive but the precise dictionary between subdivergences and conditional entropies is not fully worked out in the literature.
+
+### Gamma spaces and homotopy-theoretic entropy
+
+Marcolli (2018) takes a further step: *Gamma spaces* (in the sense of Segal) are functors $\Gamma^{op} \to \mathbf{Top}$ from the category of finite pointed sets, and they model *infinite loop spaces* — spaces with coherent $E_\infty$ multiplication. Segal showed that $\Gamma$-spaces provide a model for connective spectra (stable homotopy theory).
+
+The claim is that information loss functors naturally define $\Gamma$-space structures, placing entropy in *stable homotopy theory*. This is the most structurally ambitious claim: entropy as a map of spectra.
+
+> [!QUESTION] Open: what is the spectrum of entropy?
+> If entropy defines a $\Gamma$-space, what is the associated spectrum? What do the stable homotopy groups $\pi_n$ of this spectrum compute? This connects to Waldhausen's algebraic K-theory of spaces and potentially to the $K$-theory of information structures.
+
+---
+
+## Synthesis: Two Faces of the Same Program?
+
+Both approaches identify entropy via a *universal property*:
+
+| | Cohomological | Algebraic/Operad |
+|--|--------------|------------------|
+| **Setting** | Sheaves on $\mathcal{P}$ | Hopf algebras, semirings |
+| **Entropy as** | Generator of $H^1$ | Character / deformation derivative |
+| **Chain rule** | Cocycle condition $\delta H = 0$ | Semiring homomorphism axiom |
+| **Uniqueness** | $H^1 \cong \mathbb{R}$ | Birkhoff factorization is unique |
+| **Generalizations** | Different coefficient modules | Different deformation parameters |
+
+The chain rule appears in both as the *central constraint*. The cohomological approach treats it as a *differential-geometric* datum (closed form), while the algebraic approach treats it as an *algebraic* datum (homomorphism condition). These should be related by a version of the *de Rham theorem* for information structures — cohomology computed via differential forms vs. singular cohomology.
+
+> [!QUESTION] Is there an information-theoretic de Rham theorem?
+> In differential geometry, de Rham cohomology (differential forms) and singular cohomology agree by de Rham's theorem. Is there a parallel statement here: do the Baudot-Bennequin cocycles and the Marcolli-Thorngren semiring deformations compute the same "information cohomology"? A precise formulation would require identifying what plays the role of "singular chains" in the probability-space setting.
+
+---
+
+## Open Questions
+
+> [!QUESTION] 1. Higher cohomology
+> What does $H^n(\mathcal{P}; \mathcal{A})$ classify for $n \geq 2$? Are there natural probability models (Markov fields, exponential families) that produce nontrivial classes in $H^2$?
+
+> [!QUESTION] 2. The unification question
+> Is there a single framework that contains both the cohomological (Baudot-Bennequin) and algebraic (Marcolli-Thorngren) approaches as special cases? Candidate: the *derived category* of sheaves on $\mathcal{P}$, with the semiring structure arising from a monoidal structure on this derived category.
+
+> [!QUESTION] 3. Quantum generalization
+> Baudot-Bennequin work over classical probability spaces. Von Neumann entropy $S(\rho) = -\text{tr}(\rho \log \rho)$ satisfies a subadditivity $S(\rho_{AB}) \leq S(\rho_A) + S(\rho_B)$ rather than the chain rule. Does it define a *relative* cocycle (coboundary up to a term)? What cohomology does quantum entropy live in?
+
+> [!QUESTION] 4. Entropy and K-theory
+> Marcolli's Gamma-space construction connects entropy to $K$-theory spectra. Is there a precise sense in which the *K-theory of a probability space* computes information-theoretic invariants? The work of Baas-Dundas-Richter-Rognes on 2-vector bundles might be relevant.
