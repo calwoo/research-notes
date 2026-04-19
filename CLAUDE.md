@@ -31,9 +31,8 @@ curricula/      ← structured multi-week learning curricula for a field or subf
   <topic>/
     curriculum.md   ← week-by-week checklist of materials, concepts, learning goals, and milestones
 research/       ← active research notes: synthesis-in-progress across sources
-  <topic>/
-    note.md     ← single note per research thread (default)
-    figures/    ← figures pulled from source papers (optional)
+  <thread-slug>.md   ← one flat file per research thread
+  figures/           ← figures pulled from source papers (optional)
 docs/           ← documentation and design docs
   plans/        ← implementation plans before execution
 ```
@@ -50,7 +49,7 @@ Example for a multi-file concept topic `attention-mechanisms`:
 
 **Naming convention for `walkthroughs/`:** Single `note.md` is the default. Split only if the topic genuinely has distinct subtopics.
 
-**Naming convention for `research/`:** Single `note.md` per research thread. A thread is a focused line of inquiry (e.g. a specific problem, conjecture, or synthesis goal) — not a broad field. Split into multiple files only if two genuinely distinct threads emerge.
+**Naming convention for `research/`:** Flat directory — one `.md` file per research thread directly under `research/`, named by thread slug (e.g. `research/diffusion-posterior-collapse.md`). No subdirectories. Figures go in the shared `research/figures/` folder.
 
 **Exercises and solutions are inline.** Do not create separate `exercises.md` or `solutions.md` files. Exercises are distributed throughout the note — place them immediately after the section whose content they test, so each exercise appears after all its prerequisites. Do not batch all exercises at the end of the note.
 
@@ -111,7 +110,7 @@ Problems are numbered continuously 1–N across both categories. Solutions use *
 
 ## Research Notes Format
 
-Research notes live in `research/<topic>/note.md`. They are synthesis-in-progress documents: the goal is to understand and connect results from multiple sources toward new insight, not to teach settled material.
+Research notes live in `research/<thread-slug>.md`. They are synthesis-in-progress documents: the goal is to understand and connect results from multiple sources toward new insight, not to teach settled material.
 
 ### Structure
 
@@ -226,7 +225,7 @@ Notes are viewed in Obsidian. Use Obsidian's wikilink syntax for all TOC links �
 **Cross-file wikilinks** (for Relations blocks and inline body links) use vault-relative paths without the `.md` extension:
 - Paper links: `[[papers/paper-slug|Display Name]]` (flat) or `[[papers/topic/paper-slug|Display Name]]` (cluster)
 - Concept links: `[[concepts/topic/filename|Display Name]]`
-- Research links: `[[research/topic/note|Display Name]]`
+- Research links: `[[research/thread-slug|Display Name]]`
 
 This differs from intra-document TOC links (`[[#Exact Heading Text|Display Text]]`). Do not mix the two forms.
 
