@@ -4,22 +4,48 @@ Prerequisites for the categorical entropy research thread. See [[research/catego
 
 ---
 
-## Operads
+## Operads: Definitions and Examples
 
-- Symmetric sequences: collections $\{\mathcal{O}(n)\}_{n \geq 0}$ with $S_n$-actions; the composition product $\mathcal{O} \circ \mathcal{P}$ of two symmetric sequences
-- Definition of an operad via the composition product: unit $\eta: \mathbf{1} \to \mathcal{O}$ and associative composition $\gamma: \mathcal{O} \circ \mathcal{O} \to \mathcal{O}$; equivalent definition via partial compositions $\circ_i$
-- Algebras over an operad: a vector space $A$ with structure maps $\mathcal{O}(n) \otimes A^{\otimes n} \to A$ compatible with $\gamma$; free $\mathcal{O}$-algebras $\mathcal{O}(V)$
-- Bimodules over an operad: left $\mathcal{O}$-modules, right $\mathcal{O}$-modules, $(\mathcal{O}, \mathcal{O})$-bimodules; the category of bimodules
-- Morphisms of operads; the category $\mathbf{Op}$; operads as monoids in $(\mathbf{SymSeq}, \circ)$
-- Key examples: $\mathrm{Ass}$, $\mathrm{Com}$, $\mathrm{Lie}$, $\mathrm{End}_V = \{\mathrm{Hom}(V^{\otimes n}, V)\}$; the inclusion $\mathrm{Lie} \to \mathrm{Ass} \to \mathrm{Com}$ as operad maps
-- $A_\infty$ and $C_\infty$ operads: homotopy-coherent versions of $\mathrm{Ass}$ and $\mathrm{Com}$; structure maps $m_n: A^{\otimes n} \to A$ with the $A_\infty$ relations
-- Topological operads: operads in $\mathbf{Top}$; continuous families of operations; the little disks operad $\mathcal{D}_n$ and its role in iterated loop spaces
-- The probability operad $\mathcal{P}$: $\mathcal{P}(n) = \Delta^{n-1}$; operadic composition as mixing of distributions; entropy as an internal $\mathcal{P}$-algebra
-- The operadic bar construction $B(\mathcal{O})$: a dg-cooperad resolving $\mathcal{O}$; the cobar construction $\Omega(\mathcal{C})$ for a cooperad $\mathcal{C}$; the bar-cobar adjunction $\Omega B \xrightarrow{\sim} \mathcal{O}$
-- Koszul duality: the Koszul dual cooperad $\mathcal{O}^¡$; Koszul operads and the Koszul criterion; $\mathrm{Ass}^! = \mathrm{Ass}$, $\mathrm{Com}^! = \mathrm{Lie}$, $\mathrm{Lie}^! = \mathrm{Com}$
-- Colored operads and multicategories: operads with multiple input/output types; small categories as colored operads with only unary operations
+- Symmetric sequences: collections $\{\mathcal{O}(n)\}_{n \geq 0}$ with $S_n$-actions; the composition product $\mathcal{O} \circ \mathcal{P}$ of two symmetric sequences; the monoidal category $(\mathbf{SymSeq}, \circ, \mathbf{1})$
+- Definition of an operad as a monoid in $(\mathbf{SymSeq}, \circ)$: unit $\eta: \mathbf{1} \to \mathcal{O}$ and associative composition $\gamma: \mathcal{O} \circ \mathcal{O} \to \mathcal{O}$; equivalent definition via partial compositions $\circ_i$ and the associativity, unit, equivariance axioms
+- Morphisms of operads; the category $\mathbf{Op}$; operads as a full subcategory of monoids in $\mathbf{SymSeq}$
+- Key examples: $\mathrm{Ass}$ (all permutations, encodes associative algebras); $\mathrm{Com}$ (one operation per arity, encodes commutative algebras); $\mathrm{Lie}$ (antisymmetric bracket); $\mathrm{End}_V = \{\mathrm{Hom}(V^{\otimes n}, V)\}$ (the endomorphism operad of a vector space)
+- The maps $\mathrm{Lie} \to \mathrm{Ass} \to \mathrm{Com}$ as operad morphisms; what they say about the categories of algebras
+- Topological operads: operads in $\mathbf{Top}$ with continuous structure maps; the little disks operad $\mathcal{D}_n$ and its recognition principle for $n$-fold loop spaces
+- The probability operad $\mathcal{P}$: $\mathcal{P}(n) = \Delta^{n-1}$ as a topological operad; operadic composition as distribution mixing; entropy as an internal $\mathcal{P}$-algebra; why $\mathcal{P}$ is not an algebraic operad (non-discrete arities)
+- Colored operads and multicategories: operads with multiple types; small categories as colored operads with only unary operations; symmetric monoidal categories as colored operads
 
 **References:** Loday & Vallette, *Algebraic Operads* Ch. 1–5; Markl, [*Operads and PROPs*](https://arxiv.org/abs/math/0601129); Leinster, [*Entropy and Diversity*](https://arxiv.org/abs/2012.02113) Ch. 2–3
+
+---
+
+## Operads: Algebras and Modules
+
+- Algebras over an operad: a vector space $A$ with structure maps $\gamma_A: \mathcal{O}(n) \otimes A^{\otimes n} \to A$ compatible with $\gamma$; the category $\mathcal{O}\text{-}\mathbf{Alg}$; recovering associative, commutative, Lie algebras from $\mathrm{Ass}$, $\mathrm{Com}$, $\mathrm{Lie}$
+- Free $\mathcal{O}$-algebras $\mathcal{O}(V) = \bigoplus_{n \geq 0} \mathcal{O}(n) \otimes_{S_n} V^{\otimes n}$; the free-forgetful adjunction $\mathcal{O}(-) \dashv U$
+- Left $\mathcal{O}$-modules, right $\mathcal{O}$-modules, $(\mathcal{O}, \mathcal{O})$-bimodules; structure maps and compatibility with operadic composition; the category ${}^\mathcal{O}\mathbf{Mod}^\mathcal{O}$
+- The enveloping algebra $U_\mathcal{O}(A)$ of an $\mathcal{O}$-algebra $A$: the universal associative algebra such that $\mathrm{Der}_\mathcal{O}(A, M) \cong \mathrm{Hom}_{U_\mathcal{O}(A)}(U_\mathcal{O}(A), M)$; explicit construction as a quotient of the tensor algebra on $\mathcal{O}$
+- Derivations of $\mathcal{O}$-algebras: $\mathrm{Der}_\mathcal{O}(A, M)$ for an $A$-module $M$; inner derivations; the evaluation map $\mathrm{Der}(\mathcal{O}, -) \to \mathrm{Der}_\mathcal{O}(A, -)$ from operad derivations to algebra derivations
+- Kähler differentials $\Omega^1_\mathcal{O}(A)$: the universal $A$-module representing $\mathrm{Der}_\mathcal{O}(A, -)$; construction as $U_\mathcal{O}(A) \otimes_A \Omega^1 / \text{(relations)}$; the operadic cotangent sequence
+- $A_\infty$-algebras: algebras over the $A_\infty$ operad; structure maps $m_n: A^{\otimes n} \to A[2-n]$ satisfying the Stasheff relations $\sum_{i+j=n+1} \sum_k (-1)^\star m_i(\ldots, m_j(\ldots), \ldots) = 0$; $A_\infty$ as a minimal resolution of $\mathrm{Ass}$
+- The probability operad revisited: the $\mathcal{P}$-algebra structure on $\mathbb{R}$ via weighted averages; entropy as a derivation of this algebra; the BFL twisted-composition rule as $\mathrm{Der}_\mathcal{P}(\mathbb{R}, \mathbb{R})$
+
+**References:** Loday & Vallette, *Algebraic Operads* Ch. 5–6; Fresse, *Modules over Operads and Functors* Ch. 2–5; Voronov, *The $A_\infty$ operad and $A_\infty$ algebras*
+
+---
+
+## Operads: Koszul Duality and the Bar Construction
+
+- The operadic bar construction $B(\mathcal{O})$: a dg-cooperad with underlying symmetric sequence $\mathcal{O}^{\circ+}$; the differential encoding operadic composition; $B(\mathcal{O})$ as the "derived" version of $\mathcal{O}$
+- The cobar construction $\Omega(\mathcal{C})$ for a dg-cooperad $\mathcal{C}$: a dg-operad; the bar-cobar adjunction $\Omega \dashv B$; the counit $\Omega B(\mathcal{O}) \xrightarrow{\sim} \mathcal{O}$ as a cofibrant resolution
+- The twisting morphism $\alpha: \mathcal{C} \to \mathcal{O}$ between a cooperad and an operad; the twisted composite product $\mathcal{C} \circ_\alpha \mathcal{O}$; the Maurer-Cartan equation for twisting morphisms
+- Koszul duality for operads: the Koszul dual cooperad $\mathcal{O}^¡$ of a quadratic operad $\mathcal{O}$; the canonical twisting morphism $\kappa: \mathcal{O}^¡ \to \mathcal{O}$; a quadratic operad is Koszul iff $\kappa$ is a quasi-isomorphism
+- The Koszul criterion: $\mathcal{O}$ is Koszul iff the bar construction $B(\mathcal{O})$ has homology concentrated in arity $= $ weight; examples $\mathrm{Ass}^! = \mathrm{Ass}$, $\mathrm{Com}^! = \mathrm{Lie}$, $\mathrm{Lie}^! = \mathrm{Com}$ (Koszul self-duality and the Lie-Com duality)
+- $\mathcal{O}_\infty$-algebras from Koszul duality: for a Koszul operad $\mathcal{O}$, the $\infty$-version $\mathcal{O}_\infty = \Omega(\mathcal{O}^¡)$ gives the correct homotopy-coherent notion; $A_\infty = \Omega(\mathrm{Ass}^¡)$, $L_\infty = \Omega(\mathrm{Com}^¡)$
+- Operadic cohomology via the bar construction: $H^\bullet_\mathcal{O}(A, M)$ computed by the complex $\mathrm{Hom}_{\mathcal{O}\text{-bimod}}(B(\mathcal{O}, A, A), M)$; the two-sided bar resolution $B(\mathcal{O}, A, A)$ as a free resolution of $A$ as an $\mathcal{O}$-algebra
+- The deformation complex of an operad: $\mathrm{Def}(\mathcal{O}) = \mathrm{Hom}_{\mathbf{SymSeq}}(\mathcal{O}^¡, \mathcal{O})$ with the convolution $L_\infty$-algebra structure; Maurer-Cartan elements as deformed operad structures; $H^0(\mathrm{Def}(\mathcal{O}))$ as infinitesimal automorphisms, $H^1$ as infinitesimal deformations
+
+**References:** Loday & Vallette, *Algebraic Operads* Ch. 6–7, 10–12; Ginzburg & Kapranov, *Koszul duality for operads* (Duke Math. J. 1994)
 
 ---
 
