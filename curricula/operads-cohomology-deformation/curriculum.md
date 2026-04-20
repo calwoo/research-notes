@@ -99,6 +99,9 @@ Prerequisites for the categorical entropy research thread. See [[research/catego
 
 ## Relating the Two Operadic Definitions of Entropy
 
+> [!INFO] Why operadic cohomology appears here
+> The core logical path — showing that Bradley's operad derivation $D \in \mathrm{Der}(\mathcal{P}, M)$ and the BFL algebra derivation $d \in \mathrm{Der}_\mathcal{P}(\mathbb{R}, \mathbb{R})$ are related — only requires the evaluation map $\mathrm{Der}(\mathcal{P}, -) \to \mathrm{Der}_\mathcal{P}(\mathbb{R}, -)$, which follows from the universal property of the enveloping algebra and the Kähler differentials comparison map. The bar construction and $H^\bullet_\mathcal{P}$ are not needed just to construct this map. They appear here because they are needed for the stronger question: are the two conditions *equivalent*, and if not, what is the obstruction? The bar resolution computes those obstructions, and the tangent/cotangent complex framing is what lets you interpret entropy as a cohomology class unifying both definitions. Skip to Kähler differentials + the comparison map if you only want the existence of the map.
+
 The BFL internal $\mathcal{P}$-algebra condition and the Bradley operad derivation condition are derivations of *different objects* — an algebra over $\mathcal{P}$ vs. the operad $\mathcal{P}$ itself. The following topics are needed to understand how they relate.
 
 - Modules over operads: left $\mathcal{O}$-modules $M$ with structure maps $\mathcal{O}(n) \otimes_{\mathcal{O}} M \to M$; bimodules; the category $_\mathcal{O}\mathbf{Mod}_\mathcal{O}$; examples for $\mathrm{Ass}$ recovering the classical notion of bimodule
