@@ -4,6 +4,26 @@ Prerequisites for the categorical entropy research thread. See [[research/catego
 
 ---
 
+## Relating the Two Operadic Definitions of Entropy
+
+The BFL internal $\mathcal{P}$-algebra condition and the Bradley operad derivation condition are derivations of *different objects* — an algebra over $\mathcal{P}$ vs. the operad $\mathcal{P}$ itself. The following topics are what you need to understand how they relate.
+
+- [ ] **Modules over operads** — the definition of a left/right module and bimodule over an operad $\mathcal{O}$; the category $_\mathcal{O}\mathbf{Mod}$
+- [ ] **The enveloping algebra $U_\mathcal{O}(A)$** — for an $\mathcal{O}$-algebra $A$, the universal algebra such that $\mathcal{O}$-algebra derivations $A \to M$ biject with $U_\mathcal{O}(A)$-module maps; the natural map $\mathrm{Der}(\mathcal{O}, -) \to \mathrm{Der}_\mathcal{O}(A, -)$ sending operad derivations to induced algebra derivations
+- [ ] **Operadic Kähler differentials** — the universal $A$-module $\Omega^1_\mathcal{O}(A)$ representing $\mathrm{Der}_\mathcal{O}(A, -)$; the universal operad bimodule $\Omega^1(\mathcal{O})$ representing $\mathrm{Der}(\mathcal{O}, -)$; how $\Omega^1(\mathcal{O})$ and $\Omega^1_\mathcal{O}(A)$ relate via the evaluation map
+- [ ] **The bar construction for operads** — $B(\mathcal{O}, A, A)$ as the resolution computing $H^\bullet_\mathcal{O}(A, M)$; how the bar construction for the operad itself vs. for an algebra over it differ; the two giving $H^\bullet_\mathrm{op}(\mathcal{O}, M)$ vs. $H^\bullet_\mathcal{O}(A, M)$
+- [ ] **The evaluation map on derivations** — the explicit map $\mathrm{Der}(\mathcal{P}, M) \to \mathrm{Der}_\mathcal{P}(\mathbb{R}, N)$ for the probability operad; whether Bradley's Leibniz condition maps to the BFL twisted-composition condition under this map with Bradley's bimodule $M = C(\mathbb{R}^-, \mathbb{R})$
+- [ ] **The operadic tangent and cotangent complex** — $\mathbb{T}_A = \mathrm{Der}(A, A)$ and its dual $\mathbb{L}_A$; the operadic analogue; entropy as a class in $H^1$ of this complex as a unification of both derivation notions
+
+**Key references:**
+
+- Fresse, *Modules over Operads and Functors* (Springer LNM 1967) Ch. 4–5 — enveloping algebras and the evaluation map
+- Loday & Vallette, *Algebraic Operads* Ch. 6–7, 12 — bar-cobar construction; operadic cohomology
+- Hinich, [*Homological algebra of homotopy algebras*](https://arxiv.org/abs/q-alg/9702015) — cotangent complex for operadic algebras
+- Bradley, [arXiv:2107.09581](https://arxiv.org/abs/2107.09581) §3–4 — the bimodule $M$ is defined to make the evaluation map work; checking this explicitly is the concrete calculation
+
+---
+
 ## Operads
 
 **Core concepts to understand:**
