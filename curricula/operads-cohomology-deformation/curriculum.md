@@ -4,117 +4,82 @@ Prerequisites for the categorical entropy research thread. See [[research/catego
 
 ---
 
-## Relating the Two Operadic Definitions of Entropy
-
-The BFL internal $\mathcal{P}$-algebra condition and the Bradley operad derivation condition are derivations of *different objects* — an algebra over $\mathcal{P}$ vs. the operad $\mathcal{P}$ itself. The following topics are what you need to understand how they relate.
-
-- [ ] **Modules over operads** — the definition of a left/right module and bimodule over an operad $\mathcal{O}$; the category $_\mathcal{O}\mathbf{Mod}$
-- [ ] **The enveloping algebra $U_\mathcal{O}(A)$** — for an $\mathcal{O}$-algebra $A$, the universal algebra such that $\mathcal{O}$-algebra derivations $A \to M$ biject with $U_\mathcal{O}(A)$-module maps; the natural map $\mathrm{Der}(\mathcal{O}, -) \to \mathrm{Der}_\mathcal{O}(A, -)$ sending operad derivations to induced algebra derivations
-- [ ] **Operadic Kähler differentials** — the universal $A$-module $\Omega^1_\mathcal{O}(A)$ representing $\mathrm{Der}_\mathcal{O}(A, -)$; the universal operad bimodule $\Omega^1(\mathcal{O})$ representing $\mathrm{Der}(\mathcal{O}, -)$; how $\Omega^1(\mathcal{O})$ and $\Omega^1_\mathcal{O}(A)$ relate via the evaluation map
-- [ ] **The bar construction for operads** — $B(\mathcal{O}, A, A)$ as the resolution computing $H^\bullet_\mathcal{O}(A, M)$; how the bar construction for the operad itself vs. for an algebra over it differ; the two giving $H^\bullet_\mathrm{op}(\mathcal{O}, M)$ vs. $H^\bullet_\mathcal{O}(A, M)$
-- [ ] **The evaluation map on derivations** — the explicit map $\mathrm{Der}(\mathcal{P}, M) \to \mathrm{Der}_\mathcal{P}(\mathbb{R}, N)$ for the probability operad; whether Bradley's Leibniz condition maps to the BFL twisted-composition condition under this map with Bradley's bimodule $M = C(\mathbb{R}^-, \mathbb{R})$
-- [ ] **The operadic tangent and cotangent complex** — $\mathbb{T}_A = \mathrm{Der}(A, A)$ and its dual $\mathbb{L}_A$; the operadic analogue; entropy as a class in $H^1$ of this complex as a unification of both derivation notions
-
-**Key references:**
-
-- Fresse, *Modules over Operads and Functors* (Springer LNM 1967) Ch. 4–5 — enveloping algebras and the evaluation map
-- Loday & Vallette, *Algebraic Operads* Ch. 6–7, 12 — bar-cobar construction; operadic cohomology
-- Hinich, [*Homological algebra of homotopy algebras*](https://arxiv.org/abs/q-alg/9702015) — cotangent complex for operadic algebras
-- Bradley, [arXiv:2107.09581](https://arxiv.org/abs/2107.09581) §3–4 — the bimodule $M$ is defined to make the evaluation map work; checking this explicitly is the concrete calculation
-
----
-
 ## Operads
 
-**Core concepts to understand:**
+- Symmetric sequences: collections $\{\mathcal{O}(n)\}_{n \geq 0}$ with $S_n$-actions; the composition product $\mathcal{O} \circ \mathcal{P}$ of two symmetric sequences
+- Definition of an operad via the composition product: unit $\eta: \mathbf{1} \to \mathcal{O}$ and associative composition $\gamma: \mathcal{O} \circ \mathcal{O} \to \mathcal{O}$; equivalent definition via partial compositions $\circ_i$
+- Algebras over an operad: a vector space $A$ with structure maps $\mathcal{O}(n) \otimes A^{\otimes n} \to A$ compatible with $\gamma$; free $\mathcal{O}$-algebras $\mathcal{O}(V)$
+- Bimodules over an operad: left $\mathcal{O}$-modules, right $\mathcal{O}$-modules, $(\mathcal{O}, \mathcal{O})$-bimodules; the category of bimodules
+- Morphisms of operads; the category $\mathbf{Op}$; operads as monoids in $(\mathbf{SymSeq}, \circ)$
+- Key examples: $\mathrm{Ass}$, $\mathrm{Com}$, $\mathrm{Lie}$, $\mathrm{End}_V = \{\mathrm{Hom}(V^{\otimes n}, V)\}$; the inclusion $\mathrm{Lie} \to \mathrm{Ass} \to \mathrm{Com}$ as operad maps
+- $A_\infty$ and $C_\infty$ operads: homotopy-coherent versions of $\mathrm{Ass}$ and $\mathrm{Com}$; structure maps $m_n: A^{\otimes n} \to A$ with the $A_\infty$ relations
+- Topological operads: operads in $\mathbf{Top}$; continuous families of operations; the little disks operad $\mathcal{D}_n$ and its role in iterated loop spaces
+- The probability operad $\mathcal{P}$: $\mathcal{P}(n) = \Delta^{n-1}$; operadic composition as mixing of distributions; entropy as an internal $\mathcal{P}$-algebra
+- The operadic bar construction $B(\mathcal{O})$: a dg-cooperad resolving $\mathcal{O}$; the cobar construction $\Omega(\mathcal{C})$ for a cooperad $\mathcal{C}$; the bar-cobar adjunction $\Omega B \xrightarrow{\sim} \mathcal{O}$
+- Koszul duality: the Koszul dual cooperad $\mathcal{O}^¡$; Koszul operads and the Koszul criterion; $\mathrm{Ass}^! = \mathrm{Ass}$, $\mathrm{Com}^! = \mathrm{Lie}$, $\mathrm{Lie}^! = \mathrm{Com}$
+- Colored operads and multicategories: operads with multiple input/output types; small categories as colored operads with only unary operations
 
-- [ ] Symmetric sequences and the composition product $\circ$
-- [ ] Definition of an operad (symmetric, non-symmetric); unit and associativity axioms
-- [ ] Algebras over an operad; free algebras
-- [ ] Bimodules over an operad; left and right module actions
-- [ ] Morphisms of operads; the category of operads
-- [ ] Key examples: $\text{Ass}$, $\text{Com}$, $\text{Lie}$, $\text{End}_V$, $A_\infty$, $E_\infty$
-- [ ] The operad of probability distributions $\mathcal{P}$: $\mathcal{P}(n) = \Delta^{n-1}$, composition by mixing
-- [ ] Topological operads; continuous families of operations
-- [ ] The operadic bar construction and cobar construction
-- [ ] Koszul duality for operads: the Koszul dual operad $\mathcal{O}^!$, Koszul operads
-- [ ] $\infty$-operads (overview level): colored operads, multicategories
-
-**Key references:**
-
-- Markl, [*Operads and PROPs*](https://arxiv.org/abs/math/0601129) — concise, in the Marcolli course bibliography
-- Loday & Vallette, *Algebraic Operads* (Springer, freely available) — the comprehensive reference; Ch. 1–5 cover the above
-- Voronov, *The $A_\infty$ operad and $A_\infty$ algebras* (lecture notes) — in the Marcolli course bibliography
-- Leinster, [*Entropy and Diversity*](https://arxiv.org/abs/2012.02113) Ch. 2–3 — for the probability operad $\mathcal{P}$ specifically
+**References:** Loday & Vallette, *Algebraic Operads* Ch. 1–5; Markl, [*Operads and PROPs*](https://arxiv.org/abs/math/0601129); Leinster, [*Entropy and Diversity*](https://arxiv.org/abs/2012.02113) Ch. 2–3
 
 ---
 
 ## Hochschild Cohomology
 
-**Core concepts to understand:**
+- The Hochschild cochain complex $C^n(A, M) = \mathrm{Hom}(A^{\otimes n}, M)$ for an associative $k$-algebra $A$ and $A$-bimodule $M$; the coboundary $\delta: C^n \to C^{n+1}$ via the explicit formula $((\delta f)(a_0, \ldots, a_n) = a_0 f(a_1, \ldots) + \sum_i (-1)^i f(\ldots, a_i a_{i+1}, \ldots) + (-1)^{n+1} f(\ldots, a_{n-1}) a_n)$
+- $HH^0(A, M)$ as the center $Z(A, M) = \{m \in M : am = ma\}$; $HH^0(A, A) = Z(A)$
+- $HH^1(A, M) = \mathrm{Der}(A, M) / \mathrm{InnDer}(A, M)$: derivations modulo inner derivations; proof that 1-cocycles are exactly derivations
+- $HH^2(A, M)$ classifies infinitesimal deformations of $A$ over $k[\epsilon]/\epsilon^2$: the obstruction to extending a deformation from order $n$ to order $n+1$ lives in $HH^3$
+- The cup product $\smile: HH^p \otimes HH^q \to HH^{p+q}$; the Gerstenhaber bracket $[-,-]: HH^p \otimes HH^q \to HH^{p+q-1}$; the resulting $G_\infty$ (Gerstenhaber) algebra structure on $HH^\bullet(A, A)$
+- Cyclic cohomology $HC^\bullet(A)$: the cyclic cochain complex; the SBI long exact sequence $\cdots \to HC^{n-1} \xrightarrow{S} HC^{n+1} \xrightarrow{B} HH^n \xrightarrow{I} HC^n \to \cdots$; Connes' $B$-operator
+- Operadic cohomology $H^\bullet_\mathcal{O}(A, M)$: the general construction for any operad $\mathcal{O}$; Hochschild as the $\mathrm{Ass}$ case; Harrison cohomology as the $\mathrm{Com}$ case; Chevalley-Eilenberg as the $\mathrm{Lie}$ case
+- André-Quillen cohomology $AQ^\bullet(A, M)$ for commutative algebras: the derived functor of derivations; relation to Harrison via the Harrison-André-Quillen comparison
+- Kähler differentials $\Omega^1_{A/k}$: the $A$-module generated by symbols $da$ with $d(ab) = a\,db + b\,da$; the universal property $\mathrm{Der}_k(A, M) \cong \mathrm{Hom}_A(\Omega^1_{A/k}, M)$; the cotangent sequence $\Omega^1_{B/k} \otimes_B A \to \Omega^1_{A/k} \to \Omega^1_{A/B} \to 0$
+- The cotangent complex $\mathbb{L}_{A/k}$: the derived version of $\Omega^1$; André-Quillen cohomology as $\mathrm{Ext}^\bullet(\mathbb{L}_{A/k}, M)$; the cotangent complex for operadic algebras
 
-- [ ] The Hochschild cochain complex $C^\bullet(A, M)$ for an associative algebra $A$ and bimodule $M$
-- [ ] The coboundary map $\delta: C^n \to C^{n+1}$; explicit formula
-- [ ] $HH^0(A, M)$ = center / invariants
-- [ ] $HH^1(A, M) = \mathrm{Der}(A, M) / \mathrm{InnDer}(A, M)$ — the derivation isomorphism
-- [ ] $HH^2(A, M)$ = infinitesimal deformations of $A$ as an algebra
-- [ ] $HH^3(A, M)$ = obstructions to extending deformations
-- [ ] The cup product on $HH^\bullet$; the Gerstenhaber bracket; the $G_\infty$-structure
-- [ ] Cyclic cohomology $HC^\bullet$ and the SBI sequence $HC^{n-1} \to HH^n \to HC^n$
-- [ ] Operadic cohomology as a generalization: $H^\bullet_\mathcal{O}(A, M)$ for a general operad $\mathcal{O}$
-- [ ] Harrison cohomology (commutative case); André-Quillen cohomology
-- [ ] Chevalley-Eilenberg cohomology (Lie case)
-- [ ] Kähler differentials $\Omega_{A/k}$; the universal derivation $d: A \to \Omega_{A/k}$; $\mathrm{Der}(A, M) \cong \mathrm{Hom}_A(\Omega_{A/k}, M)$
-
-**Key references:**
-
-- Weibel, *Introduction to Homological Algebra* Ch. 9 — Hochschild cohomology from scratch
-- Witherspoon, *Hochschild Cohomology for Algebras* (Cambridge, 2019) Ch. 1–4
-- Loday, *Cyclic Homology* (Springer) Ch. 1–2 — for cyclic cohomology and the full structure
-- Ginzburg, [*Lectures on Noncommutative Geometry*](https://arxiv.org/abs/math/0506603) — broader context
+**References:** Weibel, *Introduction to Homological Algebra* Ch. 9; Witherspoon, *Hochschild Cohomology for Algebras* Ch. 1–4; Loday, *Cyclic Homology* Ch. 1–2; Ginzburg, [*Lectures on Noncommutative Geometry*](https://arxiv.org/abs/math/0506603)
 
 ---
 
 ## Deformation Theory
 
-**Core concepts to understand:**
+- Formal deformations of a $k$-algebra $A$: a flat $k[[t]]$-algebra $A_t$ with $A_t / tA_t \cong A$; the first-order deformation $\mu_1 \in C^2(A, A)$ satisfying the Maurer-Cartan equation $\delta\mu_1 + \frac{1}{2}[\mu_1, \mu_1] = 0$ in $HH^\bullet$
+- The Maurer-Cartan equation in a dg-Lie algebra $(\mathfrak{g}, d, [-,-])$: $d\gamma + \frac{1}{2}[\gamma, \gamma] = 0$; gauge equivalence; the Deligne groupoid $\mathrm{MC}(\mathfrak{g})$ as the moduli of deformations
+- $L_\infty$-algebras: the homotopy-coherent generalization of dg-Lie algebras; higher brackets $\ell_n: \mathfrak{g}^{\otimes n} \to \mathfrak{g}[2-n]$; the $L_\infty$ Maurer-Cartan equation $\sum_{n \geq 1} \frac{1}{n!} \ell_n(\gamma^{\otimes n}) = 0$
+- Rigidity: $HH^2(A, A) = 0$ implies $A$ is rigid (no nontrivial formal deformations); examples of rigid algebras
+- Formality of a dg-algebra: quasi-isomorphic to its cohomology $H^\bullet(A)$; a formal dg-algebra has no higher Massey products; Kontsevich's formality theorem for $C^\infty(M)$ as a dg-Lie algebra
+- Deformation quantization: deforming a commutative Poisson algebra $(A, \{-,-\})$ to a noncommutative $\star$-product $f \star g = fg + \hbar\{f,g\}/2 + O(\hbar^2)$; Kontsevich's theorem that every Poisson manifold admits a canonical deformation quantization
+- Deformations of operads: the deformation complex $\mathrm{Def}(\mathcal{O})$ of an operad; the $L_\infty$-algebra structure on $\mathrm{Def}(\mathcal{O})$; Maurer-Cartan elements as deformed operad structures
+- Thermodynamic semirings as deformations: the tropical semiring $(\mathbb{R}, \min, +)$ as the $\beta \to \infty$ limit; $\oplus_\beta$ as a formal deformation of $\min$; Shannon entropy as the first-order coefficient $\partial(\oplus_\beta)/\partial\beta^{-1}|_{\beta = \infty}$; the deformation complex of the tropical semiring
 
-- [ ] Formal deformations of an algebra $A$ over $k[[t]]$; the Maurer-Cartan equation $d\gamma + \frac{1}{2}[\gamma, \gamma] = 0$
-- [ ] The deformation complex and its role: $HH^2$ parametrizes infinitesimal deformations, $HH^3$ harbors obstructions
-- [ ] Rigidity: an algebra with $HH^2 = 0$ has no nontrivial deformations
-- [ ] $L_\infty$-algebras: the correct homotopy-coherent framework controlling deformation problems
-- [ ] The Deligne conjecture / Deligne groupoid: $MC(L)$ as the moduli space of deformations
-- [ ] Formality: a dg-algebra is formal if it is quasi-isomorphic to its cohomology; Kontsevich formality
-- [ ] Deformation quantization: deforming a Poisson algebra to a noncommutative algebra; $\star$-products
-- [ ] Deformations of operads; the deformation complex of an operad $\mathcal{O}$
-- [ ] Application to thermodynamic semirings: the tropical semiring as the $t \to 0$ limit; entropy as $\partial/\partial t|_{t=0}$
-
-**Key references:**
-
-- Manetti, [*Deformation Theory via Differential Graded Lie Algebras*](https://arxiv.org/abs/math/9907.179) — clean and focused
-- Kontsevich & Soibelman, *Deformation Theory* (lecture notes, available online) — comprehensive
-- Loday & Vallette, *Algebraic Operads* Ch. 12–13 — deformations of operads specifically
-- Kontsevich, [*Deformation Quantization of Poisson Manifolds*](https://arxiv.org/abs/q-alg/9709040) — the landmark paper
+**References:** Manetti, [*Deformation Theory via Differential Graded Lie Algebras*](https://arxiv.org/abs/math/9907.179); Kontsevich & Soibelman, *Deformation Theory* (lecture notes); Loday & Vallette, *Algebraic Operads* Ch. 12–13; Kontsevich, [*Deformation Quantization of Poisson Manifolds*](https://arxiv.org/abs/q-alg/9709040)
 
 ---
 
 ## Witt Vectors
 
-**Core concepts to understand:**
+- Motivation: the problem of lifting a ring $R$ of characteristic $p$ to characteristic $0$; the non-canonicity of naive lifts; Witt vectors as the canonical solution
+- Ghost components: a Witt vector $(a_0, a_1, a_2, \ldots) \in W(R)$ corresponds to ghost coordinates $w_n = \sum_{d \mid n} d\, a_d^{n/d}$; ring operations defined by requiring ghost maps to be ring homomorphisms $W(R) \to R^\mathbb{N}$
+- $p$-typical Witt vectors $W(R)$: restricting to $p$-power ghost components $w_{p^n}$; the truncated Witt vectors $W_n(R)$; $W(\mathbb{F}_p) \cong \mathbb{Z}_p$
+- Frobenius $F: W(R) \to W(R)$ shifting ghost coordinates by $F(w_n) = w_{pn}$; Verschiebung $V: W(R) \to W(R)$ with $V(w_n) = pw_{n/p}$ (zero if $p \nmid n$); the fundamental relations $FV = p$, $VF = \mathrm{mult. by } p$, $FV = VF$ on ghosts
+- Big Witt vectors $\mathbb{W}(R)$: using all ghost components $w_n$ for $n \geq 1$; the $\lambda$-ring structure on $\mathbb{W}(R)$; Adams operations $\psi^n$
+- The functor $W: \mathbf{CRing} \to \mathbf{CRing}$; right adjoint to the forgetful functor from $\delta$-rings; Witt vectors as the representing object for $p$-typical $\lambda$-ring structures
+- $\delta$-rings: a ring $R$ with a map $\delta: R \to R$ satisfying $\delta(x+y) = \delta(x) + \delta(y) + \frac{x^p + y^p - (x+y)^p}{p}$ and $\delta(xy) = x^p\delta(y) + y^p\delta(x) + p\delta(x)\delta(y)$; the connection to Frobenius lifts $\phi(x) = x^p + p\delta(x)$; $\delta$-rings as the correct algebraic framework for $p$-adic Hodge theory
+- Thermodynamic Witt vectors: the $\oplus_\beta$ family as a temperature-parametrized deformation of $(\mathbb{R}, \min)$; Boltzmann weights $e^{-\beta E_i}$ as the analogue of Teichmüller representatives; entropy as the $\delta$-ring derivation $\partial/\partial\beta$ at $\beta = \infty$
+- Witt vectors and $p$-adic Hodge theory: $A_\mathrm{inf} = W(\mathcal{O}_{\mathbb{C}_p}^\flat)$ as the period ring; the Fontaine map; connection to prismatic cohomology (Bhatt-Scholze)
 
-- [ ] Motivation: lifting from characteristic $p$ to characteristic $0$; the Teichmüller lift
-- [ ] $p$-typical Witt vectors $W(R)$: ghost components $w_n$, addition and multiplication via ghost coordinates
-- [ ] The Frobenius $F: W(R) \to W(R)$ and Verschiebung $V: W(R) \to W(R)$; the relations $FV = p$, $VF = V(\cdot)p$
-- [ ] Big Witt vectors $\mathbb{W}(R)$: the $\lambda$-ring structure; Adams operations
-- [ ] Witt vectors as a functor $W: \mathbf{CRing} \to \mathbf{CRing}$; the universal property
-- [ ] Witt vectors and $p$-adic numbers: $W(\mathbb{F}_p) \cong \mathbb{Z}_p$
-- [ ] Witt vectors over non-commutative rings; the Hesselholt-Madsen construction
-- [ ] Thermodynamic Witt vectors: the $\oplus_\beta$ family as a Witt-type deformation of the tropical semiring; Boltzmann weights as Teichmüller representatives
-- [ ] $\delta$-rings: a $p$-derivation $\delta: R \to R$ satisfying $\delta(xy) = x^p\delta(y) + y^p\delta(x) + p\delta(x)\delta(y)$; the connection to Frobenius lifts
+**References:** Rabinoff, [*The Theory of Witt Vectors*](https://math.uchicago.edu/~may/TQFT/Witt.pdf); Hazewinkel, [*Witt Vectors*](https://arxiv.org/abs/0804.3888); Borger, [*The Basic Geometry of Witt Vectors, I*](https://arxiv.org/abs/0801.1691); Joyal, *$\delta$-anneaux et vecteurs de Witt*
 
-**Key references:**
+---
 
-- Rabinoff, [*The Theory of Witt Vectors*](https://math.uchicago.edu/~may/TQFT/Witt.pdf) — best expository notes, self-contained
-- Hazewinkel, [*Witt Vectors*](https://arxiv.org/abs/0804.3888) — comprehensive reference
-- Borger, [*The Basic Geometry of Witt Vectors, I*](https://arxiv.org/abs/0801.1691) — modern perspective via $\lambda$-rings
-- Joyal, *$\delta$-anneaux et vecteurs de Witt* — for $\delta$-rings (in French; Buium's *Arithmetic Differential Equations* covers similar ground in English)
+## Relating the Two Operadic Definitions of Entropy
+
+The BFL internal $\mathcal{P}$-algebra condition and the Bradley operad derivation condition are derivations of *different objects* — an algebra over $\mathcal{P}$ vs. the operad $\mathcal{P}$ itself. The following topics are needed to understand how they relate.
+
+- Modules over operads: left $\mathcal{O}$-modules $M$ with structure maps $\mathcal{O}(n) \otimes_{\mathcal{O}} M \to M$; bimodules; the category $_\mathcal{O}\mathbf{Mod}_\mathcal{O}$; examples for $\mathrm{Ass}$ recovering the classical notion of bimodule
+- The enveloping algebra $U_\mathcal{O}(A)$: for an $\mathcal{O}$-algebra $A$, the universal associative algebra such that $\mathrm{Der}_\mathcal{O}(A, M) \cong \mathrm{Hom}_{U_\mathcal{O}(A)}(U_\mathcal{O}(A), M)$; the natural evaluation map $\mathrm{Der}(\mathcal{O}, -) \to \mathrm{Der}_\mathcal{O}(A, -)$ sending an operad derivation to an induced algebra derivation on every $\mathcal{O}$-algebra $A$
+- Operadic Kähler differentials: the universal $A$-module $\Omega^1_\mathcal{O}(A)$ with $\mathrm{Der}_\mathcal{O}(A, M) \cong \mathrm{Hom}_A(\Omega^1_\mathcal{O}(A), M)$; the universal operad bimodule $\Omega^1(\mathcal{O})$ with $\mathrm{Der}(\mathcal{O}, M) \cong \mathrm{Hom}_{\mathcal{O}\text{-bimod}}(\Omega^1(\mathcal{O}), M)$; the comparison map $\Omega^1(\mathcal{O}) \otimes_\mathcal{O} A \to \Omega^1_\mathcal{O}(A)$ and when it is an isomorphism
+- The bar construction and operadic cohomology: $B(\mathcal{O}, A, A)$ as the two-sided bar resolution computing $H^\bullet_\mathcal{O}(A, M)$; the bar construction $B(\mathcal{O})$ for the operad itself computing $H^\bullet_\mathrm{op}(\mathcal{O}, M)$; the map between the two complexes induced by evaluation
+- The explicit calculation for $\mathcal{P}$: the evaluation map $\mathrm{Der}(\mathcal{P}, M) \to \mathrm{Der}_\mathcal{P}(\mathbb{R}, N)$ for Bradley's bimodule $M = C(\mathbb{R}^-, \mathbb{R})$ and the BFL bimodule $N = \mathbb{R}$; whether the Leibniz condition on $d$ maps to the twisted-composition condition on $\alpha$ under this map
+- The operadic tangent and cotangent complex: $\mathbb{T}_\mathcal{O}(A) = \mathrm{Der}_\mathcal{O}(A, A)$ and $\mathbb{L}_\mathcal{O}(A) = \Omega^1_\mathcal{O}(A)$ as the cotangent complex; entropy as a class in $H^1(\mathbb{T}_\mathcal{O}(\mathcal{P}))$ unifying both derivation notions
+
+**References:** Fresse, *Modules over Operads and Functors* (Springer LNM 1967) Ch. 4–5; Loday & Vallette, *Algebraic Operads* Ch. 6–7, 12; Hinich, [*Homological algebra of homotopy algebras*](https://arxiv.org/abs/q-alg/9702015); Bradley, [arXiv:2107.09581](https://arxiv.org/abs/2107.09581) §3–4
