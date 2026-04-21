@@ -240,6 +240,13 @@ compatible with all the monoidal structure. This is because $f^*$ is exact and c
 >
 > Suppose $f^*$ is symmetric monoidal. Using the adjunction $- \otimes - \dashv \mathcal{H}om(-,-)$, construct a natural map $f^*\mathcal{H}om(A, B) \to \mathcal{H}om(f^*A, f^*B)$ and explain when it is an isomorphism.
 
+> [!TIP]- Solution to Exercise 5
+> **Key insight:** The map is built by transposing the counit $\mathrm{ev}: \mathcal{H}om(A,B) \otimes A \to B$ across the tensor-hom adjunction, using the monoidal constraint of $f^*$ to rewrite the source.
+>
+> **Sketch:** By the tensor-hom adjunction on $D(X)$, a map $f^*\mathcal{H}om(A,B) \to \mathcal{H}om(f^*A, f^*B)$ is equivalent to a map $f^*\mathcal{H}om(A,B) \otimes f^*A \to f^*B$. Since $f^*$ is symmetric monoidal, $f^*\mathcal{H}om(A,B) \otimes f^*A \cong f^*(\mathcal{H}om(A,B) \otimes A)$. Applying $f^*$ to the counit $\mathrm{ev}: \mathcal{H}om(A,B) \otimes A \to B$ gives the desired map. This construction is natural in $A$ and $B$.
+>
+> The map is an isomorphism when $A$ is **perfect** (dualizable in $D(Y)$): perfectness ensures $f^*A$ is dualizable in $D(X)$, so $\mathcal{H}om(f^*A,-)$ commutes with all colimits, and the projection formula $f^*\mathcal{H}om(A,B) \cong \mathcal{H}om(f^*A, f^*B)$ holds. For non-perfect $A$ the map exists but fails to be an isomorphism; the failure is measured by higher $\mathcal{E}xt^i(f^*A, f^*B)$ sheaves.
+
 ### 4.2 The Kunneth Formula
 
 💡 The first payoff of having the tensor product is the Künneth formula.
