@@ -8,9 +8,10 @@ An *operad* is an algebraic device that encodes a species of algebraic structure
 
 | File | Status | Topic |
 |------|--------|-------|
-| [[concepts/category-theory/operads/definitions\|definitions.md]] | Written | Symmetric sequences, composition product $\circ$, operad as monoid in $\mathsf{SymSeq}$, partial-composition $\circ_i$ formulation, key examples ($\mathsf{Ass}$, $\mathsf{Com}$, $\mathsf{Lie}$, $\mathsf{End}_V$, probability operad $\mathcal{P}$), colored operads |
-| [[concepts/category-theory/operads/algebras-modules\|algebras-modules.md]] | Planned | Algebras over an operad, free algebras, left/right/bimodules, enveloping algebra $U_\mathcal{O}(A)$, derivations, Kähler differentials $\Omega^1_\mathcal{O}(A)$, $A_\infty$-algebras |
-| [[concepts/category-theory/operads/koszul-duality\|koszul-duality.md]] | Planned | Bar construction $B(\mathcal{O})$, cobar $\Omega(\mathcal{C})$, twisting morphisms, Koszul duality for quadratic operads, Koszul criterion, $\mathcal{O}_\infty$-algebras |
+| [[concepts/category-theory/operads/definitions\|definitions.md]] | ✅ Written | Symmetric sequences, composition product $\circ$, operad as monoid in $\mathsf{SymSeq}$, partial-composition $\circ_i$ formulation, key examples ($\mathsf{Ass}$, $\mathsf{Com}$, $\mathsf{Lie}$, $\mathsf{End}_V$, probability operad $\mathcal{P}$), colored operads |
+| [[concepts/category-theory/operads/algebras-modules\|algebras-modules.md]] | ✅ Written | Algebras over an operad, free algebras, left/right/bimodules, enveloping algebra $U_\mathcal{O}(A)$, derivations, Kähler differentials $\Omega^1_\mathcal{O}(A)$, $A_\infty$-algebras |
+| [[concepts/category-theory/operads/koszul-duality\|koszul-duality.md]] | ✅ Written | Bar construction $B(\mathcal{O})$, cobar $\Omega(\mathcal{C})$, twisting morphisms, Koszul duality for quadratic operads, Koszul criterion, $\mathcal{O}_\infty$-algebras |
+| [[concepts/category-theory/operads/hochschild-cohomology\|hochschild-cohomology.md]] | 🔲 Planned | Hochschild cochain complex, $HH^0$–$HH^3$ and their interpretations, cup product and Gerstenhaber bracket, cyclic cohomology, operadic cohomology as the general framework |
 
 ---
 
@@ -74,6 +75,7 @@ flowchart TD
 
     D --> AM
     AM --> KD
+    KD --> HC["[[concepts/category-theory/operads/hochschild-cohomology|Hochschild Cohomology]]<br/>Cochain complex, Gerstenhaber bracket,<br/>cyclic cohomology, operadic cohomology"]
 ```
 
 ---
