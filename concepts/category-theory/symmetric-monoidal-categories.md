@@ -16,6 +16,8 @@
   - [[#3.3 Vector Spaces over a Field|3.3 Vector Spaces over a Field]]
   - [[#3.4 Chain Complexes|3.4 Chain Complexes]]
   - [[#3.5 Endofunctor Categories|3.5 Endofunctor Categories]]
+  - [[#3.6 Based Spaces|3.6 Based Spaces]]
+  - [[#3.7 Spectra|3.7 Spectra]]
 - [[#4. Braided and Symmetric Monoidal Categories|4. Braided and Symmetric Monoidal Categories]]
   - [[#4.1 The Braiding|4.1 The Braiding]]
   - [[#4.2 The Hexagon Axioms|4.2 The Hexagon Axioms]]
@@ -303,6 +305,62 @@ A *monad* on $\mathcal{C}$ is exactly a monoid object in $(\mathrm{End}(\mathcal
 > **Sketch:** $D^2(a \otimes b) = D(d^A a \otimes b + (-1)^{|a|} a \otimes d^B b)$. Expanding:
 > $= d^A(d^A a) \otimes b + (-1)^{|a|+1} d^A a \otimes d^B b + (-1)^{|a|} d^A a \otimes d^B b + (-1)^{|a|}(-1)^{|a|} a \otimes d^B(d^B b)$.
 > The first and last terms vanish by $d^2=0$, and the middle two terms cancel since they have opposite signs: $(-1)^{|a|+1}+(-1)^{|a|}=0$.
+
+### 3.6 Based Spaces
+
+**Example (Top*, ×, *).** The category $\mathbf{Top}_*$ of *based* (pointed) topological spaces carries three distinct symmetric monoidal structures:
+
+| Structure | $A \otimes B$ | Unit $I$ | Braiding $\beta_{A,B}$ |
+|---|---|---|---|
+| Cartesian | $A \times B$, basepoint $(*,*)$ | $*$ | $(a,b) \mapsto (b,a)$ |
+| coCartesian (wedge) | $A \vee B = (A \sqcup B)/(*_A \sim *_B)$ | $*$ | swap summands |
+| Smash product | $A \wedge B = (A \times B)/(A \vee B)$ | $S^0 = \{0,1\}$ | $[a,b] \mapsto [b,a]$ |
+
+The Cartesian and coCartesian structures are the categorical product and coproduct respectively, and exist in any category with finite (co)products. The smash product is the genuinely new one.
+
+**Why the smash product is the right choice.** 💡 The Cartesian and wedge structures exist on $\mathbf{Top}_*$ for the same reason they exist on every pointed category — they are forced by the universal properties of products and coproducts. They carry no information specific to the *based* structure. The smash product, by contrast, is the structure that makes $\mathbf{Top}_*$ behave like a *tensor category*:
+
+- **Closed structure.** $(\mathbf{Top}_*, \wedge, S^0)$ is closed symmetric monoidal with internal hom $\mathbf{Map}_*(A, B)$ (the based mapping space), satisfying $\mathbf{Map}_*(A \wedge B, C) \cong \mathbf{Map}_*(A, \mathbf{Map}_*(B, C))$. Neither $\times$ nor $\vee$ yields a closed structure on $\mathbf{Top}_*$.
+- **Suspension and loops.** The suspension $\Sigma A = S^1 \wedge A$ and the loop-suspension adjunction $[\Sigma A, B]_* \cong [A, \Omega B]_*$ both arise directly from the closed structure of $\wedge$. The formula $\Sigma^n A = S^n \wedge A$ makes the smash product the natural language for stable homotopy.
+- **The unit is $S^0$, not $*$.** The unit for $\wedge$ is the two-point space $S^0 = \{0,1\}$ (basepoint at $0$). This is not the terminal object — it is the sphere spectrum's zeroth space. Under stabilization, $S^0$ becomes the sphere spectrum $\mathbb{S}$, the unit for the smash product of spectra.
+- **Distributivity.** The smash product distributes over the wedge: $A \wedge (B \vee C) \cong (A \wedge B) \vee (A \wedge C)$. This is the "bilinearity" that makes the smash product the correct analogue of $\otimes_k$ for based spaces.
+
+> [!WARNING] Associativity requires convenient categories
+> The smash product $A \wedge B = (A \times B)/(A \vee B)$ is only strictly associative and symmetric monoidal in *convenient* categories of spaces — compactly generated weakly Hausdorff spaces ($\mathbf{CGWH}$) or $k$-spaces. In the full category $\mathbf{Top}_*$, the smash product fails to be associative: $(A \wedge B) \wedge C \not\cong A \wedge (B \wedge C)$ in general. This subtlety disappears when passing to spectra or the $\infty$-category of spaces.
+
+> [!NOTE] Monoid objects in each structure
+> - Monoids in $(\mathbf{Top}_*, \times, *)$: topological monoids with basepoint (e.g., loop spaces $\Omega X$ with concatenation).
+> - Monoids in $(\mathbf{Top}_*, \vee, *)$: always trivial (every object is a comonoid via the fold map, so the only monoids are contractible).
+> - Monoids in $(\mathbf{Top}_*, \wedge, S^0)$: *ring spaces*, the precursors of ring spectra.
+
+### 3.7 Spectra
+
+Stabilizing $(\mathbf{Top}_*, \wedge, S^0)$ — inverting the suspension functor $\Sigma = S^1 \wedge -$ — produces the category of *spectra* $\mathbf{Sp}$, the natural home for stable homotopy theory.
+
+**Example (Sp, smash, S).** The category $\mathbf{Sp}$ of spectra with the *smash product* $\wedge$ and unit the *sphere spectrum* $\mathbb{S}$ is a symmetric monoidal category. Achieving this at the point-set level (not merely up to homotopy) was a major technical achievement of 1990s homotopy theory:
+
+| Model | Point-set SMC? | Key feature |
+|---|---|---|
+| Sequential spectra $\{E_n, \Sigma E_n \to E_{n+1}\}$ | ❌ — $\wedge$ only homotopy-associative | Simplest definition |
+| Symmetric spectra (Hovey–Shipley–Smith) | ✅ | $S_n$-equivariant structure maps |
+| Orthogonal spectra (MMSS) | ✅ | $O(n)$-equivariant structure maps; better for equivariant homotopy |
+| $S$-modules (EKMM) | ✅ | Based on linear isometries operad; $\wedge_\mathbb{S}$ literally on the nose |
+| $\infty$-category of spectra (Lurie) | ✅ | Presentably SMC stable $\infty$-category; conceptually cleanest |
+
+All four point-set models are Quillen equivalent — they present the same homotopy theory. The $\infty$-categorical formulation is the canonical one: $(\mathbf{Sp}, \wedge, \mathbb{S})$ is the *universal* presentably symmetric monoidal stable $\infty$-category.
+
+🔑 **Monoid objects in $(\mathbf{Sp}, \wedge, \mathbb{S})$ are ring spectra:**
+
+| Monoid type | Definition | Key examples |
+|---|---|---|
+| $A_\infty$ ring spectrum | monoid object up to coherent homotopy | $H\mathbb{Z}$, $KU$, $MU$, $\mathbb{S}$ |
+| $E_\infty$ ring spectrum | commutative monoid object | $H\mathbb{Z}$, $KU$, $\mathbb{S}$, $\mathrm{TMF}$ |
+| $R$-module spectrum | module over a ring spectrum $R$ | $\mathbf{Mod}_{H\mathbb{Z}} \simeq D(\mathbb{Z})$ |
+
+The last row is the key comparison: the derived category of abelian groups $D(\mathbb{Z})$ is equivalent to $H\mathbb{Z}$-module spectra, with the tensor product $\otimes^\mathbf{L}_\mathbb{Z}$ corresponding to $\wedge_{H\mathbb{Z}}$. This is why spectra are the "universal" generalization of homological algebra: $(\mathbf{Sp}, \wedge, \mathbb{S})$ stands above $D(R)$ for any ring $R$ in the same way $(\mathbf{Ab}, \otimes_\mathbb{Z}, \mathbb{Z})$ stands above modules over any ring.
+
+> [!INFO] The suspension spectrum functor is symmetric monoidal
+> The functor $\Sigma^\infty_+ : \mathbf{Top} \to \mathbf{Sp}$ (add a disjoint basepoint, then take the suspension spectrum) is symmetric monoidal: $\Sigma^\infty_+(X \times Y) \simeq \Sigma^\infty_+(X) \wedge \Sigma^\infty_+(Y)$. This is the spectral analogue of the fact that the free abelian group functor $\mathbb{Z}[-]: \mathbf{Set} \to \mathbf{Ab}$ is symmetric monoidal ($\mathbb{Z}[X \times Y] \cong \mathbb{Z}[X] \otimes_\mathbb{Z} \mathbb{Z}[Y]$). Both are "linearization" functors, and both are left adjoints.
 
 ---
 
@@ -624,6 +682,8 @@ The following table records classical algebraic structures as monoid objects:
 | $(\mathbf{Ch}(R), \otimes, R[0])$ | DG algebras | Commutative DG algebras |
 | $(\mathrm{End}(\mathcal{C}), \circ, \mathrm{Id})$ | Monads on $\mathcal{C}$ | — |
 | $(\mathbf{Top}, \times, \mathbf{1})$ | Topological monoids | Commutative top. monoids |
+| $(\mathbf{Top}_*, \wedge, S^0)$ | Ring spaces ($A_\infty$) | $E_\infty$ ring spaces |
+| $(\mathbf{Sp}, \wedge, \mathbb{S})$ | $A_\infty$ ring spectra | $E_\infty$ ring spectra |
 
 A *DG algebra* (differential graded algebra) is an associative algebra internal to $(\mathbf{Ch}(R), \otimes, R[0])$: it is a chain complex $A_\bullet$ equipped with a chain map $\mu : A \otimes A \to A$ that is associative and unital. A commutative DG algebra satisfies $\mu(a \otimes b) = (-1)^{|a||b|}\mu(b \otimes a)$ (the Koszul sign appears because $\beta_{A,A}$ in $\mathbf{Ch}(R)$ carries a sign).
 
