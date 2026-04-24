@@ -52,6 +52,9 @@ Geometrically, a set is convex if the line segment connecting any two of its poi
 
 **Example (Epigraph).** Given $f : \mathbb{R}^n \to \mathbb{R} \cup \{+\infty\}$, its *epigraph* is $\operatorname{epi}(f) = \{(x, t) \in \mathbb{R}^n \times \mathbb{R} : f(x) \le t\}$. As we will see, $f$ is a convex function if and only if $\operatorname{epi}(f)$ is a convex set.
 
+![[figures/bv2004-fig2.2-convex-nonconvex-sets.png]]
+*Figure 2.2 (Boyd & Vandenberghe, 2004): Convex and non-convex sets. Left: the hexagon (including boundary) is convex. Middle: the kidney-shaped set is not convex — the line segment between the two marked points leaves the set. Right: the square with some boundary points missing is not convex. The convex hulls of two sets are shown below.*
+
 > [!EXAMPLE] Convex versus Non-Convex Sets
 > The unit disk $\{(x_1, x_2) : x_1^2 + x_2^2 \le 1\}$ is convex. The unit circle (boundary only) is not, since the midpoint of two boundary points is typically interior. The set $\{x : |x_1| + |x_2| \le 1\}$ (the $\ell^1$ ball) is convex; the set $\{x : x_1^2 + x_2^2 = 1\} \cup \{0\}$ is not.
 
@@ -91,6 +94,12 @@ The function is *strictly convex* if the inequality is strict for $x \ne y$ and 
 
 **Epigraph characterization.** $f$ is convex if and only if $\operatorname{epi}(f)$ is a convex set. This is immediate from the definitions: the inequality above says exactly that the midpoint on the graph lies at or below the chord, which is the set-theoretic statement that $\operatorname{epi}(f)$ is convex.
 
+![[figures/bv2004-fig3.1-convex-function-chord.png]]
+*Figure 3.1 (Boyd & Vandenberghe, 2004): Graph of a convex function. The chord (line segment) between any two points $(x, f(x))$ and $(y, f(y))$ on the graph lies above the graph — this is the geometric content of the convexity inequality $f(\theta x + (1-\theta)y) \le \theta f(x) + (1-\theta)f(y)$.*
+
+![[figures/bv2004-fig3.5-epigraph.png]]
+*Figure 3.5 (Boyd & Vandenberghe, 2004): The epigraph of a function $f$, shown shaded. The lower boundary (shown darker) is the graph of $f$. The set $\operatorname{epi}(f)$ is convex if and only if $f$ is convex.*
+
 **Definition (Sublevel Set).** The *$\alpha$-sublevel set* of $f$ is $C_\alpha = \{x \in \operatorname{dom}(f) : f(x) \le \alpha\}$. Every sublevel set of a convex function is convex. (*The converse is false: a function with convex sublevel sets need not be convex.*) Functions with convex sublevel sets are called *quasiconvex*.
 
 > [!EXAMPLE] Standard Convex Functions
@@ -108,6 +117,9 @@ These conditions give practical tools for checking convexity without appealing t
 $$f(y) \ge f(x) + \nabla f(x)^\top (y - x).$$
 
 This says the graph of $f$ lies above every tangent hyperplane — convex functions have globally supporting hyperplanes at every point.
+
+![[figures/bv2004-fig3.2-first-order-condition.png]]
+*Figure 3.2 (Boyd & Vandenberghe, 2004): Geometric content of the first-order condition. The tangent line (hyperplane) at any point $(x, f(x))$ is a global underestimator of $f$: the graph of $f$ lies everywhere above the affine function $f(x) + \nabla f(x)^\top(y - x)$.*
 
 *Proof sketch* ($\Rightarrow$). Fix $x, y$ and let $\theta \in (0,1)$. By convexity, $f(\theta y + (1-\theta)x) \le \theta f(y) + (1-\theta)f(x)$, i.e., $f(x + \theta(y-x)) \le f(x) + \theta(f(y) - f(x))$. Rearranging and dividing by $\theta$:
 $$\frac{f(x + \theta(y-x)) - f(x)}{\theta} \le f(y) - f(x).$$
@@ -320,6 +332,9 @@ Since $g$ is concave and $\lambda \succeq 0$ defines a convex constraint, the du
 $$g(\lambda, \nu) \le L(\tilde{x}, \lambda, \nu) \le f_0(\tilde{x}).$$
 The first inequality holds because $g$ is an infimum. The second holds because $f_i(\tilde{x}) \le 0$, $h_j(\tilde{x}) = 0$, and $\lambda \succeq 0$, so the extra terms in $L$ are non-positive. Taking the infimum over feasible $\tilde{x}$ on the right gives $g(\lambda, \nu) \le p^*$. Since this holds for all dual-feasible $(\lambda, \nu)$, taking the supremum over dual-feasible points on the left gives $d^* \le p^*$. $\square$
 
+![[figures/bv2004-fig5.3-weak-duality-lower-bound.png]]
+*Figure 5.3 (Boyd & Vandenberghe, 2004): Geometric interpretation of weak duality. The set $\mathcal{G} = \{(f_1(x), f_0(x)) : x \in \mathcal{D}\}$ is shown. The dual function value $g(\lambda)$ equals the $t$-intercept of the supporting hyperplane $\lambda u + t = g(\lambda)$ with slope $-\lambda$. The hyperplane always lies at or below $p^*$ (the infimum of $t$ over $u \le 0$), establishing $g(\lambda) \le p^*$.*
+
 **Corollary (Certificate of Suboptimality).** If $\tilde{x}$ is primal feasible and $(\tilde{\lambda}, \tilde{\nu})$ is dual feasible, then:
 $$f_0(\tilde{x}) - p^* \le f_0(\tilde{x}) - g(\tilde{\lambda}, \tilde{\nu}).$$
 The right-hand side is computable without knowing $p^*$ and provides an upper bound on how suboptimal $\tilde{x}$ is. In practice, optimization algorithms use this *duality gap* as a stopping criterion.
@@ -348,6 +363,9 @@ The duality gap has a beautiful geometric interpretation. Consider the set:
 $$\mathcal{G} = \{(u, t) \in \mathbb{R}^m \times \mathbb{R} : \exists x \in \mathcal{D},\; f_i(x) \le u_i\;\forall i,\; f_0(x) \le t\}$$
 (ignoring equality constraints for simplicity). The optimal value $p^*$ is the infimum of $t$ over points in $\mathcal{G}$ with $u \preceq 0$. The dual function value $g(\lambda)$ is $-\lambda^\top u^* + (p^* \text{ contribution})$, corresponding to a supporting hyperplane to $\mathcal{G}$ at the point $(0, p^*)$. Strong duality holds when there is a *non-vertical* supporting hyperplane at $(0, p^*)$, which is guaranteed by Slater's condition.
 
+![[figures/bv2004-fig5.4-duality-gap.png]]
+*Figure 5.4 (Boyd & Vandenberghe, 2004): The duality gap when strong duality fails. Three supporting hyperplanes (for dual values $\lambda_1, \lambda^*, \lambda_2$) are shown tangent to $\mathcal{G}$. The best dual lower bound $d^*$ is achieved at $\lambda^*$, but $d^* < p^*$ — the hyperplane at $\lambda^*$ cannot be made to pass through $(0, p^*)$ without becoming vertical. This illustrates why strong duality requires Slater's condition.*
+
 ### 4.4 Strong Duality and Slater's Condition
 
 **Theorem (Slater's Condition implies Strong Duality).** Suppose the primal problem is convex ($f_0, f_1, \ldots, f_m$ are convex, $h_j$ are affine). If there exists a point $\tilde{x} \in \operatorname{relint}(\mathcal{D})$ such that:
@@ -360,6 +378,9 @@ Such a point $\tilde{x}$ is called *Slater feasible* or *strictly feasible*.
 > For constraints that are already affine (linear), strict feasibility is not required — they may hold with equality at $\tilde{x}$. Only the nonlinear convex constraints need to be strictly satisfied. This refinement matters in practice: mixed linear/nonlinear constraint sets appear frequently in recommendation problems.
 
 *Proof sketch (via supporting hyperplane theorem).* The proof proceeds by showing the set $\mathcal{G}$ (defined in Section 4.3) is a convex set, and $(0, p^*)$ is a boundary point. The supporting hyperplane theorem guarantees a supporting hyperplane at $(0, p^*)$. Slater's condition rules out a vertical supporting hyperplane (which would give no useful dual), so the hyperplane has the form $\{(u, t) : \lambda^\top u + t \ge p^*\}$ for some $\lambda \succeq 0$, $\mu > 0$. Normalizing $\mu = 1$ and unpacking gives $g(\lambda, \nu) = p^*$ for some $\nu$. $\square$
+
+![[figures/bv2004-fig5.6-slater-strong-duality.png]]
+*Figure 5.6 (Boyd & Vandenberghe, 2004): Geometric proof of strong duality under Slater's condition. The convex set $\mathcal{A}$ (shaded) and the vertical segment $\mathcal{B}$ (below $(0, p^*)$) are disjoint and can be separated by a hyperplane. Slater's condition guarantees this separating hyperplane is non-vertical — it must pass to the left of the strictly feasible point $(\tilde{u}, \tilde{t}) = (f_1(\tilde{x}), f_0(\tilde{x}))$ with $\tilde{u} < 0$ — yielding a dual certificate with $g(\lambda^*, \nu^*) = p^*$.*
 
 > [!WARNING] When Slater's Condition Fails
 > Slater's condition is sufficient but not necessary for strong duality. It can fail for feasible problems — e.g., if all constraints are equality constraints (no inequality constraints to satisfy strictly). When it fails, the duality gap may be strictly positive even for convex problems. Always verify Slater's condition before assuming $d^* = p^*$.
