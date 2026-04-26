@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository
 
-This is a personal knowledge repository for agent-created notes, walkthroughs, summaries of papers, and active research notes. Content spans machine learning, modern deep learning, and related fields.
+This is a personal knowledge repository for agent-created notes, summaries of papers, and active research notes. Content spans machine learning, modern deep learning, and related fields.
 
 **Style preference:** Always approach topics with a mathematical bent — favor rigorous definitions, formal notation, and derivations over high-level hand-waving, even for applied ML/DL topics.
 
@@ -24,9 +24,8 @@ papers/         ← summaries/analyses of specific papers
     figures/                         ← figures for papers in this cluster
   figures/
     <paper-slug>/                    ← figures for a flat single-paper file
-walkthroughs/   ← step-by-step derivations or implementations
-  <topic>/
-    note.md
+notes/          ← unstructured quick notes, scratchpad entries, or draft ideas
+  <slug>.md     ← flat files, no subdirectory required
 curricula/      ← structured multi-week learning curricula for a field or subfield
   <topic>/
     curriculum.md   ← week-by-week checklist of materials, concepts, learning goals, and milestones
@@ -47,7 +46,7 @@ Example for a multi-file concept topic `attention-mechanisms`:
 **Naming convention for `papers/`:** A folder under `papers/` is created only when two or more papers belong to the same topic cluster. A single standalone paper is always a flat `.md` file at the `papers/` root.
 - If a cluster later shrinks to one paper, leave the folder in place to avoid breaking wikilinks. A one-paper folder is an accepted exception.
 
-**Naming convention for `walkthroughs/`:** Single `note.md` is the default. Split only if the topic genuinely has distinct subtopics.
+**Naming convention for `notes/`:** Flat directory — one `.md` file per quick note directly under `notes/`. No subdirectories, no required structure. Use for drafts, scratchpad entries, or anything that doesn't yet fit a structured category.
 
 **Naming convention for `research/`:** Flat directory — one `.md` file per research thread directly under `research/`, named by thread slug (e.g. `research/diffusion-posterior-collapse.md`). No subdirectories. Figures go in the shared `research/figures/` folder.
 
