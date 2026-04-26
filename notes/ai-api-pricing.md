@@ -70,6 +70,19 @@ Every API call has two cost components:
 
 Output is typically **5x the input price** on Claude models (e.g. $3 input / $15 output for Sonnet 4.6).
 
+> [!INFO] Agentic loops and the growing context tax
+> The API is **stateless** — there is no server-side memory of prior turns. Every call is independent. To maintain a conversation, the client (Claude Code, claude.ai, any SDK app) re-sends the **entire** accumulated history on every request: system prompt + all prior turns + the new message.
+>
+> This means yes: each successive message in a conversation costs more than the last.
+>
+> | Turn | What you pay input for |
+> |------|----------------------|
+> | 1 | system prompt + message 1 |
+> | 2 | system prompt + msg 1 + response 1 + msg 2 |
+> | N | everything up to turn N |
+>
+> A long Claude Code session (say, an hour of agentic work with many tool calls and file reads) can accumulate hundreds of thousands of input tokens that are re-billed on every exchange. Prompt caching directly mitigates this: the stable prefix (system prompt, earlier turns once written) is served at 0.1× the normal input price on cache hits, so only the new portion of the context pays full price.
+
 ---
 
 ## 🗄️ Prompt Caching
