@@ -268,6 +268,58 @@ $$
 
 ---
 
+## ⚖️ Break-Even: Subscription vs Open-Source Pay-per-Token
+
+When does a Claude subscription make sense vs just paying per token on DeepInfra, OpenRouter, or the DeepSeek direct API?
+
+### Provider Landscape for Open-Source Models
+
+*Prices as of April 2026. "Direct" = model provider's own API.*
+
+| Model | Provider | Input | Cached input | Output |
+|-------|----------|-------|-------------|--------|
+| Qwen3-235B | DeepInfra | $0.071 | — | $0.10 |
+| Qwen3-32B | DeepInfra | $0.08 | — | $0.28 |
+| DeepSeek v4-flash | DeepSeek direct | $0.14 | $0.003 | $0.28 |
+| DeepSeek-V3.2 | DeepInfra / OpenRouter | $0.26 | $0.13 | $0.38 |
+| DeepSeek-R1 (reasoning) | DeepInfra | $0.50 | $0.35 | $2.15 |
+| DeepSeek v4-pro *(discounted)* | DeepSeek direct | $0.44 | $0.004 | $0.87 |
+
+> [!INFO] DeepSeek direct API vs DeepInfra
+> DeepSeek's own API is meaningfully cheaper than DeepInfra for DeepSeek models — v4-flash at $0.14/MTok input vs DeepInfra's $0.26 for V3.2. The cache hit rate on the direct API is extraordinary: $0.003/MTok, nearly 100× cheaper than a cache hit. DeepInfra is preferable for Qwen models (which DeepSeek doesn't host) and for OpenRouter-style multi-model access.
+
+### Blended Cost and Break-Even with Claude Pro ($20/month)
+
+Assuming 70% input / 30% output token split, and 3,000 tokens per average message over 22 working days:
+
+| Model | Blended rate | Tokens to break even | Messages/day to break even |
+|-------|-------------|---------------------|---------------------------|
+| Qwen3-235B | $0.080/MTok | 250M | ~1,894 |
+| Qwen3-32B | $0.140/MTok | 143M | ~1,083 |
+| DeepSeek v4-flash | $0.182/MTok | 110M | ~833 |
+| DeepSeek-V3.2 | $0.296/MTok | 68M | ~515 |
+| DeepSeek-R1 | $0.995/MTok | 20M | **~152** |
+
+For non-reasoning models the break-even is absurdly high — effectively unreachable for any individual user. DeepSeek-R1 is the exception: ~150 messages/day is demanding but plausible for a heavy power user.
+
+### Actual Monthly Cost at Realistic Usage
+
+| Usage | Tokens/month | Qwen3-235B | DeepSeek v4-flash | DeepSeek-R1 | Claude Pro |
+|-------|-------------|-----------|------------------|------------|-----------|
+| Light (20 msg/day) | 1.32M | $0.11 | $0.24 | $1.31 | $20 |
+| Moderate (50 msg/day) | 3.3M | $0.26 | $0.60 | $3.28 | $20 |
+| Heavy (200 msg/day) | 13.2M | $1.06 | $2.40 | $13.13 | $20 |
+| Very heavy (500 msg/day) | 33M | $2.64 | $6.00 | $32.84 | $20 |
+
+> [!TIP] The practical recommendation
+> **For exploring and experimenting with new models** (Qwen, DeepSeek, etc.), pay-per-token via DeepInfra or OpenRouter wins at every realistic usage level. At 50 messages/day you'd pay $0.26–$3.28/month vs $20 for Pro — a **6–77× saving**.
+>
+> **Keep the Claude subscription if** you actively use Claude Code, native tool use, or web search, or if you're already near the usage limits. For those use cases the subscription is buying features, not just tokens.
+>
+> **OpenRouter vs DeepInfra:** OpenRouter gives one API key for hundreds of models and easy provider switching — best for exploration. DeepInfra has slightly lower latency and matches or beats OpenRouter on price for the same models. DeepSeek's own API is cheapest for DeepSeek models specifically.
+
+---
+
 ## 🔑 Key Rules of Thumb
 
 | Situation | Guideline |
@@ -279,6 +331,9 @@ $$
 | Real-time vs batch | Use Batch API for any workload that tolerates ~1 hour latency — 50% savings |
 | Direct vs third-party | Direct Anthropic API is cheaper for Claude; third-party useful for multi-model access |
 | Subscription vs API | Subscription beats API only at high utilization (near daily limits); light users overpay |
+| Open-source vs subscription | Pay-per-token on DeepInfra/OpenRouter is cheaper at any realistic usage; break-even requires 150–1,900 messages/day |
+| Cheapest non-reasoning model | Qwen3-235B on DeepInfra at $0.08/MTok blended — 80× cheaper than Sonnet 4.6 |
+| Cheapest reasoning model | DeepSeek v4-flash direct at $0.182/MTok blended; DeepSeek-R1 at $0.995/MTok if you need full chain-of-thought |
 
 ---
 
@@ -293,3 +348,5 @@ $$
 | Claude Usage Limits Help | Official Anthropic article on how usage limits work across plans and surfaces | [support.claude.com — How do usage and length limits work?](https://support.claude.com/en/articles/11647753-how-do-usage-and-length-limits-work) |
 | Claude Daily Limits Analysis (LaoZhang) | Third-party empirical analysis of Free/Pro/Max token limits per 5-hour window | [blog.laozhang.ai/en/posts/claude-daily-limit](https://blog.laozhang.ai/en/posts/claude-daily-limit) |
 | Claude Code Pricing: Which Plan Saves Money | Real-world cost comparison and amortized analysis of subscription vs API | [ksred.com — Claude Code Pricing Guide](https://www.ksred.com/claude-code-pricing-guide-which-plan-actually-saves-you-money/) |
+| DeepSeek API Pricing | Official pricing for DeepSeek v4-flash and v4-pro models with cache rates | [api-docs.deepseek.com/quick_start/pricing](https://api-docs.deepseek.com/quick_start/pricing) |
+| OpenRouter Model Pricing | Aggregated per-token pricing across hundreds of models including DeepSeek and Qwen | [openrouter.ai/pricing](https://openrouter.ai/pricing) |
