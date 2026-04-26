@@ -242,6 +242,11 @@ $$
 0.7 \times \$3 + 0.3 \times \$15 = \$2.10 + \$4.50 = \$6.60/\text{MTok (blended)}
 $$
 
+> [!NOTE] What "blended rate" means
+> A *blended rate* is a single weighted-average price combining input and output costs, weighted by the assumed fraction of tokens that are input vs output:
+> $$\text{blended} = f_{\text{in}} \times P_{\text{in}} + f_{\text{out}} \times P_{\text{out}}$$
+> The 70/30 split used throughout this note is a rough default — your real ratio depends on your workload. Coding assistants with large file context tend toward 80/20 (more input); chat without much context closer to 60/40. The blended rate only matches your actual cost when your ratio matches the assumption.
+
 | Scenario | Subscription effective rate | vs. Sonnet API ($6.60 blended) |
 |----------|----------------------------|-------------------------------|
 | Pro at max utilization | $4.21/MTok | **36% cheaper** |
