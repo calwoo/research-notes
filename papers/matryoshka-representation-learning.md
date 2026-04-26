@@ -319,7 +319,53 @@ The problem: the PCA projection $P_m$ is computed from the covariance of an embe
 > from sklearn.linear_model import LogisticRegression
 > import torch, torch.nn as nn
 >
-> # TODO: generate data, train both models, compare 2-dim accuracy
+> # Generate data: 4-class Gaussian mixture in R^10, signal only in last 2 dims
+> np.random.seed(0)
+> n_per_class, d = 500, 10
+> means = np.array([[1,1],[1,-1],[-1,1],[-1,-1]], dtype=np.float32)
+> X_list, y_list = [], []
+> for c, mu in enumerate(means):
+>     noise = np.random.randn(n_per_class, d).astype(np.float32) * 0.3
+>     noise[:, -2:] += mu
+>     X_list.append(noise); y_list.append(np.full(n_per_class, c))
+> X = np.vstack(X_list); y = np.concatenate(y_list)
+> idx = np.random.permutation(len(X))
+> X_tr, y_tr = X[idx[:1600]], y[idx[:1600]]
+> X_te, y_te = X[idx[1600:]], y[idx[1600:]]
+>
+> # (a) Standard encoder: cross-entropy on full z
+> X_t = torch.tensor(X_tr); y_t = torch.tensor(y_tr, dtype=torch.long)
+> std_enc = nn.Linear(d, d)
+> opt = torch.optim.Adam(std_enc.parameters(), lr=1e-2)
+> for _ in range(300):
+>     opt.zero_grad()
+>     nn.CrossEntropyLoss()(std_enc(X_t), y_t).backward()
+>     opt.step()
+> with torch.no_grad():
+>     Z_tr_std = std_enc(X_t).numpy()
+>     Z_te_std = std_enc(torch.tensor(X_te)).numpy()
+>
+> # (b) MRL encoder: sum of prefix cross-entropy losses on M = {2, 4, 6, 8, 10}
+> M = [2, 4, 6, 8, 10]
+> mrl_enc = nn.Linear(d, d)
+> opt_mrl = torch.optim.Adam(mrl_enc.parameters(), lr=1e-2)
+> for _ in range(300):
+>     opt_mrl.zero_grad()
+>     z = mrl_enc(X_t)
+>     loss = sum(nn.CrossEntropyLoss()(z[:, :m], y_t) for m in M) / len(M)
+>     loss.backward(); opt_mrl.step()
+> with torch.no_grad():
+>     Z_tr_mrl = mrl_enc(X_t).numpy()
+>     Z_te_mrl = mrl_enc(torch.tensor(X_te)).numpy()
+>
+> # Compare: PCA on standard embedding vs MRL prefix z_{1:2}
+> pca = PCA(n_components=2).fit(Z_tr_std)
+> acc_pca = LogisticRegression().fit(pca.transform(Z_tr_std), y_tr).score(pca.transform(Z_te_std), y_te)
+> acc_mrl = LogisticRegression().fit(Z_tr_mrl[:, :2], y_tr).score(Z_te_mrl[:, :2], y_te)
+> print(f"PCA 2-dim accuracy:        {acc_pca:.3f}")
+> print(f"MRL prefix 2-dim accuracy: {acc_mrl:.3f}")
+> # Expected: MRL prefix ~0.95+, PCA ~0.25 (near chance) — signal was in last 2 dims,
+> # which PCA on unconstrained z has no incentive to surface.
 > ```
 
 ### 5.2 Interpolation Across Intermediate Dimensions
@@ -473,9 +519,14 @@ OpenAI's **text-embedding-3-small** and **text-embedding-3-large** models (annou
 >     K: int — shortlist size
 >     Returns: indices of top_k nearest neighbors by D_r distance
 >     """
->     # TODO: implement shortlisting phase (use query[:D_s] and database[:, :D_s])
->     # TODO: implement re-ranking phase (use query[:D_r] and shortlist[:, :D_r])
->     pass
+>     # Shortlisting: inner-product score over the first D_s dims for all N items
+>     scores_s = database[:, :D_s] @ query[:D_s]          # (N,)
+>     shortlist_idx = np.argpartition(scores_s, -K)[-K:]  # top-K by D_s score
+>     shortlist = database[shortlist_idx]                  # (K, d)
+>     # Re-ranking: rescore the K candidates at the larger D_r dimension
+>     scores_r = shortlist[:, :D_r] @ query[:D_r]               # (K,)
+>     top_k_local = np.argpartition(scores_r, -top_k)[-top_k:]  # top-k within shortlist
+>     return shortlist_idx[top_k_local]
 >
 > # Generate random data (N=100000, d=2048)
 > N, d = 100_000, 2048

@@ -19,7 +19,7 @@ A *token* is the atomic unit models process — not a word, not a character, but
 > A 1,000-word essay ≈ **~1,300 tokens**
 > This entire note ≈ **~2,000 tokens**
 
-The tokenization scheme varies by model family (Anthropic uses its own tokenizer; OpenAI uses tiktoken; Opus 4.7 uses a newer tokenizer that may consume up to 35% more tokens for the same text than earlier Claude models).
+The tokenization scheme varies by model family (Anthropic uses its own tokenizer; OpenAI uses tiktoken; Opus 4.7 uses a newer tokenizer that may produce up to 35% more tokens for the same input text compared to earlier Claude models — i.e., the same English sentence requires more token IDs, which increases cost proportionally).
 
 ---
 
