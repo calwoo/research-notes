@@ -39,9 +39,7 @@ At Sonnet 4.6's rate of **$3/MTok input**:
 | 100,000 (large document) | $0.30 |
 | 1,000,000 (1M tokens) | $3.00 |
 
-This is why pricing feels "cheap per call" but adds up at scale — 10,000 API calls with a 1,000-token prompt costs $0.03 total in input, but 10,000 calls with a 50,000-token system prompt costs $1,500.
-
-TODO: i don't understand this calculation. 10000*1000 = 10 million, so $30, right?
+This is why costs add up at scale — 10,000 API calls with a 1,000-token prompt costs **$30** in input, but 10,000 calls with a 50,000-token system prompt costs **$1,500** — 50× more, driven entirely by prompt size.
 
 ---
 
