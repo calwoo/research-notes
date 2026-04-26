@@ -41,6 +41,8 @@ At Sonnet 4.6's rate of **$3/MTok input**:
 
 This is why pricing feels "cheap per call" but adds up at scale — 10,000 API calls with a 1,000-token prompt costs $0.03 total in input, but 10,000 calls with a 50,000-token system prompt costs $1,500.
 
+TODO: i don't understand this calculation. 10000*1000 = 10 million, so $30, right?
+
 ---
 
 ## ↕️ Input vs Output Tokens
@@ -166,6 +168,68 @@ DeepInfra hosts both open-source models and API-resold proprietary models (Claud
 
 ---
 
+## 🧾 Subscription Plans: claude.ai
+
+Anthropic sells claude.ai access as a *compute capacity* subscription rather than a token budget. Usage limits are dynamic — they vary by model chosen, features used (web search, computer use), conversation length, and live system load. **Anthropic does not publish fixed token counts for any plan.** The numbers below are third-party empirical estimates.
+
+### Plan Pricing
+
+| Plan | Price | Usage multiple | Est. messages per 5-hr window |
+|------|-------|---------------|-------------------------------|
+| Free | $0 | baseline | dynamic / low |
+| Pro | $20/month | 5× Free | ~45 |
+| Max 5× | $100/month | 5× Pro (25× Free) | ~225 |
+| Max 20× | $200/month | 20× Pro (100× Free) | ~900 |
+
+Usage resets on a **rolling 5-hour window** — not midnight daily. Pro and Max also have a weekly all-model cap for extremely heavy users. All Claude surfaces (claude.ai, Claude Code, Claude Desktop) draw from the **same shared pool**.
+
+> [!WARNING] These are estimates, not guarantees
+> The message counts above come from independent user testing, not Anthropic documentation. A message with a large attachment or a long multi-turn history consumes far more than one with a short prompt. Your real headroom will be lower if you use tools, images, or Opus-class models heavily.
+
+### 📐 Amortized MTok Cost
+
+To compare subscription to API pricing, assume a "heavy user" scenario:
+- **22 working days/month**, Claude used **8 hours/day** → ~1.6 five-hour windows/day
+- **Average message:** ~2,000 input tokens + ~1,000 output tokens = 3,000 tokens/message
+
+| Plan | Messages/month (max) | Tokens/month (est.) | Monthly price | Effective blended rate |
+|------|---------------------|---------------------|--------------|----------------------|
+| Pro | 45 × 1.6 × 22 = 1,584 | ~4.75M | $20 | **~$4.21/MTok** |
+| Max 5× | 225 × 1.6 × 22 = 7,920 | ~23.8M | $100 | **~$4.21/MTok** |
+| Max 20× | 900 × 1.6 × 22 = 31,680 | ~95M | $200 | **~$2.11/MTok** |
+
+For reference, Sonnet 4.6 via API at a typical 70/30 input/output mix:
+
+$$
+0.7 \times \$3 + 0.3 \times \$15 = \$2.10 + \$4.50 = \$6.60/\text{MTok (blended)}
+$$
+
+| Scenario | Subscription effective rate | vs. Sonnet API ($6.60 blended) |
+|----------|----------------------------|-------------------------------|
+| Pro at max utilization | $4.21/MTok | **36% cheaper** |
+| Max 5× at max utilization | $4.21/MTok | **36% cheaper** |
+| Max 20× at max utilization | $2.11/MTok | **68% cheaper** |
+| Pro at 20% utilization | ~$21/MTok | **3× more expensive** |
+
+**The utilization rate is everything.** Subscription saves money only when you push against the limits. Light users (a handful of messages per day) pay a steep premium over API.
+
+> [!INFO] Why Max 20× has a better effective rate than Max 5×
+> Max 5× costs $100 and gives 5× Pro's tokens. Max 20× costs $200 (2× the price) but gives 20× Pro's tokens (4× more than Max 5×). The pricing is superlinear in usage — each tier is a better deal per token than the tier below it, assuming full utilization.
+
+> [!EXAMPLE] Real-world data point
+> One heavy Claude Code user reported consuming ~10B tokens over 8 months on Max 5× ($800 total). Over 90% were prompt cache reads. The estimated API equivalent was ~$15,000 — a **93% saving**. The extreme savings are driven by cache reads costing only $0.50/MTok vs $5/MTok for fresh Opus input; subscription plans absorb cache reads at no extra charge relative to the flat monthly fee.
+
+### When subscription beats API
+
+| Use case | Recommendation |
+|----------|---------------|
+| Sustained daily interactive use (chat, Claude Code) | Pro or Max — subscription wins |
+| Occasional/light usage | API — pay only for what you use |
+| Batch jobs, pipelines, overnight processing | API + Batch API (50% discount) — subscription doesn't apply |
+| Mixed interactive + batch | API for batch, subscription for chat |
+
+---
+
 ## 🔑 Key Rules of Thumb
 
 | Situation | Guideline |
@@ -176,6 +240,7 @@ DeepInfra hosts both open-source models and API-resold proprietary models (Claud
 | Which cache tier? | 5-min if calls cluster in short bursts; 1-hr for long sessions or pipelines |
 | Real-time vs batch | Use Batch API for any workload that tolerates ~1 hour latency — 50% savings |
 | Direct vs third-party | Direct Anthropic API is cheaper for Claude; third-party useful for multi-model access |
+| Subscription vs API | Subscription beats API only at high utilization (near daily limits); light users overpay |
 
 ---
 
@@ -186,3 +251,7 @@ DeepInfra hosts both open-source models and API-resold proprietary models (Claud
 | Anthropic Pricing Docs | Full pricing tables for all Claude models, prompt caching, batch, tool use, and managed agents | [platform.claude.com/docs/en/about-claude/pricing](https://platform.claude.com/docs/en/about-claude/pricing) |
 | DeepInfra Pricing | Per-token pricing for open-source and proprietary models hosted on DeepInfra | [deepinfra.com/pricing](https://deepinfra.com/pricing) |
 | Anthropic Prompt Caching Guide | Implementation details, code examples, and supported models for prompt caching | [platform.claude.com/docs/en/build-with-claude/prompt-caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching) |
+| Claude Subscription Pricing | Official plan comparison for Free, Pro, Max, Team, and Enterprise tiers | [claude.com/pricing](https://claude.com/pricing) |
+| Claude Usage Limits Help | Official Anthropic article on how usage limits work across plans and surfaces | [support.claude.com — How do usage and length limits work?](https://support.claude.com/en/articles/11647753-how-do-usage-and-length-limits-work) |
+| Claude Daily Limits Analysis (LaoZhang) | Third-party empirical analysis of Free/Pro/Max token limits per 5-hour window | [blog.laozhang.ai/en/posts/claude-daily-limit](https://blog.laozhang.ai/en/posts/claude-daily-limit) |
+| Claude Code Pricing: Which Plan Saves Money | Real-world cost comparison and amortized analysis of subscription vs API | [ksred.com — Claude Code Pricing Guide](https://www.ksred.com/claude-code-pricing-guide-which-plan-actually-saves-you-money/) |
