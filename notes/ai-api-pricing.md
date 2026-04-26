@@ -127,6 +127,26 @@ For Sonnet 4.6 ($3/MTok base input):
 - **Automatic (`cache_control` at request level):** Anthropic manages cache breakpoints as the conversation grows. Simplest to use.
 - **Explicit (per content block):** You tag specific blocks for caching — fine-grained control, better for complex multi-document prompts.
 
+### 🤖 Claude Code and Prompt Caching
+
+Claude Code enables prompt caching automatically — no configuration required. It caches the following layers in order, from most to least stable:
+
+1. **System prompt** (~4,000 tokens) — shared across all sessions
+2. **Tool definitions** — locked at session startup
+3. **`CLAUDE.md` contents** — shared within a project
+4. **Conversation history** — sliding breakpoint that advances as the conversation grows
+
+Each cache hit resets the TTL timer, so an active coding session stays warm indefinitely. A typical 100-turn session drops from ~$50–100 to ~$10–19 in input costs from caching alone.
+
+> [!WARNING] The 5-minute TTL regression (March 2026)
+> Claude Code silently regressed its default cache TTL from **1 hour → 5 minutes** in early March 2026. Any pause longer than 5 minutes now expires the cache, forcing a full re-upload of the accumulated context at the expensive *write* rate ($3.75–6.25/MTok) rather than the cheap *read* rate ($0.30–0.50/MTok) — a **12.5× price difference** for those tokens.
+>
+> An analysis of ~120,000 API calls found this caused ~17% cost inflation post-regression, and subscription users began hitting their 5-hour quota limits for the first time. February (when 1-hour TTL was active) showed only 1.1% waste; March jumped to 25.9%.
+>
+> **Practical implication:** stepping away mid-session for a coffee break (>5 min) means the next message pays full cache-write price to rebuild the entire context before reads become cheap again. This is tracked in [anthropics/claude-code#46829](https://github.com/anthropics/claude-code/issues/46829).
+
+You can disable caching entirely with the environment variable `DISABLE_PROMPT_CACHING=1`.
+
 ---
 
 ## ⚡ Batch API: 50% Off for Async
