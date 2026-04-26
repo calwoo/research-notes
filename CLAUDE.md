@@ -36,9 +36,9 @@ docs/           ← documentation and design docs
   plans/        ← implementation plans before execution
 ```
 
-**Naming convention for `concepts/`:** The topic slug is the folder name. Note files inside a concept folder should be named to reflect their content — use `note.md` only when a single file suffices; split into multiple descriptively-named files when a topic is broad enough to warrant it.
+**Naming convention for `concepts/`:** The topic slug is the folder name. Note files inside a concept folder must always be descriptively named — never use `note.md`. Even a single-file topic should have a filename that reflects its content.
 
-Example for a multi-file concept topic `attention-mechanisms`:
+Example:
 - `concepts/attention-mechanisms/standard-attention.md` — softmax attention
 - `concepts/attention-mechanisms/linear-attention.md` — linear attention variants
 - `concepts/attention-mechanisms/history.md` — historical development
@@ -73,15 +73,11 @@ The solution immediately follows as a `[!TIP]-` collapsible callout (see Obsidia
 > **Sketch:** ...
 ```
 
-Exercises should span two categories across the whole note, in order of appearance:
-1. **Mathematical Development** — derivations, proofs, limit arguments, and mathematically sharp conceptual results (16–18 problems total)
-2. **Algorithmic Applications** — pseudocode sketches, numerical implementation, complexity analysis (5–7 problems total)
-
-Problems are numbered continuously 1–N across both categories. Solutions use **Key insight** + **Sketch** format (not full worked derivations).
+Problems are numbered continuously 1–N throughout the note. Solutions use **Key insight** + **Sketch** format (not full worked derivations).
 
 ## Notes Format
 
-- Each note must begin with a table of contents listing all top-level sections and their subsections, immediately after the title.
+- For notes with more than a few sections, include a table of contents listing all top-level sections and their subsections, immediately after the title.
 - **For paper notes:** include a TL;DR table immediately after the author line. Columns: `| Dimension | Prior State | This Paper | Key Result |`. The `Key Result` column holds the primary quantitative takeaway for that dimension (e.g. "+12.4% engagement", "5.3x faster than FlashAttention2"). Rows should reflect the most important dimensions of novelty.
 - **For paper notes:** include a `## Relations` section immediately after the TL;DR table and before the TOC. See **Paper note header order** below for the full header sequence. The `## Relations` heading itself is omitted from the TOC. If all sub-fields are empty, omit the heading entirely.
 
@@ -103,7 +99,7 @@ Problems are numbered continuously 1–N across both categories. Solutions use *
   Placeholder links for papers or concepts without notes yet are marked with `*(no note yet)*`.
 - **For research notes:** see the dedicated **Research Notes Format** section below for structure and workflow rules.
 - When researching a topic, always include a references table at the end of the note with columns: "Reference Name", "Brief Summary", "Link to Reference".
-- After writing a note, fetch figures and diagrams from the cited references and embed them inline at relevant locations to improve exposition. Use the `image-extractor` agent for this.
+- When a note cites sources with figures worth embedding, use the `image-extractor` agent to fetch and embed them inline at relevant locations.
 - **Paper note header order:** For paper notes specifically, the header order is: Title → Authors/venue line → TL;DR table → Relations section → Table of Contents. This supersedes the general "TOC immediately after the title" rule for paper notes only.
 - **Inline wikilinks** to related paper notes and concept notes should appear throughout the body — link on the first mention of a related paper or concept within each major section (`##` heading level). Do not re-link the same target within the same section.
 
@@ -193,7 +189,7 @@ Use these types consistently:
 | `QUESTION` | yellow | Open problems, unresolved debates |
 | `QUOTE` | grey | Verbatim excerpts worth preserving |
 
-**Guidance:** Prefer callouts over parenthetical asides or footnotes. Use collapsible callouts (`-`) for lengthy digressions or full worked examples that only some readers will want. Place at least one callout per major section (`##`) where supplementary information exists.
+**Guidance:** Prefer callouts over parenthetical asides or footnotes. Use collapsible callouts (`-`) for lengthy digressions or full worked examples that only some readers will want.
 
 **Exercise solutions** must always use `[!TIP]-` (collapsible, green). Title format: `Solution to Exercise N`. Example:
 ```
@@ -203,7 +199,7 @@ Use these types consistently:
 
 ### Emoji Usage
 
-Use emojis throughout notes to add visual color to the exposition. Sprinkle them at section headings, before key definitions, and to signal tone (e.g. ⚠️ for warnings, 💡 for insights, 📐 for derivations, 🔑 for key results). Do not overuse — one per paragraph at most.
+Use emojis throughout notes to add visual color to the exposition. Sprinkle them at section headings, before key definitions, and to signal tone (e.g. ⚠️ for warnings, 💡 for insights, 📐 for derivations, 🔑 for key results).
 
 ### References and Hyperlinks
 
@@ -217,9 +213,6 @@ Notes are viewed in Obsidian. Use Obsidian's wikilink syntax for all TOC links �
 - The text after `#` must be the **exact literal heading text** as it appears in the document (strip the leading `##`/`###` only)
 - Example: heading `### 4.2 The Abelian Property` → TOC entry `[[#4.2 The Abelian Property|4.2 The Abelian Property]]`
 - Subsections are indented with spaces in the TOC list
-
-**Never put LaTeX (`$...$`) in headings** — it makes the literal heading text awkward in wikilinks and renders unpredictably.
-**Never use em-dashes (`—`) in headings** — use a colon instead.
 
 **Cross-file wikilinks** (for Relations blocks and inline body links) use vault-relative paths without the `.md` extension:
 - Paper links: `[[papers/paper-slug|Display Name]]` (flat) or `[[papers/topic/paper-slug|Display Name]]` (cluster)
