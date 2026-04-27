@@ -9,7 +9,8 @@
 
 | File | Status | Topic |
 |------|--------|-------|
-| `singular-learning-theory.md` | 🔲 Planned | Watanabe's RLCT, resolution of singularities, Bayesian asymptotics |
+| `singular-learning-theory.md` | ✅ Written | Watanabe's RLCT, resolution of singularities, Bayesian asymptotics |
+| `bernstein-sato-and-zeta-functions.md` | ✅ Written | Gelfand zeta function, b-function, Kashiwara's theorem, monodromy, SLT pipeline |
 | `expressivity-and-complexity.md` | 🔲 Planned | Neuromanifold dimension/degree, tensor rank, Milnor-Thom bounds |
 | `loss-landscape-geometry.md` | 🔲 Planned | Critical point structure, Morse theory, EDD, symmetry quotients |
 | `algebraic-statistics-connections.md` | 🔲 Planned | MLE on varieties, graphical models, identifiability, exponential families |
