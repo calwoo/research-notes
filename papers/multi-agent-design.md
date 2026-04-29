@@ -15,7 +15,7 @@
 ## Relations
 
 **Builds on:** [MIPRO (Automatic Prompt Optimization)](https://arxiv.org/abs/2406.11695) *(no note yet)*, [ADAS: Automated Design of Agentic Systems](https://arxiv.org/abs/2408.08435) *(no note yet)*, [AFlow](https://arxiv.org/abs/2410.10762) *(no note yet)*
-**Concepts used:** [[concepts/neural-scaling-laws/note|Neural Scaling Laws]], [[concepts/mixture-of-experts/note|Mixture of Experts]]
+**Concepts used:** [[concepts/ml-theory/power-law-scaling|Neural Scaling Laws]], [[concepts/mixture-of-experts/note|Mixture of Experts]]
 
 ---
 

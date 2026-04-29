@@ -13,7 +13,7 @@ Buyun Zhang, Liang Luo, Yuxin Chen, Jade Nie, Xi Liu, Daifeng Guo, Yanli Zhao, S
 ## Relations
 
 **Builds on:** [[papers/dhen-ranking|DHEN]], [[papers/generative-recommenders/hstu|HSTU]]
-**Concepts used:** [[concepts/neural-scaling-laws/note|Neural Scaling Laws]], [[concepts/ab-testing/foundations|A/B Testing Foundations]]
+**Concepts used:** [[concepts/ml-theory/power-law-scaling|Neural Scaling Laws]], [[concepts/ab-testing/foundations|A/B Testing Foundations]]
 
 ## Table of Contents
 
@@ -46,7 +46,7 @@ Buyun Zhang, Liang Luo, Yuxin Chen, Jade Nie, Xi Liu, Daifeng Guo, Yanli Zhao, S
 
 ### 1.1 The Scaling Gap in Recommendation
 
-Language models exhibit a well-studied *[[concepts/neural-scaling-laws/note|scaling law]]*: loss decreases as a power of compute, $L \propto C^{-\alpha}$, enabling confident prediction of model quality before training. This property has driven massive investment in LLMs. Recommendation systems, which arguably have equal commercial importance (hundreds of billions in ad revenue), lack an equivalent. Prior work found that recommendation models *plateau*: adding parameters beyond a threshold yields diminishing returns, and baselines like DLRM saturate at roughly 31 GFLOP/example on large internal datasets.
+Language models exhibit a well-studied *[[concepts/ml-theory/power-law-scaling|scaling law]]*: loss decreases as a power of compute, $L \propto C^{-\alpha}$, enabling confident prediction of model quality before training. This property has driven massive investment in LLMs. Recommendation systems, which arguably have equal commercial importance (hundreds of billions in ad revenue), lack an equivalent. Prior work found that recommendation models *plateau*: adding parameters beyond a threshold yields diminishing returns, and baselines like DLRM saturate at roughly 31 GFLOP/example on large internal datasets.
 
 The core question Wukong addresses is: *is the plateau a fundamental property of recommendation problems, or an architectural artifact?*
 
@@ -222,7 +222,7 @@ The scaling law is demonstrated by varying all five jointly according to a compu
 
 $$\text{AUC improvement} \propto C^\alpha \quad \text{for } C \in [1 \text{ GFLOP}, 100+\text{ GFLOP per example}]$$
 
-where the exponent $\alpha$ is empirically stable across two orders of magnitude. This power-law relationship is analogous to the Chinchilla [[concepts/neural-scaling-laws/note|scaling law]] for LLMs.
+where the exponent $\alpha$ is empirically stable across two orders of magnitude. This power-law relationship is analogous to the Chinchilla [[concepts/ml-theory/power-law-scaling|scaling law]] for LLMs.
 
 **Contrast with baselines:** DCNv2, the strongest baseline, requires a *40-fold increase in compute* to reach the quality level that Wukong achieves at 1× compute. DLRM plateaus entirely around 31 GFLOP/example.
 

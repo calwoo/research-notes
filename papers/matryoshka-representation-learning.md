@@ -12,7 +12,7 @@
 ## Relations
 
 **Extended by:** [[papers/2d-matryoshka-sentence-embeddings|2D Matryoshka Sentence Embeddings]] *(no note yet)*, [[papers/matryoshka-adaptor|Matryoshka-Adaptor (EMNLP 2024)]] *(no note yet)*, [[papers/matformer|MatFormer (NeurIPS 2024)]] *(no note yet)*
-**Concepts used:** [[concepts/neural-scaling-laws/note|Neural Scaling Laws]]
+**Concepts used:** [[concepts/ml-theory/power-law-scaling|Neural Scaling Laws]]
 
 ---
 

@@ -25,7 +25,8 @@ Each topic directory contains:
 | Topic | Description |
 |-------|-------------|
 | [Mixture of Experts](concepts/mixture-of-experts/note.md) | Sparse MoE architectures, routing mechanisms, and scaling |
-| [Neural Scaling Laws](concepts/neural-scaling-laws/note.md) | Power-law scaling of loss with compute, data, and parameters |
+| [Power-Law Scaling Laws](concepts/ml-theory/power-law-scaling.md) | Power-law scaling of loss with compute, data, and parameters |
+| [Lazy/Rich Dichotomy](concepts/ml-theory/lazy-rich-dichotomy.md) | Infinite-width limits, NTK, mean-field theory, and μP |
 | [Self-Organized Criticality](concepts/self-organized-criticality/note.md) | Emergent critical behavior in complex systems |
 
 ### Papers

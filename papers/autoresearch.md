@@ -12,7 +12,7 @@
 ## Relations
 
 **Builds on:** [[papers/multi-agent-design|Multi-Agent Design Patterns]]
-**Concepts used:** [[concepts/neural-scaling-laws/note|Neural Scaling Laws]], [[concepts/mixture-of-experts/note|Mixture of Experts]]
+**Concepts used:** [[concepts/ml-theory/power-law-scaling|Neural Scaling Laws]], [[concepts/mixture-of-experts/note|Mixture of Experts]]
 
 ---
 
