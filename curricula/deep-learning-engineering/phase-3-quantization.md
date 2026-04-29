@@ -63,6 +63,7 @@
 **Concepts to understand:**
 
 - [ ] The QAT idea: simulate quantization *during* training by inserting "fake quantization" nodes that round weights to the nearest quantized value and then dequantize before the rest of the forward pass; gradients still flow through the continuous dequantized values, but the model learns weights that are robust to quantization noise
+- [ ] `torch.autograd.Function`: the mechanism for defining custom differentiable operations; requires a class with `@staticmethod forward(ctx, *inputs)` and `@staticmethod backward(ctx, *grad_outputs)`; `ctx.save_for_backward(*tensors)` saves tensors needed by backward; backward must return one gradient per input, with `None` for non-tensor inputs (e.g., Python floats); verify any custom Function with `torch.autograd.gradcheck(fn, inputs)` — this numerically differentiates the forward and checks it matches the analytical backward
 - [ ] Straight-through estimator (STE): the gradient of the round function is zero almost everywhere (it is a staircase); the STE approximates it as 1 — `d/dx round(x) ≈ 1`; this is a biased gradient estimator but works well in practice for quantization
 - [ ] FP8 training: train with weights and activations in FP8 (E4M3 or E5M2 format); accumulate gradients in FP32; native hardware support on H100; reduces memory by 4× vs. FP32 and 2× vs. BF16
 - [ ] E4M3 vs. E5M2: E4M3 (4 exponent bits, 3 mantissa) has higher precision and is used for weights/activations; E5M2 (5 exponent bits, 2 mantissa) has larger dynamic range and is preferred for gradients
@@ -70,8 +71,9 @@
 
 **Coding tasks:**
 
-- [ ] Implement fake INT8 quantization as a `torch.nn.Module` that wraps a `Linear` layer; insert it into your nanoGPT and train from scratch; compare final val loss to FP32 training
-- [ ] Implement the STE: verify that `torch.autograd.Function` with a custom `backward` returning a constant gradient works for the round operation
+- [ ] **`autograd.Function` drill — STE from scratch:** Implement `class STERound(torch.autograd.Function)` with `forward` returning `x.round()` and `backward` returning `grad_output` unchanged. Test: `x = torch.tensor([0.3, 0.7], requires_grad=True); y = STERound.apply(x); y.sum().backward(); assert x.grad.tolist() == [1.0, 1.0]`. *Expected:* passes. **If `x.grad is None`, you called `STERound(x)` instead of `STERound.apply(x)`. If `x.grad` is all zeros, you forgot to override `backward` and PyTorch computed the true derivative of `round` (which is zero almost everywhere).**
+- [ ] **Multi-arg STE with non-tensor input:** Extend to `QuantizedRound.apply(x, scale)` where `scale` is a Python float; `forward` returns `(x / scale).round() * scale`; `backward` must return `(grad_output, None)` — the `None` is for the `scale` argument. Verify that `scale` can be changed between forward calls without recompiling.
+- [ ] Implement fake INT8 quantization as a `torch.nn.Module` that wraps a `Linear` layer using your `STERound`; insert it into your nanoGPT and train from scratch; compare final val loss to FP32 training
 - [ ] Using `torchao` or `transformers` with FP8: run inference in FP8 on your trained model; measure the speedup on hardware that supports FP8 (H100/A100 with recent CUDA)
 
 > [!NOTE] Milestone
@@ -88,6 +90,9 @@
 - [ ] NF4 (Normal Float 4): a 4-bit data type designed for normally distributed weights; unlike INT4 (uniform grid), NF4 places quantization levels at the quantiles of a standard normal distribution; this minimizes quantization error for normally distributed weights (which most neural network weights approximately are, post-training)
 - [ ] Brotli/LZMA compression of model weights: after quantization, the weight tensor is stored as a byte array; applying a general-purpose compressor (Brotli, LZMA) can reduce the stored size by an additional 10–30% if weights have exploitable statistical structure; used in top Parameter Golf entries to squeeze the final few kilobytes
 - [ ] The bits-per-parameter metric: in Parameter Golf, the actual "parameter count" often means bit count / 32 (equivalently, FP32-parameter-equivalent count); a 4-bit model with 10M INT4 parameters counts as 1.25M FP32-equivalent parameters
+
+> [!TIP]- What `torchao` does under the hood: `torch.fx`
+> When you call `torchao.quantize_(model, int4_weight_only())`, it uses `torch.fx` to trace the model's computation graph, identify every `nn.Linear` call-site, and replace it with a quantized variant — without you writing any module surgery. `torch.fx.symbolic_trace(model)` produces a `GraphModule` whose `.graph` attribute is a list of `Node` objects with `node.op` ∈ `{'call_module', 'call_function', 'get_attr', 'placeholder', 'output'}`. If torchao fails to quantize a layer, it is usually because symbolic tracing hit a data-dependent branch — inspect with `torch.fx.symbolic_trace(model)` and look for `TraceError`. Fix by providing `concrete_args` or using `torch.fx.wrap` on the offending function.
 
 **Coding tasks:**
 
@@ -109,11 +114,13 @@
 - [ ] Choosing the rank `r`: the intrinsic rank of the weight update during fine-tuning is much lower than the full rank; empirically `r = 4` to `r = 64` covers most use cases; `r = d_model / 4` is a reasonable default for SFT tasks
 - [ ] Knowledge distillation: train a small "student" model to mimic the output distribution of a large "teacher" model by minimizing `KL(p_teacher || p_student)` rather than cross-entropy against hard labels; the teacher's soft probabilities carry more information than one-hot labels (they encode the relative likelihood of all tokens, not just the most likely one)
 - [ ] Combining compression techniques: the full Parameter Golf pipeline is: (1) train a compact architecture, (2) apply QAT or GPTQ, (3) optionally apply SVD to remaining large matrices, (4) apply lossless compression (Brotli/LZMA) to the quantized byte stream
+- [ ] Module surgery with `named_modules()` and `setattr`: iterate `[(name, module) for name, module in model.named_modules() if isinstance(module, nn.Linear)]`; to replace a module at path `"transformer.h.2.attn.c_proj"`, split on the last `.` to get the parent path and child name, retrieve the parent with `model.get_submodule(parent_path)`, then `setattr(parent, child_name, new_module)`; collect the full list before mutating — modifying a module's children during iteration over `named_modules()` causes a `RuntimeError`
 
 **Coding tasks:**
 
 - [ ] Apply SVD compression to the attention projection matrices in nanoGPT at various ranks; find the rank at which perplexity stays within 2% of baseline; compute the parameter savings
-- [ ] Implement LoRA as a wrapper module: `LoRALinear(linear_layer, rank=8)` that adds `BA` to the frozen weight; fine-tune only the LoRA parameters on a downstream task; verify that merging produces the same output as running the LoRA forward pass
+- [ ] **Module surgery drill:** Write `apply_lora(model, rank, target_substrings)` that walks `named_modules()`, identifies any `nn.Linear` whose name contains one of `target_substrings`, and replaces it with a `LoRALinear(original_linear, rank=rank)` that freezes the original weight and adds trainable `B ∈ ℝ^{out×r}` and `A ∈ ℝ^{r×in}`. After applying, verify: (a) `sum(p.numel() for p in model.parameters() if p.requires_grad)` equals `rank × (in + out) × n_replaced`; (b) `model.transformer.h[0].attn.c_proj` is the new `LoRALinear` instance. *Expected failure mode:* if you call `setattr` on the module returned by `named_modules()` rather than on its parent, the replacement does not register in the model's module hierarchy — the old linear is still used in the forward pass.
+- [ ] Implement LoRA merge: `lora_linear.merge()` returns a plain `nn.Linear` with weight `W + B @ A`; verify that the merged output is identical to the un-merged LoRA forward to within `1e-5`; build the full compression pipeline: train → apply LoRA → fine-tune → merge → GPTQ INT4 → Brotli
 - [ ] Build the full compression pipeline: train → GPTQ INT4 → SVD on attention projections → Brotli compress; record the final bit count and perplexity at each stage
 
 > [!NOTE] Milestone

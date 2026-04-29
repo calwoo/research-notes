@@ -26,12 +26,16 @@ Watch the video, then read `model.py` and `train.py` end to end. Every line. Ann
 - [ ] Checkpointing: save `model.state_dict()`, `optimizer.state_dict()`, `iter_num`, and the random seed together — resuming without the optimizer state causes a bad LR restart
 - [ ] `ctx = torch.autocast(device_type, dtype=torch.bfloat16)`: context manager that casts eligible ops to BF16; understand which ops are and are not cast (matmuls yes, layer norms no)
 - [ ] `scaler = torch.cuda.amp.GradScaler()`: used with FP16 (not BF16) to prevent gradient underflow; `scaler.scale(loss).backward()`, `scaler.step(optimizer)`, `scaler.update()`
+- [ ] `register_buffer` vs `register_parameter` vs raw attribute: buffers (e.g., the causal mask) move with the model across devices and appear in `state_dict()` by default but receive no gradients; raw Python attributes (`self.mask = ...`) do not move on `.cuda()` and do not appear in `state_dict()`, causing silent device-mismatch bugs in Phase V (FSDP) and Phase IV (KV cache); `persistent=False` buffers move across devices but are excluded from `state_dict()`
+- [ ] `torch.compile` graph breaks: `torch.compile` only fuses operations it can trace statically; calling `.item()`, branching on a tensor value, or using `print` inside `forward` creates a graph break that silently eliminates most of the speedup; diagnose with `TORCH_LOGS=graph_breaks` or `torch._dynamo.explain(model)(x)`
 
 **Coding tasks:**
 
 - [ ] Clone nanoGPT; annotate `train.py` line by line; write a comment above each block explaining what engineering problem it solves (not what it does)
 - [ ] Add a gradient accumulation loop: modify `train.py` to support `gradient_accumulation_steps=4` and verify loss is identical to running with `batch_size × 4`
 - [ ] Implement a save/load checkpoint cycle: save at step 100, deliberately corrupt a weight, reload from checkpoint, verify weights are restored
+- [ ] **`register_buffer` drill:** Build an `nn.Module` with a causal mask stored three ways: as a raw attribute `self.m1`, as `self.register_buffer('m2', ...)`, and as `self.register_buffer('m3', ..., persistent=False)`. Call `model.cuda()`. Print `m.device` for each and `list(model.state_dict().keys())`. *Expected:* m1 stays on CPU and is absent from `state_dict`; m2 moves to CUDA and appears in `state_dict`; m3 moves to CUDA but is absent from `state_dict`.
+- [ ] **Graph break drill:** Wrap nanoGPT with `torch.compile(model, fullgraph=True)`. Add `if loss.item() > 10: pass` inside the forward. Run one step. *Expected:* `torch._dynamo.exc.Unsupported` error. Switch to `fullgraph=False`, run `torch._dynamo.explain(model)(x)`, and confirm `graph_break_count >= 1`. Then remove the break and re-run with `fullgraph=True` to confirm it compiles cleanly.
 
 > [!NOTE] Milestone
 > After adding gradient accumulation: run with `batch_size=4, grad_accum=4` and with `batch_size=16, grad_accum=1`. Loss curves should be nearly identical (they are computing the same gradient in expectation). If they diverge significantly, check that you are dividing the loss by `grad_accum_steps` before each backward call — otherwise you are scaling the gradient by `grad_accum_steps` and the effective learning rate is too high.

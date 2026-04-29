@@ -21,12 +21,14 @@
 - [ ] Loss scaling (FP16 only): multiply the loss by a large constant (`scale=2^15`) before `.backward()`; divide gradients by the same constant before `optimizer.step()`; this prevents gradient underflow in FP16 storage. `GradScaler` automates this
 - [ ] `torch.autocast`: a context manager that casts eligible operations to a lower precision; matmuls, convolutions, and attention are cast; reductions, normalization layers, and loss computations stay in FP32; does not affect the model's stored weights (still FP32 master copy)
 - [ ] Master weights in FP32: even in BF16 training, optimizer states (momentum, variance in Adam) are stored in FP32; only the forward/backward computation uses BF16; this is essential for stability
+- [ ] `torch.no_grad()` vs `torch.inference_mode()`: both disable gradient tracking; `inference_mode` is faster (skips version-counter bookkeeping) but tensors created inside cannot be used in autograd later — safe for pure generation/eval loops, a bug if you re-enter training; use `torch.no_grad()` when you need the output tensor for a training-time loss comparison, `inference_mode` for all pure inference paths
 
 **Coding tasks:**
 
 - [ ] Add `torch.autocast(device_type='cuda', dtype=torch.bfloat16)` to your nanoGPT training loop; measure step time before and after; measure GPU memory before and after
 - [ ] Verify correctness: run 1000 steps with and without AMP; val loss should differ by less than 0.02
 - [ ] Add `GradScaler` for comparison; verify it is unnecessary with BF16 (no overflow occurs); confirm it is necessary with FP16 by observing gradient NaN without it
+- [ ] **`inference_mode` trap drill:** Inside `torch.inference_mode()`, run a forward pass and save the output tensor. Exit the context. Try `output.sum().backward()`. *Expected:* `RuntimeError: Inference tensors cannot be saved for backward`. This is the exact bug that strikes when reusing a generation function inside a training-time distillation pipeline. The fix: use `torch.no_grad()` instead for any output that flows into a subsequent training loss.
 
 > [!NOTE] Milestone
 > Expected speedup from BF16 AMP on an A100: 1.5–2.5× step time reduction. Memory reduction: approximately 40% (activations stored in BF16 rather than FP32; weights unchanged in master copy). If you see less than 1.2× speedup, check that you wrapped the entire forward pass (including attention) in the autocast context — if the matmuls are not being cast, the autocast is a no-op. Verify by inserting `print(q.dtype)` inside the attention forward to confirm Q/K/V tensors are BF16.
@@ -42,12 +44,15 @@
 - [ ] How to apply checkpointing: wrap individual transformer blocks: `output = checkpoint(block, x)` instead of `output = block(x)`; requires the wrapped function to be re-entrant (no global state mutations)
 - [ ] `torch.profiler`: wraps a training loop and records kernel-level timing; output includes a timeline of CPU and GPU operations, a table of the top-N slowest kernels, and memory usage over time
 - [ ] Compute-bound vs. memory-bandwidth-bound: a matmul is compute-bound (limited by FLOP throughput); an elementwise operation (e.g., GELU, softmax) is memory-bandwidth-bound (limited by how fast data can be read/written); FlashAttention (Phase IV) is the standard solution for the attention operation's memory bottleneck
+- [ ] Profiler schedule: naive `with profile(): for i in range(10): step()` captures allocator warmup and lazy-init noise that masks real bottlenecks; the correct pattern is `schedule(wait=1, warmup=1, active=3, repeat=2)` — skip the first step, warm up the profiler for one step, then record three active steps; `record_function('label')` inserts named regions into the trace for human-readable breakdowns
+- [ ] CUDA caching allocator: `torch.cuda.memory_allocated()` is what your model actually uses; `torch.cuda.memory_reserved()` is what PyTorch has claimed from the OS (always ≥ allocated); `torch.cuda.empty_cache()` returns the free pool to the OS but does NOT reduce `nvidia-smi` usage if another process is also holding GPU memory; `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` eliminates most OOM-from-fragmentation errors without changing peak usage
 
 **Coding tasks:**
 
 - [ ] Add gradient checkpointing to every transformer block in your nanoGPT; measure memory before/after; verify the loss curve is unchanged
-- [ ] Profile 10 training steps with `torch.profiler`; export the trace and open it in Chrome's `chrome://tracing`; identify the top 3 GPU kernels by time
+- [ ] Profile 10 training steps with `torch.profiler` using the schedule pattern: `schedule(wait=1, warmup=1, active=3)`, with `on_trace_ready=tensorboard_trace_handler('./log')`; wrap `forward`, `loss`, `backward`, and `optimizer.step()` in named `record_function` regions; open the Chrome trace and confirm backward takes ~2× forward
 - [ ] Find the operator that dominates GPU time: is it the attention computation, the MLP matmuls, or the embedding lookup?
+- [ ] **CUDA memory drill:** After one training step, print `memory_allocated()` and `memory_reserved()`; call `empty_cache()` and print again. Then in a loop allocate and free random tensors from 100MB to 500MB for 100 iterations, then attempt to allocate 800MB. *Expected:* `OutOfMemoryError` even though `memory_reserved - memory_allocated > 800MB` — this is fragmentation. Re-run with `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`. *Expected:* allocation succeeds.
 
 > [!NOTE] Milestone
 > In a standard nanoGPT training step at `d_model=768, n_layers=12, seq_len=1024, batch_size=8`: the two MLP linear layers (each `d_model × 4d_model`) should dominate GPU time — they account for roughly 60–70% of the compute. The attention computation is often 20–30%. The embedding lookup is negligible in time (it is a memory operation, very fast). If attention dominates at long sequence lengths (>2048), this is the motivation for FlashAttention in Phase IV.
@@ -86,12 +91,14 @@
 - [ ] Silent data corruption: a training loop that runs without error but produces degraded models; check for: off-by-one in the data loader (`X` and `Y` not shifted by exactly 1), incorrect attention masking (non-causal masking leaks future information), label smoothing applied to padding tokens
 - [ ] The causal mask verification test: generate from a model trained with a suspected masking bug; the output should be incoherent if future tokens were visible during training (the model learns to "look ahead" and produces text with unusually high confidence on early tokens)
 - [ ] Checkpoint diff: compare `model.state_dict()` between two checkpoints 100 steps apart; parameters that have not changed at all indicate dead neurons or a layer that is not receiving gradient signal
+- [ ] `register_forward_hook` and `register_full_backward_hook`: the standard way to instrument a live model without modifying its code; a forward hook receives `(module, input, output)` and can record or modify the output; a backward hook receives `(module, grad_input, grad_output)`; use `register_full_backward_hook` (not the deprecated `register_backward_hook`) — the "full" version provides correct gradient tuples for modules with multiple inputs
 
 **Coding tasks:**
 
 - [ ] Add NaN detection to your training loop; deliberately introduce a NaN by setting one weight to `inf`; verify detection fires before `optimizer.step()`
 - [ ] Deliberately introduce an off-by-one error in the data loader (`Y = X` instead of `Y = X[:, 1:]`); observe how the loss curve changes; diagnose from the curve alone before reading the code
-- [ ] Implement a "gradient flow check": after a backward pass, print the mean absolute gradient for each layer; verify no layer has zero gradient
+- [ ] **Hooks drill — activation distribution:** Register a `forward_hook` on every `nn.LayerNorm` in nanoGPT that records the std of the output tensor. After 100 training steps, print std per layer. *Expected:* all values near 1.0 (LayerNorm normalizes). **If any std > 5, you registered the hook on the wrong module — capturing a post-residual output rather than the LayerNorm output itself.**
+- [ ] **Hooks drill — gradient flow check:** Use `param.register_hook(lambda g: ...)` on every named parameter to record `g.abs().mean()` in a dict keyed by parameter name. Run one backward pass. *Expected:* every parameter's hook fires once with a non-zero value. **If any hook does not fire, that parameter is detached from the loss graph — a common bug after misplaced `.detach()` in custom blocks.** This replaces the need to manually recurse `model.parameters()` and is cleaner than the naive checkpoint-diff approach for catching dead layers in real time.
 
 > [!NOTE] Milestone
 > The off-by-one target bug (`Y = X` instead of `Y = X[:, 1:]`) produces a model that is predicting the current token from itself — a trivially easy task. Loss will drop very quickly to near zero on training data and stay near zero on validation data. This is the only case where near-zero training AND validation loss is suspicious — it signals the model is memorizing an identity mapping, not learning language statistics. Any other near-zero training / near-zero validation pattern is just successful learning.
@@ -111,12 +118,15 @@
 - [ ] Muon optimizer (Modular Dual): applies Newton-Schulz iteration to approximate the matrix square root of the gradient second moment; effectively steepest descent in spectral norm rather than L2 norm; works best for weight matrices (not embeddings or biases)
 - [ ] Newton-Schulz iteration: the update `X ← (3X - X³) / 2` converges to the matrix sign of the input in ~5 iterations; Muon uses this to orthogonalize the gradient direction; result: gradient updates are nearly orthogonal matrices, which have good conditioning properties for deep networks
 - [ ] Muon in practice: apply Muon to all `weight` tensors in linear/attention layers; apply AdamW to embeddings, biases, and LayerNorm parameters; this hybrid is the configuration used in modded-nanoGPT
+- [ ] Parameter groups for mixed optimizers: construct an optimizer with multiple parameter groups — `optim.AdamW([{"params": emb_params, "lr": 3e-3, "weight_decay": 0.0}, {"params": weight_params, "lr": 3e-4, "weight_decay": 0.1}])`; each group can have its own LR, weight decay, and momentum; selective freezing: `param.requires_grad_(False)` before constructing the optimizer prevents that parameter from receiving updates
+- [ ] Partitioning by tensor dimensionality: 2D tensors (weight matrices) → Muon; 1D tensors (biases, LayerNorm scale/shift) and 0D/embedding → AdamW; this is the exact partition used in modded-nanoGPT and can be automated with `[p for p in model.parameters() if p.dim() == 2]`
 
 **Coding tasks:**
 
 - [ ] Implement AdamW from scratch (without `torch.optim.AdamW`); verify it matches the PyTorch implementation on a small model by comparing parameter values after 100 steps
 - [ ] Add the Muon optimizer to your nanoGPT training loop following the modded-nanoGPT reference; train on Shakespeare; compare final val loss and convergence speed vs. AdamW
 - [ ] Profile the Muon optimizer step vs. AdamW: measure the additional time from the Newton-Schulz iterations; typical overhead is 5–15% of step time
+- [ ] **Parameter group and freeze drill:** Freeze all parameters except LoRA-like rank-4 `B, A` matrices you add to the first transformer block. Build an AdamW with two groups: frozen base at `lr=0`, trainable at `lr=3e-4`. Run 100 steps. Assert: `all(p.grad is None for p in base_params)` and `all(p.grad is not None for p in lora_params)`. *Expected:* loss decreases; base weights are identical to their initial values. **If base params have gradients, you passed them to the optimizer before calling `.requires_grad_(False)` — some optimizers allocate gradient state for all params on construction.**
 
 > [!NOTE] Milestone
 > Expected results: Muon should reach the same final validation loss as AdamW in fewer steps (~20–30% fewer on small language modeling tasks). The reason: Muon's orthogonalized updates are better conditioned than Adam's, especially in the early training phase where the gradient covariance structure is poorly estimated. If you see no improvement, check that you are applying Muon only to weight matrices and not to embeddings — Muon performs poorly on embedding tables because the rows are not fully connected to all outputs (sparse gradient structure).
