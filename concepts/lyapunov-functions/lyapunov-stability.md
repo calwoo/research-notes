@@ -214,6 +214,40 @@ So $\sum_i x_i$ is constant, equaling 1 at $t=0$. $\square$
 > $$f_1 = ax + b(1-x), \qquad f_2 = cx + d(1-x), \qquad \bar{f} = x f_1 + (1-x) f_2.$$
 > The replicator reduces to a scalar ODE $\dot{x} = x(1-x)(f_1 - f_2)$. Interior fixed points occur where $f_1 = f_2$, i.e., $x^* = (d-b)/((a-c)+(d-b))$ (when this lies in $(0,1)$).
 
+> [!QUESTION] Exercise 5: Replicator ODE for a Three-Strategy Coordination Game
+> *This exercise develops facility with the replicator ODE by working through a concrete three-strategy game where the dynamics simplify to a clean closed form.*
+>
+> > **Prerequisites:** [[#3.2 The Replicator ODE|3.2 The Replicator ODE]]
+>
+> Consider the symmetric $3 \times 3$ coordination game
+>
+> $$A = \begin{pmatrix} 3 & 1 & 1 \\ 1 & 3 & 1 \\ 1 & 1 & 3 \end{pmatrix} = 2I + J,$$
+>
+> where $J = \mathbf{1}\mathbf{1}^T$ is the all-ones matrix. Write $x = (x_1, x_2, x_3) \in \Delta^3$.
+>
+> (a) Compute $(Ax)_i$ for each $i$. Show that $(Ax)_i = 1 + 2x_i$ and hence $\bar{f}(x) = 1 + 2\|x\|^2$, where $\|x\|^2 = \sum_j x_j^2$.
+>
+> (b) Substitute into the replicator ODE (3.1) and simplify to show $\dot{x}_i = 2x_i(x_i - \|x\|^2)$.
+>
+> (c) Find all fixed points of this ODE in $\Delta^3$. (There are four: three vertices and one interior point.)
+>
+> (d) Show that each pure strategy vertex $e_k$ is an ESS. Then show that the interior fixed point $\hat{x} = (1/3, 1/3, 1/3)$ is *not* an ESS by computing $\hat{x} \cdot Ax - x \cdot Ax$ and signing it using the convexity of $\|\cdot\|^2$.
+
+> [!TIP]- Solution to Exercise 5
+> **Key insight:** The matrix $A = 2I + J$ decouples fitness into a self-advantage term and a constant, yielding $\dot{x}_i = 2x_i(x_i - \|x\|^2)$. The interior fixed point fails to be an ESS because $\|x\|^2 \geq 1/3$ by convexity, reversing the required ESS inequality.
+>
+> **Sketch:**
+>
+> (a) $(Ax)_i = 3x_i + \sum_{j \neq i} x_j = 3x_i + (1-x_i) = 1 + 2x_i$. Mean fitness: $\bar{f} = \sum_i x_i(1+2x_i) = 1 + 2\sum_i x_i^2 = 1 + 2\|x\|^2$.
+>
+> (b) $\dot{x}_i = x_i\bigl((1+2x_i) - (1+2\|x\|^2)\bigr) = 2x_i(x_i - \|x\|^2)$.
+>
+> (c) Fixed points satisfy $x_i = 0$ or $x_i = \|x\|^2$ for each $i$ in the support. If all three satisfy $x_i = \|x\|^2$, then $x_1 = x_2 = x_3$, forcing $x_i = 1/3$ and $\|x\|^2 = 1/3$. ✓ The four fixed points are $e_1, e_2, e_3$, and $(1/3, 1/3, 1/3)$.
+>
+> (d) *Vertices as ESS:* For $\hat{x} = e_k$, the ESS condition $\hat{x} \cdot Ax > x \cdot Ax$ becomes $x_k > \|x\|^2$. Near $e_k$, write $x_k = 1-\epsilon$; then $\|x\|^2 = x_k^2 + O(\epsilon^2) = (1-\epsilon)^2 + O(\epsilon^2) = 1 - 2\epsilon + O(\epsilon^2) < 1-\epsilon = x_k$ for small $\epsilon > 0$. So the inequality holds near each vertex. ✓
+>
+> *Interior point not ESS:* $\hat{x} \cdot Ax = \sum_i (1/3)(1 + 2x_i) = 1 + (2/3)\sum_i x_i = 5/3$ (constant in $x$). $x \cdot Ax = 1 + 2\|x\|^2$. By convexity of $t \mapsto t^2$: $\sum_i x_i^2 \geq (\sum_i x_i)^2/3 = 1/3$, so $x \cdot Ax \geq 5/3 = \hat{x} \cdot Ax$, with equality iff $x = \hat{x}$. The strict inequality $\hat{x} \cdot Ax > x \cdot Ax$ fails — the sign is reversed. ✗
+
 ### 3.3 Fixed Points
 
 **Proposition 3.4 (Fixed points of the replicator dynamic).** A state $x^* \in \Delta^n$ is a fixed point of (3.1) if and only if
@@ -303,6 +337,31 @@ This establishes conditions (1) and (2) of Definition 2.5: $V(\hat{x}) = D_{\mat
 
 > [!NOTE] V is defined relative to hat-x
 > We treat $V$ as a function of $x$ with $\hat{x}$ fixed as a parameter. The point $\hat{x}$ is translated to play the role of the equilibrium $x^* = 0$ in Definition 2.5 — we are certifying stability of $\hat{x}$, not of the origin.
+
+> [!QUESTION] Exercise 6: Alternative Proof of KL Non-Negativity
+> *This exercise derives Lemma 4.2 by a purely algebraic route, avoiding Jensen's inequality and using only the scalar bound $\log t \leq t - 1$.*
+>
+> > **Prerequisites:** [[#4.2 Positivity of V|4.2 Positivity of V]]
+>
+> The inequality $\log t \leq t - 1$ holds for all $t > 0$, with equality iff $t = 1$.
+>
+> (a) Applying this bound with $t = q_i / p_i$, show directly that $D_{\mathrm{KL}}(p \| q) \geq 0$ for any $p, q \in \Delta^n_\circ$.
+>
+> (b) Identify the condition for equality and confirm it matches Lemma 4.2.
+>
+> (c) The bound $\log t \leq t - 1$ is itself a consequence of the concavity of $\log$. Give a one-line proof using the tangent line to $\log$ at $t = 1$.
+
+> [!TIP]- Solution to Exercise 6
+> **Key insight:** $\log t \leq t - 1$ is the tangent-line upper bound on $\log$ at $t = 1$. Applying it to $t = q_i/p_i$ makes the sum telescope to zero, proving non-negativity without invoking Jensen's inequality at all.
+>
+> **Sketch:**
+>
+> (a) $D_{\mathrm{KL}}(p\|q) = -\sum_i p_i \log(q_i/p_i)$. Apply $\log t \leq t - 1$ with $t = q_i/p_i$:
+> $$D_{\mathrm{KL}}(p\|q) \geq -\sum_i p_i\!\left(\frac{q_i}{p_i} - 1\right) = -\sum_i q_i + \sum_i p_i = -1 + 1 = 0.$$
+>
+> (b) Equality holds iff $q_i/p_i = 1$ for all $i$ in the support of $p$, i.e., $q = p$. This matches Lemma 4.2. ✓
+>
+> (c) $\log$ is concave, so it lies below every tangent line. The tangent to $\log t$ at $t=1$ has slope $1/t|_{t=1} = 1$ and passes through $(1, 0)$: $\ell(t) = t - 1$. Concavity gives $\log t \leq \ell(t) = t - 1$.
 
 ### 4.3 Computing V-dot along Replicator Trajectories 📐
 
@@ -425,6 +484,34 @@ By Theorem 2.6 Part 2, the equilibrium $\hat{x}$ is asymptotically stable. This 
 > ```
 >
 > Taking $\eta \to 0$ (continuous time limit) recovers precisely the replicator ODE. The *multiplicative weights update algorithm* (MWUA) in online learning is the discrete-time version. The connection is made explicit in [Raskutti & Mukherjee (2015)](https://arxiv.org/abs/1310.7780), which shows that mirror descent with a Bregman divergence is equivalent to natural gradient descent on the dual Riemannian manifold. When the Bregman potential is the negative entropy $\phi(x) = \sum_i x_i \log x_i$, the induced metric is the Fisher information metric and the dynamics are replicator-like.
+
+> [!QUESTION] Exercise 7: Mirror Descent Recovers the Replicator Dynamic
+> *This exercise makes the claim in §5 precise: the continuous-time limit of KL mirror descent on the simplex is exactly the replicator ODE.*
+>
+> > **Prerequisites:** [[#5. Geometric Interpretation|5. Geometric Interpretation]], [[#3.2 The Replicator ODE|3.2 The Replicator ODE]]
+>
+> *Mirror descent* with step size $\eta > 0$ and KL divergence as Bregman potential produces the update
+>
+> $$x^{(t+\eta)} = \arg\min_{y \in \Delta^n} \Bigl[ -\eta \sum_i (Ax^{(t)})_i\, y_i + D_{\mathrm{KL}}(y \,\|\, x^{(t)}) \Bigr].$$
+>
+> (a) Solve the minimization problem. Show the solution is the *multiplicative weights update*: $x^{(t+\eta)}_i \propto x^{(t)}_i \exp\!\bigl(\eta (Ax^{(t)})_i\bigr)$. (Hint: form the Lagrangian for the constraint $\sum_i y_i = 1$ and set $\partial \mathcal{L}/\partial y_i = 0$.)
+>
+> (b) Write $x^{(t+\eta)}_i = x^{(t)}_i \exp(\eta (Ax)_i) / Z_\eta$ where $Z_\eta = \sum_j x^{(t)}_j \exp(\eta (Ax)_j)$. Expand numerator and denominator to first order in $\eta$ and show
+> $$x^{(t+\eta)}_i = x^{(t)}_i \bigl(1 + \eta\bigl((Ax)_i - \bar{f}(x^{(t)})\bigr)\bigr) + O(\eta^2).$$
+>
+> (c) Take $\eta \to 0$ to conclude $\dot{x}_i = \lim_{\eta \to 0}(x^{(t+\eta)}_i - x^{(t)}_i)/\eta$ is the replicator ODE (3.1).
+
+> [!TIP]- Solution to Exercise 7
+> **Key insight:** The KL Bregman potential forces a log-linear (softmax-type) update. Expanding to first order strips the exponential nonlinearity, leaving exactly the replicator's relative-fitness increment.
+>
+> **Sketch:**
+>
+> (a) Lagrangian: $\mathcal{L} = -\eta \sum_i (Ax)_i y_i + \sum_i y_i \log(y_i/x_i) - \lambda(\sum_i y_i - 1)$. Setting $\partial\mathcal{L}/\partial y_i = 0$: $-\eta(Ax)_i + \log(y_i/x_i) + 1 = \lambda$, giving $y_i = x_i \exp(\eta(Ax)_i + \lambda - 1) \propto x_i \exp(\eta(Ax)_i)$. Normalizing yields the multiplicative weights update.
+>
+> (b) $e^{\eta(Ax)_i} = 1 + \eta(Ax)_i + O(\eta^2)$, so $Z_\eta = \sum_j x_j(1 + \eta(Ax)_j) + O(\eta^2) = 1 + \eta\bar{f} + O(\eta^2)$. Then:
+> $$x^{(t+\eta)}_i = \frac{x_i(1+\eta(Ax)_i)}{1+\eta\bar{f}} + O(\eta^2) = x_i(1+\eta(Ax)_i)(1-\eta\bar{f}) + O(\eta^2) = x_i\bigl(1 + \eta((Ax)_i - \bar{f})\bigr) + O(\eta^2).$$
+>
+> (c) $(x^{(t+\eta)}_i - x_i)/\eta \to x_i\bigl((Ax)_i - \bar{f}(x)\bigr) = \dot{x}_i$. ✓
 
 ---
 
