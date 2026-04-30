@@ -69,6 +69,13 @@ $$\|x_0\| < \delta \implies \phi_t(x_0) \to 0 \quad \text{as } t \to \infty.$$
 
 The key idea is to certify stability without solving the ODE. One finds a scalar function $V$ that acts as a generalized energy: positive away from equilibrium, and non-increasing along trajectories.
 
+> [!INFO] 💡 Intuition: the marble in a bowl
+> Picture a marble rolling in a bowl. The height $V(x)$ is always positive away from the bottom, zero at the bottom, and the marble can only lose height over time ($\dot{V} \leq 0$). You don't need to know the marble's exact trajectory to conclude it converges to the bottom — the energy argument alone is sufficient.
+>
+> The three Lyapunov conditions formalize this directly: $V = 0$ at the equilibrium (bottom of bowl), $V > 0$ everywhere else (bowl shape), and $\dot{V} \leq 0$ (can only go downhill).
+>
+> **Why this works as a proof technique.** Lyapunov's method turns an infinite-dimensional question — "where do all trajectories go?" — into a finite check: "does this one function decrease?" Nonlinear ODEs are almost never solvable in closed form, so direct trajectory analysis is usually impossible. But you can often *construct* a Lyapunov function by physical intuition or inspired guessing, bypassing the need for a solution entirely. Existence of $V$ is the certificate.
+
 **Definition 2.5 (Lyapunov function).** Let $U \subseteq \mathbb{R}^n$ be a neighborhood of $0$. A continuously differentiable function $V: U \to \mathbb{R}$ is a *Lyapunov function* for (2.1) at $x^* = 0$ if:
 1. $V(0) = 0$.
 2. $V(x) > 0$ for all $x \in U \setminus \{0\}$ (positive definiteness).
@@ -320,6 +327,9 @@ $$V(x) = D_{\mathrm{KL}}(\hat{x} \| x) := \sum_{i=1}^n \hat{x}_i \log \frac{\hat
 $V$ is defined on $\Delta^n_\circ$ (since $\hat{x}_i > 0$ and we need $x_i > 0$ for the logarithm).
 
 **Theorem 4.1 (KL Lyapunov at an ESS).** Let $\hat{x} \in \Delta^n_\circ$ be an interior ESS. Then $V(x) = D_{\mathrm{KL}}(\hat{x} \| x)$ is a strict Lyapunov function for the replicator dynamic (3.1) in a neighborhood of $\hat{x}$. In particular, $\hat{x}$ is asymptotically stable.
+
+> [!INFO] 💡 Intuition: informational distance as energy
+> $D_{\mathrm{KL}}(\hat{x} \| x)$ measures how far the current population $x$ is from the ESS $\hat{x}$ in an information-geometric sense — it is the "energy" of the system. The ESS condition says $\hat{x}$ does strictly better against any nearby invader $x$ than $x$ does against itself ($\hat{x} \cdot Ax > x \cdot Ax$). This translates directly into $\dot{V} < 0$: the mean fitness $\bar{f}(x)$ is less than $\hat{x} \cdot Ax$, so the informational distance to $\hat{x}$ is always shrinking. The "energy" here is informational distance, and the ESS inequality is what guarantees it is always being spent.
 
 The proof occupies Sections 4.2–4.5, building each piece in turn.
 
