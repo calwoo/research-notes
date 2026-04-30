@@ -16,7 +16,7 @@ Bayesian inference (formally)
         ↓
 GP regression (derive predictive posterior)
         ↓                    ↓
-Kernel theory           Marginal likelihood + hyperparameter learning
+Kernel theory           Marginal likelihood + LOO-CV + hyperparameter learning
         ↓                    ↓
         └─────────┬──────────┘
                   ↓
@@ -69,6 +69,7 @@ You should be able to: (a) state the Gaussian conditioning formula without refer
 |----------|----------|--------|------|
 | [Rasmussen & Williams — Gaussian Processes for Machine Learning](http://www.gaussianprocess.org/gpml/) | Ch. 1 (intro), Ch. 2 (GP regression — derive everything) | Textbook (free) | 5 hrs |
 | [R&W GPML](http://www.gaussianprocess.org/gpml/) | Ch. 4 §4.1–4.3 (covariance functions) | Textbook | 3 hrs |
+| [R&W GPML](http://www.gaussianprocess.org/gpml/) | §5.4.2 (LOO-CV for GPs — closed-form predictive) | Textbook | 1 hr |
 | [Neil Lawrence — GP Summer School lectures](http://gpss.cc/) | Intro GP lecture + lab | Video + notebook | 2 hrs |
 
 ### ✏️ Exercises
@@ -87,11 +88,16 @@ Plot the posterior with 3, 10, and 50 training points on a 1D function of your c
 **Exercise 2.3 — Kernel composition.**
 Prove: if $k_1$ and $k_2$ are PSD kernels, then $k_1 + k_2$ and $k_1 \cdot k_2$ are PSD. Use this to construct a kernel modeling a trend plus periodic component.
 
+**Exercise 2.5 — GP LOO-CV in closed form.**
+For a GP fit to $n$ training points with kernel matrix $K$, the leave-one-out predictive mean and variance for point $i$ are (R&W eq. 5.12):
+$$\mu_{-i} = y_i - \frac{[K^{-1}\mathbf{y}]_i}{[K^{-1}]_{ii}}, \qquad \sigma_{-i}^2 = \frac{1}{[K^{-1}]_{ii}}$$
+Derive these from the Gaussian conditioning formula applied to the joint $p(\mathbf{y})$ by partitioning into $(y_i, \mathbf{y}_{-i})$. Then verify: why does this require only one Cholesky factorization rather than $n$ separate GP refits?
+
 **Exercise 2.4 — Mercer's theorem (conceptual).**
 State Mercer's theorem and explain in one paragraph why it licenses thinking of $k(x, x')$ as a dot product in a (possibly infinite-dimensional) feature space. Why does this matter for GP regression?
 
 ### ✅ Checkpoint
-You should be able to: (a) derive the GP posterior mean and covariance in 5 minutes given the conditioning formula, (b) explain what "distribution over functions" means precisely (not just intuitively), and (c) construct a novel kernel for a given function class and justify its PSD property.
+You should be able to: (a) derive the GP posterior mean and covariance in 5 minutes given the conditioning formula, (b) explain what "distribution over functions" means precisely (not just intuitively), (c) construct a novel kernel for a given function class and justify its PSD property, and (d) state the closed-form LOO predictive and explain why it's $O(n^3)$ total rather than $O(n^4)$.
 
 ---
 
@@ -180,6 +186,7 @@ You can reconstruct the paper's multi-task kernel from the LMC framework and exp
 - [ ] What is the theoretical guarantee, and what does it require of the kernel?
 - [ ] Where does the paper depart from the Bonilla et al. setup?
 - [ ] What are the limits of the convergence result?
+- [ ] Where does LOO-CV enter Algorithm 1 — is it used to select hyperparameters, validate the model, or both? What happens if LOO-CV MSE is high?
 
 ---
 
