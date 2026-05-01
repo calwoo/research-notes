@@ -30,6 +30,21 @@ uv sync               # install from lockfile, create .venv if absent
 uv run python train.py  # run in env without activating
 ```
 
+`uv add` requires a `pyproject.toml` in the current directory or a parent — if none exists, run `uv init` first. For a one-off script without a project:
+
+```bash
+uv run --with torch python script.py   # temporary isolated env, nothing persists
+```
+
+For CLI tools that should be available globally on PATH (think pipx):
+
+```bash
+uv tool install ruff    # ruff binary available globally
+uv tool install httpie
+```
+
+`uv tool install` is for executables only — libraries like torch have no global install path in uv and are always project-scoped.
+
 > [!INFO] Why not conda?
 > The main reason to use conda for ML was managing CUDA/cuDNN. In 2026 this is moot: cloud VMs (Lambda, RunPod) ship with CUDA pre-installed, and PyTorch bundles its own CUDA runtime. The only exception is if you need packages only available on conda channels — rare for standard ML work.
 
