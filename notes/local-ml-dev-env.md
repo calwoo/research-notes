@@ -10,6 +10,7 @@
 4. [[#4. Notebooks|4. Notebooks]]
 5. [[#5. VS Code Setup|5. VS Code Setup]]
 6. [[#6. Cloud GPU Workflow|6. Cloud GPU Workflow]]
+7. [[#7. Secrets and Environment Variables|7. Secrets and Environment Variables]]
 
 ---
 
@@ -56,11 +57,25 @@ uv tool install httpie
 my-project/
 ├── pyproject.toml    ← dependency declarations
 ├── uv.lock           ← exact lockfile, committed to git
+├── .python-version   ← pins Python minor version, committed to git
 ├── .venv/            ← auto-created by uv, gitignored
 └── src/
 ```
 
 The `uv.lock` file encodes exact versions for *all platforms simultaneously* — one lockfile works for both Mac and Linux cloud VMs.
+
+Pin the Python version so `uv sync` on the cloud VM uses the same minor version as local:
+
+```bash
+uv python pin 3.12    # writes .python-version
+```
+
+Also set `requires-python` in `pyproject.toml` to make the constraint explicit:
+
+```toml
+[project]
+requires-python = ">=3.12"
+```
 
 ---
 
@@ -101,6 +116,22 @@ explicit = true
 > `cu124` targets CUDA 12.4. Verify with `nvcc --version` on the cloud VM and adjust the index URL accordingly (e.g. `cu121`, `cu126`).
 
 Same `uv sync` command on both machines — different wheels, same lockfile.
+
+### Using MPS on Mac
+
+The CPU/MPS wheel includes MPS support but you need to select the device explicitly:
+
+```python
+device = torch.device(
+    "mps" if torch.backends.mps.is_available()
+    else "cuda" if torch.cuda.is_available()
+    else "cpu"
+)
+model = model.to(device)
+```
+
+> [!WARNING] MPS limitations
+> MPS does not support float64 — use float32 throughout. Some ops fall back to CPU silently; if you hit unexpected slowness, profile with `PYTORCH_MPS_FALLBACK_POLICY=error` to surface them.
 
 ---
 
@@ -222,5 +253,70 @@ Use `tmux` so the job survives SSH disconnection.
 | Lambda Labs | A or B | Persistent storage, stable IPs |
 | RunPod / Vast.ai | B | Treat VM as ephemeral |
 
+### Getting results back
+
+After a training run, pull checkpoints with `rsync`:
+
+```bash
+rsync -avz --progress root@<pod-ip>:~/project/checkpoints/ ./checkpoints/
+```
+
+For longer-lived artifact storage, push to the HuggingFace Hub instead of copying back:
+
+```python
+from huggingface_hub import HfApi
+HfApi().upload_folder(folder_path="checkpoints/", repo_id="your-user/model-name")
+```
+
+Then pull from any machine with `huggingface-cli download your-user/model-name`. This is more robust than `rsync` for ephemeral VMs where the pod may be gone before you remember to pull.
+
 > [!INFO] Why uv.lock makes this reliable
 > The lockfile resolves exact versions for both `darwin` and `linux` at `uv lock` time. `uv sync` on the cloud VM installs the exact CUDA wheel that was resolved on your Mac — not whatever is latest on the index that day.
+
+---
+
+## 7. Secrets and Environment Variables
+
+Keep secrets in a `.env` file at the project root — never commit it:
+
+```bash
+# .env
+HF_TOKEN=hf_...
+WANDB_API_KEY=...
+AWS_ACCESS_KEY_ID=...
+```
+
+Pass it to any `uv run` invocation with `--env-file`:
+
+```bash
+uv run --env-file .env python train.py
+```
+
+Or load it inside Python with `python-dotenv`:
+
+```bash
+uv add python-dotenv
+```
+
+```python
+from dotenv import load_dotenv
+load_dotenv()   # reads .env into os.environ
+```
+
+Add to `.gitignore`:
+
+```
+.env
+.env.*
+!.env.example
+```
+
+Keep a committed `.env.example` with keys but no values so collaborators know what to fill in.
+
+**Getting secrets onto a cloud VM:**
+
+```bash
+scp .env root@<pod-ip>:~/project/.env
+```
+
+For ephemeral VMs (RunPod / Vast.ai), most providers also let you inject environment variables via their UI — prefer that over copying files to pods you'll destroy.
