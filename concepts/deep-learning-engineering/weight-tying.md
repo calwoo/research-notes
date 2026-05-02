@@ -2,6 +2,7 @@
 
 ## Table of Contents
 
+- [[#0. Intuition|0. Intuition]]
 - [[#1. Motivation: Parameter Dominance at the Vocabulary Boundary|1. Motivation: Parameter Dominance at the Vocabulary Boundary]]
   - [[#1.1 Where Parameters Live|1.1 Where Parameters Live]]
   - [[#1.2 The Symmetry Observation|1.2 The Symmetry Observation]]
@@ -29,6 +30,23 @@
   - [[#6.2 Output Projection Scaling|6.2 Output Projection Scaling]]
   - [[#6.3 Cross-Layer Weight Sharing|6.3 Cross-Layer Weight Sharing]]
 - [[#References|References]]
+
+---
+
+## 0. Intuition 🧠
+
+A language model touches the vocabulary at exactly two points in its forward pass: at the very start, when it converts input token IDs into vectors, and at the very end, when it converts its final hidden state back into a probability distribution over tokens. Two big matrices do this work — call them the *embedding* matrix and the *unembedding* matrix.
+
+Weight tying is the observation that these two matrices are doing essentially the same job, just in opposite directions — and so there's no reason they can't share the same numbers.
+
+Here's the intuition. The embedding matrix has to answer: *"What does token* `dog` *mean as a context clue?"* The unembedding matrix has to answer: *"How strongly does this hidden state point toward predicting* `dog`*?"* Both questions are about the same underlying thing — the meaning of `dog` in the distributional sense. A token that tends to appear after `golden retriever` (as a prediction target) is exactly the kind of token whose embedding should encode "follows pet-related context" (as an input signal). The two representations are different facets of the same semantic fact.
+
+> [!EXAMPLE] A concrete picture
+> Imagine the model's hidden state as a point in a 4096-dimensional space. The unembedding matrix is a collection of 50,000 "template vectors," one per vocabulary token. The model predicts the next token by asking: *which template is my hidden state most aligned with?* The embedding matrix is also a collection of 50,000 vectors — one per vocabulary token — used to seed the transformer's input representation.
+>
+> Weight tying says: use the same 50,000 vectors for both purposes. The "template for predicting `dog`" and the "seed vector for reading `dog`" are identical. This halves the parameter count for the vocabulary layer and, crucially, turns out to *also* improve generalization — because it forces the model to learn representations that are simultaneously good at both tasks.
+
+The rest of this note formalizes this picture, analyzes when it works, when it fails, and how the shared weight is updated during training.
 
 ---
 
