@@ -16,7 +16,7 @@ This file is the index for the `concepts/deep-learning-engineering/` folder. It 
 
 | File | Topic |
 |------|-------|
-| `gradient-checkpointing.md` | Recompute activations on the backward pass to reduce peak memory |
+| `gradient-checkpointing.md` | ✅ Recompute activations on the backward pass to reduce peak memory |
 | `mixed-precision.md` | FP16/BF16 training, loss scaling, and master weight copies |
 | `muon.md` | Orthogonalized gradient descent for 2D weights; the top Parameter Golf optimizer |
 | `mup-parametrization.md` | Maximal Update Parametrization — transfer optimal hyperparameters from small to large models |
