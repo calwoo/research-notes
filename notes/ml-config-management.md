@@ -31,6 +31,8 @@ Silent failure modes:
 
 ## 2. Tier 1 — dataclasses
 
+**The trigger:** You're passing a config dict around and can't remember whether the key is `"learning_rate"` or `"lr"`. Your IDE can't help — dict keys are opaque strings. You grep the codebase, find three inconsistent spellings, and discover a silent bug that's been present for weeks. The moment your config has more than a handful of keys and gets passed across module boundaries, you want a *named, typed structure*.
+
 > [!INFO] When to use
 > You want structure and dot-access with zero new dependencies. Good starting point for a small project.
 
@@ -64,6 +66,8 @@ print(asdict(cfg))          # → plain dict for logging
 ---
 
 ## 3. Tier 2 — Pydantic v2
+
+**The trigger:** Someone edits your YAML config so that `lr: 1e-3` becomes `lr: "1e-3"` — now a string. Your `@dataclass` silently accepts it, and AdamW crashes three minutes into training on a remote GPU. Or: you want to reload a saved config to reproduce an experiment, but the round-trip through `asdict()` → JSON → `TrainConfig(...)` requires manual reconstruction. *Dataclasses give you structure but no contract* — no guarantee that values are the right type, in the right range, or even present. The moment you need to trust that a loaded config is valid, you need runtime validation.
 
 > [!INFO] When to use
 > Production ML projects where you load config from files or env vars and want runtime validation. The sweet spot for most projects.
@@ -148,6 +152,8 @@ cfg2 = TrainConfig.model_validate_json(cfg.model_dump_json())
 ---
 
 ## 4. Tier 3 — Hydra
+
+**The trigger:** You have a working training script and want to compare Transformer vs. Mamba at three learning rates — six runs total for one ablation table. You edit `config.yaml`, run, edit again, run again. By run four you're no longer sure which checkpoint came from which settings. You rename files by hand, keep a spreadsheet, and still manage to submit the wrong job twice. *Pydantic gives you a validated config object, but it says nothing about how to systematically vary that config across experiments.* The moment you need to define and enumerate a combinatorial experiment space — without editing Python — you need a config composition layer.
 
 > [!INFO] When to use
 > Research projects with many experiment variants: you want to swap model architectures, optimizers, or schedulers from the CLI without editing Python. Essential for grid/random hyperparameter sweeps.
