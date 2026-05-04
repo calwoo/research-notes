@@ -5,11 +5,12 @@
 ## Table of Contents
 
 1. [[#1. The Problem with Plain Dicts|1. The Problem with Plain Dicts]]
-2. [[#2. Tier 1 — dataclasses|2. Tier 1 — dataclasses]]
-3. [[#3. Tier 2 — Pydantic v2|3. Tier 2 — Pydantic v2]]
-4. [[#4. Tier 3 — Hydra|4. Tier 3 — Hydra]]
-5. [[#5. Decision Guide|5. Decision Guide]]
-6. [[#6. References|6. References]]
+2. [[#2. Config Structure — Monolithic vs. Nested|2. Config Structure — Monolithic vs. Nested]]
+3. [[#3. Tier 1 — dataclasses|3. Tier 1 — dataclasses]]
+4. [[#4. Tier 2 — Pydantic v2|4. Tier 2 — Pydantic v2]]
+5. [[#5. Tier 3 — Hydra|5. Tier 3 — Hydra]]
+6. [[#6. Decision Guide|6. Decision Guide]]
+7. [[#7. References|7. References]]
 
 ---
 
@@ -29,7 +30,98 @@ Silent failure modes:
 
 ---
 
-## 2. Tier 1 — dataclasses
+## 2. Config Structure — Monolithic vs. Nested
+
+Before choosing a config tool, choose a config *shape*. The tool is secondary; a poorly structured config is still painful regardless of whether it's a dict, a Pydantic model, or a YAML file.
+
+### 🏗️ Recommendation: nested by concern, flat at root
+
+**Don't** put everything in one flat object:
+
+```python
+# Flat/monolithic — becomes unmanageable past ~15 keys
+config = TrainConfig(
+    d_model=512, n_heads=8, n_layers=6,      # model
+    lr=1e-3, batch_size=32, max_steps=100_000, # training
+    dataset="imagenet", num_workers=8,          # data
+    wandb_project="my-exp", log_every=50,       # logging
+)
+```
+
+**Do** group by the subsystem that owns each setting:
+
+```python
+@dataclass
+class ModelConfig:
+    d_model: int = 512
+    n_heads: int = 8
+    n_layers: int = 6
+
+@dataclass
+class TrainingConfig:
+    lr: float = 1e-3
+    batch_size: int = 32
+    max_steps: int = 100_000
+
+@dataclass
+class DataConfig:
+    dataset: str = "imagenet"
+    num_workers: int = 8
+
+@dataclass
+class LoggingConfig:
+    project: str = "my-exp"
+    log_every: int = 50
+
+@dataclass
+class Config:                             # ← flat root that composes the rest
+    model: ModelConfig = field(default_factory=ModelConfig)
+    training: TrainingConfig = field(default_factory=TrainingConfig)
+    data: DataConfig = field(default_factory=DataConfig)
+    logging: LoggingConfig = field(default_factory=LoggingConfig)
+```
+
+### 📐 Why nested?
+
+**Each component only receives what it needs.** The model constructor takes `ModelConfig`, the dataloader takes `DataConfig`. This is *dependency inversion* applied to configuration: components declare their config requirements explicitly and are testable in isolation.
+
+```python
+model = build_model(cfg.model)       # model code never sees lr or dataset
+loader = build_dataloader(cfg.data)  # data code never sees d_model
+trainer = Trainer(cfg.training)
+```
+
+Passing the entire `Config` to every function is the config equivalent of global state — it hides dependencies and makes components hard to reuse.
+
+**Nesting mirrors Hydra's config groups.** Each nested sub-config (`cfg.model`, `cfg.training`) maps directly to a Hydra config group. When you eventually move to Hydra, swapping `model=transformer` for `model=mamba` is a one-line CLI flag rather than a surgery on a single large config file. Nesting now pays dividends later.
+
+**Bounded growth.** Each sub-config stays focused. A `ModelConfig` that grows to 20 keys is a signal to look at your architecture; a monolithic `Config` with 60 keys just looks like noise.
+
+### 🤔 When is monolithic acceptable?
+
+A single flat config is fine when:
+- You have ≤ 15 total keys and your project is a self-contained script or notebook.
+- No subsystem needs to be reused, tested, or swapped independently.
+
+As soon as you find yourself writing `cfg.d_model` in your data loading code, or filtering keys to pass to a function, it's time to split.
+
+> [!NOTE] How many nesting levels?
+> **Two levels is almost always right:** a root `Config` composed of flat sub-configs. Three or more levels (`cfg.model.attention.rope.theta`) add cognitive overhead without much gain. If a sub-config starts needing its own sub-configs, it's often a sign the subsystem's interface is too broad.
+
+### 🔑 Canonical groupings for ML training
+
+| Group | Owns | Example keys |
+|-------|------|--------------|
+| `model` | Architecture hyperparams | `d_model`, `n_heads`, `n_layers`, `dropout` |
+| `training` | Optimization loop | `lr`, `batch_size`, `max_steps`, `grad_clip`, `scheduler` |
+| `data` | Dataset and preprocessing | `dataset`, `seq_len`, `num_workers`, `augment` |
+| `logging` | Experiment tracking | `project`, `run_name`, `log_every`, `ckpt_dir` |
+
+Add groups when a genuine new owner appears (e.g. `eval`, `distributed`). Don't split `training` just because it has many keys.
+
+---
+
+## 3. Tier 1 — dataclasses
 
 **The trigger:** You're passing a config dict around and can't remember whether the key is `"learning_rate"` or `"lr"`. Your IDE can't help — dict keys are opaque strings. You grep the codebase, find three inconsistent spellings, and discover a silent bug that's been present for weeks. The moment your config has more than a handful of keys and gets passed across module boundaries, you want a *named, typed structure*.
 
@@ -65,7 +157,7 @@ print(asdict(cfg))          # → plain dict for logging
 
 ---
 
-## 3. Tier 2 — Pydantic v2
+## 4. Tier 2 — Pydantic v2
 
 **The trigger:** Someone edits your YAML config so that `lr: 1e-3` becomes `lr: "1e-3"` — now a string. Your `@dataclass` silently accepts it, and AdamW crashes three minutes into training on a remote GPU. Or: you want to reload a saved config to reproduce an experiment, but the round-trip through `asdict()` → JSON → `TrainConfig(...)` requires manual reconstruction. *Dataclasses give you structure but no contract* — no guarantee that values are the right type, in the right range, or even present. The moment you need to trust that a loaded config is valid, you need runtime validation.
 
@@ -151,7 +243,7 @@ cfg2 = TrainConfig.model_validate_json(cfg.model_dump_json())
 
 ---
 
-## 4. Tier 3 — Hydra
+## 5. Tier 3 — Hydra
 
 **The trigger:** You have a working training script and want to compare Transformer vs. Mamba at three learning rates — six runs total for one ablation table. You edit `config.yaml`, run, edit again, run again. By run four you're no longer sure which checkpoint came from which settings. You rename files by hand, keep a spreadsheet, and still manage to submit the wrong job twice. *Pydantic gives you a validated config object, but it says nothing about how to systematically vary that config across experiments.* The moment you need to define and enumerate a combinatorial experiment space — without editing Python — you need a config composition layer.
 
@@ -286,7 +378,7 @@ This is the key reproducibility guarantee: every run is a pure function of its `
 
 ---
 
-## 5. Decision Guide
+## 6. Decision Guide
 
 | Situation | Recommendation |
 |-----------|----------------|
@@ -314,7 +406,7 @@ This is the key reproducibility guarantee: every run is a pure function of its `
 
 ---
 
-## 6. References
+## 7. References
 
 | Reference Name | Brief Summary | Link |
 |---|---|---|
