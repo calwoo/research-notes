@@ -138,22 +138,48 @@ class ModelConfig:
     n_layers: int = 6
 
 @dataclass
-class TrainConfig:
+class TrainingConfig:
     lr: float = 1e-3
     batch_size: int = 32
-    model: ModelConfig = field(default_factory=ModelConfig)
+    max_steps: int = 100_000
+    grad_clip: float = 1.0
 
-cfg = TrainConfig()
-print(cfg.model.d_model)   # 512 — dot access
-print(asdict(cfg))          # → plain dict for logging
+@dataclass
+class DataConfig:
+    dataset: str = "imagenet"
+    seq_len: int = 512
+    num_workers: int = 8
+
+@dataclass
+class LoggingConfig:
+    project: str = "my-exp"
+    log_every: int = 50
+    ckpt_dir: str = "checkpoints"
+
+@dataclass
+class Config:
+    model: ModelConfig = field(default_factory=ModelConfig)
+    training: TrainingConfig = field(default_factory=TrainingConfig)
+    data: DataConfig = field(default_factory=DataConfig)
+    logging: LoggingConfig = field(default_factory=LoggingConfig)
+
+cfg = Config()
+print(cfg.model.d_model)       # 512 — dot access
+print(cfg.training.lr)         # 0.001
+print(asdict(cfg))              # → plain dict for logging
+
+# Each component receives only its sub-config
+model = build_model(cfg.model)
+loader = build_dataloader(cfg.data)
+trainer = Trainer(cfg.training)
 ```
 
 **What you gain:** type hints (IDE autocomplete, mypy), `__repr__`, `asdict()` for serialization.
 
-**What you don't get:** runtime validation (`cfg.lr = "oops"` still silently passes), no YAML/JSON loading, no env var support.
+**What you don't get:** runtime validation (`cfg.training.lr = "oops"` still silently passes), no YAML/JSON loading, no env var support.
 
 > [!WARNING] Mutable defaults
-> Never do `model: ModelConfig = ModelConfig()` as a default value — it creates a shared instance across all `TrainConfig` instances. Always use `field(default_factory=ModelConfig)`.
+> Never do `model: ModelConfig = ModelConfig()` as a default value — it creates a shared instance across all `Config` instances. Always use `field(default_factory=ModelConfig)`.
 
 ---
 
@@ -168,7 +194,6 @@ Pydantic v2 rewrites the core in Rust, making validation ~5–50x faster than v1
 
 ```python
 from pydantic import BaseModel, Field, field_validator, model_validator
-from pydantic_settings import BaseSettings
 import yaml
 
 class ModelConfig(BaseModel):
@@ -182,16 +207,33 @@ class ModelConfig(BaseModel):
             f"d_model={self.d_model} must be divisible by n_heads={self.n_heads}"
         return self
 
-class TrainConfig(BaseModel):
+class TrainingConfig(BaseModel):
     lr: float = 1e-3
     batch_size: int = 32
-    model: ModelConfig = Field(default_factory=ModelConfig)
+    max_steps: int = 100_000
+    grad_clip: float = 1.0
 
     @field_validator("lr")
     @classmethod
     def lr_positive(cls, v: float) -> float:
         assert v > 0, "lr must be positive"
         return v
+
+class DataConfig(BaseModel):
+    dataset: str = "imagenet"
+    seq_len: int = 512
+    num_workers: int = 8
+
+class LoggingConfig(BaseModel):
+    project: str = "my-exp"
+    log_every: int = 50
+    ckpt_dir: str = "checkpoints"
+
+class Config(BaseModel):
+    model: ModelConfig = Field(default_factory=ModelConfig)
+    training: TrainingConfig = Field(default_factory=TrainingConfig)
+    data: DataConfig = Field(default_factory=DataConfig)
+    logging: LoggingConfig = Field(default_factory=LoggingConfig)
 ```
 
 ### Loading from YAML
@@ -200,16 +242,24 @@ class TrainConfig(BaseModel):
 with open("config.yaml") as f:
     raw = yaml.safe_load(f)
 
-cfg = TrainConfig.model_validate(raw)   # validates + coerces types
+cfg = Config.model_validate(raw)   # validates + coerces all sub-configs
 ```
 
 ```yaml
 # config.yaml
-lr: 0.001
-batch_size: 64
 model:
   d_model: 1024
   n_heads: 16
+  n_layers: 12
+training:
+  lr: 0.001
+  batch_size: 64
+data:
+  dataset: imagenet
+  num_workers: 16
+logging:
+  project: my-exp
+  ckpt_dir: checkpoints/run-001
 ```
 
 ### Loading from environment variables
@@ -217,25 +267,27 @@ model:
 ```python
 from pydantic_settings import BaseSettings
 
-class TrainConfig(BaseSettings):
-    lr: float = 1e-3
-    batch_size: int = 32
+class Config(BaseSettings):
+    model: ModelConfig = Field(default_factory=ModelConfig)
+    training: TrainingConfig = Field(default_factory=TrainingConfig)
+    data: DataConfig = Field(default_factory=DataConfig)
+    logging: LoggingConfig = Field(default_factory=LoggingConfig)
 
-    model_config = {"env_prefix": "TRAIN_"}
+    model_config = {"env_nested_delimiter": "__"}
 
-# Reads TRAIN_LR and TRAIN_BATCH_SIZE from environment
-cfg = TrainConfig()
+# Reads nested env vars: MODEL__D_MODEL=1024, TRAINING__LR=3e-4, DATA__DATASET=wikitext
+cfg = Config()
 ```
 
 ### Serialization
 
 ```python
-cfg.model_dump()           # → dict
-cfg.model_dump_json()      # → JSON string
-cfg.model_dump(mode="json") # → JSON-safe dict (no Python-only types)
+cfg.model_dump()            # → nested dict
+cfg.model_dump_json()       # → JSON string
+cfg.model_dump(mode="json") # → JSON-safe nested dict (no Python-only types)
 
 # Round-trip:
-cfg2 = TrainConfig.model_validate_json(cfg.model_dump_json())
+cfg2 = Config.model_validate_json(cfg.model_dump_json())
 ```
 
 > [!TIP] `model_validate` vs `__init__`
@@ -264,23 +316,28 @@ conf/
   model/
     transformer.yaml
     mamba.yaml
-  optimizer/
+  training/
     adamw.yaml
     muon.yaml
+  data/
+    imagenet.yaml
+    wikitext.yaml
+  logging/
+    wandb.yaml
+    local.yaml
 train.py
 ```
+
+Each config group corresponds directly to one sub-config from §2's canonical structure. Swapping `model=mamba` replaces the entire `ModelConfig`; `data=wikitext` replaces the entire `DataConfig`.
 
 ```yaml
 # conf/config.yaml
 defaults:
   - model: transformer
-  - optimizer: adamw
+  - training: adamw
+  - data: imagenet
+  - logging: wandb
   - _self_
-
-training:
-  lr: 1e-3
-  batch_size: 32
-  max_steps: 100_000
 ```
 
 ```yaml
@@ -291,6 +348,21 @@ n_heads: 8
 n_layers: 6
 ```
 
+```yaml
+# conf/training/adamw.yaml
+lr: 1e-3
+batch_size: 32
+max_steps: 100_000
+grad_clip: 1.0
+```
+
+```yaml
+# conf/data/imagenet.yaml
+dataset: imagenet
+seq_len: 512
+num_workers: 8
+```
+
 ```python
 # train.py
 import hydra
@@ -298,8 +370,10 @@ from omegaconf import DictConfig, OmegaConf
 
 @hydra.main(config_path="conf", config_name="config", version_base=None)
 def train(cfg: DictConfig) -> None:
-    print(OmegaConf.to_yaml(cfg))   # full resolved config
+    print(OmegaConf.to_yaml(cfg))            # full resolved config
     model = hydra.utils.instantiate(cfg.model)   # calls Transformer(**cfg.model)
+    loader = build_dataloader(cfg.data)
+    trainer = Trainer(cfg.training)
     ...
 
 if __name__ == "__main__":
@@ -312,10 +386,16 @@ if __name__ == "__main__":
 # Swap model architecture
 python train.py model=mamba
 
-# Override individual fields
+# Swap optimizer (entire TrainingConfig)
+python train.py training=muon
+
+# Swap dataset
+python train.py data=wikitext
+
+# Override individual fields within a group
 python train.py training.lr=3e-4 training.batch_size=128
 
-# Multi-run sweep (grid)
+# Multi-run sweep (grid) — 6 runs: 3 lr values × 2 model architectures
 python train.py --multirun training.lr=1e-4,3e-4,1e-3 model=transformer,mamba
 ```
 
@@ -346,18 +426,24 @@ Hydra's ConfigStore natively uses `@dataclass`, not Pydantic — so there's no s
 ```python
 @hydra.main(config_path="conf", config_name="config", version_base=None)
 def train(cfg: DictConfig) -> None:
-    # Compose with Hydra, validate with Pydantic
-    config = TrainConfig.model_validate(OmegaConf.to_container(cfg, resolve=True))
+    # Hydra composes; Pydantic validates the full nested Config
+    config: Config = Config.model_validate(OmegaConf.to_container(cfg, resolve=True))
+    model = build_model(config.model)
+    loader = build_dataloader(config.data)
+    trainer = Trainer(config.training)
     ...
 ```
 
 **Pattern B — hydra-zen:** The `hydra-zen` library (MIT Lincoln Lab) auto-generates Hydra-compatible configs from arbitrary Python objects, including Pydantic models.
 
 ```python
-from hydra_zen import builds, instantiate, make_config
+from hydra_zen import builds, make_config
 
-ModelConf = builds(TransformerModel, d_model=512, n_heads=8)
-TrainConf = make_config(model=ModelConf, lr=1e-3, batch_size=32)
+ModelConf = builds(TransformerModel, d_model=512, n_heads=8, n_layers=6)
+TrainingConf = make_config(lr=1e-3, batch_size=32, max_steps=100_000)
+DataConf = make_config(dataset="imagenet", num_workers=8)
+
+Config = make_config(model=ModelConf, training=TrainingConf, data=DataConf)
 
 # Register with ConfigStore and use normally with @hydra.main
 ```
