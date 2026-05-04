@@ -71,7 +71,7 @@ print(asdict(cfg))          # → plain dict for logging
 Pydantic v2 rewrites the core in Rust, making validation ~5–50x faster than v1.
 
 ```python
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings
 import yaml
 
@@ -89,7 +89,7 @@ class ModelConfig(BaseModel):
 class TrainConfig(BaseModel):
     lr: float = 1e-3
     batch_size: int = 32
-    model: ModelConfig = ModelConfig()
+    model: ModelConfig = Field(default_factory=ModelConfig)
 
     @field_validator("lr")
     @classmethod
@@ -221,23 +221,53 @@ python train.py training.lr=3e-4 training.batch_size=128
 python train.py --multirun training.lr=1e-4,3e-4,1e-3 model=transformer,mamba
 ```
 
-### Structured configs (Pydantic + Hydra)
+### OmegaConf interpolation
 
-You can combine Pydantic v2 validation with Hydra composition using `hydra-pydantic`:
+OmegaConf supports `${}` interpolation between config keys, evaluated *lazily on access*:
 
-```python
-from hydra_pydantic import PydanticDataClass
-from pydantic.dataclasses import dataclass as pydantic_dataclass
-from omegaconf import MISSING
+```yaml
+# conf/config.yaml
+data:
+  root: /data/imagenet
+  train: ${data.root}/train      # → /data/imagenet/train
+  val: ${data.root}/val          # → /data/imagenet/val
 
-@pydantic_dataclass
-class ModelConfig:
-    d_model: int = MISSING
-    n_heads: int = 8
+model:
+  d_model: 512
+  d_ff: ${model.d_model}         # ties d_ff to d_model — change one, both update
 ```
 
-> [!WARNING] Hydra's main gotcha
-> Hydra changes the working directory to a timestamped output folder by default (`outputs/2026-05-03/14-32-11/`). All relative file paths in your training code break silently. Either use `hydra.utils.get_original_cwd()` or disable with `hydra.job.chdir=False` in your config.
+This is useful for derived quantities (e.g. `d_ff = 4 * d_model`) and avoiding copy-paste errors across config files.
+
+### Structured configs (Pydantic + Hydra)
+
+Hydra's ConfigStore natively uses `@dataclass`, not Pydantic — so there's no single official bridge. Two practical patterns:
+
+**Pattern A — compose then validate (recommended):** Let Hydra compose the config as usual, then validate it with Pydantic at the entry point.
+
+```python
+@hydra.main(config_path="conf", config_name="config", version_base=None)
+def train(cfg: DictConfig) -> None:
+    # Compose with Hydra, validate with Pydantic
+    config = TrainConfig.model_validate(OmegaConf.to_container(cfg, resolve=True))
+    ...
+```
+
+**Pattern B — hydra-zen:** The `hydra-zen` library (MIT Lincoln Lab) auto-generates Hydra-compatible configs from arbitrary Python objects, including Pydantic models.
+
+```python
+from hydra_zen import builds, instantiate, make_config
+
+ModelConf = builds(TransformerModel, d_model=512, n_heads=8)
+TrainConf = make_config(model=ModelConf, lr=1e-3, batch_size=32)
+
+# Register with ConfigStore and use normally with @hydra.main
+```
+
+Pattern A is lower-overhead for most projects; hydra-zen pays off when you have deeply nested Python class hierarchies to auto-configure.
+
+> [!WARNING] Hydra's working directory gotcha
+> Hydra *used to* change the working directory to a timestamped output folder, silently breaking all relative paths. With `version_base=None` (as in the example above), `hydra.job.chdir` defaults to `False` — this is no longer a problem if you always pass `version_base=None`. If you're on an older setup without it, add `hydra.job.chdir=False` to your config or CLI to opt out explicitly.
 
 ### Output directory
 
@@ -258,10 +288,23 @@ This is the key reproducibility guarantee: every run is a pure function of its `
 | Production training run, config loaded from file or env | Pydantic v2 |
 | Research: ≥ 3 model variants or optimizer variants to compare | Hydra |
 | Research: systematic grid/random sweeps | Hydra + `--multirun` |
-| You want both validation AND Hydra composition | Pydantic dataclasses + `hydra-pydantic` |
+| You want both validation AND Hydra composition | Compose-then-validate or `hydra-zen` |
+| PyTorch Lightning project | `LightningCLI` (uses `jsonargparse` internally) |
+| Google JAX ecosystem / TF project | `ml_collections` or `gin-config` |
 
 > [!DANGER] Don't over-engineer early
 > Start with `@dataclass`. Migrate to Pydantic v2 once you need validation or YAML loading. Add Hydra only when you have real multi-variant experiments — its abstraction cost is real.
+
+### 🔀 Ecosystem alternatives
+
+| Tool | Ecosystem | Style | When it shines |
+|------|-----------|-------|----------------|
+| [**jsonargparse**](https://jsonargparse.readthedocs.io/) / LightningCLI | PyTorch Lightning | CLI-first, class-based | Lightning projects; auto-generates CLI from `__init__` signatures |
+| [**gin-config**](https://github.com/google/gin-config) | Google / JAX | Decorator-based | Binding hyperparameters to arbitrary functions without config objects |
+| [**ml_collections**](https://github.com/google/ml_collections) | Google / JAX | `ConfigDict` | JAX/T5/Flax codebases; supports lazy dict-like access with type safety |
+| [**hydra-zen**](https://mit-ll-responsible-ai.github.io/hydra-zen/) | Any | Auto-builds configs | Complex class hierarchies you want Hydra to instantiate |
+
+`gin-config`'s approach is worth understanding: instead of a config object, you bind values to function arguments directly via decorators, so the config *is* the call graph. Very ergonomic for research code that isn't class-structured.
 
 ---
 
@@ -273,4 +316,7 @@ This is the key reproducibility guarantee: every run is a pure function of its `
 | Hydra docs | Config composition, CLI overrides, multi-run | [hydra.cc/docs](https://hydra.cc/docs/intro/) |
 | OmegaConf docs | Structured configs, interpolation, merging | [omegaconf.readthedocs.io](https://omegaconf.readthedocs.io/) |
 | pydantic-settings | Env var loading with Pydantic v2 | [docs.pydantic.dev/latest/concepts/pydantic_settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/) |
-| hydra-pydantic | Integration layer for Pydantic v2 + Hydra structured configs | [github.com/tky823/hydra-pydantic](https://github.com/tky823/hydra-pydantic) |
+| hydra-zen | Auto-generates Hydra configs from Python objects; Pydantic integration | [mit-ll-responsible-ai.github.io/hydra-zen](https://mit-ll-responsible-ai.github.io/hydra-zen/) |
+| jsonargparse | CLI argument parsing that maps directly to class `__init__` signatures | [jsonargparse.readthedocs.io](https://jsonargparse.readthedocs.io/) |
+| gin-config | Decorator-based config binding for Google/JAX research code | [github.com/google/gin-config](https://github.com/google/gin-config) |
+| ml_collections | Google's ConfigDict for JAX/T5/Flax projects | [github.com/google/ml_collections](https://github.com/google/ml_collections) |
