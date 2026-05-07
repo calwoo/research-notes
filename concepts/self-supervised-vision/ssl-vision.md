@@ -1,6 +1,6 @@
 # 🔍 Self-Supervised Vision: Contrastive Learning and Beyond
 
-*BYOL · Barlow Twins · VICReg — a pedagogical account of collapse-free self-supervised objectives*
+*BYOL · SimSiam · Barlow Twins · VICReg — a pedagogical account of collapse-free self-supervised objectives*
 
 ## Table of Contents
 
@@ -8,6 +8,7 @@
 - [[#💥 The Collapse Problem|💥 The Collapse Problem]]
 - [[#⚔️ Contrastive Baselines: SimCLR and MoCo|⚔️ Contrastive Baselines: SimCLR and MoCo]]
 - [[#🔁 BYOL: Bootstrapping Without Negatives|🔁 BYOL: Bootstrapping Without Negatives]]
+- [[#🔀 SimSiam: Stop-Gradient Alone|🔀 SimSiam: Stop-Gradient Alone]]
 - [[#📊 Barlow Twins: Redundancy Reduction|📊 Barlow Twins: Redundancy Reduction]]
 - [[#🔧 VICReg: Explicit Regularization|🔧 VICReg: Explicit Regularization]]
 - [[#🗺️ Unified Perspective|🗺️ Unified Perspective]]
@@ -43,7 +44,7 @@ The downstream representation is always $y = f_\theta(\cdot)$ — the projector 
 | $v, v'$ | Two augmented views of $x$ |
 | $f_\theta$ | Encoder (backbone, e.g. ResNet or ViT) |
 | $g_\theta$ | Projector MLP |
-| $h_\theta$ | Predictor MLP (BYOL only) |
+| $h_\theta$, $h_\phi$ | Predictor MLP (BYOL and SimSiam) |
 | $y, y'$ | Encoder outputs (representations) |
 | $z, z'$ | Projector outputs (embeddings) |
 | $d$ | Embedding dimension |
@@ -230,6 +231,92 @@ Several mechanisms act jointly:
 
 ---
 
+## 🔀 SimSiam: Stop-Gradient Alone
+
+*Simple Siamese Representation Learning* (Chen & He, CVPR 2021) distills BYOL to its minimal core by removing the EMA target network entirely. The question it answers: **is the momentum encoder necessary, or is stop-gradient alone sufficient to prevent collapse?**
+
+*Surprisingly,* stop-gradient plus a predictor suffices. EMA is a stabilizer, not a collapse-prevention mechanism.
+
+### 🏛️ Architecture
+
+Both branches share **identical parameters** $\theta$ — there is no separate target network. A predictor $h_\phi$ with its own parameters $\phi$ sits atop the projector on both branches:
+
+```mermaid
+flowchart LR
+    v["view v"]
+    vp["view v'"]
+    enc1["f_theta + g_theta<br/>shared weights"]
+    enc2["f_theta + g_theta<br/>shared weights"]
+    z1["z_1"]
+    z2["z_2"]
+    p1["p_1 = h_phi(z_1)"]
+    p2["p_2 = h_phi(z_2)"]
+    sgz2["sg(z_2)"]
+    sgz1["sg(z_1)"]
+    D1["D(p_1, sg(z_2))"]
+    D2["D(p_2, sg(z_1))"]
+    loss["L_SimSiam"]
+
+    v --> enc1 --> z1 --> p1 --> D1 --> loss
+    vp --> enc2 --> z2 --> p2 --> D2 --> loss
+    z2 --> sgz2 --> D1
+    z1 --> sgz1 --> D2
+```
+
+Both $\theta$ (encoder + projector) and $\phi$ (predictor) are updated by gradient descent — there is no EMA copy.
+
+### 📐 The SimSiam Loss
+
+Define the *negative cosine similarity*:
+
+$$\mathcal{D}(p,\, z) = -\frac{p^\top z}{\|p\|_2 \cdot \|z\|_2}.$$
+
+Let $z_1 = g_\theta(f_\theta(v))$ and $z_2 = g_\theta(f_\theta(v'))$. The SimSiam objective is:
+
+$$\mathcal{L}_{\text{SimSiam}} = \frac{1}{2}\,\mathcal{D}\!\bigl(h_\phi(z_1),\;\mathrm{sg}(z_2)\bigr) + \frac{1}{2}\,\mathcal{D}\!\bigl(h_\phi(z_2),\;\mathrm{sg}(z_1)\bigr).$$
+
+Gradients flow through $h_\phi(z_i)$ — and back into $z_i$ and then $\theta$ — but **not** through $\mathrm{sg}(z_j)$.
+
+> [!WARNING] Without the predictor, collapse is guaranteed
+> *If $h_\phi = \mathrm{id}$ (no predictor), the symmetric loss $\frac{1}{2}\mathcal{D}(\mathrm{sg}(z_1), z_2) + \frac{1}{2}\mathcal{D}(\mathrm{sg}(z_2), z_1)$ is minimized at $z_1 = z_2 = \mathbf{c}$ for any constant unit vector $\mathbf{c}$, achieving $\mathcal{D} = -1$.* The predictor is not optional — it creates the prediction gap that makes the collapsed solution a saddle point rather than a minimum.
+
+### 🔑 The EM Interpretation
+
+Chen & He interpret SimSiam as an *expectation-maximization* (EM) algorithm with two alternating subproblems:
+
+**E-step — optimize the predictor, fix the encoder.** For fixed $\theta$, find:
+
+$$h_\phi^* = \operatorname{argmin}_{\phi}\; \mathbb{E}\!\bigl[\mathcal{D}(h_\phi(z_1),\; \mathrm{sg}(z_2))\bigr].$$
+
+The solution is proportional to the *conditional expectation*: $h_\phi^*(z_1) \propto \mathbb{E}[z_2 \mid z_1]$. The optimal predictor computes the expected target embedding given the online embedding.
+
+**M-step — optimize the encoder, fix the predictor.** For fixed $h_\phi^*$, update:
+
+$$\theta \leftarrow \theta - \eta\, \nabla_\theta\; \mathbb{E}\!\bigl[\mathcal{D}(h_\phi^*(z_1),\; \mathrm{sg}(z_2))\bigr].$$
+
+This pushes the encoder to produce embeddings $z_1$ that are better predicted by the current $h_\phi^*$, i.e. more consistent with the target $z_2$. The stop-gradient on $z_2$ implements the *decoupling* between the two steps — without it, both objectives are conflated into a single gradient step that collapses.
+
+The EM frame also clarifies why a predictor is necessary: the E-step only makes sense if there is a separate parameter $\phi$ to optimize. With $h = \mathrm{id}$, the E-step is vacuous and the M-step has a degenerate global minimum at constant embeddings.
+
+> [!NOTE] SimSiam vs. BYOL: what does EMA add?
+> SimSiam shows EMA is not required for collapse prevention. In practice, BYOL's EMA target provides a *smoother target trajectory*: the predictor tracks a slowly-moving network rather than the rapidly-changing gradient-descent iterates. This reduces training variance and makes hyperparameter tuning less brittle. The EMA buys stability at the cost of an additional forward pass through the target network. SimSiam trains faster per step but requires more careful learning-rate scheduling.
+
+---
+
+> [!QUESTION] Exercise 5: The SimSiam EM Steps
+> *The EM interpretation clarifies what each subproblem optimizes and why a non-trivial predictor is necessary.*
+>
+> > **Prerequisites:** [[#🔀 SimSiam: Stop-Gradient Alone|SimSiam: Stop-Gradient Alone]]
+>
+> Suppose the encoder $f_\theta \circ g_\theta$ is linear: $z = Wx$ for weight matrix $W \in \mathbb{R}^{d \times n}$, and $h_\phi$ is also linear: $h_\phi(z) = Az$ for $A \in \mathbb{R}^{d \times d}$. Write the E-step as a least-squares problem and give the closed-form optimal $A^*$ in terms of the second-moment matrices $\Sigma_{11} = \mathbb{E}[z_1 z_1^\top]$ and $\Sigma_{21} = \mathbb{E}[z_2 z_1^\top]$. Under what condition on $\mathcal{T}$ does $A^* = I$?
+
+> [!TIP]- Solution to Exercise 5
+> **Key insight:** The optimal linear predictor is the least-squares regression of $z_2$ on $z_1$; it equals the identity exactly when the two views are identically distributed and perfectly correlated.
+>
+> **Sketch:** For the MSE surrogate (equivalent to cosine loss for normalized vectors), the E-step is $\min_A \mathbb{E}[\|Az_1 - z_2\|^2]$. Taking the gradient and setting to zero: $\mathbb{E}[Az_1 z_1^\top] = \mathbb{E}[z_2 z_1^\top]$, giving $A^* = \Sigma_{21}\Sigma_{11}^{-1}$ (standard OLS). If $z_1 = z_2$ exactly (trivial augmentations, $\mathcal{T}$ is the identity), then $\Sigma_{21} = \Sigma_{11}$, so $A^* = I$. In this case the loss becomes $\mathcal{D}(z_1, \mathrm{sg}(z_1)) = -1$ regardless of $\theta$ — zero gradient, no learning. Non-trivial augmentations make $\Sigma_{21} \neq \Sigma_{11}$ and $A^* \neq I$, creating a non-degenerate M-step.
+
+---
+
 ## 📊 Barlow Twins: Redundancy Reduction
 
 *Barlow Twins* (Zbontar et al., ICML 2021) prevents collapse by directly imposing a *spectral constraint* on the cross-correlation structure of the embeddings — driving the cross-correlation matrix of twin embeddings toward the identity.
@@ -276,14 +363,14 @@ The two terms work in tandem: invariance ensures view-consistency; redundancy re
 
 ---
 
-> [!QUESTION] Exercise 5: Cross-Correlation Fixed Point
+> [!QUESTION] Exercise 6: Cross-Correlation Fixed Point
 > *The target $C = I_d$ characterizes an entire family of solutions related by orthogonal transformations.*
 >
 > > **Prerequisites:** [[#📊 Barlow Twins: Redundancy Reduction|Barlow Twins: Redundancy Reduction]]
 >
 > Suppose $Z^A = Z^B = Z$ (same embeddings from both views, already batch-normalized). Show that $C = I_d$ if and only if the columns of $Z$ are mutually orthogonal in the batch sense (i.e. $Z^\top Z / N = I_d$). Conclude that the solution set of $\mathcal{L}_{\text{BT}} = 0$ forms an orbit under the orthogonal group $O(d)$.
 
-> [!TIP]- Solution to Exercise 5
+> [!TIP]- Solution to Exercise 6
 > **Key insight:** The fixed-point condition $C = I_d$ defines an orthonormality constraint on the embedding columns — an $O(d)$ family of equivalent solutions.
 >
 > **Sketch:** With $Z^A = Z^B = Z$ batch-normalized: $C = Z^\top Z / N$. Then $C = I_d \Leftrightarrow Z^\top Z = N \cdot I_d \Leftrightarrow$ the columns of $Z / \sqrt{N}$ form an orthonormal set. For any $R \in O(d)$, the rotated embeddings $ZR$ satisfy $(ZR)^\top(ZR)/N = R^\top (Z^\top Z / N) R = R^\top I_d R = I_d$. So the solution set is closed under $O(d)$-action — there is a whole $O(d)$-orbit of solutions, reflecting the rotational symmetry of the SSL objective.
@@ -345,14 +432,14 @@ At the optimum of $\mathcal{L}_{\text{VICReg}}$: each dimension has $\sigma_j \g
 
 ---
 
-> [!QUESTION] Exercise 6: Variance Term Gradient
+> [!QUESTION] Exercise 7: Variance Term Gradient
 > *The variance hinge loss has a centering-repulsive gradient that spreads samples along each dimension.*
 >
 > > **Prerequisites:** [[#🔧 VICReg: Explicit Regularization|VICReg: Explicit Regularization]]
 >
 > For a single embedding dimension $j$ with active hinge ($\sigma_j < \gamma$), compute $\partial v(Z) / \partial z_{b,j}$ and show it takes the form $-(z_{b,j} - \bar{z}_j) / (dN\sigma_j)$. Interpret the sign: does this gradient push $z_{b,j}$ toward or away from the batch mean $\bar{z}_j$?
 
-> [!TIP]- Solution to Exercise 6
+> [!TIP]- Solution to Exercise 7
 > **Key insight:** The gradient of the variance hinge is a centering-repulsive force: it pushes each sample *away* from the batch mean, expanding the empirical distribution along dimension $j$.
 >
 > **Sketch:** For active hinge on dimension $j$: $v_j = (\gamma - \sigma_j)/d$ where $\sigma_j = \sqrt{\mathrm{Var}_b(z^j) + \varepsilon}$. Differentiating:
@@ -370,6 +457,7 @@ The methods form a clean taxonomy based on *how* each prevents collapse:
 | SimCLR | Explicit repulsion (negatives) | ✅ | ✅ | ❌ | ✅ |
 | MoCo | Repulsion + queue | ✅ | ❌ | Momentum enc. | ✅ |
 | BYOL | Gradient asymmetry + EMA | ❌ | ❌ | ✅ | ✅ |
+| SimSiam | Stop-gradient + predictor, no EMA | ❌ | ❌ | Predictor only | ✅ |
 | Barlow Twins | Cross-branch spectral constraint ($C \to I$) | ❌ | ❌ | ❌ | ✅ |
 | VICReg | Per-branch explicit regularization | ❌ | ❌ | ❌ | ❌ |
 
@@ -397,14 +485,14 @@ All three post-contrastive methods reach competitive performance with SimCLR/MoC
 
 ---
 
-> [!QUESTION] Exercise 7: Barlow Twins vs. VICReg
+> [!QUESTION] Exercise 8: Barlow Twins vs. VICReg
 > *The two spectral methods differ in where the covariance is computed — across branches or within each branch.*
 >
 > > **Prerequisites:** [[#📊 Barlow Twins: Redundancy Reduction|Barlow Twins: Redundancy Reduction]], [[#🔧 VICReg: Explicit Regularization|VICReg: Explicit Regularization]]
 >
 > (a) Identify one architectural scenario where VICReg applies naturally but Barlow Twins does not conceptually fit. (b) Show that when $Z^A = Z^B = Z$ (batch-normalized, symmetric branches), the Barlow Twins off-diagonal term and VICReg's covariance term are equal up to a constant factor. What is that factor?
 
-> [!TIP]- Solution to Exercise 7
+> [!TIP]- Solution to Exercise 8
 > **Key insight:** Cross-branch vs. per-branch computation is the essential distinction; they coincide up to normalization in the symmetric case.
 >
 > **Sketch:** **(a)** Multi-modal SSL: branch A encodes images ($Z^A$, vision encoder), branch B encodes text captions ($Z^B$, language model). VICReg's per-branch variance and covariance regularizers apply naturally to each modality independently. Barlow Twins computes $C = (Z^A)^\top Z^B / N$ cross-modally, which conflates the two modalities in a single correlation matrix and loses the per-modality decorrelation signal. **(b)** With $Z^A = Z^B = Z$ batch-normalized: Barlow Twins off-diagonal $= \sum_{i \neq j} [(Z^\top Z / N)_{ij}]^2$. VICReg covariance $= (1/d)\sum_{i\neq j}[(Z^\top Z/(N-1))_{ij}]^2$. The ratio is $d \cdot ((N-1)/N)^2 \approx d$ for large $N$. So VICReg's covariance term equals Barlow Twins' off-diagonal term divided by $d \cdot (1 - 1/N)^2$ — same quantity, different normalization conventions.
@@ -416,6 +504,7 @@ All three post-contrastive methods reach competitive performance with SimCLR/MoC
 | Reference Name | Brief Summary | Link |
 |---|---|---|
 | [BYOL] Grill et al. (2020), "Bootstrap Your Own Latent: A New Approach to Self-Supervised Learning" | Introduces online/target asymmetric architecture with EMA; first negative-free SSL to match contrastive methods | [arXiv:2006.07733](https://arxiv.org/abs/2006.07733) |
+| [SimSiam] Chen & He (2021), "Exploring Simple Siamese Representation Learning" | Removes EMA from BYOL; proves stop-gradient + predictor suffices; EM interpretation of the predictor role | [arXiv:2011.10566](https://arxiv.org/abs/2011.10566) |
 | [Barlow Twins] Zbontar, Jing, Misra, LeCun, Deny (2021), "Barlow Twins: Self-Supervised Learning via Redundancy Reduction" | Cross-correlation objective driving $C \to I_d$; connects SSL to Barlow's efficient coding hypothesis | [arXiv:2103.03230](https://arxiv.org/abs/2103.03230) |
 | [VICReg] Bardes, Ponce, LeCun (2022), "VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning" | Three-term per-branch regularization; most architecturally flexible — no weight sharing or BN required | [arXiv:2105.04906](https://arxiv.org/abs/2105.04906) |
 | [SimCLR] Chen, Kornblith, Norouzi, Hinton (2020), "A Simple Framework for Contrastive Learning of Visual Representations" | NT-Xent loss; established importance of projector head; requires large batch | [arXiv:2002.05709](https://arxiv.org/abs/2002.05709) |
