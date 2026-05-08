@@ -15,6 +15,8 @@
 - [[#📏 Trace, Frobenius Norm, and Stable Rank|📏 Trace, Frobenius Norm, and Stable Rank]]
 - [[#🔄 Orthogonal Matrices and the Group O(d)|🔄 Orthogonal Matrices and the Group O(d)]]
 - [[#🧮 Matrix Calculus|🧮 Matrix Calculus]]
+- [[#📐 Cross-Covariance and Gaussian Conditioning|📐 Cross-Covariance and Gaussian Conditioning]]
+- [[#🎯 Rayleigh Quotient and Variational Characterization|🎯 Rayleigh Quotient and Variational Characterization]]
 - [[#📚 References|📚 References]]
 
 ---
@@ -193,7 +195,11 @@ $$A_k = \sum_{i=1}^k \sigma_i u_i v_i^\top, \quad \|A - A_k\|_F^2 = \sum_{i=k+1}
 |---|---|---|
 | Trace | $\mathrm{tr}(A) = \sum_i A_{ii}$ | $\mathrm{tr}(AB) = \mathrm{tr}(BA)$; $\mathrm{tr}(A) = \sum_i \lambda_i$ |
 | Frobenius norm | $\|A\|_F = \sqrt{\sum_{i,j}A_{ij}^2} = \sqrt{\mathrm{tr}(A^\top A)}$ | $\|A\|_F^2 = \sum_i \sigma_i^2$ |
-| Stable rank | $\mathrm{srank}(A) = \|A\|_F^2 / \|A\|_2^2 = \sum_i \sigma_i^2 / \sigma_1^2$ | $\in [1, \mathrm{rank}(A)]$ |
+| Spectral norm | $\|A\|_2 = \sigma_1$ (largest singular value of $A$) | $\|A\|_2 \leq \|A\|_F \leq \sqrt{\mathrm{rank}(A)}\,\|A\|_2$ |
+| Stable rank | $\mathrm{srank}(\Sigma) = (\mathrm{tr}\,\Sigma)^2 / \|\Sigma\|_F^2 = (\sum_i \lambda_i)^2 / \sum_i \lambda_i^2$ | $\in [1, d]$ for $\Sigma \succeq 0$ |
+
+> [!NOTE] Two stable rank conventions
+> The definition above — $(\mathrm{tr}\,\Sigma)^2/\|\Sigma\|_F^2$ — is the convention used in [[concepts/self-supervised-vision/ssl-theory|SSL Theory]] and Exercise 9 below. A second convention (Vershynin, random matrix theory) defines $\mathrm{srank}(A) = \|A\|_F^2/\|A\|_2^2 = \sum_i \sigma_i^2/\sigma_1^2$. Both equal $d$ for $\Sigma = \sigma^2 I_d$ and $1$ for rank-1 matrices; they differ for intermediate eigenvalue spectra. This note uses the first convention throughout.
 
 **The cyclic trace property** $\mathrm{tr}(ABC) = \mathrm{tr}(BCA) = \mathrm{tr}(CAB)$ is used constantly in matrix calculus derivations.
 
@@ -287,6 +293,78 @@ $$\frac{\partial}{\partial x}\,(x^\top \Sigma x) = 2\Sigma x.$$
 > By the chain rule, $\partial \mathcal{L}/\partial Z^A = (\partial \mathcal{L}/\partial C)(\partial C/\partial Z^A)$. Since $C = (Z^A)^\top Z^B/N$, we have $\partial C_{ij}/\partial Z^A_{bk} = Z^B_{bj}\delta_{ik}/N$, giving:
 > $$\frac{\partial\mathcal{L}}{\partial Z^A} = \frac{2}{N}(C-I)(Z^B)^\top \cdot \frac{1}{N} \cdot N = \frac{2}{N} Z^B (C - I)^\top.$$
 > At $C = I$: gradient $= 0$ ✓. When $C_{ij} > \delta_{ij}$ (dimensions over-correlated), the gradient pushes $Z^A$ in the direction that reduces $C_{ij}$ toward $\delta_{ij}$.
+
+---
+
+## 📐 Cross-Covariance and Gaussian Conditioning
+
+When two random vectors $z_1, z_2 \in \mathbb{R}^d$ are jointly distributed with means $\mu_1, \mu_2$, the *cross-covariance matrix* is:
+
+$$\Sigma_{21} = \mathbb{E}[(z_2 - \mu_2)(z_1 - \mu_1)^\top] \in \mathbb{R}^{d \times d}, \qquad \Sigma_{12} = \Sigma_{21}^\top.$$
+
+Unlike the within-variable covariance $\Sigma_{11} = \mathrm{Cov}(z_1) \succeq 0$, the cross-covariance $\Sigma_{21}$ is not symmetric and need not be PSD.
+
+**Gaussian conditioning formula.** If $(z_1, z_2)$ are jointly Gaussian with zero means and block covariance:
+
+$$\mathrm{Cov}\!\begin{pmatrix}z_1 \\ z_2\end{pmatrix} = \begin{pmatrix}\Sigma_{11} & \Sigma_{12} \\ \Sigma_{21} & \Sigma_{22}\end{pmatrix},$$
+
+then the conditional distribution is:
+
+$$z_2 \mid z_1 \sim \mathcal{N}\!\bigl(\Sigma_{21}\Sigma_{11}^{-1}z_1,\;\; \Sigma_{22} - \Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12}\bigr).$$
+
+The conditional mean $\mathbb{E}[z_2 \mid z_1] = \Sigma_{21}\Sigma_{11}^{-1}z_1$ is the *linear least-squares predictor* of $z_2$ given $z_1$. The conditional covariance $\Sigma_{22} - \Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12}$ is the *Schur complement* of $\Sigma_{11}$ — it measures residual uncertainty in $z_2$ after observing $z_1$.
+
+**SSL connection.** In the SimSiam EM derivation (see [[concepts/self-supervised-vision/ssl-theory|SSL Theory §SimSiam as EM]]), the E-step optimal predictor is $h^*(z_1) = \mathbb{E}[z_2 \mid z_1]$. For jointly Gaussian zero-mean embeddings this equals $\Sigma_{21}\Sigma_{11}^{-1}z_1$. The M-step then minimizes $\mathrm{tr}(\Sigma_{22} - \Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12})$ — the total conditional variance — with respect to the encoder weights.
+
+---
+
+> [!QUESTION] Exercise 12: Deriving the Optimal Linear Predictor
+> *The normal equations for least-squares regression give $A^* = \Sigma_{21}\Sigma_{11}^{-1}$ — the same coefficient as Gaussian conditioning.*
+>
+> > **Prerequisites:** [[#📐 Cross-Covariance and Gaussian Conditioning|Cross-Covariance and Gaussian Conditioning]], [[#🧮 Matrix Calculus|Matrix Calculus]]
+>
+> Let $z_1, z_2 \in \mathbb{R}^d$ have zero means with $\mathbb{E}[z_1 z_1^\top] = \Sigma_{11}$ and $\mathbb{E}[z_2 z_1^\top] = \Sigma_{21}$. Find $A^* = \operatorname{argmin}_{A \in \mathbb{R}^{d \times d}}\, \mathbb{E}[\|Az_1 - z_2\|^2]$ by expanding the objective, computing $\partial/\partial A$, and setting to zero. Show $A^* = \Sigma_{21}\Sigma_{11}^{-1}$. What does $A^*$ reduce to when (a) $z_1 = z_2$ (trivial augmentations) and (b) $\Sigma_{21} = 0$ (views are uncorrelated)?
+
+> [!TIP]- Solution to Exercise 12
+> **Key insight:** The OLS normal equations and the Gaussian conditioning formula give the same linear map — both minimize expected squared prediction error.
+>
+> **Sketch:** Expand: $\mathbb{E}[\|Az_1 - z_2\|^2] = \mathrm{tr}(A\Sigma_{11}A^\top - 2A\Sigma_{12} + \Sigma_{22})$. Taking $\partial/\partial A$ (using $\partial\,\mathrm{tr}(ABA^\top)/\partial A = 2AB$ for symmetric $B$ and $\partial\,\mathrm{tr}(AC)/\partial A = C^\top$): derivative $= 2A\Sigma_{11} - 2\Sigma_{21} = 0$, giving $A^* = \Sigma_{21}\Sigma_{11}^{-1}$. **(a) $z_1 = z_2$:** $\Sigma_{21} = \Sigma_{11}$, so $A^* = I$ — the predictor is the identity, gradient vanishes, nothing is learned (trivial augmentations provide no self-supervised signal). **(b) $\Sigma_{21} = 0$:** $A^* = 0$ — the predictor outputs zero regardless of input; the M-step gradient pushes the encoder toward collapse since both views carry no shared information.
+
+---
+
+## 🎯 Rayleigh Quotient and Variational Characterization
+
+For a symmetric matrix $A \in \mathbb{R}^{d \times d}$, the *Rayleigh quotient* of a nonzero vector $x$ is:
+
+$$R(A, x) = \frac{x^\top A x}{\|x\|^2}.$$
+
+**Variational characterization of eigenvalues (Courant–Fischer).** If $A = Q\Lambda Q^\top$ with $\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_d$, then:
+
+$$\lambda_1 = \max_{\|x\|=1} x^\top A x, \qquad \lambda_d = \min_{\|x\|=1} x^\top A x.$$
+
+The maximum is attained at $x = q_1$ (leading eigenvector); the minimum at $x = q_d$. More generally, the $k$-th eigenvalue equals the maximum Rayleigh quotient over all unit vectors orthogonal to $q_1, \ldots, q_{k-1}$.
+
+**Multi-dimensional generalization.** For $W \in \mathbb{R}^{k \times d}$ with $WW^\top = I_k$ (orthonormal rows):
+
+$$\max_{WW^\top = I_k}\; \mathrm{tr}(WAW^\top) = \sum_{i=1}^k \lambda_i,$$
+
+achieved when the rows of $W$ are $q_1^\top, \ldots, q_k^\top$ (top-$k$ eigenvectors). This identity is proved by writing $W = \tilde{Q}R$ with $R \in O(k)$ and reducing to the 1D Rayleigh quotient applied to each column of $\tilde{Q}$.
+
+**SSL connection.** Tian et al.'s convergence theorem (see [[concepts/self-supervised-vision/ssl-theory|SSL Theory §What Do SSL Representations Converge To?]]) states that the optimal linear encoder solves $\max_{WW^\top = I_d} \mathrm{tr}(WFW^\top)$. By the Courant–Fischer identity above, the solution is $W^* = [q_1, \ldots, q_d]^\top$ — the top-$d$ eigenvectors of $F$. **SSL in the linear regime is PCA of the augmentation-averaged cross-covariance.**
+
+---
+
+> [!QUESTION] Exercise 13: Maximizing Projected Variance
+> *The variational characterization proves that SSL in the linear regime finds the principal components of the augmentation-averaged covariance.*
+>
+> > **Prerequisites:** [[#🎯 Rayleigh Quotient and Variational Characterization|Rayleigh Quotient and Variational Characterization]], [[#🔬 Eigenvalues and the Spectral Theorem|Eigenvalues and the Spectral Theorem]]
+>
+> Let $F \in \mathbb{R}^{n \times n}$ be symmetric PSD with eigenvalues $\lambda_1 \geq \cdots \geq \lambda_n \geq 0$ and eigenvectors $q_1, \ldots, q_n$. For $W \in \mathbb{R}^{d \times n}$ with $WW^\top = I_d$, prove that $\mathrm{tr}(WFW^\top) \leq \sum_{i=1}^d \lambda_i$ and that equality is achieved by $W^* = [q_1, \ldots, q_d]^\top$. Conclude: if SSL in the linear regime maximizes $\mathrm{tr}(WFW^\top)$, what representation does it learn?
+
+> [!TIP]- Solution to Exercise 13
+> **Key insight:** The orthonormality constraint forces each row of $W$ to "pick" a direction in $\mathbb{R}^n$; total projected variance is maximized by greedily picking the directions of largest variance — i.e., the top eigenvectors.
+>
+> **Sketch:** Let $w_1, \ldots, w_d$ be the rows of $W$ (orthonormal). Then $\mathrm{tr}(WFW^\top) = \sum_{i=1}^d w_i^\top F w_i = \sum_{i=1}^d R(F, w_i)$. Since $w_1, \ldots, w_d$ are orthonormal, by the Courant–Fischer theorem applied iteratively: $\sum_{i=1}^d R(F, w_i) \leq \sum_{i=1}^d \lambda_i$, with equality when $w_i = q_i$ (the $i$-th eigenvector of $F$). Hence $W^* = [q_1, \ldots, q_d]^\top$. **Conclusion:** SSL in the linear regime learns the projection onto the subspace spanned by the top-$d$ eigenvectors of $F$ — i.e., PCA of $F$. For additive-noise augmentations, $F = \Sigma_x$ (data covariance), so SSL recovers standard PCA. With richer augmentations, $F$ encodes only augmentation-consistent structure, and SSL recovers PCA of that filtered covariance.
 
 ---
 
