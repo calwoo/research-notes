@@ -17,6 +17,7 @@
 - [[#🧮 Matrix Calculus|🧮 Matrix Calculus]]
 - [[#📐 Cross-Covariance and Gaussian Conditioning|📐 Cross-Covariance and Gaussian Conditioning]]
 - [[#🎯 Rayleigh Quotient and Variational Characterization|🎯 Rayleigh Quotient and Variational Characterization]]
+- [[#🔗 Synthesis Exercises|🔗 Synthesis Exercises]]
 - [[#📚 References|📚 References]]
 
 ---
@@ -365,6 +366,54 @@ achieved when the rows of $W$ are $q_1^\top, \ldots, q_k^\top$ (top-$k$ eigenvec
 > **Key insight:** The orthonormality constraint forces each row of $W$ to "pick" a direction in $\mathbb{R}^n$; total projected variance is maximized by greedily picking the directions of largest variance — i.e., the top eigenvectors.
 >
 > **Sketch:** Let $w_1, \ldots, w_d$ be the rows of $W$ (orthonormal). Then $\mathrm{tr}(WFW^\top) = \sum_{i=1}^d w_i^\top F w_i = \sum_{i=1}^d R(F, w_i)$. Since $w_1, \ldots, w_d$ are orthonormal, by the Courant–Fischer theorem applied iteratively: $\sum_{i=1}^d R(F, w_i) \leq \sum_{i=1}^d \lambda_i$, with equality when $w_i = q_i$ (the $i$-th eigenvector of $F$). Hence $W^* = [q_1, \ldots, q_d]^\top$. **Conclusion:** SSL in the linear regime learns the projection onto the subspace spanned by the top-$d$ eigenvectors of $F$ — i.e., PCA of $F$. For additive-noise augmentations, $F = \Sigma_x$ (data covariance), so SSL recovers standard PCA. With richer augmentations, $F$ encodes only augmentation-consistent structure, and SSL recovers PCA of that filtered covariance.
+
+---
+
+## 🔗 Synthesis Exercises
+
+The following exercises each combine two or more prior sections. They directly underpin the three SSL theory results with no dedicated LA prereq above: the NT-Xent dimensional collapse bound, VICReg's explicit eigenvalue constraint, and the SimSiam M-step conditional variance interpretation.
+
+---
+
+> [!QUESTION] Exercise 14: Gram Matrix Rank and Dimensional Collapse
+> *The Gram matrix $ZZ^\top$ and the covariance $Z^\top Z$ share all nonzero eigenvalues — this bounds the rank of any batch of embeddings by the embedding dimension $d$, not the batch size $N$.*
+>
+> > **Prerequisites:** [[#🔢 Rank and the Column Space|Rank and the Column Space]], [[#✂️ Singular Value Decomposition|Singular Value Decomposition]]
+>
+> Let $Z \in \mathbb{R}^{N \times d}$ with $N > d$. Let $G = ZZ^\top \in \mathbb{R}^{N \times N}$ be the *Gram matrix* and $\hat\Sigma = Z^\top Z / N \in \mathbb{R}^{d \times d}$. (a) Show that $G$ and $\hat\Sigma$ have the same nonzero eigenvalues (up to the $1/N$ scaling factor), and conclude $\mathrm{rank}(G) = \mathrm{rank}(Z) \leq d$. (b) The NT-Xent loss depends only on pairwise cosine similarities, which are entries of the normalized Gram matrix. Explain why this means the NT-Xent loss landscape is insensitive to the $(N - d)$ "extra" directions in $\mathbb{R}^N$ — and why this implies dimensional collapse to rank $\leq d$ carries no penalty from the loss.
+
+> [!TIP]- Solution to Exercise 14
+> **Key insight:** The Gram matrix and covariance share nonzero eigenvalues because $ZZ^\top$ and $Z^\top Z$ are related by the same SVD; the embedding dimension $d < N$ caps the rank of $G$, making NT-Xent blind to most of the batch's representation space.
+>
+> **Sketch:** **(a)** Let $Z = U\Sigma V^\top$ be the SVD. Then $G = ZZ^\top = U\Sigma^2 U^\top$ and $Z^\top Z = V\Sigma^2 V^\top$. Both have the same diagonal $\Sigma^2$, so the same nonzero eigenvalues (those of $\hat\Sigma$ are $\sigma_i^2/N$). The rank is $r = $ number of nonzero singular values $\leq \min(N, d) = d$. **(b)** NT-Xent for a batch of $N$ embeddings is a function of $G_{ij} = z_i^\top z_j / (\|z_i\|\|z_j\|)$. Since $\mathrm{rank}(G) \leq d$, all $N$ embeddings lie in a $d$-dimensional subspace. If $d \ll N$, there are $N - d$ directions in $\mathbb{R}^N$ along which the Gram matrix is zero — the loss is constant along these directions. Gradient descent therefore has no incentive to use more than $d$ dimensions, even when $d \ll N$. *This is the root cause of dimensional collapse in contrastive learning:* with $N$ negatives and embedding dimension $d \ll N$, the NT-Xent minimizer can live in a rank-$d$ subspace.
+
+---
+
+> [!QUESTION] Exercise 15: VICReg Variance Term and Eigenvalue Lower Bound
+> *The variance hinge directly lower-bounds each diagonal of the within-branch covariance; combined with the covariance regularizer, this implies $\hat{C}(Z) \succeq (γ^2 - \varepsilon)I_d$.*
+>
+> > **Prerequisites:** [[#✅ Positive Semidefinite Matrices|Positive Semidefinite Matrices]], [[#📊 Covariance Matrices|Covariance Matrices]]
+>
+> VICReg's variance term is $v(Z) = \frac{1}{d}\sum_{j=1}^d \max(0,\, \gamma - \sqrt{\mathrm{Var}_b(z^j) + \varepsilon})$. (a) Show that $v(Z) = 0$ implies $\hat{C}(Z)_{jj} \geq \gamma^2 - \varepsilon$ for every dimension $j$. (b) Now suppose additionally that the covariance regularizer $c(Z) = 0$ (all off-diagonal entries of $\hat{C}(Z)$ are zero, i.e. $\hat{C}(Z)$ is diagonal). Conclude that $\hat{C}(Z) \succeq (\gamma^2 - \varepsilon)I_d$ — the minimum eigenvalue is lower-bounded by $\gamma^2 - \varepsilon > 0$. Why does this mean VICReg explicitly prevents collapse via an eigenvalue constraint?
+
+> [!TIP]- Solution to Exercise 15
+> **Key insight:** The variance hinge is an eigenvalue lower bound in disguise — it directly controls the diagonal of $\hat{C}(Z)$, and the covariance regularizer then ensures the diagonal entries *are* the eigenvalues.
+>
+> **Sketch:** **(a)** $v(Z) = 0$ means every hinge is inactive: $\sqrt{\mathrm{Var}_b(z^j) + \varepsilon} \geq \gamma$ for all $j$, so $\mathrm{Var}_b(z^j) \geq \gamma^2 - \varepsilon$. Since $\hat{C}(Z)_{jj} = \mathrm{Var}_b(z^j)$, we have $\hat{C}(Z)_{jj} \geq \gamma^2 - \varepsilon$ for each $j$. **(b)** If $\hat{C}(Z)$ is diagonal, its eigenvalues are exactly its diagonal entries. All of these are $\geq \gamma^2 - \varepsilon > 0$ (for $\varepsilon < \gamma^2$), so $\hat{C}(Z) - (\gamma^2 - \varepsilon)I_d \succeq 0$, i.e. $\hat{C}(Z) \succeq (\gamma^2 - \varepsilon)I_d$. This directly implies $\hat{C}(Z) \succ 0$ — no collapse. Unlike BYOL or SimSiam (which prevent collapse implicitly via architecture), VICReg makes the eigenvalue constraint a *hard condition in the loss*: $v(Z) = 0$ is a necessary condition for any optimizer to declare convergence.
+
+---
+
+> [!QUESTION] Exercise 16: Schur Complement, Conditional Variance, and the SimSiam M-Step
+> *The Schur complement of a block covariance matrix is the conditional covariance of $z_2$ given $z_1$ — and minimizing it is the M-step objective in SimSiam.*
+>
+> > **Prerequisites:** [[#📐 Cross-Covariance and Gaussian Conditioning|Cross-Covariance and Gaussian Conditioning]], [[#✅ Positive Semidefinite Matrices|Positive Semidefinite Matrices]]
+>
+> Let $(z_1, z_2)$ be jointly Gaussian with zero means and block covariance as in §Cross-Covariance. The *Schur complement* of $\Sigma_{11}$ in the joint covariance is $S = \Sigma_{22} - \Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12}$. (a) Show $S \succeq 0$ by writing $S$ as a conditional variance. (b) Show $\mathrm{tr}(S) = \mathrm{tr}(\Sigma_{22}) - \mathrm{tr}(\Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12})$ and interpret this as total variance minus explained variance. (c) The SimSiam M-step updates the encoder to minimize $\mathrm{tr}(S)$ (total conditional variance). Using the expression from (b), explain why this is equivalent to maximizing the *explained variance* of $z_2$ by $z_1$.
+
+> [!TIP]- Solution to Exercise 16
+> **Key insight:** The Schur complement is a conditional covariance and is always PSD; minimizing its trace is the same as maximizing $R^2$ — the fraction of variance in $z_2$ explained by $z_1$.
+>
+> **Sketch:** **(a)** For any $x \in \mathbb{R}^d$: $x^\top S x = x^\top \Sigma_{22} x - x^\top \Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12} x = \mathrm{Var}(x^\top z_2) - \mathrm{Var}(\mathbb{E}[x^\top z_2 \mid z_1]) = \mathrm{Var}(x^\top z_2 \mid z_1) \geq 0$ (by the law of total variance). So $S \succeq 0$ — it equals the conditional covariance of $z_2$ given $z_1$. **(b)** $\mathrm{tr}(S) = \sum_j \mathrm{Var}(z_{2,j} \mid z_1)$ (sum of conditional variances per dimension). Since $\mathrm{tr}(\Sigma_{22}) = \sum_j \mathrm{Var}(z_{2,j})$ is the total variance: $\mathrm{tr}(S) = \mathrm{tr}(\Sigma_{22}) - \underbrace{\mathrm{tr}(\Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12})}_{\text{explained variance}}$. **(c)** Since $\mathrm{tr}(\Sigma_{22})$ is fixed (depends only on the data, not the encoder), minimizing $\mathrm{tr}(S)$ is equivalent to maximizing $\mathrm{tr}(\Sigma_{21}\Sigma_{11}^{-1}\Sigma_{12})$. This is the encoder objective: make the views $z_1, z_2$ as mutually predictable as possible — i.e., maximize the total explained variance (multivariate $R^2$). The stop-gradient ensures $\Sigma_{21}$ and $\Sigma_{11}$ are treated as fixed during the M-step, exactly as in EM.
 
 ---
 
