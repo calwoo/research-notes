@@ -20,6 +20,7 @@
   - [[#🔬 The Projector Head|🔬 The Projector Head]]
   - [[#🌡️ Temperature and Hard Negatives|🌡️ Temperature and Hard Negatives]]
   - [[#🌐 Alignment and Uniformity on the Hypersphere|🌐 Alignment and Uniformity on the Hypersphere]]
+  - [[#🏋️ Semi-Supervised Learning and Scaling|🏋️ Semi-Supervised Learning and Scaling]]
 - [[#🧭 Retrospective: The Historical Arc|🧭 Retrospective: The Historical Arc]]
 - [[#📚 References|📚 References]]
 
@@ -629,6 +630,49 @@ $$\mathcal{L}_{\text{NT-Xent}} \approx \frac{1}{\tau}\,\mathcal{L}_{\text{align}
 > **(b) Uniformity:** $\mathcal{L}_{\text{uniform}} = \log\,\mathbb{E}[\exp(-2\|z - z'\|^2)]$. With 4 points, the all-$+1$ assignment gives $\mathcal{L}_{\text{uniform}} = 0$ (maximum). The balanced 2+2 split gives $\mathbb{E}[\exp(-2\|z-z'\|^2)] = (1/2)e^0 + (1/2)e^{-8}$ — much smaller log, so minimum uniformity loss. Requires exactly 2 images at each pole.
 >
 > **(c) Both simultaneously:** assign $f(x_1) = f(x_2) = +1$ and $f(x_3) = f(x_4) = -1$. This satisfies alignment (pairs aligned) and achieves the uniform 2+2 split (uniformity minimized). On $S^0$ with exactly 2 positive-pair classes, the objectives are jointly satisfiable. In higher dimensions with $n \gg d$ instances, such perfect joint solutions rarely exist — the objectives are in genuine tension and the loss finds a compromise.
+
+---
+
+### 🏋️ Semi-Supervised Learning and Scaling
+
+The note so far has treated SimCLR purely as a self-supervised pre-training method evaluated via *linear probing* — freeze $f_\theta$, fit a linear classifier on top. The paper also establishes SimCLR as a *semi-supervised* learner by fine-tuning the entire encoder on a small labeled subset.
+
+**Two downstream protocols.**
+
+| Protocol | Labels used | SimCLR top-1 / top-5 | Prior SOTA |
+|---|---|---|---|
+| Linear evaluation | 0% (unsupervised) | 76.5% / 93.2% | 71.5% / 90.1% (CPC v2) |
+| Semi-supervised fine-tune | 1% (~12,800 images) | 63.0% / **85.8%** | 52.7% / 77.9% (CPC v2) |
+| Fine-tune (100% labels) | 100% | 80.1% in 30 epochs | 78.4% supervised in 90 epochs |
+
+The 1% result is the most striking: **85.8% top-5 accuracy matches AlexNet trained with 100× more labels.** The encoder pre-trained on unlabeled data is already in a region of parameter space where a small labeled nudge generalizes well.
+
+**Why fine-tuning dominates linear probing at low label fractions.** Linear probing is a strict test: the encoder must compress all task-relevant variation into a *linearly separable* structure before training ends. At 1% labels, a linear classifier is severely data-starved — it can overfit to the few labeled examples with no capacity to correct the encoder's bias. Fine-tuning allows the encoder to adapt its invariances to the task, discarding irrelevant pre-training structure. The pre-trained initialization provides strong inductive bias while the labeled data steers it — a regime where contrastive pre-training pays a large dividend.
+
+**Self-training / distillation pipeline.** The fine-tuned semi-supervised model can generate *pseudo-labels* on remaining unlabeled data, bootstrapping a knowledge distillation loop:
+
+1. Pre-train $f_\theta$ with NT-Xent on all unlabeled data.
+2. Fine-tune $(f_\theta, \text{head})$ on the small labeled set $\to$ teacher $T$.
+3. Apply $T$ to unlabeled data to generate pseudo-labels $\hat{y}_i = T(x_i)$.
+4. Train a student $S$ (possibly smaller) on the full labeled + pseudo-labeled corpus.
+
+Each iteration tightens the pseudo-label quality; the contrastive pre-training ensures the teacher's representations generalize to the unlabeled distribution.
+
+**Scaling behavior.** Unlike supervised training, contrastive pre-training does not plateau quickly:
+
+- *Supervised* ResNet-50 tops out between 90 and 300 epochs.
+- *SimCLR* continues improving past 800 epochs. Each epoch presents fresh stochastic negative combinations drawn from the $2N$-way batch, so the effective contrast distribution is not exhausted by repeated passes over the dataset.
+
+Three independent scaling axes all help:
+
+| Axis | Why it helps |
+|---|---|
+| More epochs | Fresh random negatives per batch; the NCE distribution is never exhausted |
+| Larger batch $N$ | MI bound ceiling $\log(2N-1)$ rises; more in-batch negatives tighten the estimate |
+| Wider encoder | More representation capacity; wider $f_\theta$ retains finer-grained invariances before the projector discards them |
+
+> [!WARNING] Diminishing semi-supervised advantage at high label fractions
+> *The contrastive pre-training dividend shrinks as the labeled fraction grows.* At 100% labels, fine-tuned SimCLR mainly accelerates convergence (30 vs. 90 epochs to similar accuracy) rather than improving peak performance. The semi-supervised benefit is sharpest at 1–10% labels, where the pre-trained initialization prevents overfitting to the scarce labeled set.
 
 ---
 
