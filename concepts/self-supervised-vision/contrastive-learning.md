@@ -193,33 +193,67 @@ The conceptual leap from N-pairs to *InfoNCE* came through *Contrastive Predicti
 
 InfoNCE does not appear from nowhere — it is a direct descendant of *Noise Contrastive Estimation* (NCE), introduced by Gutmann & Hyvärinen (2010) for fitting unnormalized density models without computing an intractable partition function.
 
-**The NCE problem.** Suppose we have an unnormalized model $\tilde{p}_\theta(x)$ and want to estimate $p_\theta(x) = \tilde{p}_\theta(x) / Z(\theta)$ where $Z(\theta) = \int \tilde{p}_\theta(x)\,dx$ is intractable. NCE replaces maximum likelihood (which requires $Z(\theta)$) with a *binary classification* problem.
+**The NCE problem.** Suppose we have an unnormalized model $\tilde{p}_\theta(x)$ and want to estimate $p_\theta(x) = \tilde{p}_\theta(x) / Z(\theta)$ where $Z(\theta) = \int \tilde{p}_\theta(x)\,dx$ is intractable. The maximum likelihood objective is:
 
-**Setup.** Mix data samples $x^+ \sim p_d(x)$ (the true data distribution) with noise samples $x^- \sim p_n(x)$ (a known reference, e.g. uniform) at ratio $1:k$. Train a classifier $h_\theta$ to decide which samples are data and which are noise:
+$$\mathcal{L}_{\text{MLE}} = -\frac{1}{n}\sum_i \log p_\theta(x_i) = -\frac{1}{n}\sum_i \log \tilde{p}_\theta(x_i) + \log Z(\theta).$$
 
-$$h_\theta(x) = \frac{p_\theta(x)}{p_\theta(x) + k\, p_n(x)}.$$
+The $\log Z(\theta)$ term is intractable, and its gradient $\nabla_\theta \log Z(\theta) = \mathbb{E}_{x \sim p_\theta}[\nabla_\theta \log \tilde{p}_\theta(x)]$ requires sampling from the model itself. NCE replaces this with a *binary classification* problem — but the connection is not obvious and deserves unpacking.
+
+**Why a classifier can recover a density.** The key insight comes from a basic Bayesian calculation. Suppose you mix data samples $x^+ \sim p_d(x)$ with noise samples $x^- \sim p_n(x)$ at ratio $1:k$. Introduce a binary label $C \in \{\text{data}, \text{noise}\}$; the prior probabilities are $P(C = \text{data}) = \frac{1}{1+k}$ and $P(C = \text{noise}) = \frac{k}{1+k}$.
+
+Applying Bayes' theorem for $P(C = \text{data} \mid x)$, the marginal $P(x)$ expands by the law of total probability:
+
+$$P(x) = p_d(x) \cdot \frac{1}{1+k} + p_n(x) \cdot \frac{k}{1+k} = \frac{p_d(x) + k\,p_n(x)}{1+k}.$$
+
+Substituting into Bayes' theorem — the $(1+k)$ factors cancel:
+
+$$h^*(x) = P(C = \text{data} \mid x) = \frac{p_d(x) \cdot \frac{1}{1+k}}{\frac{p_d(x) + k\,p_n(x)}{1+k}} = \frac{p_d(x)}{p_d(x) + k\, p_n(x)}.$$
+
+Now rearrange: the odds ratio of the optimal classifier gives you the density ratio directly,
+
+$$\frac{h^*(x)}{1 - h^*(x)} = \frac{p_d(x)}{k\, p_n(x)} \implies p_d(x) = k\, p_n(x) \cdot \frac{h^*(x)}{1 - h^*(x)}.$$
+
+Since $p_n$ and $k$ are known, **a perfect classifier uniquely determines $p_d$** — without any integrals. This is the bridge: solving binary classification is equivalent to learning the density ratio $p_d / p_n$.
+
+**How NCE exploits this.** NCE parameterizes the classifier using the model,
+
+$$h_\theta(x) = \frac{p_\theta(x)}{p_\theta(x) + k\, p_n(x)}, \qquad p_\theta(x) = \frac{\tilde{p}_\theta(x)}{e^c},$$
+
+where $c = \log Z(\theta)$ is treated as an *additional scalar parameter* to be learned by gradient descent — not computed by integration. The binary cross-entropy loss is then:
 
 **Definition (NCE Objective).**
 
-$$\mathcal{L}_{\text{NCE}}(\theta) = -\mathbb{E}_{x \sim p_d}\!\left[\log h_\theta(x)\right] - k\,\mathbb{E}_{y \sim p_n}\!\left[\log\bigl(1 - h_\theta(y)\bigr)\right].$$
+$$\mathcal{L}_{\text{NCE}}(\theta, c) = -\mathbb{E}_{x \sim p_d}\!\left[\log h_\theta(x)\right] - k\,\mathbb{E}_{y \sim p_n}\!\left[\log\bigl(1 - h_\theta(y)\bigr)\right].$$
 
-This is a standard binary cross-entropy with $k$ noise samples per data sample.
-
-**Key theorem.** The NCE objective is minimized when $p_\theta = p_d$ — the model recovers the true data distribution. At the optimum, $h^*(x) = p_d(x)/(p_d(x) + k\,p_n(x))$, which encodes the density ratio $p_d(x)/p_n(x)$.
+This only ever evaluates $\tilde{p}_\theta$ at individual sample points — no integral, no expectation under $p_\theta$. At the minimum, the classifier achieves Bayes optimality: $h_\theta = h^*$, which forces $p_\theta(x) = p_d(x)$ everywhere. The scalar $c$ converges to the true $\log Z(\theta)$ as a byproduct — the model learns normalization automatically.
 
 **This is the statistical core of contrastive learning: estimating a density ratio by training a classifier against a reference distribution.**
 
-**From NCE to InfoNCE.** InfoNCE generalizes the binary NCE classifier ($K = 2$: data vs. noise) to a $K$-way categorical problem:
+**From NCE to InfoNCE.** The N-pairs loss (from the metric learning lineage) and NCE (from the statistics lineage) converge at InfoNCE via two independent generalizations:
+
+```mermaid
+flowchart TD
+    npairs["N-pairs loss (2016)<br/>multiclass softmax<br/>from metric learning"]
+    nce["NCE (2010)<br/>binary data-vs-noise<br/>from statistics"]
+    infonce["InfoNCE (2018)<br/>K-way identification<br/>density ratio as optimal critic"]
+    npairs --> infonce
+    nce --> infonce
+```
+
+InfoNCE generalizes the binary NCE classifier ($K = 2$: data or noise) to a $K$-way identification task, while inheriting NCE's key insight that the optimal solution is a density ratio:
 
 | | NCE | InfoNCE |
 |---|---|---|
-| Positive | $x \sim p_d(x)$ (data) | $x^+ \sim p(x \mid c)$ (conditioned on context) |
-| Negative | $x \sim p_n(x)$ (noise) | $x_k \sim p(x)$ (marginal) |
-| Task | Binary: data or noise? | $K$-way: which candidate is the positive? |
+| Positive | $x \sim p_d(x)$ — real data | $x^+ \sim p(x \mid c)$ — real data, conditioned on context |
+| Negative | $x \sim p_n(x)$ — **synthetic** noise | $x_k \sim p(x)$ — **real data**, unconditional |
+| Are negatives real? | No | Yes |
+| Discrimination tests | Real vs. fake | Conditioned vs. unconditioned |
 | Optimal classifier | $p_d(x)/p_n(x)$ | $p(x \mid c)/p(x)$ |
 | What's estimated | Log partition function $\log Z$ | Mutual information $I(X; C)$ |
 
-The conceptual leap: InfoNCE replaces the absolute density $p_d$ with a *conditional* density $p(x \mid c)$, turning partition-function estimation into mutual information estimation. The binary classification task becomes a $K$-way identification task, and the partition function estimator becomes a MI lower bound.
+The structural analogy $p_n \leftrightarrow p(x)$ holds at the level of the math — both serve as the reference in the density ratio — but hides a deep conceptual shift. In NCE, negatives are *synthetic*: you fabricate a noise distribution $p_n$ and draw fake samples from it. In InfoNCE, **all $K$ candidates are real data**. There is no real-vs-fake distinction. The discrimination task is purely about *conditioning*: which of these real samples was drawn from $p(x \mid c)$ rather than the unconditional $p(x)$?
+
+The reason $p(x)$ appears as the reference is not that it acts as noise — it is that the conditional-vs-marginal ratio $p(x \mid c)/p(x)$ is exactly what mutual information measures: $I(X; C) = \mathbb{E}[\log p(x \mid c)/p(x)]$. Distinguishing samples from $p(x \mid c)$ vs. $p(x)$ *is* MI estimation. NCE estimated a partition function; InfoNCE estimates an information-theoretic quantity.
 
 > [!INFO] NCE in NLP: word2vec negative sampling
 > NCE was widely used in NLP before the deep learning era. Word2vec's negative sampling (Mikolov et al., 2013) is an instance of NCE applied to pointwise mutual information between a word and its context: the loss $\log \sigma(z_w^\top z_c) + k\,\mathbb{E}_{w' \sim p_n}[\log \sigma(-z_{w'}^\top z_c)]$ is a binary NCE with $k$ noise words. This is another direct ancestor of InfoNCE in the same lineage.
