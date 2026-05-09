@@ -9,14 +9,17 @@
 - [[#🔺 The Triplet Loss (Schroff et al., 2015)|🔺 The Triplet Loss (Schroff et al., 2015)]]
 - [[#🔢 From Pairs to N-Pairs (Sohn, 2016)|🔢 From Pairs to N-Pairs (Sohn, 2016)]]
 - [[#📡 InfoNCE and Contrastive Predictive Coding (van den Oord et al., 2018)|📡 InfoNCE and Contrastive Predictive Coding (van den Oord et al., 2018)]]
+  - [[#🔗 From NCE to InfoNCE: Statistical Roots|🔗 From NCE to InfoNCE: Statistical Roots]]
   - [[#🔑 The Categorical Cross-Entropy Derivation|🔑 The Categorical Cross-Entropy Derivation]]
   - [[#📐 The Mutual Information Lower Bound|📐 The Mutual Information Lower Bound]]
   - [[#🌡️ The Role of the Critic|🌡️ The Role of the Critic]]
+- [[#🖼️ Instance Discrimination: The Vision Bridge (Wu et al., 2018)|🖼️ Instance Discrimination: The Vision Bridge (Wu et al., 2018)]]
 - [[#🧪 SimCLR: InfoNCE for Vision (Chen et al., 2020)|🧪 SimCLR: InfoNCE for Vision (Chen et al., 2020)]]
   - [[#🔭 Augmentation Strategy|🔭 Augmentation Strategy]]
   - [[#📐 NT-Xent as an InfoNCE Instance|📐 NT-Xent as an InfoNCE Instance]]
   - [[#🔬 The Projector Head|🔬 The Projector Head]]
   - [[#🌡️ Temperature and Hard Negatives|🌡️ Temperature and Hard Negatives]]
+  - [[#🌐 Alignment and Uniformity on the Hypersphere|🌐 Alignment and Uniformity on the Hypersphere]]
 - [[#🧭 Retrospective: The Historical Arc|🧭 Retrospective: The Historical Arc]]
 - [[#📚 References|📚 References]]
 
@@ -33,7 +36,7 @@ $$\|f_\theta(x) - f_\theta(x'')\| \gg 0 \quad \text{whenever } x \not\sim x''.$$
 
 In *metric learning*, similarity is defined by labels — pairs $(x, x^+)$ share a class, pairs $(x, x^-)$ do not. In *self-supervised* contrastive learning, similarity is defined by *augmentation invariance* — $(x, x^+)$ are two views of the same underlying image.
 
-The history of contrastive learning traces a 15-year arc: from margin-based pairwise losses (2006) through triplets (2015), then a conceptual reframing via information theory (2018), culminating in SimCLR's operationalization for large-scale vision (2020).
+The history of contrastive learning traces a 15-year arc: from margin-based pairwise losses (2006) through triplets (2015), through the statistical mechanics of noise contrastive estimation and its generalization to mutual information bounds (2018), through the first vision applications via instance discrimination (2018), and culminating in SimCLR's clean operationalization for large-scale vision (2020).
 
 > [!NOTE] Relation to other notes
 > This note focuses on the loss functions and their historical development. For how SimCLR fits into the post-contrastive landscape (BYOL, Barlow Twins, VICReg), see [[concepts/self-supervised-vision/ssl-vision|Self-Supervised Vision: Contrastive Learning and Beyond]]. For the theoretical geometry of these objectives on the hypersphere, see [[concepts/self-supervised-vision/ssl-theory|Theoretical Foundations of Self-Supervised Vision]].
@@ -186,6 +189,41 @@ This is a *softmax cross-entropy*: the loss is the negative log-probability assi
 
 The conceptual leap from N-pairs to *InfoNCE* came through *Contrastive Predictive Coding* (CPC), introduced by van den Oord, Li, and Vinyals at DeepMind. CPC was designed for sequential data (speech, video) — learning representations by predicting the future from the present. But the loss function it introduced, *InfoNCE*, became the mathematical foundation of all modern contrastive learning.
 
+### 🔗 From NCE to InfoNCE: Statistical Roots
+
+InfoNCE does not appear from nowhere — it is a direct descendant of *Noise Contrastive Estimation* (NCE), introduced by Gutmann & Hyvärinen (2010) for fitting unnormalized density models without computing an intractable partition function.
+
+**The NCE problem.** Suppose we have an unnormalized model $\tilde{p}_\theta(x)$ and want to estimate $p_\theta(x) = \tilde{p}_\theta(x) / Z(\theta)$ where $Z(\theta) = \int \tilde{p}_\theta(x)\,dx$ is intractable. NCE replaces maximum likelihood (which requires $Z(\theta)$) with a *binary classification* problem.
+
+**Setup.** Mix data samples $x^+ \sim p_d(x)$ (the true data distribution) with noise samples $x^- \sim p_n(x)$ (a known reference, e.g. uniform) at ratio $1:k$. Train a classifier $h_\theta$ to decide which samples are data and which are noise:
+
+$$h_\theta(x) = \frac{p_\theta(x)}{p_\theta(x) + k\, p_n(x)}.$$
+
+**Definition (NCE Objective).**
+
+$$\mathcal{L}_{\text{NCE}}(\theta) = -\mathbb{E}_{x \sim p_d}\!\left[\log h_\theta(x)\right] - k\,\mathbb{E}_{y \sim p_n}\!\left[\log\bigl(1 - h_\theta(y)\bigr)\right].$$
+
+This is a standard binary cross-entropy with $k$ noise samples per data sample.
+
+**Key theorem.** The NCE objective is minimized when $p_\theta = p_d$ — the model recovers the true data distribution. At the optimum, $h^*(x) = p_d(x)/(p_d(x) + k\,p_n(x))$, which encodes the density ratio $p_d(x)/p_n(x)$.
+
+**This is the statistical core of contrastive learning: estimating a density ratio by training a classifier against a reference distribution.**
+
+**From NCE to InfoNCE.** InfoNCE generalizes the binary NCE classifier ($K = 2$: data vs. noise) to a $K$-way categorical problem:
+
+| | NCE | InfoNCE |
+|---|---|---|
+| Positive | $x \sim p_d(x)$ (data) | $x^+ \sim p(x \mid c)$ (conditioned on context) |
+| Negative | $x \sim p_n(x)$ (noise) | $x_k \sim p(x)$ (marginal) |
+| Task | Binary: data or noise? | $K$-way: which candidate is the positive? |
+| Optimal classifier | $p_d(x)/p_n(x)$ | $p(x \mid c)/p(x)$ |
+| What's estimated | Log partition function $\log Z$ | Mutual information $I(X; C)$ |
+
+The conceptual leap: InfoNCE replaces the absolute density $p_d$ with a *conditional* density $p(x \mid c)$, turning partition-function estimation into mutual information estimation. The binary classification task becomes a $K$-way identification task, and the partition function estimator becomes a MI lower bound.
+
+> [!INFO] NCE in NLP: word2vec negative sampling
+> NCE was widely used in NLP before the deep learning era. Word2vec's negative sampling (Mikolov et al., 2013) is an instance of NCE applied to pointwise mutual information between a word and its context: the loss $\log \sigma(z_w^\top z_c) + k\,\mathbb{E}_{w' \sim p_n}[\log \sigma(-z_{w'}^\top z_c)]$ is a binary NCE with $k$ noise words. This is another direct ancestor of InfoNCE in the same lineage.
+
 ### 🔑 The Categorical Cross-Entropy Derivation
 
 **Setup.** We have a context representation $c$ (the "query") and a set of $K$ candidate representations $\{x_1, \ldots, x_K\}$, exactly one of which ($x_+$, at position $j^*$) is the *positive* — the true future/paired sample. The rest are negatives, drawn independently from the data distribution $p(x)$.
@@ -288,6 +326,66 @@ The bilinear critic in CPC allows the compatibility function to rotate and scale
 
 ---
 
+## 🖼️ Instance Discrimination: The Vision Bridge (Wu et al., 2018)
+
+*Unsupervised Feature Learning via Non-Parametric Instance Discrimination* (Wu, Xiong, Yu, Lin, CVPR 2018) occupies the crucial position between CPC and SimCLR: it applied the InfoNCE/NCE ideas to vision self-supervised learning for the first time, establishing that *instance-level* discrimination with no labels produces strong visual representations.
+
+### 🎯 The Instance Discrimination Pretext Task
+
+**Definition (Instance Discrimination).** Given a dataset $\mathcal{D} = \{x_1, \ldots, x_n\}$ of $n$ images, treat each image $x_i$ as its own class $y = i$. The pretext task is $n$-way classification: given a query, identify which training instance it came from.
+
+This is a radical extension of the N-pairs framework: instead of $N$ classes within a mini-batch, there are $n$ classes across the *entire training set* ($n = 1{,}281{,}167$ for ImageNet).
+
+**The non-parametric softmax.** In standard $n$-way classification, the model learns a weight vector $w_i \in \mathbb{R}^d$ per class. With $n > 10^6$ classes this is prohibitively expensive. Instead, InstDisc uses the stored embedding $v_i \in \mathbb{R}^d$ directly as the class prototype:
+
+$$P(i \mid x) = \frac{\exp(v_i^\top f_\theta(x) / \tau)}{\sum_{j=1}^{n} \exp(v_j^\top f_\theta(x) / \tau)}.$$
+
+The denominator sums over all $n$ training embeddings — still intractable. InstDisc approximates it using NCE.
+
+### 💾 The Memory Bank and NCE Approximation
+
+**Memory bank.** InstDisc maintains a bank $\mathcal{M} \in \mathbb{R}^{n \times d}$ storing the most recently computed $\ell_2$-normalized embedding for each training image. After each forward pass for image $x_i$, the entry $\mathcal{M}[i]$ is updated to the new embedding. The bank decouples the embeddings used as negatives from the current model parameters — a direct precursor to MoCo's queue.
+
+**NCE approximation.** To avoid computing the full $n$-way denominator, InstDisc draws $m$ noise indices $\{j_1, \ldots, j_m\}$ uniformly from $\{1, \ldots, n\}$ and uses:
+
+$$P_{\text{NCE}}(i \mid x) = \frac{\exp(v_i^\top f_\theta(x) / \tau)}{\exp(v_i^\top f_\theta(x) / \tau) + \frac{n}{m}\sum_{k=1}^{m} \exp(v_{j_k}^\top f_\theta(x) / \tau)}.$$
+
+This is a binary classifier between the positive instance $i$ and $m$ noise instances — directly NCE with a uniform noise distribution over training indices. The $n/m$ factor corrects for the subsampling. The full loss is:
+
+$$\mathcal{L}_{\text{InstDisc}} = -\sum_{i \in \text{batch}} \log P_{\text{NCE}}(i \mid x_i).$$
+
+### 🔑 What InstDisc Established
+
+InstDisc demonstrated three things that directly enabled SimCLR:
+
+1. **Instance-level discrimination produces semantic representations.** Despite never seeing class labels, InstDisc embeddings cluster by semantic category. Nearest-neighbor retrieval using InstDisc features achieves $\sim$40% top-1 accuracy on ImageNet — competitive with early supervised methods, and achieved with zero labels.
+
+2. **Temperature is critical at $\tau = 0.07$.** The temperature in the non-parametric softmax controls the concentration of the probability distribution. InstDisc established this value experimentally — exactly the value SimCLR later adopted.
+
+3. **The memory bank solves the large-batch problem.** By storing all $n$ embeddings, InstDisc sidesteps the need for large mini-batches. The effective negative pool is the entire training set. The cost is *staleness*: memory bank embeddings may be up to $n/B$ batches old.
+
+> [!INFO] From memory bank to MoCo queue
+> MoCo (He et al., 2020) replaced InstDisc's full memory bank with a FIFO *queue* of the $K = 65{,}536$ most recent embeddings, kept fresh via a momentum encoder with EMA update $\xi \leftarrow m\xi + (1-m)\theta$. The queue is always current to within $K$ gradient steps, eliminating the staleness problem at the cost of a fixed negative pool size.
+
+> [!WARNING] InstDisc uses identity, not augmentation pairing
+> *Unlike SimCLR, InstDisc does not construct explicit positive pairs from augmentations.* It applies a single mild augmentation to each image and treats the stored memory bank embedding as the "positive." Two augmented views of the same image are not explicitly contrasted. This means InstDisc cannot exploit strong augmentations — heavy crops or color jitter would make the query too different from the stored prototype, breaking the identity task. SimCLR's key insight was to replace the identity pretext with augmentation pairing, which allows — indeed requires — aggressive augmentations to produce useful representations.
+
+---
+
+> [!QUESTION] Exercise 6: Memory Bank Staleness
+> *The memory bank creates a staleness problem: embeddings used as negatives may come from an earlier encoder.*
+>
+> > **Prerequisites:** [[#🖼️ Instance Discrimination: The Vision Bridge (Wu et al., 2018)|Instance Discrimination]]
+>
+> Suppose the memory bank is updated once per epoch (one full pass through $n = 1{,}281{,}167$ images with batch size $B = 256$). An embedding stored at the start of an epoch will be used as a negative for approximately $n/B \approx 5{,}000$ subsequent batches before being refreshed. If the encoder parameters change by $\|\Delta\theta\|$ per batch, give an order-of-magnitude bound on the staleness (in gradient steps) of the oldest memory bank entries. Why does staleness bias the NCE loss toward producing weaker gradient signal?
+
+> [!TIP]- Solution to Exercise 6
+> **Key insight:** Stale embeddings come from a strictly older encoder, making negatives "easier" than the current model would produce and reducing the effective gradient signal.
+>
+> **Sketch:** With $n/B \approx 5{,}000$ batches per epoch, the oldest memory bank entry is up to $5{,}000$ gradient steps stale — it was produced by a model differing by $\sim 5{,}000 \cdot \|\Delta\theta\|$ in parameters. The NCE loss implicitly assumes all noise embeddings $\{v_{j_k}\}$ are drawn from the *current* encoder's distribution. Stale embeddings violate this: they come from a less-trained encoder that produces less discriminative representations. Concretely, as the encoder improves during an epoch, the stored embeddings become progressively less sharp — they cluster less tightly by instance. This makes the negatives easier to distinguish from the positive (the current embedding is sharper), so the NCE denominator is not as informative, and the gradient signal is weaker than if fresh embeddings were used. MoCo's EMA queue bounds staleness to at most $K = 65{,}536 \ll n$ steps while maintaining a large negative pool.
+
+---
+
 ## 🧪 SimCLR: InfoNCE for Vision (Chen et al., 2020)
 
 *A Simple Framework for Contrastive Learning of Visual Representations* (SimCLR, Chen et al., 2020) distilled the CPC/InfoNCE framework into a clean recipe for visual self-supervised learning, eliminating specialized architectures and achieving state-of-the-art with remarkable simplicity.
@@ -387,14 +485,14 @@ $$\frac{\partial \ell_k}{\partial s_m} = \frac{p_m}{\tau}.$$
 
 ---
 
-> [!QUESTION] Exercise 6: Temperature Gradient Analysis
+> [!QUESTION] Exercise 7: Temperature Gradient Analysis
 > *The temperature controls the concentration of gradient signal on hard vs. easy negatives.*
 >
 > > **Prerequisites:** [[#🌡️ Temperature and Hard Negatives|Temperature and Hard Negatives]]
 >
 > Consider $K = 3$ negatives with similarities $s_1 = 0.9$, $s_2 = 0.5$, $s_3 = 0.1$ (relative to anchor), and positive similarity $s_+ = 0.95$. Compute the softmax weights $p_1, p_2, p_3$ (ignoring the positive in the denominator for simplicity) at $\tau = 0.07$ and $\tau = 0.5$. What fraction of the gradient flows through the hardest negative ($s_1 = 0.9$) in each case?
 
-> [!TIP]- Solution to Exercise 6
+> [!TIP]- Solution to Exercise 7
 > **Key insight:** Reducing $\tau$ from 0.5 to 0.07 shifts nearly all gradient mass to the single hardest negative.
 >
 > **Sketch:** Softmax weights $p_i \propto \exp(s_i/\tau)$.
@@ -407,17 +505,75 @@ $$\frac{\partial \ell_k}{\partial s_m} = \frac{p_m}{\tau}.$$
 
 ---
 
-> [!QUESTION] Exercise 7: SimCLR as Classification
+> [!QUESTION] Exercise 8: SimCLR as Classification
 > *The NT-Xent objective asks the model to identify the positive in a $2(N-1)$-way classification.*
 >
 > > **Prerequisites:** [[#📐 NT-Xent as an InfoNCE Instance|NT-Xent as an InfoNCE Instance]]
 >
 > Consider a batch of $N = 2$ images (so $2N = 4$ embeddings: $z_1, z_1', z_2, z_2'$). Write out $\ell_1$ (the loss for anchor $z_1$ with positive $z_1'$) explicitly as a $3$-way softmax. Identify the role of $z_2$ and $z_2'$ as negatives. Now suppose image 2 is actually the same semantic class as image 1 (a false negative). Qualitatively describe the erroneous gradient signal that results.
 
-> [!TIP]- Solution to Exercise 7
+> [!TIP]- Solution to Exercise 8
 > **Key insight:** In a tiny batch, false negatives send a strong "push apart" gradient signal that actively corrupts the representation.
 >
 > **Sketch:** With $N=2$: $\ell_1 = -\log[\exp(z_1^\top z_1'/\tau) / (\exp(z_1^\top z_1'/\tau) + \exp(z_1^\top z_2/\tau) + \exp(z_1^\top z_2'/\tau))]$ — a 3-way softmax where $z_2$ and $z_2'$ are negatives. If image 2 shares image 1's class (e.g. both are "cat"), then semantically $z_1 \approx z_2$ is *desirable* — they should be nearby. But the loss treats $z_2$ as a negative: when $z_1^\top z_2$ is high (as it should be for same-class images), the term $\exp(z_1^\top z_2/\tau)$ is large and dominates the denominator, sending a strong gradient that *pushes $z_1$ and $z_2$ apart*. The model is being trained to distinguish images from the same class — the opposite of what downstream tasks require.
+
+---
+
+### 🌐 Alignment and Uniformity on the Hypersphere
+
+Wang & Isola (2020) decompose the NT-Xent objective into two orthogonal geometric properties, revealing precisely what SimCLR optimizes on the unit sphere $S^{d-1}$.
+
+**Setup.** Since SimCLR $\ell_2$-normalizes embeddings, all representations lie on $S^{d-1}$. Let $p_{\text{pos}}$ denote the distribution over positive pairs $(z, z^+)$ and $p_{\text{data}}$ the marginal distribution over individual embeddings.
+
+**Definition (Alignment Loss).**
+
+$$\mathcal{L}_{\text{align}} = \mathbb{E}_{(z, z^+) \sim p_{\text{pos}}}\!\left[\|z - z^+\|_2^2\right].$$
+
+On the unit sphere, $\|z - z^+\|_2^2 = 2 - 2\langle z, z^+\rangle$, so $\mathcal{L}_{\text{align}} = 2\bigl(1 - \mathbb{E}[\langle z, z^+\rangle]\bigr)$. **Minimizing alignment pulls positive pairs to the same point on $S^{d-1}$.**
+
+**Definition (Uniformity Loss).**
+
+$$\mathcal{L}_{\text{uniform}} = \log\,\mathbb{E}_{z,\, z' \overset{\text{iid}}{\sim} p_{\text{data}}}\!\left[\exp\!\bigl(-2\|z - z'\|_2^2\bigr)\right].$$
+
+This is the log of the average pairwise Gaussian kernel over the embedding distribution. Since all embeddings lie on $S^{d-1}$ (so $\|z - z'\|^2 = 2 - 2\langle z, z'\rangle$), the expression becomes $\log\,\mathbb{E}[\exp(-4(1-\langle z, z'\rangle))]$. The kernel $\exp(-2\|z - z'\|^2)$ is maximized when $z = z'$ and small when points are far apart, so $\mathcal{L}_{\text{uniform}}$ is minimized when the distribution is **maximally spread on $S^{d-1}$** — i.e. uniform on the hypersphere.
+
+**NT-Xent decomposes into alignment + uniformity.** The NT-Xent loss for a single anchor $z$ with positive $z^+$ is:
+
+$$\ell = \underbrace{-z^\top z^+ / \tau}_{\substack{\text{alignment:}\\ \text{pull positive}}} + \underbrace{\log \sum_{m} \exp(z^\top z_m / \tau)}_{\substack{\text{uniformity:}\\ \text{push all apart}}}.$$
+
+In the large-batch limit where the batch approximates $p_{\text{data}}$:
+
+$$\mathcal{L}_{\text{NT-Xent}} \approx \frac{1}{\tau}\,\mathcal{L}_{\text{align}} + \frac{1}{\tau}\,\mathcal{L}_{\text{uniform}} + \text{const}.$$
+
+**🔑 The tension is fundamental.** Alignment alone is minimized by mapping everything to one point — collapse. Uniformity alone (ignoring positives) is minimized by a perfectly uniform distribution with no positive structure. NT-Xent balances both: temperature $\tau$ rescales the tradeoff, with small $\tau$ sharpening the uniformity pressure (harder negative separation) and large $\tau$ softening both terms.
+
+> [!NOTE] Geometric optimum
+> The globally optimal solution is: *positive pairs perfectly aligned* ($z = z^+$, alignment $= 0$) while *all embeddings are maximally spread* on $S^{d-1}$ (uniformity minimized). When the number of instances $n$ is small relative to $d$, the optimal arrangement is a tight frame — e.g. vertices of a regular simplex for $n = d+1$. In practice $n \gg d$, and the approximately optimal marginal is the *Haar measure* (uniform distribution on $S^{d-1}$), which is the maximum-entropy distribution on the sphere.
+
+> [!INFO] Uniformity as maximum entropy
+> The uniform distribution on $S^{d-1}$ is the maximum-entropy distribution among all distributions supported on the sphere. Minimizing $\mathcal{L}_{\text{uniform}}$ can therefore be interpreted as *maximizing the differential entropy of the embedding distribution* — the representation should use the full capacity of the embedding space, allocating equal "bandwidth" to every direction.
+
+---
+
+> [!QUESTION] Exercise 9: Alignment-Uniformity Tradeoff
+> *The alignment and uniformity terms create opposing gradient forces; their balance determines representation quality.*
+>
+> > **Prerequisites:** [[#🌐 Alignment and Uniformity on the Hypersphere|Alignment and Uniformity on the Hypersphere]]
+>
+> Consider a 1-dimensional embedding on $S^0 = \{-1, +1\}$. There are $n = 4$ training images $\{x_1, x_2, x_3, x_4\}$ where $(x_1, x_2)$ and $(x_3, x_4)$ are positive pairs. The encoder assigns each image to $+1$ or $-1$.
+>
+> (a) What assignment minimizes $\mathcal{L}_{\text{align}}$ alone? (b) What assignment minimizes $\mathcal{L}_{\text{uniform}}$ alone? (c) Is there an assignment that minimizes both simultaneously?
+
+> [!TIP]- Solution to Exercise 9
+> **Key insight:** On $S^0$, the two objectives have compatible optima when there are exactly as many positive-pair classes as poles — a coincidence that fails in general.
+>
+> **Sketch:** On $S^0 = \{-1, +1\}$, the only degrees of freedom are the four binary assignments.
+>
+> **(a) Alignment:** $\mathcal{L}_{\text{align}} = \mathbb{E}[\|z - z^+\|^2]$. Each positive pair contributes 0 if same pole, 4 if opposite poles. Minimum achieved by any assignment with $f(x_1) = f(x_2)$ and $f(x_3) = f(x_4)$ — e.g. all four at $+1$ (collapsed) or each pair at its own pole.
+>
+> **(b) Uniformity:** $\mathcal{L}_{\text{uniform}} = \log\,\mathbb{E}[\exp(-2\|z - z'\|^2)]$. With 4 points, the all-$+1$ assignment gives $\mathcal{L}_{\text{uniform}} = 0$ (maximum). The balanced 2+2 split gives $\mathbb{E}[\exp(-2\|z-z'\|^2)] = (1/2)e^0 + (1/2)e^{-8}$ — much smaller log, so minimum uniformity loss. Requires exactly 2 images at each pole.
+>
+> **(c) Both simultaneously:** assign $f(x_1) = f(x_2) = +1$ and $f(x_3) = f(x_4) = -1$. This satisfies alignment (pairs aligned) and achieves the uniform 2+2 split (uniformity minimized). On $S^0$ with exactly 2 positive-pair classes, the objectives are jointly satisfiable. In higher dimensions with $n \gg d$ instances, such perfect joint solutions rarely exist — the objectives are in genuine tension and the loss finds a compromise.
 
 ---
 
@@ -427,34 +583,41 @@ The 15-year trajectory from contrastive loss to SimCLR traces a progression alon
 
 ```mermaid
 flowchart TD
+    NCE["Noise Contrastive Estimation<br/>Gutmann and Hyvarinen 2010<br/>Binary density ratio estimation"]
     A["Contrastive Loss<br/>Hadsell et al. 2006<br/>Pairs + Euclidean margin"]
     B["Triplet Loss<br/>Schroff et al. 2015<br/>Triplets + relative ordering"]
     C["N-Pairs Loss<br/>Sohn 2016<br/>N-way softmax + inner product"]
     D["InfoNCE / CPC<br/>van den Oord et al. 2018<br/>MI lower bound + density ratio critic"]
-    E["NT-Xent / SimCLR<br/>Chen et al. 2020<br/>InfoNCE for vision + augmentations"]
+    F["Instance Discrimination<br/>Wu et al. 2018<br/>Non-parametric softmax + memory bank"]
+    E["NT-Xent / SimCLR<br/>Chen et al. 2020<br/>InfoNCE for vision + augmentation pairing"]
     A --> B
     B --> C
     C --> D
-    D --> E
+    NCE --> D
+    D --> F
+    F --> E
 ```
 
-| Loss | Negatives | Similarity | Theoretical grounding |
+| Method | Negatives | Similarity | Theoretical grounding |
 |---|---|---|---|
 | Contrastive (2006) | 1 per step, hand-labeled | Euclidean distance | None (heuristic margin) |
 | Triplet (2015) | 1 per step, mined | Euclidean distance | Ranking objective |
 | N-Pairs (2016) | $N-1$ per step, in-batch | Inner product | Cross-entropy classification |
-| InfoNCE (2018) | $K-1$, sampled from $p(x)$ | Learned critic | MI lower bound |
-| NT-Xent (2020) | $2(N-1)$, in-batch | Cosine similarity / $\tau$ | InfoNCE + vision augmentations |
+| NCE (2010) | $k$ per step, sampled from $p_n$ | Unnormalized model | Binary density ratio estimation |
+| InfoNCE / CPC (2018) | $K-1$, sampled from $p(x)$ | Learned critic | MI lower bound |
+| InstDisc (2018) | $m$ per step, from memory bank | Cosine / $\tau$ | NCE approx. of instance softmax |
+| NT-Xent / SimCLR (2020) | $2(N-1)$, in-batch | Cosine / $\tau$ | InfoNCE + vision augmentations |
 
 **Key transitions:**
 
 1. **Pairs → Triplets**: shifted from absolute-distance constraints to relative-ordering constraints, removing the fragile margin $m$.
 2. **Triplets → N-Pairs**: moved all negatives into a single softmax, enabling efficient in-batch negative mining and revealing the classification interpretation.
-3. **N-Pairs → InfoNCE**: provided an information-theoretic derivation — the loss became a principled MI lower bound, justifying the objective beyond heuristics. The critic framework separated architecture from objective.
-4. **InfoNCE → SimCLR**: replaced the sequential prediction task (future from context) with spatial augmentation invariance; added the projector head; systematically studied augmentations, temperature, and batch size.
+3. **NCE → InfoNCE**: NCE estimated densities by binary classification against noise; InfoNCE generalized to $K$-way classification, replacing absolute density estimation with conditional density ratio estimation ($p(x|c)/p(x)$) and partition-function estimation with MI lower bounding.
+4. **InfoNCE → InstDisc**: applied the NCE/InfoNCE framework to vision for the first time via instance-level discrimination; introduced the memory bank to decouple negatives from batch size; established $\tau = 0.07$ and the non-parametric softmax.
+5. **InstDisc → SimCLR**: replaced the identity pretext and memory bank with augmentation pairing and in-batch negatives; added the projector head; showed that augmentation composition is the dominant design variable.
 
-> [!INFO] What SimCLR fixed
-> Prior contrastive vision work (e.g. InstDisc, CMC) used memory banks, specialized negative sampling, or auxiliary self-supervised tasks. SimCLR proved that all of this was unnecessary: the right augmentations + a large batch + a projector head + NT-Xent suffice. Its simplicity made it the canonical baseline for subsequent SSL methods.
+> [!INFO] What SimCLR simplified
+> Prior contrastive vision work (InstDisc, CMC, MoCo v1) required memory banks, momentum encoders, or specialized negative sampling. SimCLR proved these were unnecessary for strong performance: the right augmentations + a large batch + a projector head + NT-Xent suffice. Its simplicity made it the canonical baseline for all subsequent SSL methods.
 
 > [!NOTE] What came next
 > SimCLR's main limitation is its batch-size requirement ($N \approx 4096$). MoCo (He et al., 2020) decoupled negatives from the batch using a memory queue. BYOL (Grill et al., 2020) eliminated negatives entirely. These are covered in [[concepts/self-supervised-vision/ssl-vision|Self-Supervised Vision: Contrastive Learning and Beyond]].
@@ -473,3 +636,6 @@ flowchart TD
 | [Chuang et al. (2020)](https://arxiv.org/abs/2007.00224) "Debiased Contrastive Learning" | Corrected the false-negative bias in SimCLR's NT-Xent; proposed importance-weighted estimator for the true negative distribution | [arXiv:2007.00224](https://arxiv.org/abs/2007.00224) |
 | [Wang & Isola (2020)](https://arxiv.org/abs/2005.10242) "Understanding Contrastive Representation Learning through Alignment and Uniformity on the Hypersphere" | Decomposed NT-Xent into alignment and uniformity terms; provided geometric characterization of what SimCLR optimizes on $S^{d-1}$ | [arXiv:2005.10242](https://arxiv.org/abs/2005.10242) |
 | [He et al. (2020)](https://arxiv.org/abs/1911.05722) "Momentum Contrast for Unsupervised Visual Representation Learning" (MoCo) | Decoupled negative pool from batch size using a queue + momentum encoder; complementary to SimCLR | [arXiv:1911.05722](https://arxiv.org/abs/1911.05722) |
+| [Wu et al. (2018)](https://arxiv.org/abs/1805.01978) "Unsupervised Feature Learning via Non-Parametric Instance Discrimination" | First application of contrastive learning to vision SSL; introduced memory bank and non-parametric softmax approximated via NCE; established $\tau = 0.07$ | [arXiv:1805.01978](https://arxiv.org/abs/1805.01978) |
+| [Gutmann & Hyvärinen (2010)](https://proceedings.mlr.press/v9/gutmann10a.html) "Noise-Contrastive Estimation: A New Estimation Principle for Unnormalized Statistical Models" | Introduced NCE — density ratio estimation via binary classification against a noise distribution; the statistical ancestor of InfoNCE | [AISTATS 2010](https://proceedings.mlr.press/v9/gutmann10a.html) |
+| [Mikolov et al. (2013)](https://arxiv.org/abs/1301.3781) "Efficient Estimation of Word Representations in Vector Space" (word2vec) | Applied NCE negative sampling to word embeddings; NLP precursor to visual contrastive learning | [arXiv:1301.3781](https://arxiv.org/abs/1301.3781) |
