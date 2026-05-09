@@ -424,6 +424,9 @@ InstDisc demonstrated three things that directly enabled SimCLR:
 
 *A Simple Framework for Contrastive Learning of Visual Representations* (SimCLR, Chen et al., 2020) distilled the CPC/InfoNCE framework into a clean recipe for visual self-supervised learning, eliminating specialized architectures and achieving state-of-the-art with remarkable simplicity.
 
+![[figures/simclr-general-architecture.png]]
+*The full SimCLR pipeline: two augmented views of a batch pass through a shared encoder $f_\theta$ and projector $g_\theta$; the NT-Xent loss maximizes agreement between positive pairs and pushes apart all others.*
+
 ### 🔭 Augmentation Strategy
 
 SimCLR's core insight: *the choice of data augmentation defines what the representation will be invariant to*, and this choice is the single most important design decision.
@@ -438,12 +441,18 @@ The augmentation pipeline samples two views $(v, v')$ of each image $x \sim p(x)
 
 The key finding: **color jitter + crop together are the dominant pair.** Without color jitter, representations exploit color histograms (a shortcut) rather than learning semantic content. Without crops, two views of the same image are too similar and the task is too easy.
 
+![[figures/simclr-random-transformation-function.gif]]
+*The augmentation pipeline applies a stochastic composition of crop, flip, color jitter, grayscale, and Gaussian blur to produce two randomly-transformed views $(v, v')$ from each image $x$.*
+
 > [!NOTE] Asymmetric blurring in SimCLR v2 and beyond
 > Later work (MoCo v3, DINO) applied asymmetric augmentation: stronger augmentation (blur, solarize) on one view and weaker augmentation on the other. This creates a harder pretext task without destroying all visual information in either view.
 
 ### 📐 NT-Xent as an InfoNCE Instance
 
 Given a batch of $N$ images, SimCLR produces $2N$ embeddings by applying augmentation twice to each image. After passing through encoder $f_\theta$ and projector $g_\theta$, embeddings are $\ell_2$-normalized:
+
+![[figures/simclr-batch-data-preparation.png]]
+*Batch preparation: $N$ images are each augmented twice, yielding $2N$ views. Positive pairs are the two augmented views of the same image (shaded); all other within-batch pairs are negatives.*
 
 $$\bar{z}_k = z_k / \|z_k\|_2, \quad k \in \{1, \ldots, 2N\}.$$
 
@@ -456,6 +465,12 @@ $$\ell_k = -\log \frac{\exp(\bar{z}_k^\top \bar{z}_k' / \tau)}{\displaystyle\sum
 where $\tau > 0$ is the temperature. The full objective is symmetric:
 
 $$\mathcal{L}_{\text{SimCLR}} = \frac{1}{2N} \sum_{k=1}^{N} \bigl(\ell_k + \ell_k'\bigr).$$
+
+![[figures/simclr-pairwise-similarity.png]]
+*The $2N \times 2N$ pairwise cosine similarity matrix. Diagonal blocks (same-image pairs) are the positives; the loss drives the off-diagonal entries down while pulling the positive entries up. Self-similarities (diagonal) are masked out.*
+
+![[figures/simclr-softmax-loss.png]]
+*For each anchor $\bar{z}_k$, the NT-Xent loss is the negative log of the softmax probability assigned to its positive partner $\bar{z}_k'$ in a $(2N-1)$-way classification over all other embeddings in the batch.*
 
 **NT-Xent is InfoNCE** with critic $f_\theta(x, c) = \exp(\bar{z}(x)^\top \bar{z}(c) / \tau)$, context $c = v_k$ (one view), positive $x_+ = v_k'$ (other view of same image), and $K - 1 = 2(N-1)$ negatives from the batch (all other $2N-2$ embeddings). The identity $\mathcal{L}_{\text{NT-Xent}} = \mathcal{L}_{\text{InfoNCE}}$ holds exactly:
 
@@ -470,6 +485,12 @@ Minimizing $\mathcal{L}_{\text{SimCLR}}$ approximately maximizes the mutual info
 ### 🔬 The Projector Head
 
 A surprising finding from Chen et al.: appending a 2–3 layer MLP projector $g_\theta$ after the encoder $f_\theta$, and discarding $g_\theta$ at evaluation time, consistently improves linear probe accuracy by $\sim$10 percentage points.
+
+![[figures/simclr-encoder-part.png]]
+*The encoder $f_\theta$ (ResNet-50 in the original paper) maps each augmented view to a 2048-dimensional representation $h = f_\theta(v)$, which is the vector used for downstream tasks.*
+
+![[figures/simclr-projection-head-component.png]]
+*The projector $g_\theta$ — a 2-layer MLP with ReLU — maps $h \in \mathbb{R}^{2048}$ to $z \in \mathbb{R}^{128}$. Only $z$ sees the NT-Xent loss; $h$ is preserved for downstream linear probing.*
 
 Without a projector, the NT-Xent loss operates directly on the encoder output, forcing the encoder to simultaneously:
 1. Be invariant to the augmentations (since $(v, v')$ must map to similar $z$)
@@ -649,6 +670,12 @@ flowchart TD
 3. **NCE → InfoNCE**: NCE estimated densities by binary classification against noise; InfoNCE generalized to $K$-way classification, replacing absolute density estimation with conditional density ratio estimation ($p(x|c)/p(x)$) and partition-function estimation with MI lower bounding.
 4. **InfoNCE → InstDisc**: applied the NCE/InfoNCE framework to vision for the first time via instance-level discrimination; introduced the memory bank to decouple negatives from batch size; established $\tau = 0.07$ and the non-parametric softmax.
 5. **InstDisc → SimCLR**: replaced the identity pretext and memory bank with augmentation pairing and in-batch negatives; added the projector head; showed that augmentation composition is the dominant design variable.
+
+![[figures/simclr-performance.png]]
+*SimCLR's linear evaluation performance on ImageNet as a function of training epochs, batch size, and projector ablations. The key result: 76.5% top-1 at 1000 epochs with batch size 4096, a 7% absolute gain over prior SSL methods and matching supervised ResNet-50.*
+
+![[figures/simclr-downstream.png]]
+*After self-supervised pre-training, the encoder $f_\theta$ is frozen and a linear classifier is trained on top of the representations. SimCLR representations transfer to downstream tasks without any contrastive fine-tuning.*
 
 > [!INFO] What SimCLR simplified
 > Prior contrastive vision work (InstDisc, CMC, MoCo v1) required memory banks, momentum encoders, or specialized negative sampling. SimCLR proved these were unnecessary for strong performance: the right augmentations + a large batch + a projector head + NT-Xent suffice. Its simplicity made it the canonical baseline for all subsequent SSL methods.
