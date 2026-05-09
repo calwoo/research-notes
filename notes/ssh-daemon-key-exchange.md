@@ -11,6 +11,7 @@
   - [[#Where Failures Occur and What They Mean|Where Failures Occur and What They Mean]]
 - [[#⚙️ MaxStartups and Session Slot Exhaustion|⚙️ MaxStartups and Session Slot Exhaustion]]
 - [[#🛠️ Prevention — Keepalives and Timeouts|🛠️ Prevention — Keepalives and Timeouts]]
+- [[#🔀 Out-of-Band Access|🔀 Out-of-Band Access]]
 - [[#📚 References|📚 References]]
 
 ---
@@ -164,6 +165,24 @@ Host pylon
 
 > [!TIP] Escaping a frozen SSH session without closing the terminal
 > SSH has a built-in escape character sequence: type `~.` (tilde then period) on a new line. This sends an escape sequence the *client* interprets — it terminates the connection locally without needing the server to respond. Other useful sequences: `~C` opens a command line, `~#` lists forwarded connections, `~?` lists all escape sequences.
+
+---
+
+## 🔀 Out-of-Band Access
+
+*Out-of-band* means accessing a system through a different channel than the one that's broken.
+
+If SSH is the broken channel, any fix that also relies on SSH is useless — you need an independent path in. Options that don't depend on `sshd`:
+
+| Method | How it works | Dependency |
+|---|---|---|
+| Physical console | Keyboard + monitor directly on the machine | None — bypasses all networking |
+| Tailscale SSH | SSH implementation inside the Tailscale daemon | Tailscale network reachability, not `sshd` |
+| IPMI / iDRAC / iLO | Dedicated management controller on server hardware | Separate management NIC + power |
+| Cloud serial console | Browser-based console via AWS/GCP/Azure control plane | Cloud provider API, not VM networking |
+
+> [!INFO] Origin of the term
+> *In-band* signaling uses the same channel as the data it controls — e.g. DTMF tones on a phone call travel over the voice channel. *Out-of-band* signaling uses a separate, independent channel. The term migrated from telecom into systems administration to mean any recovery path that doesn't depend on the primary (broken) channel.
 
 ---
 
