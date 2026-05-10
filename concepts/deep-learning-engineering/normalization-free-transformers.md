@@ -73,6 +73,9 @@ However, different tokens have different $\sigma_t$, so different slopes. When w
 
 **Finding (Zhu et al., 2025).** In trained Transformers — specifically ViT-B, wav2vec 2.0, and DiT-XL — plotting LN output against LN input across all tokens and channels in deeper layers produces a *tanh-shaped* S-curve. The mapping saturates for large $|x|$ and is approximately linear near the origin. Roughly 99% of activations fall in the central linear regime; the saturation is driven by outlier tokens with unusually small $\sigma_t$.
 
+![LN output vs. input scatter plots across four layers of a trained ViT-B, showing the emergence of an S-shaped curve in deeper layers](figures/zhu2025-fig2-scurve-vit.png)
+*Figure 2 (Zhu et al., 2025): LN output vs. LN input for four layers of ViT-B. Earlier layers (left) show a roughly linear mapping; deeper layers (right) develop a pronounced tanh-shaped S-curve. Each point is one (token, channel) pair sampled from a mini-batch. The progressive saturation of the envelope motivates replacing LN with a learned tanh.*
+
 ### 2.2 Deriving the Envelope
 
 We now derive why many linear functions with varying slopes collectively produce an S-shaped curve. For clarity, work in the RMSNorm setting (zero mean) with a single channel, so $\mu_t = 0$ and $\gamma = 1$:
@@ -141,6 +144,9 @@ where:
 
 DyT is a *drop-in replacement*: it occupies exactly the same position as LayerNorm or RMSNorm in the Transformer block (Pre-Norm position, applied before the attention or FFN sublayer). No other architectural changes are required.
 
+![Side-by-side diagram of a standard Transformer block with LayerNorm versus a DyT block where LayerNorm is replaced by tanh(αx) followed by scale & shift](figures/zhu2025-fig1-dyt-architecture.png)
+*Figure 1 (Zhu et al., 2025): The DyT substitution. Left: a standard Pre-Norm Transformer block with a LayerNorm (normalize → scale & shift). Right: the DyT block, where the normalize step is replaced by $\tanh(\alpha x)$; the scale & shift affine parameters $\gamma, \beta$ are retained. No other changes to the architecture are needed.*
+
 The tanh function satisfies $\tanh(x) = (e^x - e^{-x})/(e^x + e^{-x})$ and maps $\mathbb{R} \to (-1, 1)$. The scalar $\alpha$ controls the slope at the origin: $\tanh'(0) = 1$, so $(\tanh \circ \alpha \cdot)(0)' = \alpha$.
 
 > [!INFO] Why not just tanh without alpha?
@@ -153,6 +159,9 @@ Empirically, $\alpha$ converges during training to track the inverse standard de
 $$\alpha \approx \frac{1}{\text{std}(x)}$$
 
 This is not a coincidence — in the linear regime of tanh ($|\alpha x_i| \ll 1$), $\tanh(\alpha x_i) \approx \alpha x_i$, so $\text{DyT}(x) \approx \alpha \gamma \odot x + \beta$, which matches RMSNorm's output $\gamma \odot x / \text{RMS}(x)$ when $\alpha \approx 1/\text{RMS}(x)$.
+
+![Training curves for α and 1/std across epochs for two selected ViT-B DyT layers (layers 5 and 20), showing that both quantities evolve in lock-step throughout training](figures/zhu2025-fig5a-alpha-epoch.png)
+*Figure 5a (Zhu et al., 2025): Evolution of $\alpha$ (dashed) and $1/\text{std}$ (solid) over 300 training epochs for two DyT layers in ViT-B. Both quantities decrease sharply in early training and then rise together, confirming that $\alpha$ tracks the inverse standard deviation of layer inputs throughout optimization.*
 
 Ablation results on ViT-B (ImageNet top-1):
 
@@ -238,6 +247,9 @@ Tanh wins due to two properties: *smoothness* (unlike Hardtanh, which has zero g
 The DyT paper demonstrates that tanh works as a normalization replacement. The Derf paper asks the deeper question: *why* tanh? Are there better alternatives? To answer this, the authors identify four properties that any pointwise normalization replacement must satisfy for training to succeed.
 
 Let $f: \mathbb{R} \to \mathbb{R}$ be the core scalar function (before the affine wrap). The framework instantiates any candidate as $F(x) = \gamma \odot f(\alpha x + s) + \beta$ and evaluates on ViT-B ImageNet and DiT-B FID.
+
+![Four panel illustration showing pairs of curves contrasting functions that satisfy vs. violate each of the four properties: zero-centered, bounded, center sensitive, and monotonic](figures/chen2025-fig1-four-properties.png)
+*Figure 1 (Chen et al., 2025): Visual illustration of the four properties. In each panel, the blue curve satisfies the property and the red curve violates it. Left to right: (1) Zero-centeredness — centered vs. horizontally shifted; (2) Boundedness — bounded vs. unbounded growth; (3) Center sensitivity — steep vs. flat slope at the origin; (4) Monotonicity — monotone vs. non-monotone (hump-shaped). Any valid normalization replacement must match the blue profile in all four panels.*
 
 ### 4.1 Property 1: Zero-Centeredness
 
@@ -338,6 +350,9 @@ To justify choosing erf over the many other functions satisfying the four proper
 - **Instantiation**: each candidate $h$ was wrapped as $F(x) = \gamma \odot h(\alpha x + s) + \beta$ and evaluated with $\alpha_0 = 0.5$, $s_0 = 0$, $\gamma = \mathbf{1}$, $\beta = \mathbf{0}$
 
 Over 20 candidate functions were evaluated on ViT-Base ImageNet top-1 accuracy and DiT-B FID at a fixed compute budget. erf ranked first on both metrics.
+
+![Function search overview: left panel shows a Transformer block with the norm layer replaced by a point-wise function; center panel overlays all candidate function curves (gray) with Derf/erf highlighted in blue; right panel ranks candidates by ViT-B ImageNet accuracy with Derf at 82.8%, DyT at 82.5%, LayerNorm at 82.3%](figures/chen2025-fig-function-search-results.png)
+*Figure (Chen et al., 2025): Summary of the function search. The center plot shows the shape of all candidate point-wise functions; $\text{erf}(x)$ (Derf, blue) saturates faster near the origin than $\tanh(x)$ (DyT) and much faster than $\arctan(x)$. The ranking table on the right shows ViT-B ImageNet top-1 accuracy for each candidate — erf/Derf tops the list at 82.8%, outperforming DyT (82.5%) and LayerNorm (82.3%).*
 
 ### 5.3 Why erf Beats tanh
 
