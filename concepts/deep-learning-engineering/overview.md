@@ -11,12 +11,13 @@ This file is the index for the `concepts/deep-learning-engineering/` folder. It 
 | File | Topic |
 |------|-------|
 | `weight-tying.md` | ✅ Parameter sharing between input embedding and output projection |
+| `gradient-checkpointing.md` | ✅ Recompute activations on the backward pass to reduce peak memory |
+| `normalization-free-transformers.md` | ✅ DyT and Derf as pointwise LayerNorm replacements; four-property theory |
 
 ### Planned
 
 | File | Topic |
 |------|-------|
-| `gradient-checkpointing.md` | ✅ Recompute activations on the backward pass to reduce peak memory |
 | `mixed-precision.md` | FP16/BF16 training, loss scaling, and master weight copies |
 | `muon.md` | Orthogonalized gradient descent for 2D weights; the top Parameter Golf optimizer |
 | `mup-parametrization.md` | Maximal Update Parametrization — transfer optimal hyperparameters from small to large models |
@@ -51,6 +52,7 @@ This file is the index for the `concepts/deep-learning-engineering/` folder. It 
 | Subtopic | Key Idea | Primary Source |
 |----------|----------|----------------|
 | RMSNorm + Pre-Norm | Drop mean-centering; normalize before each sublayer — ubiquitous in modern LLMs | Zhang & Sennrich (2019); LLaMA (2023) |
+| Normalization-free Transformers | Replace LayerNorm with DyT (tanh) or Derf (erf); four necessary properties; matches/beats LN | Zhu et al. (2025); Chen et al. (2025) |
 | SwiGLU / GLU variants | Gated FFN: $\text{FFN}(x) = (\sigma(xV) \odot xW_1) W_2$ — consistent perplexity improvement | Shazeer (2020) |
 | Rotary embeddings (RoPE) | Encode relative position via Q/K rotation; extends to longer contexts via YaRN | Su et al. (2021); Peng et al. (2023) |
 
@@ -124,6 +126,8 @@ flowchart TD
 | Modded-nanoGPT / Muon | Jordan et al. | 2024 | Muon optimizer — Newton-Schulz orthogonalization for 2D weight gradients | [GitHub](https://github.com/KellerJordan/modded-nanogpt) |
 | Tensor Programs V: Tuning Large Neural Networks via Zero-Shot HP Transfer | Yang et al. | 2022 | µP — reparametrization enabling HP transfer across model scales | [arXiv:2203.03466](https://arxiv.org/abs/2203.03466) |
 | Root Mean Square Layer Normalization | Zhang & Sennrich | 2019 | RMSNorm — drops mean-centering; faster and equally stable as LayerNorm | [arXiv:1910.07467](https://arxiv.org/abs/1910.07467) |
+| Transformers without Normalization | Zhu, Chen, He, LeCun, Liu | 2025 | DyT = γ⊙tanh(αx)+β as drop-in LayerNorm replacement; 8.2% LLaMA-7B training speedup | [arXiv:2503.10622](https://arxiv.org/abs/2503.10622) |
+| Stronger Normalization-Free Transformers | Chen, Lu, Zhu, Sun, Liu | 2025 | Four-property framework for pointwise norm replacements; Derf = γ·erf(αx+s)+β outperforms LN and DyT | [arXiv:2512.10938](https://arxiv.org/abs/2512.10938) |
 | GLU Variants Improve Transformer | Shazeer | 2020 | SwiGLU and other gated FFN variants — consistent perplexity improvement | [arXiv:2002.05202](https://arxiv.org/abs/2002.05202) |
 | RoFormer: Enhanced Transformer with Rotary Position Embedding | Su et al. | 2021 | RoPE — relative position via rotation; decays with distance naturally | [arXiv:2104.09864](https://arxiv.org/abs/2104.09864) |
 | YaRN: Efficient Context Window Extension | Peng et al. | 2023 | NTK-aware RoPE frequency interpolation for context length extension | [arXiv:2309.00071](https://arxiv.org/abs/2309.00071) |
