@@ -231,6 +231,33 @@ Several mechanisms act jointly:
 > [!EXAMPLE] Intuition: chasing a moving target
 > Imagine trying to predict tomorrow's weather by bootstrapping from yesterday's predictions. If you output the same constant prediction every day, your "yesterday's prediction" is also the constant — and your error is zero. But BN ensures your predictions vary across the batch (different images = different embeddings), so the target you're predicting is not constant. You must learn actual structure to minimize the loss.
 
+### 🔍 The Optimal Predictor Perspective
+
+The three mechanisms above explain why collapse is not a stable fixed point. Xiong (2024) offers a complementary account that reframes BYOL in terms of what the encoder is *positively incentivized to do*.
+
+**Setup.** Treat $q_\theta$ as approximately optimal for the current target $\xi$. This is reasonable: the predictor is updated by gradient descent on every step, while $\xi$ drifts slowly under EMA with $\tau \approx 0.996$. From the encoder's perspective, $q_\theta$ looks essentially stationary.
+
+A loss-minimizing predictor satisfies $q^*(z_\theta) = \mathbb{E}[z'_\xi \mid z_\theta]$ — the conditional expectation of the target embedding given the online embedding. Substituting, the encoder's effective loss is the *conditional variance* of the target:
+
+$$\mathbb{E}\bigl[\|q^*(z_\theta) - z'_\xi\|^2\bigr] = \mathbb{E}\bigl[\mathrm{Var}(z'_\xi \mid z_\theta)\bigr].$$
+
+**The implicit instance-discrimination argument.** The law of total variance decomposes the target's variance:
+
+$$\underbrace{\mathrm{Var}(z'_\xi)}_{\text{fixed by target network}} = \underbrace{\mathbb{E}[\mathrm{Var}(z'_\xi \mid z_\theta)]}_{\text{encoder minimizes}} + \underbrace{\mathrm{Var}(\mathbb{E}[z'_\xi \mid z_\theta])}_{\text{explained variance — must grow}}.$$
+
+Since $\mathrm{Var}(z'_\xi)$ is held fixed by the (slowly moving) target network, reducing the conditional variance forces the *explained variance* — the spread of the predictor's outputs — to increase. The predictor can only produce spread-out outputs if $z_\theta$ carries substantial information about which image generated the embedding. Concretely: the predictor achieves lower loss precisely when distinct images land in distinct embedding regions, because it can then look up the correct target rather than outputting a global average.
+
+**The encoder therefore has an implicit incentive to be discriminative** — not because it is penalized for similarity between different images' embeddings, but because the prediction task is only solvable when embeddings separate instances.
+
+> [!NOTE] Connection to SimSiam's EM framing
+> This is structurally identical to SimSiam's M-step: given optimal predictor $h^*(z_1) = \mathbb{E}[z_2 \mid z_1]$, the encoder is pushed to make $z_1$ maximally informative about $z_2$. BYOL's EMA target provides a smoother, slower-moving version of $z_2$, reducing noise in the implicit discrimination signal without changing the underlying logic.
+
+> [!NOTE] Implicit vs. explicit instance discrimination
+> Contrastive methods (SimCLR, MoCo) *explicitly* push different-image embeddings apart via negatives in the denominator of NT-Xent. BYOL achieves the same anti-collapse pressure *implicitly*: accurate prediction of an image's target embedding requires the online embedding to identify the image. No negatives are needed — the prediction task itself encodes instance discrimination, with the predictor's error as the discrimination signal.
+
+> [!WARNING] Near-optimal predictor is an assumption
+> *This argument requires the predictor to track near-optimality throughout training.* In early training, when the predictor is far from optimal, the effective loss seen by the encoder is noisier and the discrimination signal is weaker. This is one reason BN and EMA still matter: BN prevents the trivial collapse that would break the predictor's learning signal, and EMA keeps the target stable enough that the predictor can actually reach near-optimality.
+
 ---
 
 > [!QUESTION] Exercise 4: Batch Normalization as Implicit Contrastive Learning
