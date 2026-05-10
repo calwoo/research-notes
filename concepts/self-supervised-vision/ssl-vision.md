@@ -209,24 +209,40 @@ Several mechanisms act jointly:
 
    $$\hat{z}_i = \frac{z_i - \mu_B}{\sigma_B + \epsilon}, \qquad \mu_B = \frac{1}{N}\sum_{k=1}^{N} z_k.$$
 
-   Factoring out $\mu_B$ reveals the implicit cross-sample structure. Since $z_i - \mu_B = \frac{N-1}{N}(z_i - \bar{z}_{-i})$ where $\bar{z}_{-i} = \frac{1}{N-1}\sum_{k \neq i} z_k$:
+   The crucial observation is that $\hat{z}_i$ is a **relative** quantity — it encodes how $z_i$ deviates from the batch average, not its absolute position in $\mathbb{R}^d$. Factoring out $\mu_B$ makes this concrete. Since $z_i - \mu_B = \frac{N-1}{N}(z_i - \bar{z}_{-i})$ where $\bar{z}_{-i} = \frac{1}{N-1}\sum_{k \neq i} z_k$:
 
    $$\hat{z}_i = \frac{N-1}{N(\sigma_B + \epsilon)}\!\left(z_i - \bar{z}_{-i}\right).$$
 
-   Up to a scalar factor, $\hat{z}_i$ is the *deviation of $z_i$ from the mean of all other batch embeddings*. The other $N-1$ samples act as *implicit negatives*: the representation of image $i$ encodes "how does image $i$ differ from a typical image in this batch?" — not any absolute property of $z_i$ alone.
+   Up to a scalar factor, $\hat{z}_i$ is the deviation of $z_i$ from the mean of all other batch embeddings — "how does image $i$ differ from a typical image in this batch?" The other $N-1$ samples act as *implicit negatives*.
 
-   This coupling propagates into gradients. For $j \neq i$:
+   **Why this creates implicit repulsion.** Suppose $z_j$ begins drifting toward $z_i$ (embeddings start to coalesce). As $z_j \to z_i$, the batch mean $\mu_B$ shifts toward $z_i$, causing $z_i - \mu_B$ to shrink — $\hat{z}_i$ deflates toward zero. But the BYOL loss wants $\hat{z}_i$ to match the (stop-gradient) target network output, which is generically non-zero. The loss therefore increases, generating a gradient that pushes $z_i$ away from $\mu_B$. Through the shared mean, this gradient also nudges $z_j$ in the opposite direction. The result: every image's attempt to match its target automatically resists other embeddings moving toward it.
+
+   This coupling is exact via the chain rule. For $j \neq i$:
 
    $$\frac{\partial \hat{z}_i}{\partial z_j} = -\frac{1}{N(\sigma_B + \epsilon)} \neq 0.$$
 
-   BYOL's loss on image $i$ therefore backpropagates into the network weights that generated $z_j$ for every other $j$ in the batch — a soft cross-sample repulsive signal structurally analogous to explicit contrastive learning.
+   The repulsive force that image $i$'s loss exerts on $z_j$ is:
+
+   $$\frac{\partial \mathcal{L}_i}{\partial z_j} = \underbrace{\frac{\partial \mathcal{L}_i}{\partial \hat{z}_i}}_{\text{loss gradient for image }i} \cdot \underbrace{\left(-\frac{1}{N(\sigma_B+\epsilon)}\right)}_{\text{leakage through }\mu_B}.$$
+
+   The leakage factor $-1/N(\sigma_B+\epsilon)$ is what propagates image $i$'s gradient signal into the parameters that generated $z_j$. BYOL's nominally non-contrastive loss therefore sends implicit cross-sample gradient signals across all pairs in the batch — structurally analogous to the repulsive denominator terms in NT-Xent.
+
+   **Why BN is insufficient alone.** The repulsive force is *loss-gradient-driven*: it is proportional to $\frac{\partial \mathcal{L}_i}{\partial \hat{z}_i}$, which vanishes when the loss is near zero. At full collapse $z_k = \mathbf{c}$ for all $k$: $\mu_B = \mathbf{c}$, $\sigma_B = 0$, and $\hat{z}_i = 0$ for all $i$; after learnable scale $\gamma$ and bias $\beta$, the BN output is the constant $\beta$. The predictor trivially learns $q(\beta) = \beta$, so $\mathcal{L} = 0$ and $\nabla_\theta\mathcal{L} = 0$. Collapse is still a valid zero-loss fixed point. **BN acts like viscosity** — it resists movement toward collapse during training but cannot prevent arriving there.
 
 3. **EMA bootstrap.** The target $\xi$ lags behind $\theta$ by approximately $1/(1-\tau)$ gradient steps. The online network must constantly track a moving target — there is no stable fixed point at which both networks output the same constant and the gradient vanishes.
 
-> [!WARNING] BN's role is more subtle than the original ablations suggest
-> Grill et al.'s original ablations show that removing BN from the projector causes BYOL to collapse, which motivated the implicit-contrastive interpretation above. The math is correct: BN's mean subtraction makes each $\hat{z}_i$ a relative quantity, and gradients propagate across all batch samples.
+**Relative load-bearing of the three mechanisms:**
+
+| Mechanism | Anti-collapse role | Load-bearing? |
+|---|---|---|
+| **BN** | Implicit repulsion via batch mean coupling; viscous resistance *during training* | No — collapsed state is still a zero-loss fixed point |
+| **Stop-gradient + predictor** | Makes collapse a saddle point; prediction is only solvable when embeddings are discriminative | **Yes** — primary mechanism |
+| **EMA** | Stabilizes the target so the predictor can track near-optimality | Helpful, not required (SimSiam removes it) |
+
+> [!WARNING] BN's empirical role is initialization stability, not collapse prevention
+> Grill et al.'s original ablations show that removing BN from the projector causes BYOL to collapse, which motivated the implicit-contrastive interpretation above. However, as shown above, the collapsed state is still a valid fixed point even with BN — so BN cannot be the primary barrier.
 >
-> However, Richemond et al. (2020, "BYOL works even without batch statistics") replaced BN with Group Normalization + Weight Standardization — which use *no* batch statistics and cannot implement any batch-wise contrastive coupling. Result: **73.9% vs. 74.3% top-1 on ImageNet** — a negligible gap. Batch statistics are not the primary mechanism preventing collapse; the stop-gradient + predictor + EMA structure is sufficient on its own. BN's practical role is likely *initialization stability*: it conditions the optimization landscape so that random initialization does not immediately diverge, rather than providing an essential anti-collapse signal during training.
+> Richemond et al. (2020, "BYOL works even without batch statistics") confirmed this by replacing BN with Group Normalization + Weight Standardization — which use *no* batch statistics and cannot implement any batch-wise coupling. Result: **73.9% vs. 74.3% top-1 on ImageNet** — a negligible gap. BN's practical role is *initialization stability*: it conditions the optimization landscape so that random initialization does not immediately diverge before the predictor can learn a useful signal. The stop-gradient + predictor structure is what makes collapse non-attractive; BN just makes the early training trajectory well-behaved.
 
 > [!EXAMPLE] Intuition: chasing a moving target
 > Imagine trying to predict tomorrow's weather by bootstrapping from yesterday's predictions. If you output the same constant prediction every day, your "yesterday's prediction" is also the constant — and your error is zero. But BN ensures your predictions vary across the batch (different images = different embeddings), so the target you're predicting is not constant. You must learn actual structure to minimize the loss.
