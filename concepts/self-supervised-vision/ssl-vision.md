@@ -205,26 +205,66 @@ Several mechanisms act jointly:
 
 1. **Stop-gradient asymmetry.** The gradient $\nabla_\theta \mathcal{L}$ depends on the online output $q_\theta(z_\theta)$ but treats the target $z'_\xi$ as a fixed constant. This breaks the symmetry between the two branches: the online network must *predict* the target, not merely agree with it. The predictor $q_\theta$ must learn a non-trivial mapping from online embeddings to target embeddings, creating a non-degenerate optimization landscape.
 
-2. **Batch normalization.** The projectors $g_\theta$ and $g_\xi$ contain batch normalization layers, which normalize embeddings to zero mean and unit variance *along the batch dimension*. This is an implicit diversity constraint: no two images in the batch can have identical embeddings after BN. BN injects contrastive information implicitly by coupling all samples within a batch.
+2. **Batch normalization.** The projectors $g_\theta$ and $g_\xi$ contain batch normalization layers. For a batch of $N$ projector outputs $z_1, \ldots, z_N \in \mathbb{R}^d$, BN computes:
+
+   $$\hat{z}_i = \frac{z_i - \mu_B}{\sigma_B + \epsilon}, \qquad \mu_B = \frac{1}{N}\sum_{k=1}^{N} z_k.$$
+
+   Factoring out $\mu_B$ reveals the implicit cross-sample structure. Since $z_i - \mu_B = \frac{N-1}{N}(z_i - \bar{z}_{-i})$ where $\bar{z}_{-i} = \frac{1}{N-1}\sum_{k \neq i} z_k$:
+
+   $$\hat{z}_i = \frac{N-1}{N(\sigma_B + \epsilon)}\!\left(z_i - \bar{z}_{-i}\right).$$
+
+   Up to a scalar factor, $\hat{z}_i$ is the *deviation of $z_i$ from the mean of all other batch embeddings*. The other $N-1$ samples act as *implicit negatives*: the representation of image $i$ encodes "how does image $i$ differ from a typical image in this batch?" — not any absolute property of $z_i$ alone.
+
+   This coupling propagates into gradients. For $j \neq i$:
+
+   $$\frac{\partial \hat{z}_i}{\partial z_j} = -\frac{1}{N(\sigma_B + \epsilon)} \neq 0.$$
+
+   BYOL's loss on image $i$ therefore backpropagates into the network weights that generated $z_j$ for every other $j$ in the batch — a soft cross-sample repulsive signal structurally analogous to explicit contrastive learning.
 
 3. **EMA bootstrap.** The target $\xi$ lags behind $\theta$ by approximately $1/(1-\tau)$ gradient steps. The online network must constantly track a moving target — there is no stable fixed point at which both networks output the same constant and the gradient vanishes.
 
-> [!WARNING] BN is load-bearing in BYOL
-> *Ablation studies by Grill et al. show that removing batch normalization from the projector causes BYOL to collapse.* This was initially surprising — BN appears to be an innocent implementation detail, but it is in fact central to collapse prevention. The implicit cross-sample coupling in BN acts as a soft contrastive signal.
+> [!WARNING] BN's role is more subtle than the original ablations suggest
+> Grill et al.'s original ablations show that removing BN from the projector causes BYOL to collapse, which motivated the implicit-contrastive interpretation above. The math is correct: BN's mean subtraction makes each $\hat{z}_i$ a relative quantity, and gradients propagate across all batch samples.
+>
+> However, Richemond et al. (2020, "BYOL works even without batch statistics") replaced BN with Group Normalization + Weight Standardization — which use *no* batch statistics and cannot implement any batch-wise contrastive coupling. Result: **73.9% vs. 74.3% top-1 on ImageNet** — a negligible gap. Batch statistics are not the primary mechanism preventing collapse; the stop-gradient + predictor + EMA structure is sufficient on its own. BN's practical role is likely *initialization stability*: it conditions the optimization landscape so that random initialization does not immediately diverge, rather than providing an essential anti-collapse signal during training.
 
 > [!EXAMPLE] Intuition: chasing a moving target
 > Imagine trying to predict tomorrow's weather by bootstrapping from yesterday's predictions. If you output the same constant prediction every day, your "yesterday's prediction" is also the constant — and your error is zero. But BN ensures your predictions vary across the batch (different images = different embeddings), so the target you're predicting is not constant. You must learn actual structure to minimize the loss.
 
 ---
 
-> [!QUESTION] Exercise 4: EMA Fixed Points
+> [!QUESTION] Exercise 4: Batch Normalization as Implicit Contrastive Learning
+> *Batch normalization couples every embedding to every other in the batch through the shared mean and variance statistics.*
+>
+> > **Prerequisites:** [[#🔑 Why Doesn't BYOL Collapse?|Why Doesn't BYOL Collapse?]]
+>
+> Let $z_1, \ldots, z_N \in \mathbb{R}^d$ be the projector outputs (pre-BN) for a batch of $N$ images. Write $\bar{z}_{-i} = \frac{1}{N-1}\sum_{k \neq i} z_k$.
+>
+> (a) Show that $\hat{z}_i = \frac{N-1}{N(\sigma_B + \epsilon)}(z_i - \bar{z}_{-i})$, so the normalized representation is proportional to the deviation of $z_i$ from the mean of all other batch embeddings.
+>
+> (b) Compute $\partial \hat{z}_i / \partial z_j$ for $j \neq i$ (treat $\sigma_B$ as a constant). Show it is non-zero, and argue that the BYOL loss on image $i$ therefore induces a gradient on the parameters that produced $z_j$.
+>
+> (c) At full collapse $z_k = \mathbf{c}$ for all $k$: what does BN output (assuming learnable scale $\gamma$ and bias $\beta$)? Is this a fixed point of gradient descent on the BYOL loss? Does BN alone prevent collapse?
+
+> [!TIP]- Solution to Exercise 4
+> **Key insight:** BN makes every representation a relative quantity — it encodes deviation from the batch center, not absolute position. The cross-sample gradient coupling structurally mirrors explicit contrastive repulsion, but it is not strong enough to independently prevent collapse.
+>
+> **Sketch (a):** $z_i - \mu_B = z_i - \frac{1}{N}z_i - \frac{1}{N}\sum_{k\neq i}z_k = \frac{N-1}{N}z_i - \frac{N-1}{N}\bar{z}_{-i} = \frac{N-1}{N}(z_i - \bar{z}_{-i})$. Dividing by $\sigma_B + \epsilon$ gives the result. ✓
+>
+> **Sketch (b):** $\partial\hat{z}_i/\partial z_j = \partial/\partial z_j[(z_i - \mu_B)/(\sigma_B+\epsilon)] = -1/(N(\sigma_B+\epsilon)) \neq 0$ (the $-1/N$ comes from $\partial\mu_B/\partial z_j = 1/N$). So $\partial\mathcal{L}/\partial z_j$ receives a contribution via $(\partial\mathcal{L}/\partial \hat{z}_i)(\partial\hat{z}_i/\partial z_j)$ for every $i \neq j$. BYOL's nominally "non-contrastive" loss implicitly sends gradient signals across all pairs in the batch through BN's statistics.
+>
+> **Sketch (c):** At collapse $z_k = \mathbf{c}$: $\mu_B = \mathbf{c}$, $\sigma_B = 0$, so $\hat{z}_i = (\mathbf{c} - \mathbf{c})/\epsilon = \mathbf{0}$. After learnable parameters: output is $\gamma \cdot \mathbf{0} + \beta = \beta$ — a constant for all samples, still collapsed. This *is* a fixed point of the BYOL loss: $\mathcal{L} = \|q(\beta) - \mathrm{sg}(\beta)\|^2 = 0$, so $\nabla_\theta \mathcal{L} = 0$ at collapse. BN alone does not prevent collapse; the cross-sample gradient coupling in (b) creates implicit repulsive pressure *en route* to collapse but not at the fixed point itself. This is why BN can be replaced by batch-independent normalization (Richemond et al.) without performance loss.
+
+---
+
+> [!QUESTION] Exercise 5: EMA Fixed Points
 > *The EMA update has a specific fixed point that depends on the training dynamics of $\theta$.*
 >
 > > **Prerequisites:** [[#🔁 BYOL: Bootstrapping Without Negatives|BYOL: Bootstrapping Without Negatives]]
 >
 > Suppose $\theta$ is updated by gradient descent and changes at rate $\dot{\theta}$ (continuous-time limit). Show that in continuous time, the gap $\|\xi - \theta\|$ satisfies $\dot{\xi} - \dot{\theta} = -(1-\tau)(\xi - \theta) - \dot{\theta}$, and conclude that the steady-state gap is $\|\xi - \theta\|_{\text{ss}} \propto \|\dot{\theta}\| / (1 - \tau)$. What happens to this gap as training converges ($\dot{\theta} \to 0$)?
 
-> [!TIP]- Solution to Exercise 4
+> [!TIP]- Solution to Exercise 5
 > **Key insight:** The EMA gap is proportional to the learning rate divided by $(1-\tau)$ — a large $\tau$ creates a persistent lag even as training slows, maintaining a non-trivial prediction target.
 >
 > **Sketch:** In continuous time, $\dot{\xi} = (1-\tau)(\theta - \xi)$. Let $\delta = \xi - \theta$, then $\dot{\delta} = \dot{\xi} - \dot{\theta} = (1-\tau)(\theta - \xi) - \dot{\theta} = -(1-\tau)\delta - \dot{\theta}$. At steady state ($\dot{\delta} = 0$): $\delta_{\text{ss}} = -\dot{\theta}/(1-\tau)$, so $\|\delta_{\text{ss}}\| = \|\dot{\theta}\|/(1-\tau)$. As training converges, $\dot{\theta} \to 0$ and the gap vanishes — $\xi \to \theta$. During active training, the gap is non-zero: the online network always has a non-trivial (non-constant) target.
@@ -303,14 +343,14 @@ The EM frame also clarifies why a predictor is necessary: the E-step only makes 
 
 ---
 
-> [!QUESTION] Exercise 5: The SimSiam EM Steps
+> [!QUESTION] Exercise 6: The SimSiam EM Steps
 > *The EM interpretation clarifies what each subproblem optimizes and why a non-trivial predictor is necessary.*
 >
 > > **Prerequisites:** [[#🔀 SimSiam: Stop-Gradient Alone|SimSiam: Stop-Gradient Alone]]
 >
 > Suppose the encoder $f_\theta \circ g_\theta$ is linear: $z = Wx$ for weight matrix $W \in \mathbb{R}^{d \times n}$, and $h_\phi$ is also linear: $h_\phi(z) = Az$ for $A \in \mathbb{R}^{d \times d}$. Write the E-step as a least-squares problem and give the closed-form optimal $A^*$ in terms of the second-moment matrices $\Sigma_{11} = \mathbb{E}[z_1 z_1^\top]$ and $\Sigma_{21} = \mathbb{E}[z_2 z_1^\top]$. Under what condition on $\mathcal{T}$ does $A^* = I$?
 
-> [!TIP]- Solution to Exercise 5
+> [!TIP]- Solution to Exercise 6
 > **Key insight:** The optimal linear predictor is the least-squares regression of $z_2$ on $z_1$; it equals the identity exactly when the two views are identically distributed and perfectly correlated.
 >
 > **Sketch:** For the MSE surrogate (equivalent to cosine loss for normalized vectors), the E-step is $\min_A \mathbb{E}[\|Az_1 - z_2\|^2]$. Taking the gradient and setting to zero: $\mathbb{E}[Az_1 z_1^\top] = \mathbb{E}[z_2 z_1^\top]$, giving $A^* = \Sigma_{21}\Sigma_{11}^{-1}$ (standard OLS). If $z_1 = z_2$ exactly (trivial augmentations, $\mathcal{T}$ is the identity), then $\Sigma_{21} = \Sigma_{11}$, so $A^* = I$. In this case the loss becomes $\mathcal{D}(z_1, \mathrm{sg}(z_1)) = -1$ regardless of $\theta$ — zero gradient, no learning. Non-trivial augmentations make $\Sigma_{21} \neq \Sigma_{11}$ and $A^* \neq I$, creating a non-degenerate M-step.
@@ -363,14 +403,14 @@ The two terms work in tandem: invariance ensures view-consistency; redundancy re
 
 ---
 
-> [!QUESTION] Exercise 6: Cross-Correlation Fixed Point
+> [!QUESTION] Exercise 7: Cross-Correlation Fixed Point
 > *The target $C = I_d$ characterizes an entire family of solutions related by orthogonal transformations.*
 >
 > > **Prerequisites:** [[#📊 Barlow Twins: Redundancy Reduction|Barlow Twins: Redundancy Reduction]]
 >
 > Suppose $Z^A = Z^B = Z$ (same embeddings from both views, already batch-normalized). Show that $C = I_d$ if and only if the columns of $Z$ are mutually orthogonal in the batch sense (i.e. $Z^\top Z / N = I_d$). Conclude that the solution set of $\mathcal{L}_{\text{BT}} = 0$ forms an orbit under the orthogonal group $O(d)$.
 
-> [!TIP]- Solution to Exercise 6
+> [!TIP]- Solution to Exercise 7
 > **Key insight:** The fixed-point condition $C = I_d$ defines an orthonormality constraint on the embedding columns — an $O(d)$ family of equivalent solutions.
 >
 > **Sketch:** With $Z^A = Z^B = Z$ batch-normalized: $C = Z^\top Z / N$. Then $C = I_d \Leftrightarrow Z^\top Z = N \cdot I_d \Leftrightarrow$ the columns of $Z / \sqrt{N}$ form an orthonormal set. For any $R \in O(d)$, the rotated embeddings $ZR$ satisfy $(ZR)^\top(ZR)/N = R^\top (Z^\top Z / N) R = R^\top I_d R = I_d$. So the solution set is closed under $O(d)$-action — there is a whole $O(d)$-orbit of solutions, reflecting the rotational symmetry of the SSL objective.
@@ -432,14 +472,14 @@ At the optimum of $\mathcal{L}_{\text{VICReg}}$: each dimension has $\sigma_j \g
 
 ---
 
-> [!QUESTION] Exercise 7: Variance Term Gradient
+> [!QUESTION] Exercise 8: Variance Term Gradient
 > *The variance hinge loss has a centering-repulsive gradient that spreads samples along each dimension.*
 >
 > > **Prerequisites:** [[#🔧 VICReg: Explicit Regularization|VICReg: Explicit Regularization]]
 >
 > For a single embedding dimension $j$ with active hinge ($\sigma_j < \gamma$), compute $\partial v(Z) / \partial z_{b,j}$ and show it takes the form $-(z_{b,j} - \bar{z}_j) / (dN\sigma_j)$. Interpret the sign: does this gradient push $z_{b,j}$ toward or away from the batch mean $\bar{z}_j$?
 
-> [!TIP]- Solution to Exercise 7
+> [!TIP]- Solution to Exercise 8
 > **Key insight:** The gradient of the variance hinge is a centering-repulsive force: it pushes each sample *away* from the batch mean, expanding the empirical distribution along dimension $j$.
 >
 > **Sketch:** For active hinge on dimension $j$: $v_j = (\gamma - \sigma_j)/d$ where $\sigma_j = \sqrt{\mathrm{Var}_b(z^j) + \varepsilon}$. Differentiating:
@@ -485,14 +525,14 @@ All three post-contrastive methods reach competitive performance with SimCLR/MoC
 
 ---
 
-> [!QUESTION] Exercise 8: Barlow Twins vs. VICReg
+> [!QUESTION] Exercise 9: Barlow Twins vs. VICReg
 > *The two spectral methods differ in where the covariance is computed — across branches or within each branch.*
 >
 > > **Prerequisites:** [[#📊 Barlow Twins: Redundancy Reduction|Barlow Twins: Redundancy Reduction]], [[#🔧 VICReg: Explicit Regularization|VICReg: Explicit Regularization]]
 >
 > (a) Identify one architectural scenario where VICReg applies naturally but Barlow Twins does not conceptually fit. (b) Show that when $Z^A = Z^B = Z$ (batch-normalized, symmetric branches), the Barlow Twins off-diagonal term and VICReg's covariance term are equal up to a constant factor. What is that factor?
 
-> [!TIP]- Solution to Exercise 8
+> [!TIP]- Solution to Exercise 9
 > **Key insight:** Cross-branch vs. per-branch computation is the essential distinction; they coincide up to normalization in the symmetric case.
 >
 > **Sketch:** **(a)** Multi-modal SSL: branch A encodes images ($Z^A$, vision encoder), branch B encodes text captions ($Z^B$, language model). VICReg's per-branch variance and covariance regularizers apply naturally to each modality independently. Barlow Twins computes $C = (Z^A)^\top Z^B / N$ cross-modally, which conflates the two modalities in a single correlation matrix and loses the per-modality decorrelation signal. **(b)** With $Z^A = Z^B = Z$ batch-normalized: Barlow Twins off-diagonal $= \sum_{i \neq j} [(Z^\top Z / N)_{ij}]^2$. VICReg covariance $= (1/d)\sum_{i\neq j}[(Z^\top Z/(N-1))_{ij}]^2$. The ratio is $d \cdot ((N-1)/N)^2 \approx d$ for large $N$. So VICReg's covariance term equals Barlow Twins' off-diagonal term divided by $d \cdot (1 - 1/N)^2$ — same quantity, different normalization conventions.
@@ -510,4 +550,5 @@ All three post-contrastive methods reach competitive performance with SimCLR/MoC
 | [SimCLR] Chen, Kornblith, Norouzi, Hinton (2020), "A Simple Framework for Contrastive Learning of Visual Representations" | NT-Xent loss; established importance of projector head; requires large batch | [arXiv:2002.05709](https://arxiv.org/abs/2002.05709) |
 | [MoCo] He, Fan, Wu, Xie, Girshick (2020), "Momentum Contrast for Unsupervised Visual Representation Learning" | Queue + momentum encoder decouples negative pool from batch size | [arXiv:1911.05722](https://arxiv.org/abs/1911.05722) |
 | [InfoNCE] van den Oord, Li, Vinyals (2018), "Representation Learning with Contrastive Predictive Coding" | Introduces InfoNCE bound; connects contrastive objectives to mutual information maximization | [arXiv:1807.03748](https://arxiv.org/abs/1807.03748) |
+| [Richemond et al. (2020)](https://arxiv.org/abs/2010.10241) "BYOL works even without batch statistics" | Shows BYOL achieves 73.9% top-1 with Group Normalization + Weight Standardization (no batch statistics), refuting the hypothesis that BN's implicit contrastive coupling is the primary collapse-prevention mechanism | [arXiv:2010.10241](https://arxiv.org/abs/2010.10241) |
 | Barlow (1961), "Possible Principles Underlying the Transformation of Sensory Messages" | Original redundancy reduction hypothesis from theoretical neuroscience; inspiration for Barlow Twins | [MIT Press](https://doi.org/10.7551/mitpress/9780262518420.003.0013) |
