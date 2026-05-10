@@ -100,6 +100,12 @@ Problems are numbered continuously 1–N throughout the note. Solutions use **Ke
 - **For research notes:** see the dedicated **Research Notes Format** section below for structure and workflow rules.
 - When researching a topic, always include a references table at the end of the note with columns: "Reference Name", "Brief Summary", "Link to Reference".
 - When a note cites sources with figures worth embedding, use the `image-extractor` agent to fetch and embed them inline at relevant locations.
+- **Image sizing:** Never embed images at full native resolution. Use `<img>` tags with an explicit `width` attribute so figures render at a readable size in Obsidian. Recommended widths: single plots or diagrams → `width="420"–"500"`; two-panel figures → `width="550"–"600"`; three-or-more-panel figures → `width="650"–"700"`. Place the italic caption on its own line immediately below the `<img>` tag. Example:
+  ```markdown
+  <img src="figures/author2025-fig1-description.png" width="500" alt="brief alt text">
+
+  *Figure 1 (Author et al., 2025): Caption describing the figure in context.*
+  ```
 - **Paper note header order:** For paper notes specifically, the header order is: Title → Authors/venue line → TL;DR table → Relations section → Table of Contents. This supersedes the general "TOC immediately after the title" rule for paper notes only.
 - **Inline wikilinks** to related paper notes and concept notes should appear throughout the body — link on the first mention of a related paper or concept within each major section (`##` heading level). Do not re-link the same target within the same section.
 
@@ -247,7 +253,7 @@ Then read `/tmp/paper.md`. This applies to arXiv PDFs, textbooks, and any other 
 
 Specialized subagents are defined in `.claude/agents/`. Available agents:
 - `note-writer` — researches and writes note files following repo format
-- `image-extractor` — fetches figures from arXiv HTML (`ar5iv.org/html/{id}`) and embeds them
+- `image-extractor` — extracts figures from arXiv source tarballs (`arxiv.org/src/{id}`) and embeds them at scaled sizes
 - `reference-finder` — finds high-quality references for a topic via web search
 
 **Skills** (invoked via `/skill-name`):
