@@ -8,6 +8,7 @@
   - [[#2.2 The Rotation Matrix Construction|2.2 The Rotation Matrix Construction]]
   - [[#2.3 Complex-Number Shorthand|2.3 Complex-Number Shorthand]]
   - [[#2.4 Frequency Schedule|2.4 Frequency Schedule]]
+  - [[#2.5 Why Rotation? Uniqueness of the Construction|2.5 Why Rotation? Uniqueness of the Construction]]
 - [[#3. Key Properties|3. Key Properties]]
   - [[#3.1 Relative Position in the Dot Product|3.1 Relative Position in the Dot Product]]
   - [[#3.2 Long-Term Decay|3.2 Long-Term Decay]]
@@ -19,12 +20,14 @@
   - [[#6.2 Base-Frequency Rescaling|6.2 Base-Frequency Rescaling]]
   - [[#6.3 What NTK Scaling Leaves Uncalibrated|6.3 What NTK Scaling Leaves Uncalibrated]]
   - [[#6.4 A Cleaner Lens: Nyquist Sampling Theory|6.4 A Cleaner Lens: Nyquist Sampling Theory]]
+  - [[#6.5 Dynamic NTK: Zero-Shot Length Generalization|6.5 Dynamic NTK: Zero-Shot Length Generalization]]
 - [[#7. YaRN: Yet Another RoPE ExtensioN|7. YaRN: Yet Another RoPE ExtensioN]]
   - [[#7.1 Dimension-Wise Wavelength Analysis|7.1 Dimension-Wise Wavelength Analysis]]
   - [[#7.2 The Ramp Function and NTK-by-Parts Interpolation|7.2 The Ramp Function and NTK-by-Parts Interpolation]]
   - [[#7.3 Attention Temperature Scaling|7.3 Attention Temperature Scaling]]
   - [[#7.4 Fine-Tuning Recipe|7.4 Fine-Tuning Recipe]]
-- [[#8. Comparison and Practical Guidance|8. Comparison and Practical Guidance]]
+- [[#8. Large-Base RoPE|8. Large-Base RoPE]]
+- [[#9. Comparison and Practical Guidance|9. Comparison and Practical Guidance]]
 - [[#References|References]]
 
 ---
@@ -40,7 +43,7 @@ The earliest approaches, due to Vaswani et al. (2017), add a fixed sinusoidal si
 
 *Relative positional encodings* address both issues by encoding the offset $m - n$ between positions directly into the attention computation. RoPE, introduced by [Su et al. (2021)](https://arxiv.org/abs/2104.09864), is now the dominant approach: it achieves relative encoding without extra parameters by rotating query and key vectors by a position-dependent angle before computing their dot product. The rotation is structured so that the inner product $\langle \mathbf{q}_m, \mathbf{k}_n \rangle$ is a function of $m - n$ alone — not of $m$ or $n$ individually. Crucially, RoPE is applied at every layer inside attention, not as a one-time additive offset.
 
-RoPE underpins LLaMA, Mistral, Falcon, Qwen, and most modern open-weight LLMs. Its simplicity (no trainable parameters, purely geometric) and its natural long-term decay property make it attractive. However, as models are deployed on contexts longer than those seen during training, the rotation angles fall outside the trained distribution, leading to *perplexity explosion*. Sections 5–7 cover the three main remedies: Positional Interpolation (PI), NTK-Aware Scaling, and YaRN.
+RoPE underpins LLaMA, Mistral, Falcon, Qwen, and most modern open-weight LLMs. Its simplicity (no trainable parameters, purely geometric) and its natural long-term decay property make it attractive. However, as models are deployed on contexts longer than those seen during training, the rotation angles fall outside the trained distribution, leading to *perplexity explosion*. Sections 5–8 cover the main remedies: Positional Interpolation (PI), NTK-Aware Scaling, YaRN, and Large-Base RoPE.
 
 ---
 
@@ -139,6 +142,39 @@ Low-indexed dimensions ($i \approx 1$) have $\theta_i \approx 1$ (fast rotation,
 > (a) $\lambda_1 = 2\pi \cdot b^{0} = 2\pi \approx 6.28$ tokens. $\lambda_{32} = 2\pi \cdot b^{2 \cdot 31/64} = 2\pi \cdot 10000^{31/32} \approx 2\pi \cdot 6310 \approx 39{,}650$ tokens.
 >
 > (b) Require $2\pi \cdot b^{2(i-1)/d} > L$. Taking logs: $\frac{2(i-1)}{d}\ln b > \ln(L/2\pi)$. With $d = 64$, $b = 10^4$, $L = 4096$: $\frac{i-1}{32} > \frac{\ln(651.5)}{9.21} \approx 0.703$, so $i - 1 > 22.5$, giving $i \geq 24$. Dimensions 24–32 have wavelengths exceeding the training length.
+
+### 2.5 Why Rotation? Uniqueness of the Construction 📐
+
+The construction in §2.2 may look like a clever guess: *why should the encoding $f(\mathbf{v}, m)$ be a rotation?* The answer is that, under mild regularity conditions, rotation is essentially the *only* linear encoding satisfying the relative-position desideratum.
+
+**Setting up the uniqueness argument.** Suppose $f(\mathbf{v}, m) = g_m\,\mathbf{v}$ for some matrix $g_m \in \mathbb{R}^{2\times2}$ (restricting to $d = 2$ first). The desideratum requires
+
+$$\langle g_m\,\mathbf{q},\; g_n\,\mathbf{k}\rangle = \mathbf{q}^\top g_m^\top g_n\,\mathbf{k}$$
+
+to depend only on $n - m$ for all $\mathbf{q}, \mathbf{k} \in \mathbb{R}^2$. Since this must hold for *all* $\mathbf{q}$ and $\mathbf{k}$, the matrix $g_m^\top g_n$ itself can depend only on $n - m$:
+
+$$g_m^\top g_n = F(n - m) \qquad \text{for some } F : \mathbb{Z} \to \mathbb{R}^{2\times 2}.$$
+
+**Deriving the rotation structure.** Setting $m = n$: $g_m^\top g_m = F(0)$, constant in $m$. Setting $n = 0$: $F(-m) = g_m^\top g_0$. Applying the functional equation twice:
+
+$$g_m^\top g_n = F(n-m) = g_0^\top g_{n-m}.$$
+
+This is a *cocycle condition*: the product $g_m^\top g_n$ factors through the difference $n - m$. Normalising so that $g_0 = I$ (no rotation at the reference position), the condition becomes $g_m^\top g_n = g_{n-m}$. Setting $n = 0$: $g_m^\top = g_{-m}$, so each $g_m$ is an *orthogonal* matrix. The map $m \mapsto g_m$ is then a group homomorphism from $(\mathbb{Z}, +)$ into $O(2)$.
+
+**Proposition.** *Any group homomorphism $\varphi : (\mathbb{Z}, +) \to SO(2)$ has the form $\varphi(m) = R(m\theta)$ for some $\theta \in \mathbb{R}$, where $R(\phi)$ denotes the $2\times 2$ rotation by angle $\phi$.*
+
+*Proof sketch.* $SO(2) \cong U(1) \cong \mathbb{R}/2\pi\mathbb{Z}$ as groups. A homomorphism from $\mathbb{Z}$ into $\mathbb{R}/2\pi\mathbb{Z}$ is determined by the image of the generator $1 \mapsto \theta \pmod{2\pi}$, which gives $m \mapsto m\theta \pmod{2\pi}$. $\square$
+
+Restricting to orientation-preserving maps ($\det g_m = 1$, i.e., $g_m \in SO(2)$) eliminates reflections. **In 2D, rotation by $m\theta$ is the unique linear encoding satisfying the desideratum with $g_0 = I$ and $\det g_m = 1$.**
+
+**Extension to $\mathbb{R}^d$.** For $d > 2$, the inner product decomposes across pairs of coordinates:
+
+$$\langle f(\mathbf{q}, m),\; f(\mathbf{k}, n) \rangle = \sum_{i=1}^{d/2} \langle g_m^{(i)}\,\tilde{\mathbf{q}}_i,\; g_n^{(i)}\,\tilde{\mathbf{k}}_i\rangle,$$
+
+where $\tilde{\mathbf{v}}_i = (v_{2i-1}, v_{2i})^\top \in \mathbb{R}^2$ is the $i$-th pair. The 2D uniqueness result applies to each block independently: each $g_m^{(i)}$ must be a rotation $R(m\theta_i)$ for some angle $\theta_i$. The block-diagonal structure of $R_m$ follows. **The only freedom remaining is the choice of angles $\{\theta_i\}_{i=1}^{d/2}$ — which is precisely the frequency schedule of §2.4.**
+
+> [!NOTE] What the Uniqueness Argument Does Not Fix
+> The proof shows rotation is forced given the desideratum and linearity. It does *not* determine the frequency schedule $\theta_i = b^{-2(i-1)/d}$ — that is a design choice, motivated by spectral coverage (§2.4) and continuity with the sinusoidal APE convention of Vaswani et al. (2017). Different valid schedules yield different RoPE variants; the geometric spectrum is one particular choice.
 
 ---
 
@@ -319,7 +355,7 @@ So the exponent $d/(d-2)$ is chosen so that the *lowest-frequency dimension stre
 
 ### 6.3 What NTK Scaling Leaves Uncalibrated
 
-NTK-aware scaling correctly stretches low-frequency dimensions but applies the *same uniform base change* to all dimensions, including the fast-rotating ones that don't need it. At moderate extensions ($s \leq 4$) the perturbation to fast dimensions is negligible; at large extensions ($s \geq 8$) the accumulated error becomes significant. *Empirically, NTK scaling without fine-tuning achieves good perplexity at $s \leq 4$ but collapses at $s = 8$* (see the perplexity table in §8). The YaRN method addresses this by moving from a single base change to explicit per-dimension control.
+NTK-aware scaling correctly stretches low-frequency dimensions but applies the *same uniform base change* to all dimensions, including the fast-rotating ones that don't need it. At moderate extensions ($s \leq 4$) the perturbation to fast dimensions is negligible; at large extensions ($s \geq 8$) the accumulated error becomes significant. *Empirically, NTK scaling without fine-tuning achieves good perplexity at $s \leq 4$ but collapses at $s = 8$* (see the perplexity table in §9). The YaRN method addresses this by moving from a single base change to explicit per-dimension control.
 
 ### 6.4 A Cleaner Lens: Nyquist Sampling Theory 💡
 
@@ -400,6 +436,29 @@ The threshold $\beta = 32$ is empirical ($r_i > 32$ means 32 complete cycles; th
 > (a) $\theta_i' = (bc)^{-2(i-1)/d} = \theta_i \cdot c^{-2(i-1)/d}$, so $\lambda_i' = \lambda_i \cdot c^{2(i-1)/d}$.
 >
 > (b) At $i = d/2$: $\lambda_{d/2}' = \lambda_{d/2} \cdot c^{2(d/2-1)/d} = \lambda_{d/2} \cdot c^{(d-2)/d}$. Setting this equal to $s \cdot \lambda_{d/2}$: $c^{(d-2)/d} = s$, so $c = s^{d/(d-2)}$. Thus $b' = b \cdot s^{d/(d-2)}$. $\square$
+
+### 6.5 Dynamic NTK: Zero-Shot Length Generalization 💡
+
+Standard NTK scaling requires committing to a fixed target length $L'$ at deployment — the base $b'$ is computed once and baked into all position computations. *Dynamic NTK* removes this constraint by recomputing the effective base on-the-fly as the sequence grows.
+
+**Definition (Dynamic NTK Scaling).** At inference time, when the current sequence has length $\ell$ tokens, compute the effective base as
+
+$$b'(\ell) = b \cdot \left(\frac{\ell}{L}\right)^{d/(d-2)},$$
+
+where $L$ is the training context length and $b$ is the original base. If $\ell \leq L$, set $b'(\ell) = b$ (no modification). Otherwise, $b'(\ell)$ grows with $\ell$ so that the slowest dimension is always stretched to match the current length.
+
+**The consistency problem.** At step $\ell$, tokens at all positions $0, 1, \ldots, \ell$ are encoded with base $b'(\ell)$. But in a KV-cache setting, tokens $0, \ldots, \ell-1$ were previously encoded with base $b'(\ell-1) \neq b'(\ell)$. The cached keys and values are *inconsistent* with the new base: token $j < \ell$ was rotated by angle $j\theta_i^{(\ell-1)}$ when cached, but the current query expects it to have been rotated by $j\theta_i^{(\ell)}$.
+
+**Why it works anyway.** Despite this inconsistency, dynamic NTK performs well in practice for two reasons:
+
+1. **Fast dimensions are nearly unaffected.** For small $i$ (large $\theta_i$), $\lambda_i \ll L$, so $r_i \gg 1$ at any sequence length. The base rescaling formula stretches $\lambda_i$ by $(\ell/L)^{2(i-1)/(d-2)} \approx 1$ for small $i$ — the angular change $\Delta\theta_i = \theta_i^{(\ell)} - \theta_i^{(\ell-1)}$ is negligible. High-frequency dimensions dominate the QK inner product for nearby tokens, so the inconsistency has little effect on local attention.
+
+2. **Slow dimensions have small absolute angles.** For large $i$ (small $\theta_i$), the rotation angle $m\theta_i$ is small even for large $m$, so the error $m\,|\Delta\theta_i|$ remains bounded relative to $2\pi$.
+
+> [!WARNING]
+> *Dynamic NTK is a heuristic — the KV-cache inconsistency is real and accumulates for very long sequences. It is appropriate for serving when the target length is unknown, but YaRN fine-tuning is preferred when the target length is fixed and latency allows a fine-tuning phase. Many inference engines (vLLM, Ollama) implement dynamic NTK as the default zero-shot extension strategy.*
+
+**Relationship to §6.2.** Dynamic NTK is not a different formula — it is the same formula $b' = b \cdot s^{d/(d-2)}$ evaluated at $s = \ell/L$ for each new token. The novelty is in applying this as an online update rather than a one-time configuration.
 
 ---
 
@@ -506,23 +565,72 @@ YaRN's theoretical improvements are amplified by a short fine-tuning phase:
 
 ---
 
-## 8. Comparison and Practical Guidance 🔑
+## 8. Large-Base RoPE 🔑
 
-The four methods form a progression of increasing sophistication:
+NTK scaling, YaRN, and PI are all *post-hoc* methods: they take a model trained with base $b$ on context length $L$ and extend it at inference or fine-tuning time. An alternative is to simply train with a **much larger base from the start**, so that the frequency grid is pre-stretched to cover the intended extended context.
 
-| Method | Position Modification | Frequency Modification | Fine-tuning Needed | Strengths | Weaknesses |
-|--------|----------------------|----------------------|--------------------|-----------|------------|
-| **Vanilla RoPE** | None | None | N/A | Exact trained behavior | Fails beyond $L$ |
-| **PI** (Chen et al. 2023) | $m \mapsto m/s$ (all dims) | None (equivalent to $\theta_i \mapsto \theta_i/s$) | ~1000 steps | Stable, simple | Destroys high-freq resolution |
-| **NTK Scaling** (bloc97 2023) | None | $b \mapsto b \cdot s^{d/(d-2)}$ (global base change) | Optional | No fine-tuning needed; preserves high-freq | Leaves high-freq slightly disturbed; degrades at large $s$ |
-| **YaRN** (Peng et al. 2023) | None | Per-dim: $\theta_i \mapsto \alpha_i \theta_i$ via ramp; + temperature scaling | ~400 steps | Best perplexity; frequency-discriminating | Slightly more complex; requires $\alpha, \beta$ tuning |
+### 8.1 The Large-Base Intuition
+
+Recall the slowest dimension's wavelength: $\lambda_{d/2} = 2\pi\,b^{(d-2)/d} \approx 2\pi\,b$ for large $d$. For the standard $b = 10{,}000$, $\lambda_{d/2} \approx 62{,}800$ tokens. A model trained on $L = 4096$ has $r_{d/2} \approx 4096/62800 \approx 0.065$ — the slowest clock completes only 6.5% of a revolution during pretraining, yet the model must use it to encode coarse global position.
+
+With $b = 500{,}000$ (as used in LLaMA 3), $\lambda_{d/2} \approx 3.14\text{M}$ tokens. Now:
+- At pretraining length $L = 8192$: $r_{d/2} \approx 0.003$ — essentially a static bias, not a periodic signal.
+- At extended length $L' = 128{,}000$: $r_{d/2} \approx 0.04$ — still well below 1, so no out-of-distribution angles appear.
+
+**The large-base approach works by ensuring that $r_i < 1$ for slow dimensions even at the intended extended length** — the model is trained in an "always-undersampled" regime for those dimensions, and fine-tuning at $L'$ teaches them their role.
+
+### 8.2 Effect on the Frequency Spectrum
+
+The Nyquist condition from §6.4 becomes: dimension $i$ is undersampled ($r_i < 1$) iff $\lambda_i > L$, i.e.,
+
+$$i > i^*(b, L, d) = \frac{d}{2}\left(1 + \frac{\log(L/2\pi)}{\log b}\right).$$
+
+With $b = 500{,}000$, $d = 128$, $L = 128{,}000$:
+
+$$i^* = 64\left(1 + \frac{\log(128000/2\pi)}{\log(500000)}\right) = 64\left(1 + \frac{\ln(20373)}{13.12}\right) \approx 64\left(1 + 0.748\right) \approx 112.$$
+
+All but 16 of the 64 frequency dimensions are undersampled — the vast majority of the spectrum encodes only coarse-grained positional information. This is acceptable because the model never needs to extrapolate: any sequence up to 128k tokens uses only angles in the range that training covered.
+
+Contrast with the standard base $b = 10{,}000$ at $L = 128{,}000$:
+
+$$i^* = 64\left(1 + \frac{\ln(20373)}{9.21}\right) \approx 64 \cdot 2.065 \approx 132 > 64 = d/2.$$
+
+$i^*$ exceeds $d/2$ — *every single dimension* would be undersampled, meaning the model is extrapolating everywhere. Standard RoPE with $b = 10{,}000$ cannot handle 128k contexts at all.
+
+### 8.3 Tradeoffs vs. Post-Hoc Methods
+
+| Dimension | Large-Base (train-time) | YaRN / NTK (post-hoc) |
+|-----------|------------------------|----------------------|
+| When applied | Before pretraining | After pretraining |
+| Fine-tuning required | Yes (extended pretraining at $L'$) | ~400 steps |
+| Perplexity at short contexts | Slightly degraded (slow dims carry less info at short range) | No change from base model |
+| Maximum achievable $L'$ | Essentially unlimited (just fine-tune longer) | Bounded by stability of the interpolation formula |
+| Flexibility | Must know target $L'$ before pretraining | Can be applied post-hoc to any checkpoint |
+
+> [!WARNING]
+> *Large-base RoPE has a subtle cost at short contexts: with $b = 500{,}000$, slow dimensions contribute almost nothing to pairwise scores ($r_i \approx 0$, so $\cos((n-m)\theta_i) \approx 1$ for all offsets). The model loses positional resolution in those dimensions at training time. In practice this is offset by fine-tuning at the extended length, which re-teaches the slow dimensions, but the pretraining perplexity at $L = 8192$ may be slightly higher than with the standard base.*
+
+---
+
+## 9. Comparison and Practical Guidance 🔑
+
+The methods form a progression of increasing sophistication:
+
+| Method | When Applied | Frequency Modification | Fine-tuning Needed | Strengths | Weaknesses |
+|--------|-------------|----------------------|--------------------|-----------|------------|
+| **Vanilla RoPE** | — | None | N/A | Exact trained behavior | Fails beyond $L$ |
+| **PI** (Chen et al. 2023) | Post-hoc | $\theta_i \mapsto \theta_i/s$ (uniform) | ~1000 steps | Stable, simple | Destroys high-freq resolution |
+| **NTK Scaling** (bloc97 2023) | Post-hoc | $b \mapsto b \cdot s^{d/(d-2)}$ (global) | Optional | No fine-tuning needed | Degrades at large $s$ |
+| **Dynamic NTK** | Online (per-token) | $b'(\ell) = b\cdot(\ell/L)^{d/(d-2)}$ | None | Zero-shot; length-agnostic | KV-cache inconsistency |
+| **YaRN** (Peng et al. 2023) | Post-hoc | Per-dim ramp $\alpha_i$; + temperature | ~400 steps | Best perplexity; Nyquist-principled | Requires $\alpha, \beta$ tuning |
+| **Large-Base RoPE** (LLaMA 3) | Train-time | $b \gg 10{,}000$ (pre-stretched grid) | Extended pretraining | Unlimited $L'$; no post-hoc hacks | Must know target $L'$ before training; short-context cost |
 
 **Practical guidance:**
 
-- *If no fine-tuning is possible*, use NTK-Aware Scaling with $b' = b \cdot s^{d/(d-2)}$. It requires only changing the base constant in the RoPE computation and provides good perplexity at moderate extensions ($s \leq 4$).
-- *If a small fine-tuning budget is available* ($\sim 400$ steps on $0.1\%$ of pretrain data), YaRN is the best choice and consistently outperforms all alternatives at all measured context lengths.
-- *Avoid pure PI* unless the downstream task is insensitive to local positional order (e.g., long-document retrieval where paragraph-level structure dominates). Its compression of high-frequency dimensions degrades near-neighbor sensitivity.
-- *Dynamic NTK* (a variant where the base $b'$ is recomputed on-the-fly based on the actual inference context length) can be used for zero-shot extension when the target length is not known at deployment time.
+- *If serving at variable lengths with no fine-tuning*, use Dynamic NTK. It requires only a one-line change to the base computation per forward pass and gracefully handles unknown target lengths.
+- *If the target length is fixed and a small fine-tuning budget is available* ($\sim 400$ steps on $0.1\%$ of pretrain data), YaRN is the best choice and consistently outperforms all alternatives.
+- *If training a new model intended for very long contexts*, use a large base ($b \geq 500{,}000$) from the start, then extended-pretrain at $L'$. This is the approach of LLaMA 3 / 3.1.
+- *Avoid pure PI* unless the downstream task is insensitive to local positional order (e.g., long-document retrieval). Its uniform frequency compression degrades near-neighbor sensitivity.
 
 > [!WARNING]
 > *The perplexity tables in the YaRN paper (Table 5, reproduced below) compare methods at LLaMA 7B with 400 fine-tuning steps on 32k context. Without fine-tuning, NTK-aware scaling outperforms YaRN's NTK-by-parts on some intermediate lengths. The margin of YaRN is largest at the extended length $L' = 32768$ and requires fine-tuning to materialize.*
@@ -574,4 +682,5 @@ The four methods form a progression of increasing sophistication:
 | Peng et al. (2023) — YaRN | Introduces dimension-wise frequency interpolation via ramp function $\gamma(r_i)$, plus attention temperature scaling. 10× fewer tokens and 2.5× fewer steps than PI. State-of-the-art at long-context extension. | [arxiv.org/abs/2309.00071](https://arxiv.org/abs/2309.00071) |
 | EleutherAI Blog — Rotary Embeddings | Accessible exposition of RoPE mathematics, including complex-number representation and comparison with sinusoidal encodings. | [blog.eleuther.ai/rotary-embeddings](https://blog.eleuther.ai/rotary-embeddings/) |
 | EleutherAI Blog — YaRN | Technical blog companion to the YaRN paper, with additional derivations of the NTK base rescaling formula and ramp function design. | [blog.eleuther.ai/yarn](https://blog.eleuther.ai/yarn/) |
+| Dubey et al. (2024) — LLaMA 3 | Introduces $b = 500{,}000$ large-base RoPE as the training-time alternative to post-hoc extension; extended pretraining to 128k context. | [arXiv:2407.21783](https://arxiv.org/abs/2407.21783) |
 | Amara et al. (2025) — How LLMs Scaled from 512 to 2M Context | Survey blog post tracing context extension methods from RoPE through PI, NTK, and YaRN with mathematical detail and code. | [amaarora.github.io](https://amaarora.github.io/posts/2025-09-21-rope-context-extension.html) |
