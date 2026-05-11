@@ -13,6 +13,7 @@ This file is the index for the `concepts/deep-learning-engineering/` folder. It 
 | `weight-tying.md` | ✅ Parameter sharing between input embedding and output projection |
 | `gradient-checkpointing.md` | ✅ Recompute activations on the backward pass to reduce peak memory |
 | `normalization-free-transformers.md` | ✅ DyT and Derf as pointwise LayerNorm replacements; four-property theory |
+| `rotary-embeddings.md` | ✅ RoPE — rotating Q/K vectors to encode relative position; NTK-aware scaling and YaRN context extension |
 
 ### Planned
 
@@ -23,7 +24,6 @@ This file is the index for the `concepts/deep-learning-engineering/` folder. It 
 | `mup-parametrization.md` | Maximal Update Parametrization — transfer optimal hyperparameters from small to large models |
 | `normalization.md` | RMSNorm vs. LayerNorm; Pre-Norm vs. Post-Norm; training stability at depth |
 | `glu-variants.md` | SwiGLU and gated FFN variants — multiplicative gating for better perplexity |
-| `rotary-embeddings.md` | RoPE — rotating Q/K vectors to encode relative position; YaRN context extension |
 | `mamba-ssm.md` | Selective state space models — $O(N)$ training via parallel scan, $O(1)$ inference via recurrence |
 | `linear-attention.md` | Gated linear attention — RWKV, RetNet, GLA; $O(1)$ inference with data-dependent decay |
 | `ttt-layers.md` | Test-time training layers — inner model weights as dynamic hidden state |
