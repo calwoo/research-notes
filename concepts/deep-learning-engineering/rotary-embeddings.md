@@ -15,9 +15,10 @@
 - [[#4. The Context Extension Problem|4. The Context Extension Problem]]
 - [[#5. Positional Interpolation (PI)|5. Positional Interpolation (PI)]]
 - [[#6. NTK-Aware Scaling|6. NTK-Aware Scaling]]
-  - [[#6.1 The NTK Lens on RoPE|6.1 The NTK Lens on RoPE]]
+  - [[#6.1 The NTK Argument — and Its Limits|6.1 The NTK Argument — and Its Limits]]
   - [[#6.2 Base-Frequency Rescaling|6.2 Base-Frequency Rescaling]]
   - [[#6.3 What NTK Scaling Leaves Uncalibrated|6.3 What NTK Scaling Leaves Uncalibrated]]
+  - [[#6.4 A Cleaner Lens: Nyquist Sampling Theory|6.4 A Cleaner Lens: Nyquist Sampling Theory]]
 - [[#7. YaRN: Yet Another RoPE ExtensioN|7. YaRN: Yet Another RoPE ExtensioN]]
   - [[#7.1 Dimension-Wise Wavelength Analysis|7.1 Dimension-Wise Wavelength Analysis]]
   - [[#7.2 The Ramp Function and NTK-by-Parts Interpolation|7.2 The Ramp Function and NTK-by-Parts Interpolation]]
@@ -245,14 +246,52 @@ Equivalently, the attention computation uses the inner product $\mathbf{q}^\top 
 
 ## 6. NTK-Aware Scaling 📐
 
-### 6.1 The NTK Lens on RoPE
+### 6.1 The NTK Argument — and Its Limits
 
-In the Neural Tangent Kernel (NTK) theory of neural network generalization, the *effective bandwidth* of the position encoding governs which frequencies of positional signal the network can represent and generalize. The key observation, due to [bloc97 (2023)](https://www.reddit.com/r/LocalLLaMA/comments/14lz7j5/ntkaware_scaled_rope_allows_llama_models_to_have/), is:
+> [!WARNING]
+> *The "NTK" label is somewhat misleading. The connection to Neural Tangent Kernel theory is primarily by analogy, not by formal theorem. Understanding what the argument actually claims — and where it breaks down — is essential for interpreting both NTK scaling's successes and its failures at large $s$.*
 
-- **High-frequency dimensions** (small $i$, small $\lambda_i$): rotation angles cycle many times in $[0, L]$. The model is effectively interpolating between familiar angle values, even at slightly longer sequences.
-- **Low-frequency dimensions** (large $i$, large $\lambda_i$): rotation angles barely complete one cycle in $[0, L]$. Any sequence longer than $\lambda_i$ requires the model to extrapolate into an entirely unseen angular regime.
+#### The Position-Encoding Kernel
 
-PI's uniform compression helps but at the cost of degrading high-frequency resolution. The NTK insight is: *rather than compressing positions, change the base $b$ so that all wavelengths scale up proportionally.* This spreads the "extension budget" across all frequencies instead of concentrating it in position compression.
+In NTK theory, a network's function class is determined by the spectral structure of its *kernel*:
+
+$$K(x, x') = \mathbb{E}_\theta\!\left[\langle \nabla_\theta f(x;\theta),\, \nabla_\theta f(x';\theta) \rangle\right].$$
+
+For a RoPE-based attention head, the attention score between tokens at positions $m$ and $n$ is
+
+$$\text{score}(m, n) = \mathbf{q}^\top R_{n-m}\,\mathbf{k} = \sum_{i=1}^{d/2} A_i \cos((n-m)\theta_i) + B_i \sin((n-m)\theta_i),$$
+
+where $A_i, B_i$ depend on $\mathbf{q}$ and $\mathbf{k}$ but not on position. The attention kernel is therefore a *trigonometric polynomial* in relative offset $n - m$, with Fourier modes $\{\cos(\cdot\,\theta_i), \sin(\cdot\,\theta_i)\}_{i=1}^{d/2}$. **The model's ability to represent arbitrary functions of relative position is entirely determined by this frequency set $\{\theta_i\}$.**
+
+#### PI's Problem Through the Kernel Lens
+
+When PI substitutes $m \mapsto m/s$, the effective kernel becomes
+
+$$\text{score}^{\text{PI}}(m, n) = \sum_{i=1}^{d/2} A_i \cos\!\left(\frac{n-m}{s}\theta_i\right) + B_i \sin\!\left(\frac{n-m}{s}\theta_i\right).$$
+
+The kernel now has $1/s$ the original frequency bandwidth. Concretely, the innermost dimension (largest $\theta_i \approx 1$) previously changed by $\approx 1$ radian per token; after PI it changes by $\approx 1/s$ radians per token. For nearby positions ($|n-m| \ll s$), $\cos((n-m)/s) \approx 1$ — the model can no longer distinguish them. **PI destroys high-frequency resolution in exchange for in-distribution angles at long range.**
+
+The NTK framing names this precisely: PI changes what the kernel *sees*, effectively replacing the trained frequency basis $\{\theta_i\}$ with a compressed basis $\{\theta_i/s\}$. The model's function class changes discontinuously with $s$.
+
+#### The NTK Scaling Insight
+
+Rather than compressing positions (changing the kernel's input), change the frequencies $\theta_i$ directly so that the kernel's spectral structure expands to cover the longer range. The goal: at new context length $L'$, the kernel should "look the same" as at training length $L$ — the same frequency basis, just with longer wavelengths. This requires stretching $\{\theta_i\}$ rather than squashing $\{m\}$.
+
+Concretely:
+- **High-frequency dimensions** ($\lambda_i \ll L$): angles cycle many times in $[0, L]$. The model interpolates between familiar values even slightly beyond $L$. Leave them untouched.
+- **Low-frequency dimensions** ($\lambda_i \gg L$): angles barely complete one cycle. Any $m > \lambda_i$ is entirely unseen. These need the most stretching.
+
+Changing the base $b$ to a larger value $b'$ uniformly stretches all wavelengths $\lambda_i \propto b^{2(i-1)/d}$, with the slowest dimensions stretching proportionally more (because their exponent $2(i-1)/d$ is larger). This is *frequency-aware* in a way that PI is not.
+
+#### Where the Formal Argument Breaks Down
+
+Three issues prevent this from being a rigorous theorem:
+
+1. **NTK requires infinite width.** The NTK theorem governs infinitely-wide networks trained under gradient flow from random initialization. Real transformer heads have finite $d$ and are trained with Adam — the actual kernel evolves throughout training and is not frozen at initialization.
+
+2. **Fine-tuning invalidates the fixed-kernel assumption.** Even the 400 gradient steps YaRN uses re-enters a regime where the NTK is not the relevant object. The argument is about initialization-time function class, not post-training behavior.
+
+3. **The base-rescaling formula encodes an arbitrary design choice.** The exponent $d/(d-2)$ pins the *slowest* dimension's stretch to exactly $s$. There is no NTK theorem that specifies which dimension should be the anchor. The YaRN ablation table (§8) shows that NTK scaling collapses at large $s$ precisely because this single constraint leaves intermediate dimensions simultaneously over-stretched and under-stretched.
 
 ### 6.2 Base-Frequency Rescaling
 
@@ -280,7 +319,68 @@ So the exponent $d/(d-2)$ is chosen so that the *lowest-frequency dimension stre
 
 ### 6.3 What NTK Scaling Leaves Uncalibrated
 
-NTK-aware scaling correctly stretches low-frequency dimensions but does not constrain the high-frequency dimensions to stay within the trained regime — they were already fine, so touching them introduces no benefit and no harm. However, NTK scaling applies the *same uniform base change* to all dimensions, which means even the fast-rotating dimensions receive a slight modification. *Empirically, NTK scaling without fine-tuning achieves good perplexity at modest extensions ($s \leq 4$) but degrades at larger extensions ($s \geq 8$).* The YaRN method addresses this by treating each frequency dimension individually.
+NTK-aware scaling correctly stretches low-frequency dimensions but applies the *same uniform base change* to all dimensions, including the fast-rotating ones that don't need it. At moderate extensions ($s \leq 4$) the perturbation to fast dimensions is negligible; at large extensions ($s \geq 8$) the accumulated error becomes significant. *Empirically, NTK scaling without fine-tuning achieves good perplexity at $s \leq 4$ but collapses at $s = 8$* (see the perplexity table in §8). The YaRN method addresses this by moving from a single base change to explicit per-dimension control.
+
+### 6.4 A Cleaner Lens: Nyquist Sampling Theory 💡
+
+The NTK framing is useful for motivating *why frequencies matter*, but the *Nyquist-Shannon sampling theorem* provides a cleaner and more honest mathematical basis for both NTK scaling and its successor, YaRN.
+
+#### The Sampling Analogy
+
+Recall the rotation count from §7.1:
+
+$$r_i = \frac{L}{\lambda_i} = \frac{L}{2\pi\,b^{2(i-1)/d}}.$$
+
+$r_i$ is the number of complete revolutions dimension $i$ makes during training on sequences of length $L$. Think of each dimension as a periodic clock with period $\lambda_i$:
+
+| Regime | Condition | Interpretation |
+|--------|-----------|----------------|
+| Well-sampled | $r_i \gg 1$ | Clock cycles many times. Model has seen all angles $[0, 2\pi]$ repeatedly. Reliable interpolation at any offset. |
+| Barely sampled | $r_i \approx 1$ | Exactly one full revolution. Model has seen all angles, but sparsely. |
+| Undersampled | $r_i < 1$ | Clock hasn't completed a full revolution. Angles beyond $2\pi r_i$ are entirely unseen. Any relative position $|n-m| > \lambda_i$ is out-of-distribution. |
+
+By the Nyquist-Shannon theorem, a signal of frequency $f$ must be sampled at rate $\geq 2f$ to be recoverable without aliasing. The analog here is that dimension $i$ can only reliably encode relative positions up to $\lambda_i/2$ — beyond that, the rotation angle wraps around in a way the model has never seen. The context extension problem is precisely an *undersampling* problem for the low-frequency (large $\lambda_i$, small $r_i$) dimensions.
+
+#### The Undersampling Condition
+
+The out-of-distribution failure at inference time has a dimension-by-dimension characterization. At training length $L$:
+
+$$r_i < 1 \iff \lambda_i > L \iff i > i^* := \frac{d}{2}\left(1 + \frac{\log(L/2\pi)}{\log b}\right).$$
+
+Dimensions $i > i^*$ are undersampled — they have never completed a full revolution. For the standard setting $b = 10{,}000$, $d = 128$, $L = 4096$, this gives $i^* \approx 43$, so the top $\approx 21$ dimensions are undersampled.
+
+The correct fix is to *slow down* these clocks so that each completes at most one revolution within the new context length $L'$. The ideal intervention: stretch $\lambda_i$ for dimension $i$ such that
+
+$$r_i' = \frac{L'}{\lambda_i'} \lesssim 1 \quad \text{for all formerly undersampled dims.}$$
+
+For well-sampled dimensions ($r_i \gg 1$), no modification is needed.
+
+#### NTK Scaling as an Approximation to the Nyquist Fix
+
+Base rescaling changes $\lambda_i \mapsto \lambda_i \cdot s^{2(i-1)/(d-2)}$. At dimension $i = d/2$ (the slowest clock), the stretch factor is $s^1 = s$, so:
+
+$$r_{d/2}' = \frac{L'}{s\,\lambda_{d/2}} = \frac{sL}{s\,\lambda_{d/2}} = \frac{L}{\lambda_{d/2}} = r_{d/2}.$$
+
+The slowest clock's rotation count is preserved — it now completes the same number of revolutions over $L' = sL$ as it did over $L$. This is exactly the Nyquist prescription applied to the single most critical dimension.
+
+But the base change applies a *continuous gradient* of stretching to all other dimensions, even those with $r_i \gg 1$ that need no modification. At $s = 8$, intermediate dimensions receive a stretch factor of $s^{(d-4)/(d-2)} \approx 6\text{–}7$, perturbing clocks that were already well-calibrated. This accounts for the empirical collapse at large $s$.
+
+#### YaRN as the Nyquist-Optimal Solution
+
+YaRN's ramp function $\gamma(r_i)$ directly implements the Nyquist prescription dimension-by-dimension:
+
+$$\gamma(r_i) = \begin{cases}
+0 & r_i < \alpha \quad \text{(undersampled: apply PI)} \\
+1 & r_i > \beta \quad \text{(well-sampled: leave alone)} \\
+\frac{r_i - \alpha}{\beta - \alpha} & \text{otherwise (blend)}
+\end{cases}$$
+
+The threshold $\alpha = 1$ is not a tunable hyperparameter in disguise — it is the **Nyquist boundary**: dimensions with $r_i < 1$ have $\lambda_i > L$, meaning the training data covered less than one full revolution. Any relative position beyond $\lambda_i$ is extrapolation in the strictest sense. Applying pure PI to these dimensions places their angles back within $[0, 2\pi r_i]$, the range the model has seen.
+
+The threshold $\beta = 32$ is empirical ($r_i > 32$ means 32 complete cycles; the model has dense coverage of all angles), but it corresponds to a well-motivated criterion: *sufficiently sampled that perturbation is harmless*.
+
+> [!NOTE]
+> The Nyquist analogy is structural, not literal. Nyquist-Shannon is about recovering bandlimited signals from discrete samples; RoPE dimensions are not signals being recovered. The analogy holds at the level of "how many times has the model seen the full angular range of this dimension," not at the level of information-theoretic bit rates. The value is in making the threshold $\alpha = 1$ and the asymmetric treatment of fast vs. slow dimensions mathematically principled rather than heuristic.
 
 > [!QUESTION] Exercise 4: NTK Base Rescaling Derivation
 > *This exercise works through the algebra connecting the desired wavelength scaling to the base rescaling formula.*
