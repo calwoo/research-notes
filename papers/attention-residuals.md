@@ -240,6 +240,10 @@ In both cases the *recurrence bottleneck* is the same: the current state is a si
 
 ## 5. Attention Residuals (AttnRes)
 
+<img src="figures/attention-residuals/fig1-architecture-overview.png" width="650" alt="Architecture overview: standard residuals, full AttnRes, block AttnRes">
+
+*Figure 1 (Dobriban et al., 2025): The three architectures. (a) Standard residuals: uniform additive accumulation. (b) Full AttnRes: each layer attends over all previous layer outputs via a learned per-layer pseudo-query. (c) Block AttnRes: layers are grouped into blocks, reducing the O(Ld) memory cost to O(Nd) where N is the number of blocks.*
+
 🧮 The core idea: replace the fixed uniform weights $M_{i\to l} = 1$ with learned, input-dependent attention weights $\alpha_{i\to l}$:
 
 $$h_l = \sum_{i=0}^{l-1} \alpha_{i\to l} \cdot v_i, \qquad \sum_{i=0}^{l-1} \alpha_{i\to l} = 1$$
