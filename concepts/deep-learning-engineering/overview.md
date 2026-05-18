@@ -14,6 +14,7 @@ This file is the index for the `concepts/deep-learning-engineering/` folder. It 
 | `gradient-checkpointing.md` | ✅ Recompute activations on the backward pass to reduce peak memory |
 | `normalization-free-transformers.md` | ✅ DyT and Derf as pointwise LayerNorm replacements; four-property theory |
 | `rotary-embeddings.md` | ✅ RoPE — rotating Q/K vectors to encode relative position; NTK-aware scaling and YaRN context extension |
+| `training-loops.md` | ✅ Engineering concerns for ideal training loops — step order, scheduling, mixed precision, gradient clipping, tricks |
 
 ### Planned
 
