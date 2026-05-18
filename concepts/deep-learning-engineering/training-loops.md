@@ -15,6 +15,11 @@
   - [[#GradScaler and the float16 Pitfall|GradScaler and the float16 Pitfall]]
   - [[#Device-Specific Considerations|Device-Specific Considerations]]
 - [[#Gradient Clipping|Gradient Clipping]]
+- [[#Gradient Accumulation|Gradient Accumulation]]
+  - [[#Plain PyTorch|Plain PyTorch]]
+  - [[#HuggingFace Accelerate|HuggingFace Accelerate]]
+  - [[#PyTorch Lightning|PyTorch Lightning]]
+  - [[#DDP and Gradient Sync|DDP and Gradient Sync]]
 - [[#Model Mode Management|Model Mode Management]]
 - [[#Tricks and Engineering Notes|Tricks and Engineering Notes]]
 - [[#References|References]]
@@ -238,6 +243,110 @@ A max norm of $1.0$ is the conventional default for LLM pretraining (used by GPT
 
 ---
 
+## 🔁 Gradient Accumulation
+
+*Gradient accumulation* simulates a larger effective batch size by running multiple forward–backward passes before taking a single optimizer step. If the true desired batch size is $B$ but only $B/k$ samples fit in memory, run $k$ *micro-steps*, accumulating gradients across them, then step once.
+
+The effective gradient is:
+
+$$g_{\text{eff}} = \frac{1}{k} \sum_{i=1}^{k} \nabla_\theta \mathcal{L}(x_i)$$
+
+which requires dividing each micro-batch loss by $k$ before backprop so gradients average rather than sum.
+
+### Plain PyTorch
+
+```python
+accumulation_steps = 4
+
+optimizer.zero_grad()
+for i, (x, y) in enumerate(train_loader):
+    loss = loss_fn(model(x), y) / accumulation_steps   # scale before backward
+    loss.backward()                                     # gradients accumulate in .grad
+    if (i + 1) % accumulation_steps == 0:
+        clip_grad_norm_(model.parameters(), max_norm=1.0)
+        optimizer.step()
+        scheduler.step()
+        optimizer.zero_grad()
+```
+
+> [!WARNING] Norm clipping with accumulation
+> `clip_grad_norm_` must be called *after all micro-steps* for that accumulation window, not after each individual backward. Clipping per micro-step clips a partial gradient — the norm computed is not representative of the full accumulated gradient.
+
+### HuggingFace Accelerate
+
+Accelerate wraps accumulation in a context manager that handles loss scaling and DDP sync suppression automatically:
+
+```python
+accelerator = Accelerator(gradient_accumulation_steps=4)
+model, optimizer, dataloader, scheduler = accelerator.prepare(
+    model, optimizer, dataloader, scheduler
+)
+
+for batch in dataloader:
+    with accelerator.accumulate(model):       # manages no_sync + loss scaling
+        loss = loss_fn(model(inputs), labels)
+        accelerator.backward(loss)            # internally: loss / accumulation_steps
+        optimizer.step()
+        scheduler.step()
+        optimizer.zero_grad()
+```
+
+Inside `accelerator.backward()` (from source):
+```python
+def backward(self, loss, **kwargs):
+    loss = loss / self.gradient_accumulation_steps   # scale before backward
+    if self.scaler is not None:
+        self.scaler.scale(loss).backward(**kwargs)   # fp16: GradScaler path
+    else:
+        loss.backward(**kwargs)
+```
+
+The parameter group weight decay exclusion in HuggingFace Trainer also uses name-based filtering (see [[#Tricks and Engineering Notes|Tricks]]).
+
+### PyTorch Lightning
+
+Lightning exposes accumulation as a single Trainer argument — it handles loss normalization and DDP sync suppression internally:
+
+```python
+trainer = Trainer(accumulate_grad_batches=4)
+```
+
+A scheduled variant allows decreasing accumulation as training stabilizes:
+```python
+from lightning.pytorch.callbacks import GradientAccumulationScheduler
+
+# 8 micro-steps for first 4 epochs, then 4, then 1
+scheduler = GradientAccumulationScheduler(scheduling={0: 8, 4: 4, 8: 1})
+trainer = Trainer(callbacks=scheduler)
+```
+
+In Lightning's automatic optimization mode the `training_step` just returns a loss — Lightning divides it by `accumulate_grad_batches` internally. The full optimizer step (including clipping) only fires on update steps; on accumulation steps the optimizer call is entirely skipped, not merely no-op'd.
+
+> [!NOTE] Manual mode in Lightning
+> With `self.automatic_optimization = False`, the user controls accumulation manually — identical to plain PyTorch but using `self.manual_backward(loss)` instead of `loss.backward()` to route through Lightning's precision plugin.
+
+### DDP and Gradient Sync
+
+In *DistributedDataParallel* training, PyTorch performs an all-reduce across ranks at the end of each `backward()` call to synchronize gradients. During accumulation micro-steps this is wasted communication — only the final backward in each window needs to sync.
+
+The fix is to suppress gradient sync on intermediate steps using `model.no_sync()`:
+
+```python
+for i, (x, y) in enumerate(train_loader):
+    is_last_micro_step = (i + 1) % accumulation_steps == 0
+    ctx = contextlib.nullcontext() if is_last_micro_step else model.no_sync()
+    with ctx:
+        loss = loss_fn(model(x), y) / accumulation_steps
+        loss.backward()
+    if is_last_micro_step:
+        optimizer.step()
+        optimizer.zero_grad()
+```
+
+Both Accelerate (`accumulate()`) and Lightning (`_block_parallel_sync_behavior`) handle this automatically. *In a single-GPU setup `no_sync` is a no-op* — the pattern is safe to use regardless of whether DDP is active.
+
+---
+
 ## 🔄 Model Mode Management
 
 PyTorch modules carry a `training: bool` flag (accessible as `model.training`) that changes the behavior of stateful layers:
@@ -304,6 +413,29 @@ optimizer = torch.optim.AdamW([
 
 **Origin:** nanoGPT (`configure_optimizers`). Widely adopted in LLM pretraining.
 
+**HuggingFace Trainer variant — name-based exclusion:** rather than relying on `ndim`, HuggingFace filters by parameter name using regex patterns. This is more explicit and handles edge cases like named 2D norm parameters:
+
+```python
+# From transformers/trainer.py
+forbidden = [r"bias", r"layernorm", r"rmsnorm", r"(?:^|\.)norm(?:$|\.)", r"_norm(?:$|\.)"]
+
+decay_names = get_parameter_names(model, [nn.LayerNorm], forbidden)
+optimizer_grouped_parameters = [
+    {
+        "params": [p for n, p in model.named_parameters()
+                   if n in decay_names and p.requires_grad],
+        "weight_decay": args.weight_decay,
+    },
+    {
+        "params": [p for n, p in model.named_parameters()
+                   if n not in decay_names and p.requires_grad],
+        "weight_decay": 0.0,
+    },
+]
+```
+
+The `dim >= 2` heuristic and the name-based approach should agree in practice. The name-based approach is more defensive when third-party layers use non-standard parameter shapes.
+
 ---
 
 ### torch.compile()
@@ -338,3 +470,6 @@ Call this once before model initialization. Has no effect on non-CUDA devices.
 | Karpathy, nanoGPT | Minimal, readable GPT-2 pretraining reference implementation | [GitHub](https://github.com/karpathy/nanoGPT) |
 | PyTorch AMP documentation | Official guide to `torch.amp.autocast` and `GradScaler` | [pytorch.org](https://pytorch.org/docs/stable/amp.html) |
 | Touvron et al., "LLaMA 2" (2023) | Training config reference: bfloat16, cosine schedule, AdamW with group WD | [arXiv:2307.09288](https://arxiv.org/abs/2307.09288) |
+| HuggingFace Accelerate source (`accelerator.py`) | Reference implementation of gradient accumulation, loss scaling, `no_sync` dispatch, and GradScaler unscaling in a framework context | [GitHub](https://github.com/huggingface/accelerate/blob/main/src/accelerate/accelerator.py) |
+| HuggingFace Transformers Trainer (`trainer.py`) | Reference implementation of parameter group weight decay via name-based regex filtering | [GitHub](https://github.com/huggingface/transformers/blob/main/src/transformers/trainer.py) |
+| PyTorch Lightning training tricks docs | Canonical Lightning patterns for gradient accumulation, mixed precision, and gradient clipping via Trainer arguments | [lightning.ai](https://lightning.ai/docs/pytorch/stable/advanced/training_tricks.html) |
