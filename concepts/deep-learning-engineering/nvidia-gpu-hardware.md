@@ -626,6 +626,11 @@ Kernels with $I < I^*$ are *memory-bound*; kernels with $I > I^*$ are *compute-b
 >
 > (c) At batch size $B$: FLOPs scale as $B \times 17.2$ GFLOPs, bytes stay at $\approx 17.2$ GB (weights dominate over activations). $I(B) \approx B$ FLOP/byte. Crossover at $B \approx I^* = 591$, i.e., batch size $\approx 600$ to become compute-bound on H100. In practice, KV cache also grows with $B$, pushing the crossover higher.
 
+> [!INFO] The Bandwidth Gap — a macro-trend
+> Compute throughput (TFLOPS) has scaled roughly 3× every two years; HBM memory bandwidth has scaled only ~1.6×/year. The consequence is that the ridge point $I^* = \Pi / \beta$ rises with each generation — from ~156 FLOP/byte on A100 to ~591 on H100 — meaning *more* kernels are memory-bound on newer hardware, not fewer. GPUs are becoming compute-richer relative to their bandwidth. Achieving peak Tensor Core utilization requires increasingly large batch sizes to push $I$ above the rising $I^*$.
+>
+> For a deeper treatment of inference-specific memory-bound analysis, KV-cache bandwidth math, and practical diagnostics for identifying which regime a workload is in, see [[concepts/deep-learning-engineering/memory-bound-inference|Memory-Bound Inference]].
+
 ---
 
 ## 8. Practical GPU Selection 🎯
