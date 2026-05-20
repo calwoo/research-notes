@@ -2,6 +2,7 @@
 
 ## Table of Contents
 
+- [[#0. GPU Quick Reference|0. GPU Quick Reference]]
 - [[#1. GPU Architecture Overview|1. GPU Architecture Overview]]
   - [[#1.1 The Streaming Multiprocessor|1.1 The Streaming Multiprocessor]]
   - [[#1.2 Warps and SIMT Execution|1.2 Warps and SIMT Execution]]
@@ -34,6 +35,49 @@
   - [[#7.3 Deep Learning Operations on the Roofline|7.3 Deep Learning Operations on the Roofline]]
 - [[#8. Practical GPU Selection|8. Practical GPU Selection]]
 - [[#References|References]]
+
+---
+
+## 0. GPU Quick Reference 📋
+
+A bird's-eye view of every major NVIDIA GPU line relevant to deep learning, organized by generation and use case.
+
+| GPU | Generation | Architecture | VRAM | Memory Type | FP16 TFLOPS | FP8 TFLOPS | Primary Use | Tier |
+|-----|-----------|--------------|------|-------------|-------------|------------|-------------|------|
+| GTX 1080 Ti | Pascal (2017) | GP102 | 11 GB | GDDR5X | 0.18 | — | Hobbyist training | Consumer |
+| RTX 2080 Ti | Turing (2018) | TU102 | 11 GB | GDDR6 | 26.9 | — | Training / inference | Consumer |
+| RTX 2080 Super | Turing (2018) | TU104 | 8 GB | GDDR6 | 22.0 | — | Training / inference | Consumer |
+| RTX 3090 | Ampere (2020) | GA102 | 24 GB | GDDR6X | 35.6 | — | Training / inference | Consumer |
+| RTX 3090 Ti | Ampere (2021) | GA102 | 24 GB | GDDR6X | 40.0 | — | Training / inference | Consumer |
+| RTX A4000 | Ampere (2021) | GA104 | 16 GB | GDDR6 | 19.2 | — | Inference / light training | Pro |
+| RTX A5000 | Ampere (2021) | GA102 | 24 GB | GDDR6 | 27.8 | — | Training / inference | Pro |
+| RTX A6000 | Ampere (2021) | GA102 | 48 GB | GDDR6 | 38.7 | — | Training (large batch) | Pro |
+| A10 | Ampere (2021) | GA102 | 24 GB | GDDR6 | 31.2 | — | Inference | Datacenter |
+| A30 | Ampere (2021) | GA100 | 24 GB | HBM2 | 165 | — | Training / inference | Datacenter |
+| A40 | Ampere (2021) | GA102 | 48 GB | GDDR6 | 37.4 | — | Inference / training | Datacenter |
+| A100 40 GB | Ampere (2020) | GA100 | 40 GB | HBM2e | 312 | — | Training | Datacenter |
+| A100 80 GB | Ampere (2020) | GA100 | 80 GB | HBM2e | 312 | — | Training (large models) | Datacenter |
+| RTX 4090 | Ada Lovelace (2022) | AD102 | 24 GB | GDDR6X | 82.6 | 165.2 | Training / inference | Consumer |
+| RTX 4080 | Ada Lovelace (2022) | AD103 | 16 GB | GDDR6X | 48.7 | 97.5 | Training / inference | Consumer |
+| RTX 4070 Ti | Ada Lovelace (2022) | AD104 | 12 GB | GDDR6X | 40.1 | 80.2 | Inference / light training | Consumer |
+| RTX A5000 Ada | Ada Lovelace (2023) | AD102 | 24 GB | GDDR6 | 59.8 | 119.6 | Training / inference | Pro |
+| RTX A6000 Ada | Ada Lovelace (2023) | AD102 | 48 GB | GDDR6 | 91.1 | 182.2 | Training (large batch) | Pro |
+| L4 | Ada Lovelace (2023) | AD104 | 24 GB | GDDR6 | 30.3 | 60.6 | Inference | Datacenter |
+| L40 | Ada Lovelace (2023) | AD102 | 48 GB | GDDR6 | 90.5 | 181.0 | Inference / training | Datacenter |
+| L40S | Ada Lovelace (2023) | AD102 | 48 GB | GDDR6 | 91.6 | 183.2 | Training / inference | Datacenter |
+| H100 PCIe | Hopper (2022) | GH100 | 80 GB | HBM3 | 756 | 1,513 | Training | Datacenter |
+| H100 SXM5 | Hopper (2022) | GH100 | 80 GB | HBM3 | 989 | 1,979 | Training (pretraining scale) | Datacenter |
+| H200 SXM | Hopper (2024) | GH100 | 141 GB | HBM3e | 989 | 1,979 | Training + long-context inference | Datacenter |
+| B100 | Blackwell (2024) | GB100 | 192 GB | HBM3e | 1,800 | 3,500 | Training (frontier scale) | Datacenter |
+| B200 | Blackwell (2024) | GB200 | 192 GB | HBM3e | 4,500 | 9,000 | Training (frontier scale) | Datacenter |
+| RTX 5090 | Blackwell (2025) | GB202 | 32 GB | GDDR7 | 209.6 | 419.2 | Training / inference | Consumer |
+| RTX 5080 | Blackwell (2025) | GB203 | 16 GB | GDDR7 | 137.7 | 275.4 | Training / inference | Consumer |
+
+> [!NOTE] Reading the table
+> **FP8 TFLOPS** applies only to Hopper (Ada for consumer) and later — prior generations lack native FP8 Tensor Core support. FP16 TFLOPS shown are with Tensor Cores (sparsity off). H100/H200 figures are with TF32 accumulation; peak with sparsity is 2×. B200 FP8 numbers include the 2:4 structured sparsity multiplier.
+
+> [!TIP] Training vs. inference optimization
+> The primary axis is **memory bandwidth** (inference is usually memory-bound at batch size 1) vs. **compute throughput** (training is compute-bound during forward/backward passes). GPUs with HBM (A100, H100, H200, B-series) dominate training because they pair high bandwidth with high compute. Consumer GPUs with GDDR6X (RTX 4090, 5090) are bandwidth-constrained for large-batch inference but surprisingly competitive for training at their VRAM capacity ceiling.
 
 ---
 
