@@ -7,6 +7,7 @@
   - [[#1.1 The Streaming Multiprocessor|1.1 The Streaming Multiprocessor]]
   - [[#1.2 Warps and SIMT Execution|1.2 Warps and SIMT Execution]]
   - [[#1.3 Memory Hierarchy|1.3 Memory Hierarchy]]
+  - [[#1.4 CUDA Version Taxonomy|1.4 CUDA Version Taxonomy]]
 - [[#2. Memory Types: GDDR6X vs HBM|2. Memory Types: GDDR6X vs HBM]]
   - [[#2.1 GDDR6X|2.1 GDDR6X]]
   - [[#2.2 HBM2e and HBM3|2.2 HBM2e and HBM3]]
@@ -165,6 +166,67 @@ In Ampere and later, the L1 cache and shared memory share a single unified 128�
 > (a) RTX 4090: $2 \times 128 \times 128 \times 2.52 \approx 82.6$ TFLOPS FP32. H100 SXM: $2 \times 132 \times 128 \times 1.98 \approx 66.9$ TFLOPS FP32. These match the published spec-sheet numbers.
 >
 > (b) CUDA cores handle scalar FP32. Tensor Cores perform $4 \times 4 \times 4$ (or larger) matrix MMA in a single warp-level instruction. The H100 has 528 Tensor Cores (4 per SM), each capable of 512 FP16 FMA ops/cycle. The 4090's 4th-gen Tensor Cores are powerful too, but the H100's memory system (HBM3 at 3.35 TB/s vs GDDR6X at ~1 TB/s) ensures matrix operands can be fed fast enough to keep those Tensor Cores busy.
+
+---
+
+### 1.4 CUDA Version Taxonomy 🗂️
+
+Four distinct version numbers appear whenever you work with NVIDIA GPUs, and they are frequently confused with one another.
+
+**Definition (Architecture Generation).** The *architecture generation* (Turing, Ampere, Hopper, …) is a microarchitecture name tied to a specific physical die design — e.g., TU102, GA100, GH100. It describes the hardware engineering generation: what functional units are present, how the SM is wired, what interconnects exist. This is a marketing/engineering label, not a software-visible number.
+
+**Definition (Compute Capability).** *Compute capability* (CC) is a two-part version number `major.minor` (e.g., `7.5`) that encodes the SM feature set as a software-visible identifier. CUDA code is compiled for a specific CC target. CC determines: available instruction types, Tensor Core precision modes, maximum shared memory per SM, warp-level primitives, and which cuDNN/cuBLAS kernels are available.
+
+| Architecture | Die examples | Compute Capability |
+|---|---|---|
+| Pascal | GP100, GP102 | 6.0 – 6.2 |
+| Volta | GV100 | 7.0 |
+| Turing | TU102, TU104, TU116 | 7.5 |
+| Ampere (datacenter) | GA100 | 8.0 |
+| Ampere (consumer) | GA102, GA104 | 8.6 |
+| Ada Lovelace | AD102, AD103 | 8.9 |
+| Hopper | GH100 | 9.0 |
+| Blackwell | GB100, GB202 | 10.0 |
+
+**Definition (CUDA Toolkit Version).** The *CUDA toolkit* (`nvcc`) is the compiler and library suite you install on the host. It is versioned independently of the driver — e.g., CUDA 12.4 toolkit. Each toolkit version supports compiling for a range of compute capabilities and requires a minimum driver version.
+
+**Definition (Driver Version).** The *driver* is the kernel-mode component that manages hardware access. Its version number (e.g., `591.86` on Windows; `570.xx` style on Linux) determines: what hardware is accessible, and the **maximum CUDA toolkit version** the driver can support. This ceiling is what `nvidia-smi` displays as "CUDA Version."
+
+**The dependency chain:**
+
+```mermaid
+flowchart LR
+    HW["GPU Die<br/>(hardware)"]
+    CC["Compute Capability<br/>(feature set)"]
+    DRV["Driver Version<br/>(hardware access)"]
+    CUDAceil["Max CUDA Version<br/>(driver ceiling)"]
+    TK["CUDA Toolkit (nvcc)<br/>(compiler you install)"]
+    CODE["Compiled PTX / SASS<br/>(your code)"]
+
+    HW -->|encodes| CC
+    DRV -->|exposes| CUDAceil
+    TK -->|must be ≤| CUDAceil
+    TK -->|targets| CC
+    CC -->|determines available instructions in| CODE
+```
+
+> [!WARNING] nvidia-smi "CUDA Version" is a ceiling, not your toolkit version
+> The CUDA Version shown by `nvidia-smi` (e.g., `13.1`) is the **maximum** CUDA version the installed driver supports — it says nothing about what toolkit you have installed. Run `nvcc --version` to see your actual toolkit version, which may be much older (e.g., 12.4). The driver is backward compatible: a CUDA 12.4 toolkit runs fine under a driver that advertises ceiling 13.1.
+
+**Annotated example** — the `nvidia-smi` output above:
+
+```
+NVIDIA-SMI 590.57        ← version of the nvidia-smi tool itself
+Driver Version: 591.86   ← Windows kernel driver (different numbering from Linux ~570.x)
+CUDA Version: 13.1       ← max CUDA the driver supports (not your installed toolkit)
+
+GPU: NVIDIA GeForce GTX 1660 Ti
+  Architecture: Turing (die TU116)
+  Compute Capability: 7.5
+```
+
+> [!DANGER] GTX 1660 Ti has no Tensor Cores despite being Turing
+> NVIDIA split the Turing lineup: the RTX 20xx series (TU102/TU104) received RT Cores and Tensor Cores. The GTX 16xx series (TU116/TU117) used the same Turing architecture and compute capability 7.5 but **omitted both RT Cores and Tensor Cores entirely** to hit a lower price point. Compute capability 7.5 therefore does not guarantee Tensor Core availability — the hardware may not be present. In practice, attempting to use Tensor Core–backed FP16 mixed precision on a 1660 Ti falls back to slower CUDA core FP32 paths.
 
 ---
 
