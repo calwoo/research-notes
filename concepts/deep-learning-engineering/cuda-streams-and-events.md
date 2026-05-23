@@ -86,6 +86,10 @@ flowchart LR
 
 *The host enqueues work into streams; each stream is dispatched to one or more GPU engines. Separate engines can operate concurrently.*
 
+<img src="figures/leimao2020-fig1-serial-vs-concurrent-engines.png" width="600" alt="Serial vs concurrent GPU engine utilization">
+
+*Figure 1 (Lei Mao, 2020): Serial model (top) — a single stream keeps H2D, Kernel, and D2H engines busy one at a time. Concurrent model (bottom) — four streams pipeline across the same three engines, each staggered by one operation, reducing total wall time by ~3×.*
+
 ---
 
 ## 2. CUDA Streams 🌊
@@ -165,6 +169,10 @@ Key methods on `torch.cuda.Stream`:
 | `s.query()` | Returns `True` if `s` is idle | No |
 
 ### 2.5 Key Pattern: Overlapping Compute and Data Transfer 🔑
+
+<img src="figures/leimao2020-fig2-serial-vs-concurrent-streams.png" width="600" alt="Serial vs concurrent stream execution timeline">
+
+*Figure 2 (Lei Mao, 2020): The same overlap shown from the stream perspective. Serial model — Stream 0 sequences H2D → Kernel Execution → D2H end-to-end. Concurrent model — Streams 1–4 each carry the same sequence, but staggered so each stream's kernel execution overlaps with the next stream's H2D transfer.*
 
 **Both the compute engine and the DMA H2D engine can run simultaneously.** This means: while the GPU is running a forward pass on batch $k$ in stream 0, stream 1 can be DMA-ing batch $k+1$ from host to device. The result is that data transfer latency is fully *hidden* behind compute.
 
