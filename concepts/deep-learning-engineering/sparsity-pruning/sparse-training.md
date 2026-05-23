@@ -23,7 +23,7 @@
 
 ## 1. 💡 The Dense-to-Sparse Paradigm Shift
 
-All methods in [[concepts/sparsity-pruning/classical-pruning|Classical Pruning]] and [[concepts/sparsity-pruning/structured-pruning|Structured Pruning]] follow the same paradigm: *train dense, then prune*. This has a fundamental inefficiency: you pay the full computational cost of training a dense model just to discard 80–90% of it.
+All methods in [[concepts/deep-learning-engineering/sparsity-pruning/classical-pruning|Classical Pruning]] and [[concepts/deep-learning-engineering/sparsity-pruning/structured-pruning|Structured Pruning]] follow the same paradigm: *train dense, then prune*. This has a fundamental inefficiency: you pay the full computational cost of training a dense model just to discard 80–90% of it.
 
 The *sparse training* question is more radical: **Can we train a sparse network from scratch — or online during training — and match the dense baseline's accuracy?**
 

@@ -1,6 +1,6 @@
 # Sparsity and Pruning in Deep Learning: Overview
 
-This file is the index for the `concepts/sparsity-pruning/` folder. It lists planned and written subtopic notes, organizes them by theme, and collects the canonical references for the field.
+This file is the index for the `concepts/deep-learning-engineering/sparsity-pruning/` folder. It lists planned and written subtopic notes, organizes them by theme, and collects the canonical references for the field.
 
 ---
 
@@ -73,7 +73,7 @@ flowchart TD
     D["Structured Pruning<br/>structured-pruning.md"]
     E["Sparse Training<br/>sparse-training.md"]
     F["LLM Pruning<br/>llm-pruning.md"]
-    G["Knowledge Distillation<br/>concepts/knowledge-distillation/knowledge-distillation.md"]
+    G["Knowledge Distillation<br/>concepts/deep-learning-engineering/knowledge-distillation/knowledge-distillation.md"]
 
     A --> B
     B --> C

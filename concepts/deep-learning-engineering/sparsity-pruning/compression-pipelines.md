@@ -22,7 +22,7 @@
 
 ## 1. 💡 Motivation: From Pruning to Deployment
 
-Iterative magnitude pruning ([[concepts/sparsity-pruning/classical-pruning|Classical Pruning]]) produces a network where 80–90% of weights are exactly zero. But *storing* or *computing* with this sparse network naively recovers none of the theoretical efficiency:
+Iterative magnitude pruning ([[concepts/deep-learning-engineering/sparsity-pruning/classical-pruning|Classical Pruning]]) produces a network where 80–90% of weights are exactly zero. But *storing* or *computing* with this sparse network naively recovers none of the theoretical efficiency:
 
 - A sparse weight matrix stored as a dense 32-bit float array wastes memory: 90% of the entries are zeros consuming full storage.
 - A matrix-vector product with a dense representation executes 10× more multiply-accumulate operations than necessary.
@@ -50,7 +50,7 @@ flowchart LR
 
 ### 2.1 Stage 1 — Pruning
 
-Apply iterative magnitude pruning (see [[concepts/sparsity-pruning/classical-pruning|Classical Pruning]] §6) to remove 80–90% of weights. The output is a sparse weight matrix with a binary mask:
+Apply iterative magnitude pruning (see [[concepts/deep-learning-engineering/sparsity-pruning/classical-pruning|Classical Pruning]] §6) to remove 80–90% of weights. The output is a sparse weight matrix with a binary mask:
 
 $$W_\text{sparse} = W \odot M, \quad M_{ij} \in \{0, 1\}$$
 

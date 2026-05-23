@@ -30,7 +30,7 @@ First-order methods (SGD, Adam) use only the gradient $g = \nabla_w L$. They tre
 
 SGD with fixed learning rate $\eta$ takes steps $\delta w = -\eta g$ — the same size in all directions regardless of curvature. This forces a conservative $\eta$ globally, causing slow convergence in flat directions.
 
-**Second-order methods** use $H$ to scale the step in proportion to local curvature: step size $\propto 1/H_{ii}$ in each direction, automatically moving quickly in flat directions and cautiously in sharp ones. This is the same curvature information that [[concepts/sparsity-pruning/classical-pruning|Optimal Brain Damage and OBS]] exploit for pruning.
+**Second-order methods** use $H$ to scale the step in proportion to local curvature: step size $\propto 1/H_{ii}$ in each direction, automatically moving quickly in flat directions and cautiously in sharp ones. This is the same curvature information that [[concepts/deep-learning-engineering/sparsity-pruning/classical-pruning|Optimal Brain Damage and OBS]] exploit for pruning.
 
 ---
 
@@ -162,7 +162,7 @@ The **Gauss-Newton step:** $\delta w^* = -G^{-\!1} g = -(J^\top J)^{-1} J^\top \
 - Computing $G v$ (a matrix-vector product) requires only one forward-backward pass via automatic differentiation — no explicit $H$ needed.
 - For least-squares problems, $G$ is the exact Hessian; for general losses, it's a positive-definite approximation.
 
-**For a linear layer $f = Wx$:** $J = I \otimes x^\top$, so $G = (x x^\top) \otimes I$ — the Kronecker product structure that enables layer-wise second-order methods like [[concepts/sparsity-pruning/classical-pruning|OBS]] and [[concepts/sparsity-pruning/llm-pruning|SparseGPT]].
+**For a linear layer $f = Wx$:** $J = I \otimes x^\top$, so $G = (x x^\top) \otimes I$ — the Kronecker product structure that enables layer-wise second-order methods like [[concepts/deep-learning-engineering/sparsity-pruning/classical-pruning|OBS]] and [[concepts/deep-learning-engineering/sparsity-pruning/llm-pruning|SparseGPT]].
 
 > [!QUESTION] Exercise 2: Gauss-Newton for a linear layer
 > *This exercise derives the Gauss-Newton matrix for a linear layer with MSE loss.*
@@ -242,7 +242,7 @@ For models in the exponential family (logistic regression, softmax classifiers, 
 
 $$F = G \quad \text{at the maximum likelihood estimator}$$
 
-*Intuition:* At the MLE, the Gauss-Newton matrix $G = J^\top \nabla^2_f \ell\, J$ (using the exact loss Hessian $\nabla^2_f \ell$) equals the Fisher $F = \mathbb{E}[g g^\top]$. This means the Fisher diagonal $F_{ii} = \mathbb{E}[g_i^2]$ is an approximation to the Hessian diagonal $H_{ii}$, which is why it is used in [[concepts/sparsity-pruning/classical-pruning|OBD's]] empirical Fisher approximation.
+*Intuition:* At the MLE, the Gauss-Newton matrix $G = J^\top \nabla^2_f \ell\, J$ (using the exact loss Hessian $\nabla^2_f \ell$) equals the Fisher $F = \mathbb{E}[g g^\top]$. This means the Fisher diagonal $F_{ii} = \mathbb{E}[g_i^2]$ is an approximation to the Hessian diagonal $H_{ii}$, which is why it is used in [[concepts/deep-learning-engineering/sparsity-pruning/classical-pruning|OBD's]] empirical Fisher approximation.
 
 > [!WARNING] Empirical vs. true Fisher
 > The *empirical Fisher* uses the observed labels $y$ (from the training set) instead of samples from the model's predictive distribution:
@@ -352,7 +352,7 @@ def obd_saliency_from_fisher(
 
 ## 5. 🔗 Connection to Pruning (OBD and OBS)
 
-The second-order methods described here are the mathematical prerequisites for [[concepts/sparsity-pruning/classical-pruning|classical pruning]]:
+The second-order methods described here are the mathematical prerequisites for [[concepts/deep-learning-engineering/sparsity-pruning/classical-pruning|classical pruning]]:
 
 | Concept | Used by | Connection |
 |---------|---------|-----------|

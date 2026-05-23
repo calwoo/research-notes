@@ -23,7 +23,7 @@ A trained classifier doesn't just predict the correct class — its output distr
 
 *Knowledge distillation* (Hinton, Vinyals, Dean 2015) exploits this: instead of training a small *student* network from hard labels, train it to match the *soft output distribution* of a large *teacher* network. The soft distribution carries more information per example than the hard label, enabling faster and more sample-efficient training of the student.
 
-**Key contrast with pruning.** [[concepts/sparsity-pruning/classical-pruning|Pruning]] preserves the original architecture and removes weights. Distillation trains an entirely new (smaller) architecture to *mimic* the teacher's behavior. The student is not a subgraph of the teacher — it can have a completely different design.
+**Key contrast with pruning.** [[concepts/deep-learning-engineering/sparsity-pruning/classical-pruning|Pruning]] preserves the original architecture and removes weights. Distillation trains an entirely new (smaller) architecture to *mimic* the teacher's behavior. The student is not a subgraph of the teacher — it can have a completely different design.
 
 | Dimension | Pruning | Distillation |
 |-----------|---------|-------------|

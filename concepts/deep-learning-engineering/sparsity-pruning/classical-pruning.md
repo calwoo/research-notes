@@ -413,7 +413,7 @@ $$s_q^{OBS} = \frac{w_q^{*2}}{2[H^{-1}]_{qq}} \leq \frac{w_q^{*2}}{2} H_{qq} = s
 
 ### 4.5 💻 PyTorch: Layer-wise OBS
 
-For large networks, computing the full $P \times P$ Hessian inverse is intractable. The practical approach, used in [[concepts/sparsity-pruning/llm-pruning|SparseGPT]], applies OBS *layer by layer*: for a linear layer $y = Wx$, the Hessian of the reconstruction loss w.r.t. $W$ has a Kronecker structure enabling efficient row-wise computation.
+For large networks, computing the full $P \times P$ Hessian inverse is intractable. The practical approach, used in [[concepts/deep-learning-engineering/sparsity-pruning/llm-pruning|SparseGPT]], applies OBS *layer by layer*: for a linear layer $y = Wx$, the Hessian of the reconstruction loss w.r.t. $W$ has a Kronecker structure enabling efficient row-wise computation.
 
 **The layer Hessian.** For a linear layer with input activations $X \in \mathbb{R}^{n \times d_{in}}$ (rows are examples) and squared reconstruction loss:
 
@@ -532,7 +532,7 @@ class LayerOBSPruner:
 ```
 
 > [!WARNING] Scalability note
-> The iterative row-wise OBS loop above is $O(d_{in}^2 \cdot k)$ per row where $k = \lfloor\text{sparsity} \cdot d_{in}\rfloor$. For large hidden dimensions ($d_{in} \sim 4096$), this is expensive. SparseGPT amortizes this by pruning multiple weights per iteration (column-wise grouping) and updating $H^{-1}$ using the Cholesky factor directly — see [[concepts/sparsity-pruning/llm-pruning|LLM Pruning]] for the full treatment.
+> The iterative row-wise OBS loop above is $O(d_{in}^2 \cdot k)$ per row where $k = \lfloor\text{sparsity} \cdot d_{in}\rfloor$. For large hidden dimensions ($d_{in} \sim 4096$), this is expensive. SparseGPT amortizes this by pruning multiple weights per iteration (column-wise grouping) and updating $H^{-1}$ using the Cholesky factor directly — see [[concepts/deep-learning-engineering/sparsity-pruning/llm-pruning|LLM Pruning]] for the full treatment.
 
 ---
 
@@ -669,7 +669,7 @@ for round r = 1, ..., R:
 After $R$ rounds at rate $p$, the total sparsity is $1 - (1-p)^R$. For example, $R = 10$ rounds at $p = 20\%$ reaches $1 - 0.8^{10} \approx 89\%$ sparsity.
 
 > [!NOTE] IMP vs. Lottery Ticket weight rewinding
-> The IMP described here (prune + retrain from current weights) is *different* from the Lottery Ticket Hypothesis variant, where pruned weights are reset to their *initialization values* after each round. The LTH variant is described in [[concepts/sparsity-pruning/sparse-training|Sparse Training]].
+> The IMP described here (prune + retrain from current weights) is *different* from the Lottery Ticket Hypothesis variant, where pruned weights are reset to their *initialization values* after each round. The LTH variant is described in [[concepts/deep-learning-engineering/sparsity-pruning/sparse-training|Sparse Training]].
 
 ### 6.2 Global vs. Layer-wise Thresholds
 
@@ -828,7 +828,7 @@ if __name__ == "__main__":
 > - Overall: **9× compression** of AlexNet, **13× compression** of VGG-16
 > - Top-1 accuracy: unchanged (within noise of repeated runs)
 >
-> The key observation is that *most of the compressible mass* is in the fully-connected layers. ConvNet convolutional layers are already relatively parameter-efficient. This motivates the compression pipeline in [[concepts/sparsity-pruning/compression-pipelines|Deep Compression]], which chains IMP with quantization and Huffman coding to reach 35–49× total compression.
+> The key observation is that *most of the compressible mass* is in the fully-connected layers. ConvNet convolutional layers are already relatively parameter-efficient. This motivates the compression pipeline in [[concepts/deep-learning-engineering/sparsity-pruning/compression-pipelines|Deep Compression]], which chains IMP with quantization and Huffman coding to reach 35–49× total compression.
 
 ---
 

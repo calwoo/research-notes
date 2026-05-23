@@ -26,7 +26,7 @@
 Classical pruning methods face a fundamental obstacle at LLM scale: *retraining is infeasible*.
 
 - GPT-3 (175B parameters) took $\approx$ 3,600 petaflop-days to train once. An IMP pipeline requiring 3–10 train–prune–retrain cycles would cost tens of thousands of GPU-years.
-- The iterative magnitude pruning of [[concepts/sparsity-pruning/classical-pruning|Han et al.]] depends critically on the retrain step to recover accuracy after each pruning round. Without retraining, naive magnitude pruning on LLMs causes catastrophic perplexity spikes.
+- The iterative magnitude pruning of [[concepts/deep-learning-engineering/sparsity-pruning/classical-pruning|Han et al.]] depends critically on the retrain step to recover accuracy after each pruning round. Without retraining, naive magnitude pruning on LLMs causes catastrophic perplexity spikes.
 
 The LLM-era pruning question is: **Can we prune a pre-trained LLM to high sparsity in a single pass, with no weight updates, using only a small calibration dataset?**
 
@@ -178,7 +178,7 @@ where $\|\cdot\|_H$ is the Hessian-weighted norm. Each *row* $W_i$ of $W$ faces 
 
 $$\min_{W'_i : \text{sparsity}(W'_i) = s}\; (W_i - W'_i) H (W_i - W'_i)^\top$$
 
-This is exactly the per-row OBS formulation from [[concepts/sparsity-pruning/classical-pruning|Classical Pruning]] §4 — the OBD/OBS math from 1993, applied to each transformer linear layer with $H = X^\top X / n$ computed from calibration data.
+This is exactly the per-row OBS formulation from [[concepts/deep-learning-engineering/sparsity-pruning/classical-pruning|Classical Pruning]] §4 — the OBD/OBS math from 1993, applied to each transformer linear layer with $H = X^\top X / n$ computed from calibration data.
 
 ### 3.2 The OBC Algorithm
 
@@ -219,7 +219,7 @@ Frantar & Alistarh observe that the OBC weight updates and Hessian inverse updat
 > [!QUESTION] Exercise 2: SparseGPT saliency vs. magnitude at an attention layer
 > *This exercise computes SparseGPT and magnitude saliencies for a small attention projection.*
 >
-> > **Prerequisites:** [[#3.2 The OBC Algorithm|3.2 The OBC Algorithm]], [[concepts/sparsity-pruning/classical-pruning#4.3 OBS Saliency and the Weight Correction|OBS Saliency]]
+> > **Prerequisites:** [[#3.2 The OBC Algorithm|3.2 The OBC Algorithm]], [[concepts/deep-learning-engineering/sparsity-pruning/classical-pruning#4.3 OBS Saliency and the Weight Correction|OBS Saliency]]
 >
 > A value projection $W_V \in \mathbb{R}^{1 \times 3}$ (single output, 3 inputs) has weight $w = (0.8,\; 0.1,\; 0.5)^\top$. The calibration Hessian (from input activations) is:
 >

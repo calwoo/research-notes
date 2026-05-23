@@ -11,20 +11,20 @@ This note cluster surveys sparsity and pruning in deep learning from first princ
 
 The cluster spans four eras: (1) classical Hessian-based methods treating pruning as constrained optimization on the loss surface; (2) the empirical/hardware era treating it as a compression pipeline (prune → quantize → encode) targeting inference on custom ASICs; (3) the sparse-training era (Lottery Ticket Hypothesis, dynamic sparse training) questioning whether we need a dense model at all; and (4) the LLM-compression era where the OBS math is made tractable at 175B-parameter scale.
 
-Two companion notes are planned in sibling concept folders: `concepts/optimization-theory/second-order-methods.md` (covering Newton, Gauss-Newton, Fisher information, natural gradient — mathematical prerequisites for understanding OBD/OBS rigorously) and `concepts/knowledge-distillation/knowledge-distillation.md` (covering the main competing compression paradigm).
+Two companion notes are planned in sibling concept folders: `concepts/optimization-theory/second-order-methods.md` (covering Newton, Gauss-Newton, Fisher information, natural gradient — mathematical prerequisites for understanding OBD/OBS rigorously) and `concepts/deep-learning-engineering/knowledge-distillation/knowledge-distillation.md` (covering the main competing compression paradigm).
 
 ## Files to Create
 
 | File | Purpose |
 |------|---------|
-| `concepts/sparsity-pruning/overview.md` | Topic index, subtopic map, dependency graph, master references |
-| `concepts/sparsity-pruning/classical-pruning.md` | OBD → OBS → magnitude pruning → iterative magnitude pruning; full Hessian-based saliency derivations + PyTorch implementations |
-| `concepts/sparsity-pruning/compression-pipelines.md` | Deep Compression pipeline (prune + quantize + Huffman encode) and EIE hardware accelerator; complexity analysis + PyTorch implementations |
-| `concepts/sparsity-pruning/structured-pruning.md` | Filter/channel pruning (Li et al., Liu et al. BN-scaling), attention head pruning (Michel et al., Voita et al.); structured vs. unstructured hardware implications + PyTorch implementations |
-| `concepts/sparsity-pruning/sparse-training.md` | Lottery Ticket Hypothesis, SNIP, SET, SNFS, RigL — training sparse networks from scratch or online topology update; PyTorch implementations |
-| `concepts/sparsity-pruning/llm-pruning.md` | Movement Pruning, SparseGPT, Wanda — LLM-scale compression; layerwise OBS + activation-weighted saliency; PyTorch/transformers implementations |
+| `concepts/deep-learning-engineering/sparsity-pruning/overview.md` | Topic index, subtopic map, dependency graph, master references |
+| `concepts/deep-learning-engineering/sparsity-pruning/classical-pruning.md` | OBD → OBS → magnitude pruning → iterative magnitude pruning; full Hessian-based saliency derivations + PyTorch implementations |
+| `concepts/deep-learning-engineering/sparsity-pruning/compression-pipelines.md` | Deep Compression pipeline (prune + quantize + Huffman encode) and EIE hardware accelerator; complexity analysis + PyTorch implementations |
+| `concepts/deep-learning-engineering/sparsity-pruning/structured-pruning.md` | Filter/channel pruning (Li et al., Liu et al. BN-scaling), attention head pruning (Michel et al., Voita et al.); structured vs. unstructured hardware implications + PyTorch implementations |
+| `concepts/deep-learning-engineering/sparsity-pruning/sparse-training.md` | Lottery Ticket Hypothesis, SNIP, SET, SNFS, RigL — training sparse networks from scratch or online topology update; PyTorch implementations |
+| `concepts/deep-learning-engineering/sparsity-pruning/llm-pruning.md` | Movement Pruning, SparseGPT, Wanda — LLM-scale compression; layerwise OBS + activation-weighted saliency; PyTorch/transformers implementations |
 | `concepts/optimization-theory/second-order-methods.md` | Newton, Gauss-Newton, Fisher information matrix, natural gradient — prerequisite for OBD/OBS |
-| `concepts/knowledge-distillation/knowledge-distillation.md` | Teacher-student distillation (Hinton et al. 2015), response-based vs. feature-based methods; contrast with pruning |
+| `concepts/deep-learning-engineering/knowledge-distillation/knowledge-distillation.md` | Teacher-student distillation (Hinton et al. 2015), response-based vs. feature-based methods; contrast with pruning |
 
 ## Note Structure: classical-pruning.md (first note)
 

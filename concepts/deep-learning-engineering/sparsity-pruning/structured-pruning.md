@@ -21,7 +21,7 @@
 
 ## 1. 💡 Unstructured vs. Structured Sparsity
 
-[[concepts/sparsity-pruning/classical-pruning|Classical pruning methods]] produce *unstructured* sparsity: individual weights are zeroed at arbitrary positions. While this achieves high compression ratios, the resulting sparse matrices are *dense in memory layout* — the zero entries still occupy storage and memory bandwidth unless a custom sparse format (CSC, CSR) is used.
+[[concepts/deep-learning-engineering/sparsity-pruning/classical-pruning|Classical pruning methods]] produce *unstructured* sparsity: individual weights are zeroed at arbitrary positions. While this achieves high compression ratios, the resulting sparse matrices are *dense in memory layout* — the zero entries still occupy storage and memory bandwidth unless a custom sparse format (CSC, CSR) is used.
 
 On modern hardware (GPU, TPU), dense matrix operations dominate:
 - `cuBLAS` `SGEMM` operates on $m \times n$ tiles; any zero within a tile still costs a multiply-accumulate.
@@ -459,7 +459,7 @@ This paper challenges the conventional wisdom that the *inherited weights* of a 
 **Implication:** Structured pruning is equivalent to *Neural Architecture Search* — it discovers a compact architecture. The training of the unpruned model is just a expensive architecture search procedure, not a source of good weights.
 
 > [!WARNING] This result does NOT apply to unstructured pruning
-> The Lottery Ticket Hypothesis (see [[concepts/sparsity-pruning/sparse-training|Sparse Training]]) shows that for *unstructured* pruning, the original initialization matters: rewinding to the initial weights (not random reinit) is key to the lottery ticket's performance. Liu et al.'s result is specific to structured pruning, where the surviving subgraph is a complete standard architecture.
+> The Lottery Ticket Hypothesis (see [[concepts/deep-learning-engineering/sparsity-pruning/sparse-training|Sparse Training]]) shows that for *unstructured* pruning, the original initialization matters: rewinding to the initial weights (not random reinit) is key to the lottery ticket's performance. Liu et al.'s result is specific to structured pruning, where the surviving subgraph is a complete standard architecture.
 
 > [!INFO] Contrast with the Lottery Ticket Hypothesis
 > The two results are compatible: structured pruning produces a *dense but smaller* architecture where random init works fine. Unstructured pruning produces a *sparse architecture* where the specific initial weights matter (the "lottery ticket"). The key difference is whether the pruning mask respects the computational graph structure (structured) or creates irregular sparsity (unstructured).

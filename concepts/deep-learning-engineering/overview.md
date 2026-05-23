@@ -32,7 +32,8 @@ This file is the index for the `concepts/deep-learning-engineering/` folder. It 
 | `sparse-moe.md` | Sparse Mixture of Experts — decouple parameter count from per-token compute via routing |
 | `mixture-of-depths.md` | Token routing to skip transformer blocks — reduce FLOPs with matched perplexity |
 | `vocab-optimization.md` | BPE engineering, bigram hashing, and small-vocabulary strategies |
-| `knowledge-distillation.md` | Sequence-level and on-policy distillation — training small models from teacher distributions |
+| `knowledge-distillation/knowledge-distillation.md` | ✅ Teacher-student distillation — soft targets, dark knowledge, feature-based methods |
+| `sparsity-pruning/` | ✅ **Subfolder** — classical (OBD/OBS/IMP), compression pipelines (Deep Compression/EIE), structured pruning, sparse training (LTH/RigL), LLM pruning (SparseGPT/Wanda) |
 
 ---
 
@@ -80,6 +81,20 @@ This file is the index for the `concepts/deep-learning-engineering/` folder. It 
 | Vocabulary optimization | Tune BPE vocab size; bigram hashing for ultra-small vocabularies | Sennrich et al. (2016) |
 | Knowledge distillation | Train student on teacher's output distribution via reverse KL; on-policy variants | Gu et al. (2023) |
 
+### ✂️ Model Compression (subfolder: `sparsity-pruning/`, `knowledge-distillation/`)
+
+| Subtopic | Key Idea | Primary Source |
+|----------|----------|----------------|
+| OBD / OBS | Second-order Hessian saliency for weight deletion; full inverse-Hessian weight correction | LeCun et al. 1990; Hassibi & Stork 1993 |
+| Deep Compression | Prune + k-means quantize + Huffman encode; 35–49× total compression | Han et al. 2016 |
+| EIE | Custom VLSI for compressed-sparse FC inference; 189× CPU speedup | Han et al. 2016 |
+| Structured pruning | Filter/channel/head pruning; hardware-compatible sparsity without sparse kernels | Li et al. 2016; Liu et al. 2017 |
+| Lottery Ticket Hypothesis | Sparse winning-ticket subnetworks found via IMP + weight rewinding | Frankle & Carlin 2019 |
+| RigL | Dynamic sparse training — gradient-guided topology updates at fixed FLOP budget | Evci et al. 2020 |
+| SparseGPT | Layer-wise OBS at LLM scale via Cholesky inverse; 50% sparsity with no retraining | Frantar & Alistarh 2023 |
+| Wanda | Weight × activation-norm saliency; matches SparseGPT with no weight update | Sun et al. 2023 |
+| Knowledge distillation | Soft targets encode inter-class structure ("dark knowledge"); student trained on teacher logits | Hinton et al. 2015 |
+
 ---
 
 ## Dependency Graph
@@ -101,12 +116,14 @@ flowchart TD
     MoE["Sparse MoE<br/>sparse-moe.md"]
     MoD["Mixture of Depths<br/>mixture-of-depths.md"]
     VO["Vocab Optimization<br/>vocab-optimization.md"]
-    KD["Knowledge Distillation<br/>knowledge-distillation.md"]
+    KD["Knowledge Distillation<br/>knowledge-distillation/knowledge-distillation.md"]
+    SP["Sparsity and Pruning<br/>sparsity-pruning/overview.md"]
 
     MB --> LA
     MB --> TTT
     TTT --> DR
     MoE --> MoD
+    KD -.->|"competing paradigm"| SP
 ```
 
 *Most notes are self-contained. Notable chains: `mamba-ssm` motivates both `linear-attention` (shared recurrent framing) and `ttt-layers` (generalizing fixed state to a learned model); `ttt-layers` pairs naturally with `depth-recurrence` for Parameter Golf. `sparse-moe` is prerequisite context for `mixture-of-depths`.*
