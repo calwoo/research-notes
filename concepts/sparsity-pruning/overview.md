@@ -8,11 +8,11 @@ This file is the index for the `concepts/sparsity-pruning/` folder. It lists pla
 
 | File | Status | Topic |
 |------|--------|-------|
-| `classical-pruning.md` | 🔲 Planned | OBD, OBS, magnitude pruning — second-order saliency theory and iterative magnitude pruning |
-| `compression-pipelines.md` | 🔲 Planned | Deep Compression (prune + quantize + Huffman) and EIE hardware accelerator |
-| `structured-pruning.md` | 🔲 Planned | Filter/channel pruning, BN-scaling pruning, attention head pruning |
-| `sparse-training.md` | 🔲 Planned | Lottery Ticket Hypothesis, SNIP, SET, SNFS, RigL — sparse training from scratch |
-| `llm-pruning.md` | 🔲 Planned | Movement Pruning, SparseGPT, Wanda — LLM-scale compression |
+| `classical-pruning.md` | ✅ Written | OBD, OBS, magnitude pruning — second-order saliency theory and iterative magnitude pruning |
+| `compression-pipelines.md` | ✅ Written | Deep Compression (prune + quantize + Huffman) and EIE hardware accelerator |
+| `structured-pruning.md` | ✅ Written | Filter/channel pruning, BN-scaling pruning, attention head pruning |
+| `sparse-training.md` | ✅ Written | Lottery Ticket Hypothesis, SNIP, SET, SNFS, RigL — sparse training from scratch |
+| `llm-pruning.md` | ✅ Written | Movement Pruning, SparseGPT, Wanda — LLM-scale compression |
 
 ---
 
