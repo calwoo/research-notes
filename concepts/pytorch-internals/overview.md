@@ -33,6 +33,18 @@ This file is the index for the `concepts/pytorch-internals/` folder. It lists pl
 | Memory aliasing invariants | Mutable aliasing is tracked via version counters; in-place ops bump the version and invalidate saved tensors in autograd | PyTorch autograd notes |
 | `AutogradMeta` | Optional metadata attached to `TensorImpl` at runtime (in a separate DSO to avoid circular deps) | Yang 2019 |
 
+<img src="figures/yang2019-tensor-storage-separation.png" width="500" alt="Tensor, TensorImpl, and Storage object hierarchy">
+
+*Yang (2019): The three-layer object hierarchy. `Tensor` is a thin Python-side handle (ref-counted pointer); `TensorImpl` holds all metadata (dtype, device, strides, sizes, `AutogradMeta`); `Storage` owns the raw byte buffer. Multiple `TensorImpl`s can point to the same `Storage`, which is how views are implemented without copying data.*
+
+<img src="figures/yang2019-memory-layout-contiguous.png" width="500" alt="Contiguous tensor physical memory layout">
+
+*Yang (2019): Physical memory layout for a contiguous 2D tensor. Elements are stored row-major; the stride tuple `[ncols, 1]` encodes that stepping along dim-0 advances by `ncols` elements and stepping along dim-1 advances by 1.*
+
+<img src="figures/yang2019-tensor-view-noncontiguous.png" width="500" alt="Non-contiguous tensor view via strides">
+
+*Yang (2019): A transposed or sliced view reuses the same `Storage` but changes the stride/offset fields in `TensorImpl`. No data is copied; `is_contiguous()` returns `False` when strides do not satisfy the row-major ordering invariant.*
+
 ### ⚙️ Dispatch & Ops
 
 | Subtopic | Key Idea | Primary Source |
@@ -127,6 +139,10 @@ loss.backward()
 
 `torch.randn(...)` allocates a `Storage` (a raw byte buffer) via `CUDACachingAllocator`, then constructs a `TensorImpl` pointing into that `Storage` with strides `[8, 1]` and offset `0`. The Python-side `Tensor` object is a thin reference-counted handle to this `TensorImpl`. Because `requires_grad=True`, the `TensorImpl` also carries an `AutogradMeta` struct that marks it as a *leaf variable* whose gradient will accumulate into `x.grad`.
 
+<img src="figures/yang2019-tensor-storage-separation.png" width="500" alt="Tensor/TensorImpl/Storage hierarchy">
+
+*Yang (2019): The `Tensor` → `TensorImpl` → `Storage` ownership chain. The `Tensor` Python object is a thin ref-counted handle; `TensorImpl` holds all metadata including strides, dtype, and optional `AutogradMeta`; `Storage` is the raw byte buffer allocated by `CUDACachingAllocator`.*
+
 ---
 
 ### Step 2 — Dispatching `torch.sin(x)`
@@ -134,6 +150,14 @@ loss.backward()
 Calling `torch.sin(x)` crosses the Python/C++ boundary into the C10 *dispatcher*. The dispatcher computes a `DispatchKeySet` bitmask by inspecting the tensor arguments and thread-local state. For a CUDA tensor with `requires_grad=True` outside a `torch.no_grad()` block, the highest-priority active key is **`Autograd`**. The dispatcher finds the kernel registered at `Autograd` for `aten::sin` and calls it.
 
 > The `Autograd` kernel is auto-generated from `native_functions.yaml` + `derivatives.yaml` at build time.
+
+<img src="figures/yang2020-dispatch-table-structure.png" width="500" alt="C10 dispatch table: operators × dispatch keys">
+
+*Yang (2020): The C10 dispatch table. Each operator (`aten::sin`, `aten::add`, …) has a row of function pointers, one per dispatch key (`CPU`, `CUDA`, `Autograd`, `Tracing`, …). The dispatcher selects the highest-priority key present in the computed `DispatchKeySet` and jumps to that cell.*
+
+<img src="figures/yang2020-dispatch-keyset-computation.png" width="500" alt="DispatchKeySet computation from tensor inputs and thread-local state">
+
+*Yang (2020): How the `DispatchKeySet` bitmask is computed. It is the union of (1) the keys contributed by each tensor argument (device/layout bits), (2) a thread-local include set (e.g. `Tracer` when inside `torch.jit.trace`), and (3) a global default set — minus a thread-local exclude set (e.g. `Autograd` excluded inside `torch.no_grad()`).*
 
 ---
 
@@ -146,6 +170,14 @@ The `Autograd`-keyed kernel for `sin` is a *wrapper*, not the math. It:
 3. **Wraps the output**: sets `y.grad_fn = SinBackward`, a `Node` subclass whose `next_edges_` point to `x`'s `AccumulateGrad` node. This links `y` into the autograd DAG.
 
 This two-pass structure — `Autograd` key builds the tape, `CUDA` key does the math — is repeated for every differentiable op.
+
+<img src="figures/yang2019-variable-autogradmeta.png" width="500" alt="Variable wrapping Tensor with AutogradMeta">
+
+*Yang (2019): The `Variable` abstraction (now unified into `Tensor`) carries an `AutogradMeta` payload inside `TensorImpl`. `AutogradMeta` holds the `grad_fn` pointer (the backward `Node`), the accumulated `.grad` tensor for leaf variables, and the `requires_grad` flag.*
+
+<img src="figures/yang2020-autograd-dispatch-sequence.png" width="600" alt="Autograd dispatch key sequence: Autograd kernel re-dispatches to CUDA">
+
+*Yang (2020): The two-pass dispatch sequence for a differentiable op. The `Autograd` key fires first — its kernel saves inputs and prepares the `grad_fn` — then re-dispatches with `Autograd` excluded, falling through to the `CUDA` kernel that performs the actual computation. The output tensor is then wrapped to carry the newly constructed `grad_fn`.*
 
 ---
 
