@@ -127,6 +127,21 @@ When you wrote `x + y` in Python, ATen called `x.type().add(x, y)` — single dy
 
 Autograd was the first major cross-cutting feature. The requirement: when a tensor has `requires_grad=True`, calling `add` should (a) run the actual addition, (b) record a `AddBackward` node on the autograd tape, and (c) return a result tensor whose `grad_fn` points to that node.
 
+> [!INFO] What is a cross-cutting concern?
+> A *cross-cutting concern* is a behaviour that applies uniformly across many otherwise-unrelated components — it "cuts across" the primary decomposition of a system. The canonical examples from software engineering are logging, security, and transaction management: every module in an application needs them, but they have nothing to do with the module's core logic.
+>
+> In PyTorch, the core decomposition is by *operator* (add, relu, mm, …). A cross-cutting concern is anything that must wrap or intercept **every** operator regardless of what that operator does:
+>
+> | Concern | What it does to every op |
+> |---------|--------------------------|
+> | Autograd | Records a gradient node on the tape |
+> | JIT tracing | Appends an IR node to the trace graph |
+> | Profiling | Emits a timing event |
+> | Functionalization | Rewrites in-place mutations to out-of-place |
+> | `__torch_dispatch__` | Calls back into Python for each op |
+>
+> The key property is *orthogonality*: a cross-cutting concern doesn't care which operator is running — it applies the same wrapping logic to all of them. This is precisely why implementing it via subclassing (where you must override each operator method individually) is the wrong abstraction. The dispatcher solves this by letting a single fallback kernel handle all operators for a given concern.
+
 Under the `Type` model, the only way to intercept every operator for autograd was to create a *new subclass* of every backend type, overriding every method:
 
 ```cpp
