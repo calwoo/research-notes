@@ -3,9 +3,13 @@
 ## Table of Contents
 
 - [[#1. Motivation and Architecture Overview|1. Motivation and Architecture Overview]]
-  - [[#1.1 Before the Dispatcher: ad-hoc Dispatch|1.1 Before the Dispatcher: ad-hoc Dispatch]]
-  - [[#1.2 The Two-Level Table|1.2 The Two-Level Table]]
-  - [[#1.3 Cross-Cutting Concerns as First-Class Citizens|1.3 Cross-Cutting Concerns as First-Class Citizens]]
+  - [[#1.1 Before the Dispatcher: The Type Object|1.1 Before the Dispatcher: The Type Object]]
+  - [[#1.2 Adding a Feature: The VariableType Example|1.2 Adding a Feature: The VariableType Example]]
+  - [[#1.3 Why This Breaks: The Combinatorial Explosion|1.3 Why This Breaks: The Combinatorial Explosion]]
+  - [[#1.4 Multiple Dispatch|1.4 Multiple Dispatch]]
+  - [[#1.5 How the C10 Dispatcher Fixes These Issues|1.5 How the C10 Dispatcher Fixes These Issues]]
+  - [[#1.6 The Two-Level Table|1.6 The Two-Level Table]]
+  - [[#1.7 Cross-Cutting Concerns as First-Class Citizens|1.7 Cross-Cutting Concerns as First-Class Citizens]]
 - [[#2. Dispatch Keys and DispatchKeySet|2. Dispatch Keys and DispatchKeySet]]
   - [[#2.1 DispatchKey: the Enum|2.1 DispatchKey: the Enum]]
   - [[#2.2 DispatchKeySet: the 64-Bit Bitmask|2.2 DispatchKeySet: the 64-Bit Bitmask]]
@@ -44,31 +48,233 @@
 
 ## 1. Motivation and Architecture Overview
 
-### 1.1 Before the Dispatcher: ad-hoc Dispatch
+### 1.1 Before the Dispatcher: The Type Object
 
-Before the C10 dispatcher landed (roughly PyTorch 1.3–1.4), the routing of a tensor operation to its backend implementation was done through a layered chain of Python `isinstance` checks and C++ virtual function tables. At the Python level, operator dispatch looked approximately like:
+Before the C10 dispatcher landed (roughly PyTorch 1.3–1.4), every tensor carried a pointer to a `Type` object — a C++ abstract base class with one pure virtual method for every PyTorch operator. The full definition had around 600 methods:
 
-```python
-def add(x, y):
-    if isinstance(x, CUDATensor):
-        return cuda_add(x, y)
-    elif isinstance(x, CPUTensor):
-        return cpu_add(x, y)
-    else:
-        raise TypeError(...)
+```cpp
+// Simplified from aten/src/ATen/Type.h (pre-dispatcher)
+struct Type {
+    // One pure virtual method per operator
+    virtual Tensor add(const Tensor& self, const Tensor& other, Scalar alpha) const = 0;
+    virtual Tensor mul(const Tensor& self, const Tensor& other) const = 0;
+    virtual Tensor relu(const Tensor& self) const = 0;
+    virtual Tensor mm(const Tensor& self, const Tensor& mat2) const = 0;
+    virtual Tensor conv2d(const Tensor& input, const Tensor& weight,
+                          const Tensor& bias, IntArrayRef stride,
+                          IntArrayRef padding, IntArrayRef dilation,
+                          int64_t groups) const = 0;
+    // ... ~595 more methods
+    
+    virtual Backend backend() const = 0;
+    virtual ScalarType scalarType() const = 0;
+};
 ```
 
-At the C++ level, the `Type` object provided one virtual method per operator, and each backend (e.g. `CPUFloatType`, `CUDAHalfType`) overrode the relevant methods. Adding a new cross-cutting concern — say, operator profiling — meant touching every backend's implementation of every operator. *Concretely:* autograd support was baked into a parallel `VariableType` class hierarchy that mirrored the backend hierarchy, with ~1000 hand-maintained overrides.
+Each concrete backend provided a full override of every method. The backends were further split by dtype, yielding a class per (device, dtype) pair:
 
-This approach had several problems:
+```cpp
+struct CPUFloatType : public Type {
+    Backend backend() const override { return Backend::CPU; }
+    ScalarType scalarType() const override { return ScalarType::Float; }
 
-1. **Poor composability.** Features like autograd, tracing, and profiling all needed their own `Type` subclass, and composing two features required a combinatorial explosion of subclasses.
-2. **No clean fallback story.** A backend that did not implement an operator had no way to inherit a decomposition; it would simply crash.
-3. **External extensibility was minimal.** Third-party backends (XLA, IPEX) had to fork internal `Type` tables.
+    Tensor add(const Tensor& self, const Tensor& other, Scalar alpha) const override {
+        // dispatch to CPU float ATen kernel
+        return at::native::add_cpu(self, other, alpha);
+    }
+    Tensor relu(const Tensor& self) const override {
+        return at::native::relu_cpu(self);
+    }
+    // ... implement all ~600 methods
+};
 
-### 1.2 The Two-Level Table
+struct CUDAHalfType : public Type {
+    Backend backend() const override { return Backend::CUDA; }
+    ScalarType scalarType() const override { return ScalarType::Half; }
 
-The C10 dispatcher replaces this with a single, unified two-level lookup:
+    Tensor add(const Tensor& self, const Tensor& other, Scalar alpha) const override {
+        return at::native::add_cuda_half(self, other, alpha);
+    }
+    // ... implement all ~600 methods
+};
+```
+
+When you wrote `x + y` in Python, ATen called `x.type().add(x, y)` — single dynamic dispatch through the `Type*` pointer stored inside the tensor's `TensorImpl`.
+
+> [!INFO] How many Type subclasses existed?
+> In practice: `{CPU, CUDA, HIP, MKLDNN, OpenCL, ...} × {Float, Double, Half, Int, Long, ...}` ≈ 5 devices × 10 dtypes = **~50 concrete `Type` subclasses**, each implementing ~600 virtual methods. This was ~30,000 lines of largely redundant C++ code auto-generated from a script.
+
+### 1.2 Adding a Feature: The VariableType Example
+
+Autograd was the first major cross-cutting feature. The requirement: when a tensor has `requires_grad=True`, calling `add` should (a) run the actual addition, (b) record a `AddBackward` node on the autograd tape, and (c) return a result tensor whose `grad_fn` points to that node.
+
+Under the `Type` model, the only way to intercept every operator for autograd was to create a *new subclass* of every backend type, overriding every method:
+
+```cpp
+// Simplified from torch/csrc/autograd/generated/VariableType.cpp
+struct VariableType : public Type {
+    // Wrap the underlying real type (CPU, CUDA, etc.)
+    const Type& baseType;
+    explicit VariableType(const Type& base) : baseType(base) {}
+
+    Tensor add(const Tensor& self, const Tensor& other, Scalar alpha) const override {
+        // 1. Unwrap Variable → underlying Tensor
+        auto& self_  = static_cast<const Variable&>(self).data();
+        auto& other_ = static_cast<const Variable&>(other).data();
+
+        // 2. Set up gradient bookkeeping
+        std::shared_ptr<AddBackward0> grad_fn;
+        if (compute_requires_grad(self, other)) {
+            grad_fn = std::make_shared<AddBackward0>();
+            grad_fn->self_scalar_type = self.scalar_type();
+            // ... capture saved tensors, set edge connections
+        }
+
+        // 3. Call real kernel via the wrapped base type
+        auto result = baseType.add(self_, other_, alpha);
+
+        // 4. Wrap result back into a Variable with grad_fn attached
+        auto output = as_variable(result);
+        if (grad_fn) {
+            set_history(output, grad_fn);
+        }
+        return output;
+    }
+
+    // Repeat this pattern for EVERY other operator: relu, mm, conv2d, ...
+    Tensor relu(const Tensor& self) const override {
+        auto& self_ = static_cast<const Variable&>(self).data();
+        std::shared_ptr<ReluBackward0> grad_fn;
+        if (compute_requires_grad(self)) {
+            grad_fn = std::make_shared<ReluBackward0>();
+            grad_fn->self_ = SavedVariable(self, false);
+        }
+        auto result = baseType.relu(self_);
+        auto output = as_variable(result);
+        if (grad_fn) set_history(output, grad_fn);
+        return output;
+    }
+
+    // ... ~600 more methods, all following the same boilerplate
+};
+```
+
+*The generated `VariableType.cpp` was over 1 MB of code* — primarily boilerplate that repeated the same pattern (unwrap → save inputs → call base → wrap result → attach grad_fn) for each of ~600 operators. A new operator required hand-editing (or codegen-editing) this file. Any bug in the wrapper pattern could silently produce wrong gradients for just one operator.
+
+> [!EXAMPLE] What adding `torch.atan2` looked like before the dispatcher
+> Adding a new operator required:
+> 1. Add `virtual Tensor atan2(...) = 0` to `Type`.
+> 2. Implement `atan2` in every backend (`CPUFloatType`, `CUDAHalfType`, ... × 50 subclasses).
+> 3. Add `atan2` to `VariableType` with the gradient wrapper.
+> 4. Add a derivative formula to `derivatives.yaml` so the codegen could produce the `VariableType` entry.
+>
+> Steps 2–3 alone touched 50+ files. With the dispatcher, only steps 4 + a native kernel are needed.
+
+### 1.3 Why This Breaks: The Combinatorial Explosion
+
+Autograd was only the beginning. As PyTorch grew, more cross-cutting features appeared:
+
+| Feature | What it needed |
+|---------|---------------|
+| Autograd | `VariableType` wrapping every operator |
+| JIT Tracing (`torch.jit.trace`) | `TracingType` recording every operator |
+| Profiling | `ProfilingType` timing every operator |
+| Quantization | `QuantizedCPUType` / `QuantizedCUDAType` for every op |
+| Named tensors | `NamedType` propagating dim names through every op |
+| XLA (Google TPUs) | New backend subclasses for every dtype |
+
+Each new feature either required its own `Type` subclass wrapping the previous chain, or a combinatorial subclass merging multiple features. Composing autograd + tracing + profiling for CUDA float32 required something like:
+
+```
+ProfilingType → TracingType → VariableType → CUDAFloatType
+```
+
+This chain was:
+- **Implicit** — constructed through a sequence of pointer assignments, not visible at any one call site
+- **Fragile** — reordering features in the chain could change semantics silently
+- **Unextensible** — a third-party backend (XLA, IPEX) had to subclass PyTorch-internal types and re-implement all wrappers
+
+**Definition (Type Hierarchy Complexity).** With $B$ backends and $F$ cross-cutting features, the `Type` model requires $O(B \times F)$ subclasses if features chain linearly, or $O(B \times 2^F)$ if any subset of features must be composable. Each subclass reimplements all $\sim 600$ operator methods, giving $O(600 \cdot B \cdot F)$ lines of generated code — which scaled to hundreds of thousands of lines in practice.
+
+### 1.4 Multiple Dispatch
+
+The `Type` model used *single dispatch*: `x.type().add(x, y)` dispatches on the type of `x` only. But `add(x, y)` conceptually depends on the types of *both* arguments. What if `x` is a CPU tensor and `y` is a CUDA tensor? What if `x` is dense and `y` is sparse?
+
+**Definition (Single Dispatch).** *Single dispatch* selects a method implementation based on the runtime type of one distinguished argument (the *receiver*). In C++ this is virtual dispatch on `this`. In Python, it is `x.method(y)` — the type of `y` does not influence which `method` is called.
+
+**Definition (Multiple Dispatch).** *Multiple dispatch* (also called *multimethods*) selects an implementation based on the runtime types of **all** arguments. A call `f(x, y)` dispatches on `(type(x), type(y))` jointly.
+
+```python
+# Single dispatch: only x's type matters
+class Tensor:
+    def add(self, other):   # self is the one dispatched on
+        if type(self) is CUDATensor:
+            return cuda_add(self, other)  # other's type is ignored here
+        ...
+
+# Multiple dispatch: both types matter
+@multimethod
+def add(x: CPUTensor, y: CPUTensor): return cpu_add(x, y)
+
+@multimethod
+def add(x: CUDATensor, y: CUDATensor): return cuda_add(x, y)
+
+@multimethod
+def add(x: SparseTensor, y: DenseTensor): return sparse_dense_add(x, y)
+```
+
+Languages like [Julia](https://docs.julialang.org/en/v1/manual/methods/) have multiple dispatch built in. C++ and Python have only single dispatch natively; multiple dispatch is simulated with patterns like the *visitor* (double dispatch) or explicit `isinstance` chains.
+
+**The pre-dispatcher PyTorch workaround.** `add(x, y)` dispatched on `x.type()` only. If `y` had a different type (e.g., sparse), the `Type::add` implementation had to check `y`'s type manually with `if (y.is_sparse()) { ... }` — essentially manual multiple dispatch inside a singly-dispatched method. This was ad hoc, unsystematic, and easy to forget.
+
+**How the C10 dispatcher handles multiple dispatch.** At call time, the `DispatchKeySet` is computed as the **union** of the dispatch key sets of *all* tensor arguments:
+
+```cpp
+// Pseudocode for keyset computation at call time
+DispatchKeySet keyset;
+for (const Tensor& t : all_tensor_args) {
+    keyset |= t.key_set();           // union across all inputs
+}
+keyset |= c10::tls_local_dispatch_key_set().included_;  // thread-local keys
+```
+
+The highest-priority key in the union wins. This is a principled form of multiple dispatch: the result reflects the most "demanding" type among all arguments. If any argument is on CUDA, the CUDA key is active. If any argument requires grad, the Autograd key is active.
+
+> [!NOTE] Priority as type specificity
+> In classical multiple dispatch, the "most specific" matching signature wins. In PyTorch's dispatcher, "most specific" maps to "highest priority key." `Autograd` has higher priority than `CUDA` — meaning autograd interceptors fire before device kernels, regardless of which argument triggers the autograd key.
+
+> [!QUESTION] Exercise 1: The Type Hierarchy Problem
+> *This problem establishes why the pre-dispatcher design was architecturally unsound.*
+>
+> > **Prerequisites:** [[#1.3 Why This Breaks: The Combinatorial Explosion|1.3 Why This Breaks: The Combinatorial Explosion]]
+>
+> Suppose PyTorch supports $B$ backends (CPU, CUDA, XLA, ...) and $F$ cross-cutting features (Autograd, Tracing, Profiling, ...). Under the old `Type` virtual-table design, roughly how many distinct `Type` subclasses are needed to support all combinations? What does this count become under the dispatcher's single-table design?
+
+> [!TIP]- Solution to Exercise 1
+> **Key insight:** The old design requires composing each backend with each feature subset; the dispatcher separates them entirely.
+>
+> **Sketch:**
+> - **Type model:** $O(B \times F)$ subclasses if features chain linearly (each feature wraps the previous), or $O(B \times 2^F)$ if any subset must be simultaneously active. Each subclass re-implements all $\sim 600$ operator methods.
+> - **Dispatcher:** $O(B + F)$ registrations — $B$ backend kernels (one per operator per backend) plus $F$ fallback kernels (one per cross-cutting key, shared across all operators). The fallback registration is the key saving: one kernel handles all operators for that feature.
+
+### 1.5 How the C10 Dispatcher Fixes These Issues
+
+The dispatcher addresses each problem from §1.3 directly:
+
+| Old problem | Dispatcher solution |
+|------------|-------------------|
+| Cross-cutting features needed a `Type` subclass per backend | A *fallback* kernel registered once for a `DispatchKey` applies to all backends and all operators |
+| Composing $F$ features meant $O(B \cdot F)$ subclasses | Features are independent table entries; order is determined by key priority, not class hierarchy |
+| No fallback / decomposition story | `CompositeImplicitAutograd` keys register one implementation that any backend can inherit |
+| Third-party backends had to fork internal types | Backends register their own `TORCH_LIBRARY_IMPL` without modifying PyTorch source |
+| Single dispatch only | `DispatchKeySet` is the union of all argument keysets → principled multiple dispatch |
+| Adding an operator required editing 50+ files | One native kernel + one codegen entry; all features inherit via fallbacks |
+
+*The fundamental insight is separating the two axes:* operators (rows) and dispatch keys (columns) are orthogonal. Adding a new operator adds a row; adding a new feature adds a column. Neither requires touching the other.
+
+### 1.6 The Two-Level Table
+
+The C10 dispatcher replaces the `Type` chain with a single, unified two-level lookup:
 
 $$\text{operator name} \xrightarrow{\text{schema lookup}} \texttt{OperatorHandle} \xrightarrow{\text{key lookup}} \text{kernel function pointer}$$
 
@@ -78,7 +284,7 @@ $$\text{operator name} \xrightarrow{\text{schema lookup}} \texttt{OperatorHandle
 
 *Yang (2020): The dispatch table. Each operator (row) has one slot per dispatch key (column). A cell contains a function pointer when a kernel has been registered for that (operator, key) pair, and is null otherwise. The dispatcher selects the highest-priority non-null cell for the current call.*
 
-### 1.3 Cross-Cutting Concerns as First-Class Citizens
+### 1.7 Cross-Cutting Concerns as First-Class Citizens
 
 The key design insight is that features like autograd, tracing, and functionalization are expressed as *additional dispatch keys*, not as an additional class hierarchy. Each such key registers a *fallback* kernel that intercepts any operator call, performs its cross-cutting work, and then calls `redispatch` to continue down the priority stack to the next key.
 
@@ -87,19 +293,9 @@ The key design insight is that features like autograd, tracing, and functionaliz
 2. Registering one fallback kernel for that key — once, for all operators.
 3. Zero changes to existing backend kernels.
 
+Compare to the `VariableType` approach: instead of ~600 autograd wrappers (one per operator), the autograd fallback is a **single boxed kernel** that intercepts all operators via the boxed calling convention, performs gradient bookkeeping generically using the operator's registered derivative formula, and redispatches. The per-operator gradient formulas live in `derivatives.yaml` — not in per-operator C++ wrapper functions.
+
 ---
-
-> [!QUESTION] Exercise 1: The Type Hierarchy Problem
-> *This problem establishes why the pre-dispatcher design was architecturally unsound.*
->
-> > **Prerequisites:** [[#1.1 Before the Dispatcher: ad-hoc Dispatch|1.1 Before the Dispatcher: ad-hoc Dispatch]]
->
-> Suppose PyTorch supports $B$ backends (CPU, CUDA, XLA, ...) and $F$ cross-cutting features (Autograd, Tracing, Profiling, ...). Under the old `Type` virtual-table design, roughly how many distinct `Type` subclasses are needed to support all combinations? What does this count become under the dispatcher's single-table design?
-
-> [!TIP]- Solution to Exercise 1
-> **Key insight:** The old design requires composing each backend with each feature subset, yielding $O(B \cdot 2^F)$ subclasses in the worst case (or $O(B \cdot F)$ if features are applied only one at a time via re-dispatch chains — but even so, each feature must replicate methods for all backends).
->
-> **Sketch:** Under the dispatcher, the count is $O(B + F)$: $B$ backend kernel registrations (one kernel per operator per backend) plus $F$ fallback registrations (one boxed kernel per feature, shared across all operators). The fallback registration is the crucial saving — it applies to all operators at once.
 
 ---
 
