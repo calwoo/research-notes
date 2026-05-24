@@ -11,6 +11,7 @@ This file is the index for the `concepts/pytorch-internals/` folder. It lists pl
 | `tensor-storage.md` | 🔲 Planned | `Tensor` / `Storage` / `TensorImpl` layout; strides, views, and memory aliasing |
 | `dispatcher.md` | 🔲 Planned | C10 dispatcher; dispatch key bitmask; boxed vs. unboxed calls; operator registration |
 | `autograd-engine.md` | 🔲 Planned | Tape construction; `grad_fn` Node/Edge DAG; backward thread pool scheduling |
+| `torch-fx.md` | ✅ Written | torch.fx paper walkthrough: Proxy tracing, 6-opcode IR, codegen, graph transforms |
 | `torch-compile/overview.md` | ✅ Written | Full-stack survey: data flow from Python → FX graph → prims → kernels |
 | `torch-compile/dynamo.md` | 🔲 Planned | TorchDynamo: CPython frame-eval hook, bytecode analysis, FX capture, guards |
 | `torch-compile/aot-autograd.md` | 🔲 Planned | AOTAutograd: joint forward/backward trace, cross-backward fusion |
