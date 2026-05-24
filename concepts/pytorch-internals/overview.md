@@ -106,6 +106,121 @@ flowchart TD
 
 ---
 
+## 🚶 How PyTorch Works: A Brief Walkthrough
+
+This section traces a minimal training step end-to-end through PyTorch's internal machinery, grounding the subtopic map above in a concrete execution sequence.
+
+**The program:**
+
+```python
+x = torch.randn(4, 8, requires_grad=True, device="cuda")
+y = torch.sin(x)
+loss = y.sum()
+loss.backward()
+# x.grad is now populated
+```
+
+---
+
+### Step 1 — Tensor creation
+
+`torch.randn(...)` allocates a `Storage` (a raw byte buffer) via `CUDACachingAllocator`, then constructs a `TensorImpl` pointing into that `Storage` with strides `[8, 1]` and offset `0`. The Python-side `Tensor` object is a thin reference-counted handle to this `TensorImpl`. Because `requires_grad=True`, the `TensorImpl` also carries an `AutogradMeta` struct that marks it as a *leaf variable* whose gradient will accumulate into `x.grad`.
+
+---
+
+### Step 2 — Dispatching `torch.sin(x)`
+
+Calling `torch.sin(x)` crosses the Python/C++ boundary into the C10 *dispatcher*. The dispatcher computes a `DispatchKeySet` bitmask by inspecting the tensor arguments and thread-local state. For a CUDA tensor with `requires_grad=True` outside a `torch.no_grad()` block, the highest-priority active key is **`Autograd`**. The dispatcher finds the kernel registered at `Autograd` for `aten::sin` and calls it.
+
+> The `Autograd` kernel is auto-generated from `native_functions.yaml` + `derivatives.yaml` at build time.
+
+---
+
+### Step 3 — Autograd forward wrapper
+
+The `Autograd`-keyed kernel for `sin` is a *wrapper*, not the math. It:
+
+1. **Saves inputs** needed for the backward (here, `x` itself, since $\frac{d}{dx}\sin x = \cos x$ needs $x$).
+2. **Re-dispatches** by excluding `Autograd` from the `DispatchKeySet`, causing the dispatcher to fall through to the next key — `CUDA`. This runs the actual CUDA sin kernel, producing the output tensor `y`.
+3. **Wraps the output**: sets `y.grad_fn = SinBackward`, a `Node` subclass whose `next_edges_` point to `x`'s `AccumulateGrad` node. This links `y` into the autograd DAG.
+
+This two-pass structure — `Autograd` key builds the tape, `CUDA` key does the math — is repeated for every differentiable op.
+
+---
+
+### Step 4 — Tape after the forward pass
+
+After `y = torch.sin(x)` and `loss = y.sum()`, the autograd DAG looks like:
+
+```mermaid
+flowchart LR
+    L["loss<br/>(scalar)"]
+    S["SumBackward<br/>grad_fn of loss"]
+    SB["SinBackward<br/>grad_fn of y<br/>saved: x"]
+    AG["AccumulateGrad<br/>leaf node for x"]
+
+    L --> S
+    S --> SB
+    SB --> AG
+```
+
+Each `Node` stores:
+- `next_edges_`: pointers to the `Node`s of its inputs (the backward DAG edges).
+- Saved tensors: intermediate values needed to compute the JVP (here, `x` inside `SinBackward`).
+- A `sequence_nr_`: a monotonically increasing integer used by the engine to schedule execution priority.
+
+---
+
+### Step 5 — `loss.backward()`
+
+`Engine::execute()` performs a reverse topological traversal of the DAG using a thread-pool-backed priority queue:
+
+1. Seeds the queue with `(SumBackward, upstream_grad=tensor(1.0))`.
+2. Pops `SumBackward`, calls its `apply(tensor(1.0))`, which returns `ones_like(y)` — the gradient of sum w.r.t. its input. Enqueues `(SinBackward, ones_like(y))`.
+3. Pops `SinBackward`, calls `apply(ones_like(y))`. The JVP formula from `derivatives.yaml` is $\cos(x) \cdot \text{grad\_output}$. It loads the saved `x`, computes `cos(x) * ones_like(y)`, and sends the result to `AccumulateGrad`.
+4. `AccumulateGrad` adds the incoming gradient into `x.grad` (allocating it on first call).
+
+The engine dispatches each `apply()` call through the C10 dispatcher again — the gradient ops (`cos`, pointwise multiply) go through exactly the same `Autograd` → `CUDA` path as the forward ops, but because they are themselves not tracked (we are inside the backward), the `Autograd` key is disabled (via `AutoGradMode::set_enabled(false)`) and dispatch falls directly to `CUDA`.
+
+---
+
+### Step 6 — Memory throughout
+
+The `CUDACachingAllocator` services every tensor allocation in the above sequence — `x`'s storage, `y`'s storage, intermediate gradient buffers — without ever calling `cudaMalloc` after the first few warmup iterations. Freed tensors return their blocks to the pool; the next allocation performs a best-fit lookup in $O(1)$ (small pool) or $O(\log n)$ (large pool tree). The `SinBackward` node holds a reference to the saved `x` tensor, preventing its block from being reclaimed until the backward completes.
+
+---
+
+### The full picture
+
+```mermaid
+flowchart TD
+    PY["Python: torch.sin(x)"]
+    DISP["C10 Dispatcher<br/>compute DispatchKeySet"]
+    AUTO["Autograd kernel<br/>(save inputs, wrap output)"]
+    REDISP["Re-dispatch (Autograd excluded)"]
+    CUDA["CUDA kernel<br/>actual math"]
+    TAPE["Autograd DAG<br/>SinBackward node added"]
+    BWD["loss.backward()<br/>Engine::execute()"]
+    JVP["SinBackward::apply()<br/>cos(x) * grad_out"]
+    ACCUM["AccumulateGrad<br/>x.grad += result"]
+    ALLOC["CUDACachingAllocator<br/>services all tensor allocs"]
+
+    PY --> DISP
+    DISP -->|"highest key: Autograd"| AUTO
+    AUTO --> REDISP
+    REDISP -->|"highest key: CUDA"| CUDA
+    CUDA --> TAPE
+    TAPE --> BWD
+    BWD --> JVP
+    JVP --> ACCUM
+    ALLOC -.->|"allocates buffers"| CUDA
+    ALLOC -.->|"allocates grad buffers"| JVP
+```
+
+Each box in this diagram corresponds to a subsystem with a planned deepdive note. The walkthrough above is the thread that ties them together.
+
+---
+
 ## 📚 Potential Deepdives
 
 The table below lists specific internal subsystems worth dedicated deep-dive notes, beyond the planned cluster files. These are not yet scheduled but represent natural next steps as the cluster matures.
