@@ -102,6 +102,12 @@ The paper states three principles that drive torch.fx's design:
 
 ## 4. Program Capture: Symbolic Tracing
 
+The paper's overview figure shows the full pipeline at a glance: `symbolic_trace` captures a function into a `Graph` of `Node` objects, then regenerates executable Python code from that graph.
+
+<img src="figures/torch-fx/reed2022-fig1-symbolic-trace-ir.png" width="480" alt="torch.fx symbolic tracing example showing IR nodes and generated code">
+
+*Figure 1 (Reed et al., 2022): `torch.fx` captures programs via symbolic tracing into a six-opcode IR and regenerates Python code from that IR. The `call_function` node holds a direct reference to the Python callable; `call_method` records method calls on the first argument.*
+
 ### 4.1 The Proxy Data Structure
 
 Symbolic tracing works by substituting every input tensor with a *Proxy* — a duck-typed Python object that records operations on it instead of executing them.
@@ -545,6 +551,12 @@ print(codegen(g))
 
 *The real `torch.fx` codegen also handles tuple outputs, `*args`/`**kwargs` nodes, and assigns Python type annotations from `node.type`.*
 
+The paper's Figure 3 demonstrates a key downstream benefit of code generation: since the output of a transform is a valid `GraphModule` with a real Python `forward`, it can be plugged into another module and symbolically traced again for further transformation.
+
+<img src="figures/torch-fx/reed2022-fig3-code-generation-example.png" width="480" alt="torch.fx code generation example showing transformed GraphModule reused in a new trace">
+
+*Figure 3 (Reed et al., 2022): `torch.fx` generates Python code as its output. Here the result of a previous relu→gelu replacement is installed as a sub-module and symbolically traced again — the constants (`math.pi`) are inlined and the full chain of transforms is visible in a single flat IR.*
+
 ---
 
 ## 7. Design Decisions
@@ -578,6 +590,10 @@ def propagate_shapes(graph: Graph, inputs: dict[str, tuple]):
 ```
 
 With a loop in the IR, `torch.cat` in a loop body accumulates an unbounded shape — the analysis reaches a `"dynamic"` fixed point after arbitrarily many iterations. This "dynamic" value then poisons downstream analyses that need concrete shapes (e.g. ASIC memory planning).
+
+<img src="figures/torch-fx/reed2022-fig4-dynamic-shapes-loop.png" width="480" alt="loop_shapes function showing loop-carried tensor size dependency">
+
+*Figure 4 (Reed et al., 2022): A concrete illustration of loop-carried shape dynamics. After `k` iterations of `torch.cat((x, x), dim=0)`, the leading dimension is $2^k$ — not statically knowable. Shape analysis in a basic block IR avoids this entirely by simply not representing the loop.*
 
 > [!WARNING] What torch.fx does with control flow
 > *If a traced function contains `for i in range(n)` where `n` is a Python constant (e.g. `range(3)`), the loop is unrolled by the tracer — it appears in the IR as 3 repetitions of the loop body. If `n` is data-dependent, the trace raises a `TraceError`.*
@@ -644,6 +660,12 @@ The graph mutation API:
 - `graph.lint()` — check IR invariants: topological order, no dead references.
 
 ### 8.2 Activation Replacement
+
+The paper's Figure 2 shows the compact form of the activation replacement transform — fewer than 10 lines of Python for a complete graph rewrite pass:
+
+<img src="figures/torch-fx/reed2022-fig2-activation-replacement-transform.png" width="480" alt="replace_activation transform code replacing relu with gelu in a torch.fx graph">
+
+*Figure 2 (Reed et al., 2022): The activation replacement transform from the paper. `inserting_after` sets the insertion point, `replace_all_uses_with` rewires all consumers, and `erase_node` removes the old node. The simplicity of this pass is a direct consequence of the Python-native IR.*
 
 The paper's Figure 2 example — replacing all `relu` calls with `gelu`:
 
@@ -866,6 +888,30 @@ The paper evaluates torch.fx across four application areas. The results establis
 | **Program scheduling** | Hoist non-blocking RPC prefetch calls early in the graph | Up to 9% QPS improvement in large distributed training |
 | **TensorRT lowering** | Translate FX graph to TensorRT IR + handle unsupported ops | 3.7× inference speedup on ResNet50 |
 | **Shape analysis** | `ShapeProp` interpreter; symbolic shape propagation | Foundation for quantization calibration and ASIC memory planning |
+
+Figure 5 shows the concrete IR size difference for ResNet50. The TorchScript IR (left) requires explicit constant-construction nodes for every integer and list; the torch.fx IR (right) embeds them as immediate arguments, cutting node count by nearly 2×.
+
+<img src="figures/torch-fx/reed2022-fig5-torchscript-vs-fx-ir.png" width="680" alt="Side-by-side comparison of TorchScript IR and torch.fx IR for the first Conv2d of ResNet50">
+
+*Figure 5 (Reed et al., 2022): TorchScript IR (left) vs. torch.fx IR (right) for the opening Conv2d of ResNet50. TorchScript emits separate `prim::ListConstruct` nodes for strides and padding; torch.fx embeds `(2, 2)` and `(3, 3)` directly as node arguments. For a full ResNet50, this reduces the IR from 860 nodes (`jit.trace`) or 2614 nodes (`jit.script`) down to 445 nodes.*
+
+The quantization result demonstrates the runtime benefit of operator-level reduction. Applying PTQ via torch.fx achieves up to 3.3× speedup across batch sizes on a server-class CPU:
+
+<img src="figures/torch-fx/reed2022-fig6-quantization-perf.png" width="480" alt="Bar chart comparing normalized inference runtime of unquantized vs quantized DeepRecommender model">
+
+*Figure 6 (Reed et al., 2022): Normalized inference runtime (lower is better) for torch.fx-based PTQ on DeepRecommender. Quantized runtime (orange) is 3–3.3× faster than FP32 (blue) at batch sizes 1, 16, and 64; the gap narrows at batch size 128 where memory bandwidth becomes less of a bottleneck.*
+
+The Conv–BN fusion transform achieves its largest relative gains on CPU where kernel launch overhead is proportionally greater:
+
+<img src="figures/torch-fx/reed2022-fig7-conv-bn-fusion-perf.png" width="480" alt="Bar chart comparing normalized inference runtime with and without Conv-BN fusion on GPU and CPU">
+
+*Figure 7 (Reed et al., 2022): Normalized inference runtime for torch.fx-based Conv–BN fusion on ResNet50. Fused (orange) vs. unfused (blue): ~6% speedup on GPU, ~30% on CPU threaded, ~15% on CPU unthreaded. The larger CPU gains reflect reduced memory bandwidth pressure from eliminating the BN read/write pass.*
+
+The TensorRT lowering pass delegates operator execution to a specialized inference engine, yielding the largest single-transform speedup:
+
+<img src="figures/torch-fx/reed2022-fig8-tensorrt-perf.png" width="480" alt="Bar chart comparing normalized PyTorch runtime vs TensorRT runtime on ResNet50 and LearningToPaint">
+
+*Figure 8 (Reed et al., 2022): Normalized inference runtime for torch.fx-based TensorRT lowering. TensorRT (orange) achieves 3.7× speedup on ResNet50 and ~1.6× on LearningToPaint vs. native PyTorch (blue). Unsupported operations fall back to eager PyTorch, explaining the smaller gain on the more heterogeneous LearningToPaint model.*
 
 > [!INFO] 💡 Productivity argument
 > The paper notes an *order-of-magnitude productivity increase* for quantization development compared to TorchScript, and fewer than 150 lines of Python for the full Conv-BN fusion transform including a test harness. This is the strongest argument for the torch.fx design philosophy: simpler IR = simpler transforms = faster development.
