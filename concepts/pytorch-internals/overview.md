@@ -17,6 +17,7 @@ This file is the index for the `concepts/pytorch-internals/` folder. It lists pl
 | `torch-compile/aot-autograd.md` | ✅ Written | AOTAutograd: joint forward/backward trace, cross-backward fusion |
 | `torch-compile/inductor.md` | ✅ Written | TorchInductor: loop-level IR, Triton lowering, epilogue fusion |
 | `torch-compile/symbolic-shapes.md` | ✅ Written | ShapeEnv, SymPy guard inequalities, dynamic shapes, recompilation policy |
+| `torch-compile/aot-inductor.md` | ✅ Written | AOTInductor: ahead-of-time `.so` compilation, C ABI, deployment without Python |
 | `memory-management.md` | 🔲 Planned | `CUDACachingAllocator`; block pools; splitting/coalescing; fragmentation |
 | `custom-ops.md` | 🔲 Planned | `TORCH_LIBRARY` / `TORCH_LIBRARY_IMPL`; schema strings; autograd formula registration |
 
