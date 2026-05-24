@@ -101,6 +101,25 @@ struct CUDAHalfType : public Type {
 
 When you wrote `x + y` in Python, ATen called `x.type().add(x, y)` — single dynamic dispatch through the `Type*` pointer stored inside the tensor's `TensorImpl`.
 
+> [!INFO] Pure virtual functions in C++
+> A *pure virtual function* is a virtual method declared with `= 0`, which means the base class provides no implementation — any concrete subclass **must** override it or the compiler refuses to instantiate the subclass. A class with at least one pure virtual method is an *abstract class* and cannot be instantiated directly.
+>
+> ```cpp
+> struct Shape {
+>     virtual double area() const = 0;  // pure virtual — no body here
+> };
+>
+> struct Circle : Shape {
+>     double r;
+>     double area() const override { return 3.14159 * r * r; }  // must provide this
+> };
+>
+> Shape s;   // error: cannot instantiate abstract class
+> Circle c;  // ok
+> ```
+>
+> The mechanism enabling this is the *vtable* (virtual function table): the compiler generates a hidden array of function pointers, one per virtual method, stored per class. Each object carries a hidden `vptr` pointing to its class's vtable. A virtual call `x.add(...)` dereferences `x.vptr[add_slot]` at runtime — this is *dynamic dispatch*. For `Type`, the vtable had ~600 slots, one per operator.
+
 > [!INFO] How many Type subclasses existed?
 > In practice: `{CPU, CUDA, HIP, MKLDNN, OpenCL, ...} × {Float, Double, Half, Int, Long, ...}` ≈ 5 devices × 10 dtypes = **~50 concrete `Type` subclasses**, each implementing ~600 virtual methods. This was ~30,000 lines of largely redundant C++ code auto-generated from a script.
 
