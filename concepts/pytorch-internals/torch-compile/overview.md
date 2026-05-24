@@ -56,6 +56,10 @@ PyTorch's eager execution model is maximally flexible: every operator call dispa
 
 **Performance headline:** Ansel et al. (ASPLOS 2024) report a geometric mean of **2.27× inference** and **1.41× training** speedup over eager execution on an NVIDIA A100 across 180+ real-world models, while achieving a **99% graph capture rate** — compared to approximately 50% for the earlier TorchScript approach.
 
+<img src="figures/ansel2024-fig4-cdf-speedups.png" width="650" alt="CDF of speedups over PyTorch eager for GPU and CPU inference and training">
+
+*Figure 4 (Ansel et al., 2024): Cumulative Distribution Function of speedups over PyTorch eager mode across 180+ models from TorchBench, HuggingFace, and TIMM. TorchInductor (blue) dominates all other backends at every speedup threshold for both GPU inference (float32 and float16) and GPU training. The x-axis is inverted: curves further left indicate more models achieving higher speedups.*
+
 > [!INFO] What this note is and is not
 > This is a **survey** of the full stack. Each stage has its own planned deep-dive: [[concepts/pytorch-internals/torch-compile/dynamo|dynamo.md]], [[concepts/pytorch-internals/torch-compile/aot-autograd|aot-autograd.md]], [[concepts/pytorch-internals/torch-compile/inductor|inductor.md]], [[concepts/pytorch-internals/torch-compile/symbolic-shapes|symbolic-shapes.md]]. The goal here is to establish the interfaces, invariants, and ordering rationale so that the deeper notes have a coherent home.
 
@@ -79,6 +83,10 @@ When CPython is about to evaluate frame $F$, it calls `hook(F, 0)` instead. Dyna
 
 > [!NOTE] Why not `sys.settrace` or `__torch_function__`?
 > `sys.settrace` fires per Python *line*, not per bytecode instruction, and imposes enormous overhead. `__torch_function__` only intercepts PyTorch operators — it misses Python control flow and non-tensor branches that affect graph structure. PEP 523 is the only hook that can intercept *all* computation at negligible cost.
+
+<img src="figures/ansel2024-fig1-dynamo-frame-eval-overview.png" width="520" alt="TorchDynamo frame-eval hook: original vs. modified CPython behavior">
+
+*Figure 1 (Ansel et al., 2024): Side-by-side comparison of original CPython frame evaluation (left) and TorchDynamo's modified behavior (right). On first call, Dynamo performs dynamic bytecode analysis to extract FX graph fragments, generates guards, and compiles a transformed PyCodeObject. On subsequent calls, the guard function is checked; if it passes, the cached compiled function is called directly, bypassing re-analysis.*
 
 ### 2.2 Symbolic Bytecode Execution and Variable Trackers
 
