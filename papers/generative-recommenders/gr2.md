@@ -52,6 +52,10 @@ GR2 introduces a three-stage training pipeline to build a reasoning-capable rera
 > [!INFO] 🔑 The key architectural choice
 > GR2 encodes items not as natural-language text descriptions but as *semantic IDs* — compact tuples of discrete codewords. This solves the scalability problem: an industrial item catalog has $10^9$ items, and adding each as a natural-language string to the LLM's context would be infeasible. Semantic IDs are short (4 tokens per item), learnable, and capture item semantics via the RQ-VAE training objective.
 
+<img src="figures/gr2-fig1-pipeline-overview.png" width="650" alt="GR2 three-stage training pipeline overview">
+
+*Figure 1 (Liang et al., 2026): Overview of the 3-stage training pipeline. Top: student LLM mid-training on tokenized semantic IDs (Tokenized Mid-Training). Middle: reasoning data generation with a teacher LLM and rejection sampling — rollouts are kept only when they match the ground-truth (Reasoning Data Generation). Bottom: student LLM reasoning enablement via SFT and DAPO RL, with group computation, reward model, and clip-higher strategy (Reasoning Enablement Fine-tuning).*
+
 ---
 
 ## 2. Stage 1 — Tokenized Mid-Training 🏗️
