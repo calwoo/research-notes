@@ -108,9 +108,31 @@ $$S_{1:t} = [\mathbf{h}_1, \mathbf{h}_2, \ldots, \mathbf{h}_t] \in \mathbb{R}^{t
 
 $$\mathbf{z}_{t+1} = \text{SparseHead}(\text{TransformerDecoder}(S_{1:t}))$$
 
+> [!NOTE] What TransformerDecoder outputs
+> $\text{TransformerDecoder}(S_{1:t})$ is a stack of causal self-attention layers (GPT-style, decoder-only) that maps the input sequence $S_{1:t} \in \mathbb{R}^{t \times 2d}$ to a sequence of hidden states $\mathbf{O}_{1:t} \in \mathbb{R}^{t \times d_{\text{model}}}$. Position $i$ attends only to positions $\leq i$ (causal mask). The *last* hidden state $\mathbf{o}_t \in \mathbb{R}^{d_{\text{model}}}$ summarizes the full causal context of the sequence — it is the only output that SparseHead reads. The intermediate hidden states $\mathbf{o}_1, \ldots, \mathbf{o}_{t-1}$ are by-products of the computation and are not used directly by either head.
+
+> [!NOTE] What SparseHead is
+> SparseHead is a linear projection $W_s \in \mathbb{R}^{V \times d_{\text{model}}}$ applied to the last decoder hidden state $\mathbf{o}_t$:
+> $$\mathbf{z}_{t+1} = W_s\, \mathbf{o}_t \in \mathbb{R}^V$$
+> The output $\mathbf{z}_{t+1}$ is a vector of $V$ unnormalized logits — one per codebook entry at the current quantization level. Since the RQ-VAE semantic ID is a $K$-tuple $(c_1, \ldots, c_K)$, the sparse ID is generated *autoregressively over levels*: SparseHead is applied at each decode step $k \in [K]$, with the code token $c_k$ selected (by argmax during training, or by beam search at inference) and appended to the sequence before the next step. At the $k$-th decode step the decoder attends to both the history $S_{1:t}$ and the previously generated code tokens $c_1, \ldots, c_{k-1}$.
+
+> [!NOTE] What $\widehat{\text{ID}}_{t+1}$ is
+> $\widehat{\text{ID}}_{t+1} = (\hat{c}_1, \hat{c}_2, \ldots, \hat{c}_K)$ is the *predicted* sparse ID for the next item — the model's best guess at which code cluster the next item belongs to. It is obtained by running $K$ autoregressive decode steps through SparseHead:
+> - During **training**: greedy argmax at each level (or teacher forcing in some implementations), giving a single predicted $K$-tuple.
+> - During **inference**: beam search over the code tree, giving $M$ candidate $K$-tuples each with an associated log-probability $\phi^k$ (see §5.1).
+>
+> Crucially, $\widehat{\text{ID}}_{t+1}$ is a *discrete index* — not a continuous vector. The embedding $\mathbf{e}(\widehat{\text{ID}}_{t+1}) = \sum_{k=1}^K \mathbf{e}_{\hat{c}_k}$ converts it back into a continuous vector so it can be appended to the sequence for the dense pass.
+
 **Dense vector forward pass.** The predicted sparse ID embedding $\mathbf{e}(\widehat{\text{ID}}_{t+1})$ is appended to the history, and a *DenseHead* projects the decoder output at the new final position:
 
 $$\bar{S}_{1:t} = [S_{1:t};\ \mathbf{e}(\widehat{\text{ID}}_{t+1})], \qquad \hat{\mathbf{v}}_{t+1} = \text{DenseHead}(\text{TransformerDecoder}(\bar{S}_{1:t}))$$
+
+> [!NOTE] What DenseHead is
+> DenseHead is a separate linear projection $W_d \in \mathbb{R}^{d \times d_{\text{model}}}$ applied to the decoder's last hidden state *after* the extended sequence $\bar{S}_{1:t}$:
+> $$\hat{\mathbf{v}}_{t+1} = W_d\, \bar{\mathbf{o}}_{t+1} \in \mathbb{R}^d$$
+> where $\bar{\mathbf{o}}_{t+1}$ is the final hidden state of $\text{TransformerDecoder}(\bar{S}_{1:t})$ — i.e., the hidden state at the *newly appended position* $\mathbf{e}(\widehat{\text{ID}}_{t+1})$. This position attends causally to all of $S_{1:t}$ plus the sparse ID embedding, so its hidden state encodes both the full interaction history *and* the coarse cluster constraint imposed by $\widehat{\text{ID}}_{t+1}$. The output $\hat{\mathbf{v}}_{t+1} \in \mathbb{R}^d$ lives in the same space as the pre-computed item dense vectors, enabling ANN retrieval.
+>
+> Why is a second decoder pass needed? Because $\bar{\mathbf{o}}_{t+1}$ (the hidden state at the appended position) does not exist in the first forward pass — appending $\mathbf{e}(\widehat{\text{ID}}_{t+1})$ to the sequence creates a new final position whose hidden state is not computed until the decoder processes $\bar{S}_{1:t}$. The KV cache of the first pass can be reused for the prefix $S_{1:t}$; only one additional attention step is needed for the new position.
 
 Note that the dense head sees the predicted sparse ID — not the ground-truth — at training time. The model is therefore trained to produce dense vectors *conditioned on the predicted cluster*, which matches inference behavior.
 
