@@ -68,7 +68,7 @@ COBRA's solution is a *cascade*: generate the sparse ID first, then condition th
 
 The sparse representation follows the standard RQ-VAE construction (see [[concepts/generative-recommenders/note#4.1 Semantic IDs via RQ-VAE: TIGER|§4.1 of the concept note]] for full derivation). Item $x$ is encoded from its textual attribute description via a Transformer text encoder, then quantized hierarchically into a $K$-tuple $(c_1, \ldots, c_K)$.
 
-COBRA uses a 3-level RQ-VAE (codebook size 32 per level) for public datasets and a 2-level $32 \times 32$ scheme for the industrial dataset. The codebook is trained with EMA updates and random last-level assignment to achieve $\geq$99% code uniqueness (see [[concepts/generative-recommenders/note#4.1 Semantic IDs via RQ-VAE: TIGER|codebook collapse mitigation]]).
+Each level has a codebook of $V$ entries; $K$ is the number of quantization levels. COBRA uses $K=3$, $V=32$ for public datasets and $K=2$, $V=32$ for the industrial dataset. The codebook is trained with EMA updates and random last-level assignment to achieve $\geq$99% code uniqueness (see [[concepts/generative-recommenders/note#4.1 Semantic IDs via RQ-VAE: TIGER|codebook collapse mitigation]]).
 
 ### 2.2 End-to-End Learnable Dense Vectors
 
