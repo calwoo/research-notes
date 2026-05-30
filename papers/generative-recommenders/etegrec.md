@@ -99,6 +99,10 @@ where $Y_l = c_l^{t+1}$ is the $l$-th codebook token of the target item, and $X$
 > [!NOTE] Encoder-decoder vs. decoder-only
 > ETEGRec uses an encoder-decoder architecture (T5-style), unlike HSTU which is decoder-only (GPT-style). This introduces the train-inference mismatch that GenRank later identifies as a problem: the encoder sees the full history bidirectionally, but at inference time the "future" of the history (interactions after a masked position) is unavailable. ETEGRec validates on standard benchmarks where this mismatch is tolerable, but it may limit deployment at production scale.
 
+<img src="figures/etegrec/liu2024-fig1-etegrec-architecture.png" width="680" alt="ETEGRec overall framework showing item tokenizer, generative recommender, SIA, and PSA components">
+
+*Figure 1 (Liu et al., 2024): The overall ETEGRec framework. The item tokenizer (bottom) performs residual quantization on item embeddings. The generative recommender (top) is a T5 encoder-decoder that processes the token sequence. SIA (left dashed box, panel c) aligns the encoder's mean-pooled output $\mathbf{z}^E$ with the target item's codebook distributions via KL divergence at each quantization level. PSA (right dashed box, panel d) aligns the decoder's first hidden state $\mathbf{h}^D_0$ with the reconstructed item embedding $\tilde{\mathbf{z}}$ via InfoNCE.*
+
 ---
 
 ## 3. Recommendation-Oriented Alignment 🔑
@@ -155,6 +159,11 @@ where $s(\cdot, \cdot)$ is cosine similarity, $\tau$ is a temperature, and $\mat
 | Gradient target (recommender phase) | Encoder MLP | Decoder cross-attention |
 
 *PSA provides a coarser but more direct semantic alignment: the decoder's user-preference vector should be geometrically close to the target item in reconstructed embedding space. SIA provides a finer distributional alignment between the encoder's prediction and the item's quantization structure.*
+
+<img src="figures/etegrec/liu2024-fig4a-tsne-instrument.png" width="420" alt="t-SNE of preference and semantic representations on Instruments dataset">
+<img src="figures/etegrec/liu2024-fig4b-tsne-scientific.png" width="420" alt="t-SNE of preference and semantic representations on Scientific dataset">
+
+*Figure 4 (Liu et al., 2024): t-SNE visualization of preference representations ($\mathbf{h}^D_0$, circles) and semantic representations ($\tilde{\mathbf{z}}$, stars) on Instruments (left) and Scientific (right). Each color denotes a distinct item group. After PSA training, preference points cluster near their corresponding semantic star, confirming that the decoder's user-preference vector is geometrically aligned with the reconstructed target-item embedding.*
 
 ---
 
@@ -228,6 +237,10 @@ Key observations:
 ### 5.3 Generalization to Cold-Start Users
 
 On the 5% of users with the fewest historical interactions (coldest users), ETEGRec maintains its advantage over TIGER-SAS. The improvement is attributed to the decoder's preference vector $\mathbf{h}^D_0$ being aligned to item semantics via PSA, which provides a signal even when interaction history is sparse. A user with only 2–3 interactions has a noisy encoder output, but PSA ensures the decoder's preference representation stays geometrically close to the relevant part of item space.
+
+<img src="figures/etegrec/liu2024-fig3-seen-vs-unseen-users.png" width="560" alt="Bar chart comparing Recall@10 for seen vs. unseen users across TIGER, LETTER, and ETEGRec on Instrument and Scientific datasets">
+
+*Figure 3 (Liu et al., 2024): Recall@10 for seen (training-set) and unseen (cold-start) users on Instruments (left) and Scientific (right). ETEGRec (red bars) leads on both seen and unseen splits. The gain on unseen users is larger in absolute terms on Scientific, consistent with the claim that PSA alignment provides a robust preference signal even for sparse interaction histories.*
 
 ---
 
