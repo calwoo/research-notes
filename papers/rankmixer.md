@@ -338,6 +338,10 @@ flowchart TD
     PFFN -.->|"1B+ scale"| SMOE
 ```
 
+<img src="figures/rankmixer/rankmixer-fig1-architecture.png" width="680" alt="RankMixer block architecture diagram">
+
+*Figure 1 (Zhu et al., 2025): The RankMixer block architecture. Multi-head token mixing (parameter-free permutation) interleaves head slices across tokens; the per-token FFN (PFFN) then applies token-specific MLP transformations. The optional SMoE extension replaces the dense PFFN at 1B+ scale.*
+
 > [!QUESTION] Exercise 2: Parameter Count at 1B Scale
 > *This problem verifies the 1B parameter target from the paper's scaling formula.*
 >
@@ -448,6 +452,10 @@ The paper plots Finish AUC gain as a function of both parameter count and FLOPs 
 
 **The steepness of RankMixer's scaling curve is the primary architectural claim**: for a given parameter or FLOPs budget, RankMixer extracts more AUC gain than any alternative tested.
 
+<img src="figures/rankmixer/rankmixer-fig2-scaling-law-curves.png" width="680" alt="Scaling law curves: AUC gain vs params and FLOPs for multiple architectures">
+
+*Figure 2 (Zhu et al., 2025): Scaling laws comparing Finish AUC gain vs parameter count (left) and FLOPs (right) across DLRM-MLP, DCN V2, DHEN, Wukong, and RankMixer. RankMixer exhibits the steepest slope on both axes. The x-axis is logarithmic.*
+
 ### 4.3 Optimal Scaling Directions
 
 RankMixer scales along four orthogonal axes: token count $T$, hidden dimension $D$, number of layers $L$, and number of MoE experts $E$. The paper finds:
@@ -514,6 +522,14 @@ At inference, only $h_{\text{infer}}$ is used. The experts are trained on dense 
 - **DTSI + ReLU routing:** Near-flat AUC curve from full activation down to 1/8 sparsity.
 
 **RankMixer with DTSI + ReLU routing scales to 8× sparsity with nearly no AUC loss and a +50% throughput improvement**, validating the approach as a practical path to 10B+ parameters without proportional cost increase.
+
+<img src="figures/rankmixer/rankmixer-fig3-moe-sparsity-curve.png" width="500" alt="AUC vs sparsity ratio for vanilla SMoE vs DTSI+ReLU routing">
+
+*Figure 3 (Zhu et al., 2025): AUC performance of RankMixer variants at decreasing expert activation ratios (1, 1/2, 1/4, 1/8). Dense-training + ReLU-routed SMoE (DTSI-MoE) preserves near-full accuracy of the 1B dense model across all sparsity levels, while vanilla top-k MoE degrades monotonically.*
+
+<img src="figures/rankmixer/rankmixer-fig4-expert-activation-ratio.png" width="500" alt="Activated expert ratio per token in RankMixer">
+
+*Figure 4 (Zhu et al., 2025): Activated expert ratio for different token positions in RankMixer. ReLU routing produces adaptive, token-dependent activation patterns — information-rich tokens activate more experts than sparse or low-signal tokens, naturally allocating capacity where it is most needed.*
 
 > [!QUESTION] Exercise 4: ReLU Routing Sparsity Budget
 > *This problem derives the expected expert activation rate as a function of the regularization coefficient lambda.*
@@ -765,6 +781,10 @@ $$\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{CE}}(y, \hat{y}^{(L)}) + \lamb
 
 Ablation: removing both inter-residuals and auxiliary loss costs −0.04% AUC at the 4B scale; removing the standard within-block residual costs −0.15% AUC.
 
+<img src="figures/rankmixer/tokenmixer-fig2-inter-residual.png" width="560" alt="Inter-residual connections and auxiliary loss in TokenMixer-Large">
+
+*Figure 5 (Jiang et al., 2026): Inter-residual connections and auxiliary loss in TokenMixer-Large. Skip connections with stride $s \in \{2, 3\}$ bypass groups of consecutive blocks, and auxiliary cross-entropy losses at intermediate layers provide direct gradient signals to early blocks — essential for stable training at 50+ block depth.*
+
 > [!EXAMPLE] Inter-residual with stride $s=2$ across 4 blocks
 > With $s=2$, every other block's output is added to the block two steps ahead. Tracing the signal path for a single token vector:
 >
@@ -808,6 +828,10 @@ flowchart TD
     OUT --> SKIP
 ```
 
+<img src="figures/rankmixer/tokenmixer-fig1-architecture.png" width="680" alt="TokenMixer-Large block architecture with Mixing-and-Reverting and SP-MoE">
+
+*Figure 6 (Jiang et al., 2026): The TokenMixer-Large block architecture. Each block consists of (RMSNorm → Mixing → SP-MoE → Reverting → RMSNorm → SP-MoE) with inner and inter-block residuals. The Reverting phase restores the token-major layout after mixing, enabling dimensionally consistent residuals at any depth. SP-MoE replaces the dense pSwiGLU at 7B–15B scale.*
+
 > [!QUESTION] Exercise 6: Mixing Permutation as a Matrix
 > *This problem makes precise that mixing-and-reverting is an exact permutation, not a learned projection.*
 >
@@ -843,6 +867,10 @@ where $g_j(x_t) = \text{softmax}(\text{top-}k(W_g x_t))_j$. Each expert has widt
 
 The strategy is *sparse train, sparse infer* — sparsity is fixed at training time so inference requires no special conversion. For a $1:2$ sparsity model, active FLOPs drop by approximately $2\times$ while parameter count doubles relative to a single-expert baseline.
 
+<img src="figures/rankmixer/tokenmixer-fig3-enlarge-then-sparsify.png" width="680" alt="First Enlarge Then Sparsify illustration for SP-MoE">
+
+*Figure 7 (Jiang et al., 2026): "First Enlarge, Then Sparsify" illustration. Starting from a dense baseline, the model is first enlarged by adding experts (increasing total parameters), then sparsified so only a fraction of experts activate per token at inference. This sequence — train sparse from the start — avoids the dense-to-sparse conversion gap that degrades accuracy in post-hoc pruning.*
+
 > [!EXAMPLE] FLOPs comparison
 > TokenMixer-Large 4B dense: 29.8T FLOPs/batch.
 > TokenMixer-Large 4B SP-MoE (2.3B active, $1:2$ sparsity): 15.1T FLOPs/batch.
@@ -855,6 +883,10 @@ One expert is always active, regardless of gating:
 $$\text{SP-MoE}(x_t) = \sum_{i=1}^{k-1} g_i(x_t) \cdot \text{Expert}_i(x_t) + \text{SharedExpert}(x_t)$$
 
 The shared expert acts as a "default path" ensuring all tokens receive at least one full transformation, preventing catastrophic forgetting of common patterns when the router is uncertain. Removing it costs −0.02% AUC.
+
+<img src="figures/rankmixer/tokenmixer-fig5-load-balance.png" width="500" alt="SP-MoE expert load balance at 1:2 sparsity">
+
+*Figure 9 (Jiang et al., 2026): SP-MoE expert activation load balance at 1:2 sparsity. Each bar shows the fraction of tokens routed to each expert across the sequence. The distribution is approximately uniform, confirming that the auxiliary load-balancing loss prevents expert collapse even under per-token routing.*
 
 ### 11.4 Gate Value Scaling
 
@@ -900,6 +932,10 @@ Key offline results (vs. DLRM-MLP-500M baseline):
 | TokenMixer-Large 4B SP-MoE | +1.14% | 2.3B active | 15.1T |
 
 A key finding: **beyond 1B parameters, scaling requires balanced expansion across width $D$, depth $L$, and expansion factor $n$ simultaneously** — scaling any single dimension yields diminishing returns.
+
+<img src="figures/rankmixer/tokenmixer-fig4-scaling-sota-comparison.png" width="680" alt="Scaling laws comparing TokenMixer-Large vs SOTA models on AUC gain vs params/FLOPs">
+
+*Figure 8 (Jiang et al., 2026): Scaling laws comparing AUC gain vs parameter count (left) and FLOPs (right) for Wukong, RankMixer (TokenMixer), and TokenMixer-Large across multiple Douyin scenarios (e-commerce 15B, 7B, 4B). TokenMixer-Large achieves consistent log-linear AUC improvements up to 15B parameters, with the steepest scaling slope among all tested models. The x-axis is logarithmic.*
 
 The paper further notes that DCN-style cross-network components become less valuable at larger scales:
 
