@@ -393,6 +393,44 @@ $$I_{QK^\top} = \frac{2 \times 1024 \times 1536}{2 \times (2 \times 32 \times 15
 > [!NOTE] Why parameter-free attention does not help
 > One might ask: if the projection GEMMs ($W_Q, W_K, W_V, W_O$) are efficient and the attention scores are the bottleneck, would removing the projections and using parameter-free attention (setting $Q = K = V = X$ directly) improve MFU? No — the bottleneck is the $QK^\top$ computation itself, not the projections. The projections were the *compute-bound* part. Removing them saves some efficient FLOPs while leaving the memory-bound bottleneck ($QK^\top$, softmax, $AV$) fully intact. Parameter-free attention has lower MFU than full attention because the efficient operations are gone while the inefficient ones remain.
 
+> [!INFO] Why attention cost is acceptable in LLMs but not in recommendation
+>
+> **Reason 1: $I_{QK^\top}$ scales with $T$, and LLMs operate at large $T$.**
+>
+> Simplifying the formula:
+>
+> $$I_{QK^\top} = \frac{T^2D}{2TD + HT^2} = \frac{TD}{2D + HT}$$
+>
+> Two limiting regimes emerge depending on whether $HT \ll 2D$ or $HT \gg 2D$:
+>
+> $$I_{QK^\top} \approx \begin{cases} T/2 & T \ll 2D/H \quad \text{(small-}T\text{ regime)} \\ D/H & T \gg 2D/H \quad \text{(large-}T\text{ regime)} \end{cases}$$
+>
+> The crossover happens at $T^* = 2D/H$ (the head dimension doubled). For recommendation ($D=1536$, $H=32$): $T^* = 96$. Recommendation uses $T=32 \ll 96$, so $I \approx T/2 = 16$ — deeply in the memory-bound regime, with no escape. For a standard LLM ($D=4096$, $H=32$): $T^* = 256$. LLM training uses $T=2048 \gg 256$, so $I \approx D/H = 128$ — close to the A100 ridge point of 156, and approaching compute-bound for longer contexts.
+>
+> | Setting | $T$ | $D/H$ | $T^*$ | Regime | $I_{QK^\top}$ |
+> |---------|-----|--------|--------|--------|---------------|
+> | Recommendation (RankMixer target) | 32 | 48 | 96 | small-$T$ ($T \ll T^*$) | ≈ 16 |
+> | LLM training, $T=2048$ | 2048 | 128 | 256 | large-$T$ ($T \gg T^*$) | ≈ 114 |
+> | LLM training, $T=8192$ | 8192 | 128 | 256 | large-$T$ | ≈ 200+ |
+>
+> Recommendation is structurally locked in the small-$T$ regime — there is no business case for using more than ~32 semantic feature groups, so $T$ cannot be grown to escape the memory-bound floor.
+>
+> **Reason 2: In LLMs, $QK^\top$ is a small fraction of total FLOPs.**
+>
+> Even when $I_{QK^\top} < I^*$, if the memory-bound operations represent a small fraction of total FLOPs, the overall model MFU can still be high. For a standard Transformer layer at $T=2048$, $D=4096$:
+>
+> | Operation | FLOPs | Regime |
+> |-----------|-------|--------|
+> | QKV projections + output | $\approx 4 \times 2TD^2 = 268\text{B}$ | compute-bound |
+> | FFN (4× expansion) | $\approx 2 \times 2T \times 4D^2 = 537\text{B}$ | compute-bound |
+> | $QK^\top$ + $AV$ | $\approx 2 \times 2T^2D = 68\text{B}$ | memory-bound |
+>
+> The memory-bound operations represent only $68 / (268 + 537 + 68) \approx 8\%$ of total FLOPs. The 92% in compute-bound GEMMs dominate the wall-clock time, so the overall MFU is high even though one step is memory-bound. In recommendation with DLRM, the situation is inverted: embedding lookups, small cross-network layers, and irregular ops represent the *majority* of time, with few large efficient GEMMs to dilute them.
+>
+> **Corollary: LLM inference (autoregressive decoding) is also memory-bound.**
+>
+> During autoregressive generation, each decoding step produces one new token, making the effective query a single vector: $q \in \mathbb{R}^{D/H}$ attending over the entire KV cache $K \in \mathbb{R}^{T_{\text{ctx}} \times D/H}$. The "QK^T" becomes a matrix-vector product with $I \approx 1$ — deeply memory-bound. This is why LLM *serving* has much lower MFU than LLM *training*, and why KV cache quantization, continuous batching, and speculative decoding exist.
+
 ### 3.2 Arithmetic Intensity of Token Mixing and PFFN
 
 Token mixing is a parameter-free data permutation — it touches each byte exactly once and performs no arithmetic. Its arithmetic intensity is 0 FLOPs/byte. The entire computation in a RankMixer block therefore comes from the PFFN.
