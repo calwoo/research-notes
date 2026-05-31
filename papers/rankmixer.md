@@ -187,6 +187,17 @@ $$\mathbf{X}_0 = \text{stack}[x_1, \ldots, x_T] \in \mathbb{R}^{T \times D}$$
 > [!NOTE] Why semantic grouping matters
 > With too many tokens, each token receives too few parameters in the PFFN, underutilizing GPU through small matrix multiplications. With too few, high-frequency features dominate low-frequency signals. Semantic grouping targets the Goldilocks regime: $T = 16$–$32$ tokens.
 
+> [!EXAMPLE] Running example setup ($T=2$, $D=4$)
+> We will trace a single forward pass through the architecture using $T=2$ tokens, $D=4$ dimensions, $H=T=2$ heads (so each head has $D/H=2$ dimensions). Say our two semantic groups are **user** (user-ID, watch history, age, location) and **item** (video-ID, category, duration, author). After embedding and projecting to $D=4$:
+>
+> $$x_{\text{user}} = [1,\, 2,\, 3,\, 4], \qquad x_{\text{item}} = [5,\, 6,\, 7,\, 8]$$
+>
+> The input token matrix entering the block is:
+>
+> $$\mathbf{X} = \begin{bmatrix} 1 & 2 & 3 & 4 \\ 5 & 6 & 7 & 8 \end{bmatrix} \in \mathbb{R}^{2 \times 4}$$
+>
+> Row 0 = user token; row 1 = item token. Each row is entirely self-contained — no cross-token interaction has occurred yet.
+
 ### 2.2 Multi-Head Token Mixing
 
 Given $\mathbf{X} \in \mathbb{R}^{T \times D}$ at the input to a block, each token $x_t \in \mathbb{R}^D$ is split into $H$ heads of dimension $D/H$ (the paper sets $H = T$):
@@ -218,6 +229,29 @@ $$\mathbf{S} = \text{LN}\!\left(\text{TokenMixing}(\mathbf{X}) + \mathbf{X}\righ
 > [!NOTE] Contrast with MLP-Mixer
 > MLP-Mixer (Tolstikhin et al., 2021) applies a shared learnable linear layer across the token dimension, costing $O(T^2 D)$ parameters and FLOPs. RankMixer's token mixing is *parameter-free* — it is purely a reshape/scatter. All learning happens in the PFFN (§2.3), where parameters map cleanly to large batched GEMMs.
 
+> [!EXAMPLE] Head splitting and token mixing on the running example
+> Continuing with $T=2$, $D=4$, $H=2$. Split each row into $H=2$ heads of size $D/H=2$:
+>
+> | | head 0 (dims 0–1) | head 1 (dims 2–3) |
+> |---|---|---|
+> | user | $[1,\, 2]$ | $[3,\, 4]$ |
+> | item | $[5,\, 6]$ | $[7,\, 8]$ |
+>
+> Token mixing gathers each head index *across all tokens* and concatenates:
+>
+> $$s^{(0)} = \text{concat}[\underbrace{1,\,2}_{\text{user, h0}},\;\underbrace{5,\,6}_{\text{item, h0}}] = [1,\,2,\,5,\,6]$$
+> $$s^{(1)} = \text{concat}[\underbrace{3,\,4}_{\text{user, h1}},\;\underbrace{7,\,8}_{\text{item, h1}}] = [3,\,4,\,7,\,8]$$
+>
+> $$\text{TokenMixing}(\mathbf{X}) = \begin{bmatrix} 1 & 2 & 5 & 6 \\ 3 & 4 & 7 & 8 \end{bmatrix}$$
+>
+> **After mixing, rows no longer represent individual tokens.** Row 0 is now "head-0 slice from every token concatenated"; row 1 is "head-1 slice from every token concatenated". Both user and item information are present in *each* row — this is the cross-token information exchange.
+>
+> Adding the residual (before LayerNorm):
+>
+> $$\text{TokenMixing}(\mathbf{X}) + \mathbf{X} = \begin{bmatrix} 1+1 & 2+2 & 5+3 & 6+4 \\ 3+1 & 4+2 & 7+3 & 8+4 \end{bmatrix} = \begin{bmatrix} 2 & 4 & 8 & 10 \\ 4 & 6 & 14 & 16 \end{bmatrix}$$
+>
+> LayerNorm normalizes each row independently; call the result $\mathbf{S}$.
+
 ### 2.3 Per-Token Feed-Forward Network (PFFN)
 
 After token mixing, each mixed token $s_t \in \mathbb{R}^D$ is processed by a *dedicated* two-layer MLP — one per token position, **not** shared across positions.
@@ -231,6 +265,16 @@ with $W_{\text{pffn}}^{t,1} \in \mathbb{R}^{D \times kD}$ and $W_{\text{pffn}}^{
 **Why per-token weights?** After token mixing, token $t$ contains a concatenation of one head from each original input token. Because the semantic content of each mixed token position is structurally distinct, a *shared* FFN would apply the same weights to representations with different semantic structure. The per-token weights allow each position to learn a transformation appropriate for its specific head mixture.
 
 The ablation confirms this: replacing PFFN with a shared FFN costs −0.31% AUC.
+
+> [!EXAMPLE] Per-token FFN on the running example
+> After LayerNorm, $\mathbf{S}$ has two rows. Each gets its own dedicated 2-layer MLP:
+>
+> - Row 0 $\approx [2,\, 4,\, 8,\, 10]$ (normalized) → processed by $\text{MLP}_0$ with weights $W_{\text{pffn}}^{0,1} \in \mathbb{R}^{4 \times 8},\; W_{\text{pffn}}^{0,2} \in \mathbb{R}^{8 \times 4}$ → output $v_0 \in \mathbb{R}^4$
+> - Row 1 $\approx [4,\, 6,\, 14,\, 16]$ (normalized) → processed by $\text{MLP}_1$ with *different* weights $W_{\text{pffn}}^{1,1} \in \mathbb{R}^{4 \times 8},\; W_{\text{pffn}}^{1,2} \in \mathbb{R}^{8 \times 4}$ → output $v_1 \in \mathbb{R}^4$
+>
+> Why different weights? Row 0 always carries "head-0 slices from all tokens"; row 1 always carries "head-1 slices from all tokens". They have structurally different content at every forward pass, so a single shared MLP would be systematically mismatched for at least one of them.
+>
+> Adding the residual and applying LayerNorm gives block output $\mathbf{X}_1 \in \mathbb{R}^{2 \times 4}$, which feeds into the next block. After $L=2$ blocks, MeanPool collapses both rows into a single $\mathbb{R}^4$ vector for the output MLP.
 
 **Parameter and FLOPs count.** For $T$ tokens, $D$ hidden dimension, $L$ layers, expansion factor $k$:
 
@@ -249,6 +293,17 @@ $$\mathbf{X}_n = \text{LN}\!\left(\text{PFFN}(\mathbf{S}_{n-1}) + \mathbf{S}_{n-
 After $L$ blocks, the final representation is obtained by mean pooling across tokens:
 
 $$\hat{y} = \text{MLP}_{\text{out}}\!\left(\text{MeanPool}(\mathbf{X}_L)\right)$$
+
+> [!INFO] What each step does to the data (running example summary)
+>
+> | Step | Tensor shape | Semantic meaning of each row |
+> |------|-------------|------------------------------|
+> | Input $\mathbf{X}$ | $(2, 4)$ | Each row = one feature group (user, item) |
+> | After Token Mixing | $(2, 4)$ | Each row = one head-slice gathered across all groups |
+> | After PFFN + residual | $(2, 4)$ | Each row = learned transformation of its cross-token composite |
+> | After Mean Pool | $(4,)$ | Global representation combining all head composites |
+>
+> The cross-token interaction — what DCN and self-attention accomplish with learned weights — happens entirely at the Token Mixing step **using zero parameters**. The PFFN then does all the learning *after* that structural exchange has already occurred. This separation is why RankMixer is compute-efficient: the expensive parameters (the per-row MLPs) map cleanly to large batched GEMMs, while the cross-token mixing itself costs nothing.
 
 ### 2.5 Mermaid Diagram
 
