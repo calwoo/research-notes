@@ -362,16 +362,36 @@ flowchart TD
 
 ### 3.1 Arithmetic Intensity of Self-Attention
 
-For $T$ tokens of dimension $D$ with $H$ heads, consider the attention score computation $QK^\top \in \mathbb{R}^{H \times T \times T}$:
+It is tempting to assume that attention is inefficient simply because it has $O(T^2)$ complexity, or because of the heterogeneous feature problem discussed in §1.4. The real explanation is more precise and more instructive.
 
-- FLOPs: $2HT^2(D/H) = 2T^2 D$
-- Memory traffic: read $Q, K \in \mathbb{R}^{H \times T \times D/H}$: $2TD$ elements; write $A \in \mathbb{R}^{H \times T \times T}$: $HT^2$ elements
+A full attention block contains several distinct operations. They do not all have the same arithmetic intensity:
 
-For $T = 32$, $D = 1536$, $H = 32$ (FP16, 2 bytes/element):
+| Operation | What gets loaded | $I$ | Regime |
+|-----------|-----------------|-----|--------|
+| $Q = XW_Q$, $K = XW_K$, $V = XW_V$ | weights $W \in \mathbb{R}^{D \times D}$ (shared across batch) | $\sim B$ | compute-bound ✓ |
+| $A = QK^\top / \sqrt{D/H}$ | activations $Q, K$ (different per sample) | $\sim 12$ | memory-bound ✗ |
+| $\text{softmax}(A)$ | activations $A$ | $\ll 1$ | memory-bound ✗ |
+| $\text{softmax}(A) \cdot V$ | activations $A, V$ (different per sample) | $\sim 12$ | memory-bound ✗ |
+| output projection $W_O$ | weights (shared across batch) | $\sim B$ | compute-bound ✓ |
 
-$$I_{\text{attn}} = \frac{2T^2 D}{2 \times (2TD + HT^2)} \approx 12 \text{ FLOPs/byte}$$
+The projection GEMMs are efficient for exactly the same reason as RankMixer's PFFN: the weight matrices are parameters shared across all $B$ samples in the batch, so memory traffic for weights is $O(D^2)$ independent of $B$, giving $I = B$. *These steps are not the problem.*
 
-*Surprisingly,* this is far below the A100 ridge point of $I^* \approx 156$ FLOPs/byte, placing the attention score kernel firmly in the memory-bandwidth-bound regime.
+The problem is the **attention score computation** $QK^\top$ and the weighted sum $AV$. These are different in kind: both operands are **activations**, not parameters. They are distinct for every sample in the batch.
+
+**Definition (Activation-to-activation GEMM).** A GEMM of the form $C = AB$ where $A$ and $B$ are both activation tensors (i.e., outputs of prior layers, different per sample) has arithmetic intensity independent of batch size.
+
+To see why, account for batch size $B$ explicitly:
+
+$$I_{QK^\top} = \frac{B \cdot 2T^2 D}{B \cdot 2 \times (2TD + HT^2)} = \frac{2T^2 D}{2 \times (2TD + HT^2)}$$
+
+**The $B$ cancels.** Both FLOPs and memory traffic scale linearly with $B$, so the ratio is constant. For $T = 32$, $D = 1536$, $H = 32$ (FP16, 2 bytes/element):
+
+$$I_{QK^\top} = \frac{2 \times 1024 \times 1536}{2 \times (2 \times 32 \times 1536 + 32 \times 1024)} \approx 12 \text{ FLOPs/byte}$$
+
+*Surprisingly,* this is far below the A100 ridge point of $I^* \approx 156$ FLOPs/byte, placing the attention score kernel firmly in the memory-bandwidth-bound regime — **regardless of batch size**.
+
+> [!NOTE] Why parameter-free attention does not help
+> One might ask: if the projection GEMMs ($W_Q, W_K, W_V, W_O$) are efficient and the attention scores are the bottleneck, would removing the projections and using parameter-free attention (setting $Q = K = V = X$ directly) improve MFU? No — the bottleneck is the $QK^\top$ computation itself, not the projections. The projections were the *compute-bound* part. Removing them saves some efficient FLOPs while leaving the memory-bound bottleneck ($QK^\top$, softmax, $AV$) fully intact. Parameter-free attention has lower MFU than full attention because the efficient operations are gone while the inefficient ones remain.
 
 ### 3.2 Arithmetic Intensity of Token Mixing and PFFN
 
@@ -386,8 +406,29 @@ $$I_{\text{PFFN}} = \frac{2BkTD^2}{2kTD^2} = B$$
 
 **For batch size $B = 1024$, arithmetic intensity $= 1024$ FLOPs/byte, far above the ridge point of $\approx 156$.** The PFFN is deeply compute-bound.
 
-> [!NOTE] Why batch size = arithmetic intensity (for GEMM)
-> For a matrix multiplication $AB$ where $A \in \mathbb{R}^{M \times K}$ and $B \in \mathbb{R}^{K \times N}$, FLOPs $= 2MKN$ and weight bytes $= 2KN$, giving $I = M$. Batch size $M$ directly controls whether the operation is memory-bound ($M < I^*$) or compute-bound ($M > I^*$). This is why small-batch inference is memory-bound even for large models — see [[concepts/deep-learning-engineering/memory-bound-inference|Memory-Bound Inference]].
+> [!NOTE] Why batch size = arithmetic intensity (for parameter GEMMs)
+> For a matrix multiplication $Y = XW$ where $X \in \mathbb{R}^{B \times K}$ is an activation (varies per sample) and $W \in \mathbb{R}^{K \times N}$ is a weight (fixed), FLOPs $= 2BKN$ and weight bytes $= 2KN$, giving $I = B$. Batch size directly controls whether the operation is memory-bound ($B < I^*$) or compute-bound ($B > I^*$). This is why small-batch inference is memory-bound even for large models — see [[concepts/deep-learning-engineering/memory-bound-inference|Memory-Bound Inference]].
+
+**The general principle, unifying §3.1 and §3.2:**
+
+> [!INFO] Activation-to-activation vs parameter-to-activation GEMMs
+> This distinction explains the entire MFU story:
+>
+> | GEMM type | Operands | $I$ scales with | Example |
+> |-----------|---------|----------------|---------|
+> | Parameter-to-activation | one fixed weight, one activation | $B$ (batch size) | PFFN, $XW_Q$ projections |
+> | Activation-to-activation | two activations, both per-sample | constant (independent of $B$) | $QK^\top$, $AV$, FM dot products |
+>
+> Any cross-token interaction expressed as a dot product between two activation tensors — attention scores, factorization machine inner products, DCN cross layers — will have arithmetic intensity independent of $B$, and will therefore be memory-bound for any batch size at small $T$.
+>
+> RankMixer eliminates all activation-to-activation computation. The cross-token interaction (token mixing) is a **zero-FLOP data permutation** — not a GEMM at all. The attention matrix $A \in \mathbb{R}^{B \times H \times T \times T}$, which must be written to and read from HBM in standard attention, is never materialized. All arithmetic is in the PFFN, which is a parameter-to-activation GEMM with $I = B$.
+>
+> | | Token mixing | Attention score $QK^\top$ |
+> |-|---|---|
+> | FLOPs | 0 | $2BT^2D$ |
+> | New HBM bytes written | $2BTD$ (permuted copy) | $2BHT^2$ (attention matrix) |
+> | Intermediate tensor | none | $A \in \mathbb{R}^{B \times H \times T \times T}$ |
+> | $I$ | 0 (pure data move) | $\sim 12$ (memory-bound, independent of $B$) |
 
 ### 3.3 MFU Measurement and Serving Cost Decomposition
 
