@@ -655,6 +655,17 @@ The full token matrix is $\mathbf{X} = \text{concat}[X_G, X_0, \ldots, X_{T-1}] 
 > [!NOTE] Global token role
 > The global token plays a role analogous to the `[CLS]` token in BERT — it provides a summary position that accumulates cross-feature context through all subsequent mixing layers, and its output is used for the final score prediction.
 
+> [!EXAMPLE] Running example: adding a global token ($T=3$, $D=4$)
+> Extend the RankMixer example by prepending a global token $x_G \in \mathbb{R}^4$ computed as a small MLP over one representative vector from each semantic group:
+>
+> $$x_G = \text{MLP}_g([G_{\text{user}}, G_{\text{item}}]) = [0,\, 0,\, 0,\, 0] \quad \text{(at init; will diverge during training)}$$
+>
+> The full token matrix entering the block stack is now:
+>
+> $$\mathbf{X} = \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 2 & 3 & 4 \\ 5 & 6 & 7 & 8 \end{bmatrix} \in \mathbb{R}^{3 \times 4}$$
+>
+> Row 0 = global summary token; row 1 = user token; row 2 = item token. The global token starts near zero but through training accumulates a cross-feature summary used for the final score prediction. The subsequent Mix-and-Revert operations in §10.2 are demonstrated with the simpler $T=2$ sub-example from Part I to keep the arithmetic clean.
+
 ### 10.2 Mixing-and-Reverting Operation
 
 The central innovation is a *two-phase symmetric transform* that resolves the dimension-mismatch problem.
@@ -680,6 +691,35 @@ The residual $+ \mathbf{X}$ is now dimensionally consistent. *Reverting is not m
 > [!INFO] Why reverting matters for deep models
 > In a pre-norm transformer, the residual stream maintains a fixed shape $\mathbb{R}^{T \times D}$ throughout all layers. The reverting step restores this invariant after each mixing operation, enabling stable pre-norm + RMSNorm stacks at 50+ layers.
 
+> [!EXAMPLE] Mix → pSwiGLU → Revert on the running example ($T=2$, $D=4$, $H=2$)
+> Use the same $\mathbf{X}$ from Part I. Mixing produces (as before):
+>
+> $$\mathbf{H} = \text{Mix}(\mathbf{X}) = \begin{bmatrix} 1 & 2 & 5 & 6 \\ 3 & 4 & 7 & 8 \end{bmatrix} \in \mathbb{R}^{2 \times 4}$$
+>
+> Row 0 of $\mathbf{H}$ = head-0 slices from all tokens; row 1 = head-1 slices from all tokens. The pSwiGLU is applied *in this head-major layout*, learning transformations of each cross-token composite. Suppose pSwiGLU scales by $0.5$ (for illustration):
+>
+> $$\mathbf{H}' = \text{pSwiGLU}(\mathbf{H}) = \begin{bmatrix} 0.5 & 1 & 2.5 & 3 \\ 1.5 & 2 & 3.5 & 4 \end{bmatrix}$$
+>
+> **Reverting:** for each token position $t$, gather the $t$-th slice of size $D/H=2$ from each row of $\mathbf{H}'$:
+>
+> $$X^{\text{rev}}_0 = \text{concat}\!\left[\underbrace{\mathbf{H}'[0,\, 0:2]}_{\text{user's h0, processed}},\; \underbrace{\mathbf{H}'[1,\, 0:2]}_{\text{user's h1, processed}}\right] = [0.5,\, 1,\, 1.5,\, 2]$$
+>
+> $$X^{\text{rev}}_1 = \text{concat}\!\left[\underbrace{\mathbf{H}'[0,\, 2:4]}_{\text{item's h0, processed}},\; \underbrace{\mathbf{H}'[1,\, 2:4]}_{\text{item's h1, processed}}\right] = [2.5,\, 3,\, 3.5,\, 4]$$
+>
+> $$\mathbf{X}^{\text{rev}} = \begin{bmatrix} 0.5 & 1 & 1.5 & 2 \\ 2.5 & 3 & 3.5 & 4 \end{bmatrix} \in \mathbb{R}^{2 \times 4}$$
+>
+> Row 0 is now "all processed heads re-assembled for the user token"; row 1 for the item token. The residual is now semantically correct:
+>
+> $$\mathbf{X}^{\text{rev}} + \mathbf{X} = \begin{bmatrix} 0.5+1 & 1+2 & 1.5+3 & 2+4 \\ 2.5+5 & 3+6 & 3.5+7 & 4+8 \end{bmatrix} = \begin{bmatrix} 1.5 & 3 & 4.5 & 6 \\ 7.5 & 9 & 10.5 & 12 \end{bmatrix}$$
+>
+> Row 0 = (processed user features) + (original user features) ✓ Row 1 = (processed item features) + (original item features) ✓
+>
+> **Contrast with RankMixer** (no reverting — adds $\mathbf{H}'$ directly to $\mathbf{X}$):
+>
+> $$\mathbf{H}' + \mathbf{X} = \begin{bmatrix} 0.5+1 & 1+2 & \mathbf{2.5+3} & \mathbf{3+4} \\ 1.5+5 & 2+6 & 3.5+7 & 4+8 \end{bmatrix} = \begin{bmatrix} 1.5 & 3 & \mathbf{5.5} & \mathbf{7} \\ 6.5 & 8 & 10.5 & 12 \end{bmatrix}$$
+>
+> Row 0, positions 2–3: adds *item*'s head-0 (2.5, 3) to the *user* token's second half-dimensions (3, 4) — semantically mismatched. At shallow depths ($L=2$) the PFFN can compensate for this scrambling; at 50+ layers the accumulated mismatch in the residual stream degrades gradient flow.
+
 ### 10.3 Per-Token SwiGLU
 
 TokenMixer-Large uses *per-token SwiGLU* (pSwiGLU), where each token position $t$ has its own projection matrices:
@@ -688,7 +728,16 @@ $$\text{pSwiGLU}(\cdot) = FC_{\text{down}}\!\bigl(\text{Swish}(FC_{\text{gate}}(
 
 with token-specific projections $FC_i(\mathbf{x}) = W_i^t x_t + b_i^t$, where $\{W_{\text{up}}^t, W_{\text{gate}}^t\} \in \mathbb{R}^{D \times nD}$ and $W_{\text{down}}^t \in \mathbb{R}^{nD \times D}$.
 
-> [!EXAMPLE] Ablation evidence
+> [!EXAMPLE] pSwiGLU vs plain ReLU FFN
+> For token position $t$ with reverted representation $X^{\text{rev}}_t \in \mathbb{R}^D$, the pSwiGLU computes:
+>
+> $$\text{pSwiGLU}(X^{\text{rev}}_t) = W_{\text{down}}^t \cdot \underbrace{\bigl(\text{Swish}(W_{\text{gate}}^t X^{\text{rev}}_t) \odot W_{\text{up}}^t X^{\text{rev}}_t\bigr)}_{\text{gated hidden state} \in \mathbb{R}^{nD}}$$
+>
+> The Swish gate $\sigma = \text{Swish}(W_{\text{gate}}^t X^{\text{rev}}_t) \in \mathbb{R}^{nD}$ is a learned, input-dependent mask: each of the $nD$ hidden dimensions can be suppressed (near zero) or passed through (near one) based on the content of $X^{\text{rev}}_t$. This lets each token position selectively activate different parts of its FFN capacity depending on what it received from the mixing step.
+>
+> A plain per-token ReLU FFN ($W_2^t \cdot \text{ReLU}(W_1^t X^{\text{rev}}_t)$) has fixed sparsity from the ReLU nonlinearity but no input-dependent gating — every feature competes equally. The ablation (−0.10% for ReLU vs −0.21% for shared SwiGLU) shows that per-token weights matter more than the gating mechanism, but gating contributes an additional 0.10% on top.
+
+> [!EXAMPLE] Ablation evidence (from paper)
 > Replacing pSwiGLU with a standard shared SwiGLU costs −0.21% AUC; replacing it with a per-token FFN (ReLU, no gating) costs −0.10% AUC. The per-token gating mechanism contributes more than the token-specificity alone.
 
 ### 10.4 Residuals and Normalization
@@ -715,6 +764,32 @@ $$\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{CE}}(y, \hat{y}^{(L)}) + \lamb
 > At depth 50+, the gradient of $\mathcal{L}_{\text{CE}}$ with respect to block 5's parameters has been attenuated by ~45 Jacobian multiplications. The auxiliary loss at block $\ell$ provides a *direct* gradient signal to all blocks $\leq \ell$, bypassing the deep chain. This is analogous to GoogLeNet's auxiliary classifiers.
 
 Ablation: removing both inter-residuals and auxiliary loss costs −0.04% AUC at the 4B scale; removing the standard within-block residual costs −0.15% AUC.
+
+> [!EXAMPLE] Inter-residual with stride $s=2$ across 4 blocks
+> With $s=2$, every other block's output is added to the block two steps ahead. Tracing the signal path for a single token vector:
+>
+> ```
+> X^(0) ──► Block 1 ──► X^(1) ──► Block 2 ──► X^(2)
+>    └──────────────── (+) ──────────────────►  X^(2) += X^(0)
+>
+> X^(2) ──► Block 3 ──► X^(3) ──► Block 4 ──► X^(4)
+>    └──────────────── (+) ──────────────────►  X^(4) += X^(2)
+> ```
+>
+> Without inter-residuals, a gradient flowing back to block 1 must pass through Jacobians for blocks 2, 3, and 4 — four multiplications that can each attenuate it. With stride-2 inter-residuals, the gradient from block 3's loss also has a direct path back to block 1 (bypassing block 2), and the auxiliary loss at block 2 directly supervises blocks 1 and 2. At 50 blocks the difference between chaining 50 Jacobians and having skip connections every 2 steps is the difference between stable and vanishing gradients.
+
+> [!INFO] What each step does to the data — TokenMixer-Large block
+>
+> | Step | Tensor shape | Semantic meaning of each row |
+> |------|-------------|------------------------------|
+> | Input $\mathbf{X}$ | $(T, D)$ | Each row = one feature group (global, user, item, …) |
+> | After Mix | $(T, D)$ | Each row = one head-slice gathered across all groups |
+> | After pSwiGLU (in mixed layout) | $(T, D)$ | Each row = gated transformation of cross-token composite |
+> | After Revert | $(T, D)$ | Each row = processed heads **re-assembled per token** (shape-consistent with input) |
+> | After residual $+ \mathbf{X}$ and RMSNorm | $(T, D)$ | Each row = token-specific representation enriched by cross-token context |
+> | After second pSwiGLU + residual | $(T, D)$ | Block output: same shape, ready for next block or pooling |
+>
+> The Revert step is the key difference from RankMixer: it restores the token-major semantics of each row before the residual addition, enabling semantically correct skip connections at any depth.
 
 ### 10.6 Block Architecture Diagram
 
