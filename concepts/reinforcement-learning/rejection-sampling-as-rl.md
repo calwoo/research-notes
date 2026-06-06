@@ -12,6 +12,7 @@
   - [[#2.2 Correctness|2.2 Correctness]]
   - [[#2.3 Efficiency and the Optimal Bound|2.3 Efficiency and the Optimal Bound]]
   - [[#2.4 Connection to the Optimal LLM Policy|2.4 Connection to the Optimal LLM Policy]]
+  - [[#2.5 Relationship to Importance Sampling|2.5 Relationship to Importance Sampling]]
 - [[#3. Rejection Sampling for LLMs RAFT|3. Rejection Sampling for LLMs: RAFT]]
   - [[#3.1 The Algorithm|3.1 The Algorithm]]
   - [[#3.2 Why This Is RL|3.2 Why This Is RL]]
@@ -187,6 +188,51 @@ $$\Pr(\text{accept}\;y) = \frac{\tilde{p}(y)}{M \cdot \pi_\text{ref}(y|x)} = \fr
 with tightest bound $M^* = e^{r_\text{max}/\beta}$.
 
 **For binary reward and $\beta \to \infty$:** Both correct and incorrect responses have $e^{r/\beta} \to 1$ (since $e^{0/\beta} = e^{1/\beta} \to 1$), but their *ratio* diverges — the acceptance criterion collapses to $\mathbf{1}[r(x,y)=1]$. Accept iff the response is correct. This is precisely the RAFT filter step, with $\pi_\text{ref}$ replaced by the current policy $\pi_\theta$.
+
+### 2.5 Relationship to Importance Sampling
+
+Both rejection sampling and *importance sampling* (IS) solve the same problem — computing expectations or drawing samples under a target $p^*$ using a tractable proposal $q$ — and both are built from the same primitive: the *importance weight*
+
+$$w(y) = \frac{p^*(y)}{q(y)} = \frac{\tilde{p}(y)}{Z \cdot q(y)}$$
+
+The two methods differ only in how they use $w$.
+
+**Importance sampling** keeps every proposal but reweights it:
+
+$$\mathbb{E}_{p^*}[f(y)] = \mathbb{E}_q\!\left[f(y)\,w(y)\right] \approx \frac{1}{n}\sum_{i=1}^n f(y_i)\,w(y_i), \quad y_i \sim q$$
+
+When $Z$ is unknown (as with $\pi^*$ for LLMs), the *self-normalized* estimator is used:
+
+$$\hat{\mu}_\text{SNIS} = \frac{\sum_i f(y_i)\,\tilde{w}_i}{\sum_i \tilde{w}_i}, \quad \tilde{w}_i = \frac{\tilde{p}(y_i)}{q(y_i)}$$
+
+This is consistent but biased for finite $n$.
+
+**Rejection sampling** *binarizes* the same weight: a proposal $y \sim q$ is accepted iff $u \leq \tilde{p}(y)/(Mq(y)) = w(y)/(M/Z)$. The effective weight assigned to each proposal is therefore
+
+$$w_\text{RS}(y_i) = \begin{cases} 1 & \text{accepted (high } w_i\text{)} \\ 0 & \text{rejected (low } w_i\text{)} \end{cases}$$
+
+RS achieves *exact, equal-weight* samples from $p^*$ by paying a cost in wasted proposals. IS retains all proposals by paying a cost in weight variance. The trade-off is summarized:
+
+| | Importance Sampling | Rejection Sampling |
+|---|---|---|
+| Proposals kept | All (reweighted) | Only accepted |
+| Weight per sample | Continuous $\tilde{w}_i$ | Binary $\{0,1\}$ |
+| Output | Weighted approximation to $p^*$ | Exact i.i.d. samples from $p^*$ |
+| Failure mode | High weight variance | Low acceptance rate |
+
+**Both failure modes have the same root cause.** When $p^*$ and $q$ are poorly matched, importance weights are highly variable — a few proposals $y$ with large $w(y)$ dominate. This is equivalent to a low RS acceptance rate (most proposals fall in the low-$w$ region and are rejected). Quantitatively, the IS estimator variance and the RS acceptance rate are controlled by the same quantity:
+
+$$\text{Var}_q[w(y)] = \mathbb{E}_q[w^2] - 1 = \frac{M^*}{Z} - 1 = \frac{1}{\text{acceptance rate}} - 1$$
+
+so high IS variance ↔ low acceptance rate. *Mismatch between $p^*$ and $q$ hurts both methods equally.*
+
+> [!INFO] Weighted Monte Carlo: the unifying picture
+> Both IS and RS produce a *weighted sample set* $\{(y_i, w_i)\}$ approximating $p^*$. IS uses continuous weights; RS binarizes them at a threshold. The general framework of *weighted Monte Carlo* — keep all proposals, assign weights, normalize — subsumes IS as the $M \to \infty$ limit (never reject anything) and RS as the special case where weights are thresholded to $\{0,1\}$.
+
+**The RAFT / RAFT++ reread.** This dichotomy maps exactly onto the two algorithms:
+
+- **RAFT** implements RS: draw $y_i \sim \pi_\theta$, assign binary weights (accept iff $r=1$), imitate accepted samples via SFT.
+- **RAFT++** implements an IS correction on top: the per-token ratio $s_t = \pi_\theta/\pi_{\theta_\text{old}}$ reweights samples collected under the old policy to produce an unbiased estimate under the current policy — this is self-normalized IS correcting for the off-policy gap. The PPO clip $s_t \in [1-\epsilon, 1+\epsilon]$ plays the role of the envelope $M$, bounding the weight ratio to prevent any single sample from dominating.
 
 ---
 
