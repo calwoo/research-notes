@@ -160,6 +160,10 @@ Normalizing: $p(y \mid \text{accept}) = \tilde{p}(y)/Z = p^*(y)$. $\square$
 > [!NOTE] The geometric picture
 > The acceptance region in $(y, u)$ space is the region under the curve $u = \tilde{p}(y)/(Mq(y))$. Uniform sampling in the rectangle $[0,1] \times \text{support}(q)$ and keeping only points in this region is equivalent to sampling uniformly under the graph of $\tilde{p}/M$ — which gives $\tilde{p}$ as the marginal. This is the graphical interpretation of rejection sampling.
 
+<img src="figures/rejection-sampling-envelope.png" width="460" alt="Rejection sampling envelope diagram">
+
+*Figure 1 (Guzman, 2018): The dashed envelope $M \cdot q(y)$ dominates the solid target $\tilde{p}(y)$ everywhere. At a proposed sample near $y=2$, the red segment (above $\tilde{p}$, inside the envelope) causes rejection; the green segment (below $\tilde{p}$) would cause acceptance. The ratio of green to total column height equals the acceptance probability $\tilde{p}(y)/(Mq(y))$.*
+
 ### 2.3 Efficiency and the Optimal Bound
 
 The overall probability of acceptance on any single proposal is:
