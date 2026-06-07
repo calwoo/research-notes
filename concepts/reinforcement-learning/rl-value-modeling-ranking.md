@@ -40,6 +40,13 @@
   - [[#7.4 Exploration in Production|7.4 Exploration in Production]]
   - [[#7.5 Reward Shaping Pitfalls|7.5 Reward Shaping Pitfalls]]
 - [[#8. Summary and Taxonomy|8. Summary and Taxonomy]]
+- [[#9. Industrial Case Studies|9. Industrial Case Studies]]
+  - [[#9.1 YouTube — Online Matching (Real-Time Diag-LinUCB)|9.1 YouTube — Online Matching (Real-Time Diag-LinUCB)]]
+  - [[#9.2 YouTube — REINFORCE at Scale|9.2 YouTube — REINFORCE at Scale]]
+  - [[#9.3 Meta — Horizon and Production RL|9.3 Meta — Horizon and Production RL]]
+  - [[#9.4 TikTok — MMoE Weighted Scoring|9.4 TikTok — MMoE Weighted Scoring]]
+  - [[#9.5 Pinterest — DRL-PUT|9.5 Pinterest — DRL-PUT]]
+  - [[#9.6 Cross-Platform Engineering Patterns|9.6 Cross-Platform Engineering Patterns]]
 - [[#References|References]]
 
 ---
@@ -240,6 +247,27 @@ The exploration bonus $\alpha \sqrt{\phi^\top A^{-1} \phi}$ is the *posterior st
 $$\text{Regret}(T) = \sum_{t=1}^T \left[\max_a \mathbb{E}[r \mid s_t, a] - \mathbb{E}[r \mid s_t, a_t^*]\right] = O\!\left(d\sqrt{T \log(T/\delta)}\right)$$
 
 The $d\sqrt{T}$ scaling is tight: the regret grows as the square root of time (sublinear) and linearly in the feature dimension $d$.
+
+> [!EXAMPLE] YouTube Online Matching — LinUCB at Production Scale
+> *Yi et al. (2023, RecSys)* deploy a real-time bandit system called **Online Matching** at YouTube that extends LinUCB to billion-scale via two key ideas.
+>
+> **Space pruning via a sparse bipartite graph.** A two-tower neural network embeds users and items into a shared space. Users are discretized into $C$ clusters; a sparse bipartite graph is built between user clusters and items based on embedding similarity. Only edges in this graph are eligible for exploration — this prunes the exploration space from millions of items down to $O(C \cdot k)$ cluster-item pairs.
+>
+> <img src="figures/yi2023-fig1-closed-loop.png" width="560" alt="Online Matching closed-loop system diagram">
+>
+> *Figure 1 (Yi et al., 2023): The Online Matching closed loop. User feedback on explored items is aggregated in real time and feeds back into the bandit parameters, which immediately influence the next request's candidate set.*
+>
+> <img src="figures/yi2023-fig2a-bipartite-graph.png" width="400" alt="Bipartite graph between user clusters and items"> <img src="figures/yi2023-fig2b-cluster.png" width="450" alt="Within-cluster exploration view">
+>
+> *Figure 2 (Yi et al., 2023): (left) The sparse bipartite graph between user clusters and candidate items; (right) within-cluster view showing how Diag-LinUCB restricts exploration to graph edges.*
+>
+> **Diag-LinUCB — distributed parameter updates.** Standard LinUCB requires maintaining and inverting a global $d \times d$ matrix $A$, which is infeasible at scale. Online Matching assigns *independent diagonal covariance matrices* to each cluster-item edge. This allows bandit parameters to be updated asynchronously and in parallel across the entire graph, with policy update latency in the tens of milliseconds. The UCB bonus per edge $(c, j)$ is:
+>
+> $$\text{UCB}_{c,j}(s) = \hat\theta_{c,j}^\top x_s + \alpha / \sqrt{n_{c,j}}$$
+>
+> where $x_s$ is the user's real-time distribution over clusters and $n_{c,j}$ is the edge's sample count — a cheap diagonal approximation to the full posterior variance.
+>
+> **Production result:** +0.04% daily active users (exploitation holdout), and measurable growth in the daily discoverable corpus size for new videos. See §9.1 for full deployment details.
 
 ### 3.3 NeuralUCB
 
@@ -689,6 +717,132 @@ The following table summarizes the algorithmic families surveyed, with guidance 
 
 ---
 
+## 9. Industrial Case Studies 🏭
+
+The sections above cover algorithmic families. This section grounds them in specific production systems, tracing *which* algorithm each major platform chose and *why*, including engineering constraints that theory papers rarely discuss.
+
+### 9.1 YouTube — Online Matching (Real-Time Diag-LinUCB)
+
+**Paper:** Yi et al. (2023, RecSys). **Problem:** YouTube uploads millions of new videos daily. Batch-trained models have multi-hour update latency and are biased toward already-popular content, leaving fresh items systematically under-explored.
+
+**System overview:**
+
+<img src="figures/yi2023-fig3-system-architecture.png" width="660" alt="End-to-end Online Matching system architecture">
+
+*Figure 3 (Yi et al., 2023): End-to-end architecture. The dashed line separates the offline pipeline (two-tower model → embedding clustering → sparse bipartite graph construction) from the online agent (real-time bandit parameter updates and serving).*
+
+The offline pipeline runs periodically to rebuild the sparse bipartite graph. The online agent runs continuously, updating Diag-LinUCB parameters in real time:
+
+<img src="figures/yi2023-fig4-online-agent.png" width="660" alt="Online agent internals showing feedback aggregation and real-time parameter updates">
+
+*Figure 4 (Yi et al., 2023): The online agent. User feedback events stream into an aggregation processor, which updates bandit parameters for each cluster-item edge and writes them to a low-latency lookup service consumed by the ranking stack.*
+
+**Two deployment modes:**
+
+| Mode | Traffic | Goal | Reward |
+|------|---------|------|--------|
+| Type-I: Fresh Content Discovery | Small (exploration slice) | Quickly identify high-quality fresh items | User engagement on fresh videos |
+| Type-II: Corpus Exploration | Large | Grow the discoverable corpus | Diversity of discovered content |
+
+**Production results:**
+
+<img src="figures/yi2023-fig6-holdback-results.png" width="480" alt="Holdback A/B test showing +0.04% daily active users">
+
+*Figure 6 (Yi et al., 2023): Holdback experiment for Type-I (Fresh Content Discovery). Online Matching achieves a statistically significant +0.04% lift in daily active users over the batch-trained baseline.*
+
+<img src="figures/yi2023-fig7-corpus-size.png" width="540" alt="Growth in daily discoverable corpus size across impression thresholds">
+
+*Figure 7 (Yi et al., 2023): Type-II (Corpus Exploration) result. Online Matching substantially grows the daily discoverable corpus — the number of distinct items that receive at least $k$ impressions — across all impression thresholds.*
+
+**Engineering lessons:**
+- The bipartite graph is the critical engineering primitive: it converts an $O(M)$ exploration space ($M$ = millions of items) into $O(C \cdot k)$ tractable edges.
+- Diagonal covariance approximation sacrifices Bayesian rigor for parallel updates — a deliberate engineering trade-off.
+- Two-tower features provide a warm start for Diag-LinUCB: the embedding geometry encodes prior knowledge so exploration doesn't start from scratch on new items.
+
+### 9.2 YouTube — REINFORCE at Scale
+
+**Paper:** Chen et al. (2019). **Problem:** YouTube's recommendation policy is a sequence model over billions of users and millions of items; naive policy gradient has catastrophic importance weight variance when the action space is a $K$-item slate.
+
+**Key engineering decisions:**
+- *Softmax policy* over items: $\pi_\theta(a \mid s) \propto \exp(f_\theta(s, a))$. The log-policy gradient has a closed form through the softmax Jacobian.
+- *Top-K off-policy correction:* clip IS weights at $1/K$, not $1$, since the system selects $K$ items and a single item's over-representation is diluted by $K$. This is a tighter variance bound than generic clipping.
+- *Batch training on logged data* with daily model updates — not real-time like Online Matching. The two systems are complementary: REINFORCE trains the value model for the main feed; Online Matching handles fresh item exploration on a side allocation.
+
+**Signal combination:** The reward is a weighted sum of engagement signals: $r = w_1 \cdot \text{click} + w_2 \cdot \text{watch-time} + \ldots$, with weights $w_k$ hand-tuned. The RL component learns the *ranking policy*, not the reward weights — reward scalarization remains fixed.
+
+### 9.3 Meta — Horizon and Production RL
+
+**Platform:** Horizon (open-source, 2018). **Problem:** Facebook and Instagram serve billions of feed impressions daily; supervised ranking models overfit to past engagement patterns and create rich-get-richer feedback loops.
+
+**Architecture:** Horizon provides a *batch RL training framework* with:
+- **Off-policy evaluation** via doubly-robust estimators before any model is deployed live
+- **Counterfactual policy evaluation** as a mandatory gate before live A/B tests
+- **Incremental daily retraining** on tens of millions of state transitions from production exposure
+- PyTorch + Caffe2 serving, optimized for GPU inference latency
+
+**Signals combined:** Watch time (primary), likes, comments, shares, DM sends per reach. The value model is a deep network that takes per-task predictions as inputs and is trained via fitted Q-iteration on logged transitions.
+
+**Key challenge:** *Noisy reward attribution.* A video watched in a session at time $t$ affects the user's 7-day return rate, but many other videos are also watched in the same session. Meta addresses this with session-level reward assignment and session-feature state representations that carry engagement history across requests.
+
+**QCon 2024 result:** RL for user retention deployed to billions of Facebook users, with a reported improvement in retention attribution compared to session-level supervised baselines.
+
+### 9.4 TikTok — MMoE Weighted Scoring
+
+**System:** TikTok's production ranking (Monolith framework). Unlike the systems above, TikTok's primary value model is *not* trained with RL — it uses a *Multi-gate Mixture-of-Experts* (MMoE) multitask network with a hand-weighted linear score. However, *exploration* is handled by a separate contextual bandit layer.
+
+**Value model formula:**
+$$\text{Score}(u, v) = \sum_k w_k \cdot P_k(u, v)$$
+where $P_k \in \{\text{like prob, comment prob, share prob, watch-time regression, finish rate}\}$ and $w_k$ are business-tuned constants. This is pure linear scalarization — the Pareto-optimality failure mode of §2 applies, but TikTok accepts this in exchange for extreme interpretability and speed.
+
+**RL role — exploration:** A contextual bandit layer operates *above* the value model to decide which traffic to send to novel vs. established content. The bandit observes user clusters and item novelty features, and allocates a fraction of requests to exploration candidates. This two-layer design (supervised value model + bandit exploration) is pragmatic: the value model benefits from decades of supervised learning infrastructure; the bandit handles the exploration-exploitation trade-off without requiring RL training of the full ranking stack.
+
+**Online training:** Monolith supports real-time embedding updates with collision-free hash tables and frequency filtering — item embeddings for new videos are pushed live within minutes of upload, giving the MMoE scorer immediate signal even before the bandit has explored the item.
+
+### 9.5 Pinterest — DRL-PUT
+
+**Paper:** RecSys 2025 (arXiv 2509.05292). **Problem:** Pinterest's ad ranking uses a utility function with multiple per-task predictions; manually tuning the utility weights across diverse user segments is a labor-intensive and suboptimal process.
+
+**Approach — RL over hyperparameters:** Instead of applying RL to the ranker directly, Pinterest trains an RL *meta-policy* that outputs the utility weights per ad request:
+
+$$\pi_\phi(s) = (w_1(s), \ldots, w_K(s))$$
+
+where $s$ is the user context at request time. This is equivalent to Jeunen et al.'s scalarization-weight-as-action framing (§6.4), but implemented with a direct policy gradient (no value function).
+
+| Component | Detail |
+|-----------|--------|
+| State | User features from ad request |
+| Action | Discrete set of hyperparameter combinations $(w_1, \ldots, w_K)$ |
+| Reward | Customized per-user reward signal (CTR + downstream conversion) |
+| Algorithm | Policy gradient (DNN-based, no critic) |
+
+**Production A/B result:** +9.7% CTR, +7.7% long-click-through rate versus manually-tuned utility weights. This is one of the strongest published RL-for-ranking production numbers.
+
+**Engineering insight:** Framing the problem as *learning over hyperparameters* rather than *training the ranker with RL* dramatically reduces deployment risk — the base ranker is unchanged, only the weight-selection policy is new. Failed exploration degrades weights, not the ranker itself.
+
+### 9.6 Cross-Platform Engineering Patterns
+
+Across these deployments, three recurring engineering patterns dominate:
+
+| Pattern | Platforms | What it solves |
+|---------|-----------|---------------|
+| **Hybrid offline + online** | YouTube (Online Matching), Meta (Horizon) | Offline pipeline prunes exploration space; online agent provides real-time adaptation |
+| **Two-layer design** (supervised ranker + bandit explorer) | TikTok, Netflix, Spotify | Isolates exploration risk from core ranking quality; simpler to debug and roll back |
+| **Scalarization weights as actions** | Pinterest (DRL-PUT), Jeunen et al. | Avoids training the full ranker with RL; learns only the combination policy |
+
+**Algorithm selection in practice:**
+
+The dominant pattern across platforms is *not* full end-to-end RL of the ranking stack. Instead:
+1. The *multitask supervised model* handles per-task prediction (clicks, likes, watch-time).
+2. A *lightweight RL component* handles either exploration (bandits) or weight combination (meta-policy over scalarization).
+3. *Batch RL* (fitted Q-iteration, LRF) is used when the north-star reward is delayed and must be propagated back through time.
+
+Full online RL (REINFORCE, actor-critic) is reserved for the largest platforms with dedicated ML infrastructure and the traffic volume to tolerate exploration costs.
+
+> [!WARNING]
+> *The academic literature is biased toward full RL pipelines because they make cleaner papers. Production deployments at TikTok, Netflix, and Spotify use much simpler bandit + supervised hybrid designs. Match the algorithm to your infrastructure, not to the most impressive-looking paper.*
+
+---
+
 ## References
 
 | Reference Name | Brief Summary | Link to Reference |
@@ -707,4 +861,5 @@ The following table summarizes the algorithmic families surveyed, with guidance 
 | [Jeunen et al. (2024), "Multi-Objective Recommendation via Multivariate Policy Learning"](https://arxiv.org/abs/2405.02141) | RecSys 2024: scalarization weights as continuous actions; pessimistic offline RL (LCB) for safe multi-objective recommendation | https://arxiv.org/abs/2405.02141 |
 | [Chen et al. (2026), "A Long-term Value Prediction Framework in Video Ranking"](https://arxiv.org/abs/2602.17058) | WWW 2026 Alibaba: multi-task LTV prediction with position-aware debias (PDQ), attribution module, and censoring-aware temporal modeling | https://arxiv.org/abs/2602.17058 |
 | [Xiao & Wang (2024), "Towards Off-Policy Reinforcement Learning for Ranking Policies with Human Feedback"](https://arxiv.org/abs/2401.08959) | Off-policy value ranking framework unifying long-term reward optimization with NDCG-based ranking quality | https://arxiv.org/abs/2401.08959 |
+| [Yi et al. (2023), "Online Matching: A Real-time Bandit System for Large-scale Recommendations"](https://arxiv.org/abs/2307.15893) | RecSys 2023 (YouTube/Google DeepMind): Diag-LinUCB with sparse bipartite graph for real-time fresh content discovery and corpus exploration at YouTube scale | https://arxiv.org/abs/2307.15893 |
 | [Afsar et al. (2022), "Reinforcement Learning Based Recommender Systems: A Survey"](https://arxiv.org/abs/2101.06286) | Comprehensive taxonomy of RL methods for recommendation: bandit, model-based, model-free, and hybrid approaches | https://arxiv.org/abs/2101.06286 |
