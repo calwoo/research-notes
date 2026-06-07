@@ -2,6 +2,7 @@
 
 ## Table of Contents
 
+- [[#Motivation: The Unique Challenges of Search|Motivation: The Unique Challenges of Search]]
 - [[#1. How Search Differs from Recommendation|1. How Search Differs from Recommendation]]
   - [[#1.1 The Query as a First-Class Object|1.1 The Query as a First-Class Object]]
   - [[#1.2 Relevance Judgments vs. Engagement Signals|1.2 Relevance Judgments vs. Engagement Signals]]
@@ -32,6 +33,63 @@
   - [[#7.2 Reward Sparsity in Search|7.2 Reward Sparsity in Search]]
   - [[#7.3 Query Distribution Shift|7.3 Query Distribution Shift]]
 - [[#References|References]]
+
+---
+
+## Motivation: The Unique Challenges of Search 💡
+
+Search ranking looks, on the surface, like a supervised learning problem with a clean objective: given a query, rank the most relevant documents first. You have training data — billions of query-click pairs — and you have a metric: NDCG, MRR, or some human-rated relevance score. Just train a model to predict relevance, sort by score, and ship. Why does RL enter the picture at all?
+
+The answer is that search has three structural properties that make standard supervised learning quietly wrong in ways that are hard to detect until something breaks.
+
+### You Only See What You Showed
+
+The fundamental problem in learning from search logs is *confounding*: you only observe user behavior on the results you actually showed, in the positions you showed them in. You never observe what would have happened if you'd shown different results.
+
+Imagine you ranked document A first and document B fifth for a particular query. Document A got many clicks; document B got few. Your supervised model sees this as evidence that A is more relevant than B. But is it? Maybe B is actually far more relevant — but most users never scrolled to position five to find out. The click data tells you what users did given your ranking, not what they would have done given a different ranking. Any model trained on this data will inherit the biases of the logging policy that collected it.
+
+This isn't a minor calibration issue. In web search, the examination probability at position 5 is typically a quarter of what it is at position 1. Documents ranked below position 10 receive almost no clicks regardless of their quality. A supervised model trained on raw click logs will learn, in effect, to predict *where items currently appear* rather than *how relevant they actually are*. The ranker that results from this training will be conservative and self-reinforcing: it ranks what was previously ranked well, because those are the items with positive training signal.
+
+> [!EXAMPLE] The Invisible Good Result
+> Suppose a new creator posts a video that perfectly answers a common search query. Your ranker has never seen this creator before — no engagement history, no click signal. It ranks the video at position 12. Almost no one clicks on it. The click data looks like "position 12 video is irrelevant." Six months later, the creator is popular on another platform, users are searching for them specifically, and your ranker is still stuck placing their videos below-the-fold because it learned from its own past decisions. RL — specifically bandit exploration — is the mechanism for breaking this cycle.
+
+Counterfactual learning-to-rank (§2) and offline RL (§4) are the tools that address this problem. They correct for the position bias in click logs mathematically, allowing the model to estimate what users *would* have clicked had they seen items at different positions. This isn't a minor technical detail — it's a prerequisite for any search RL system to work correctly.
+
+### The Position Bias Amplifier
+
+Recommendation feeds have position effects: the first item in a carousel gets more attention than the tenth. But in search, position bias is *stark and deterministic*. Eye-tracking studies of search result pages consistently show that users read the first result, skim the second and third, and rarely examine anything below the fold. The examination probability drops by roughly half for every three positions.
+
+This means that if you train a ranking model on raw clicks without correcting for position, you are training it to rank items to the top because high-position items got clicks — not because they are relevant. The model has confounded *position* with *quality*, and your offline metrics will look fine (the model predicts clicks accurately!) while your actual ranking quality may be poor.
+
+The insidious thing is that this failure is hard to catch. If you measure success by click-through rate on your ranked list, a position-biased model will score well: it puts the previously-clicked items back at the top, where they get clicked again. Only when you run experiments with *randomized positions* — or deploy an IPS-corrected model — do you discover that the "best" ranker by click metrics was actually just a good memorizer of the existing position order.
+
+> [!WARNING] Offline Metrics Are Not Enough
+> A model that achieves NDCG of 0.87 on your test set might be inflating that number because your test set was also collected under a position-biased logging policy. NDCG measured on biased data is not the same as NDCG against human relevance judgments. Hager et al. (2024) audited this directly on Baidu's production dataset and found that IPS-corrected methods reliably improve click prediction but only inconsistently improve human-rated NDCG — a sobering finding that every search team should internalize before claiming RL-based improvements.
+
+### Search Is a Conversation, Not a Single Decision
+
+The third structural challenge is temporal. When a user issues a search query, they are often in the middle of an *information-seeking session* that spans multiple queries. They search, scan the results, maybe click one or two items, realize they need something different, reformulate the query, and search again. The quality of each ranking decision affects all the subsequent ones.
+
+If your ranker shows poor results on the first query, the user reformulates. If they reformulate twice without finding what they need, they may leave. If your ranker shows excellent results immediately, the user may be done in one query and leave satisfied. From a supervised learning perspective, a one-query session and a five-query session might look identical per-query — but they represent very different user experiences.
+
+RL's session MDP framing (§3) captures this directly. The user's *state* evolves across queries: their information need becomes more refined (or more frustrated) with each interaction. A ranking policy that optimizes for the full session — minimizing reformulations, maximizing successful task completion — looks different from one that optimizes each query independently. Session-level RL can learn to sacrifice a little per-query CTR on early queries in order to surface higher-quality results that resolve the user's intent quickly.
+
+> [!INFO] Why This Matters More in Short-Video Search
+> In text search (Google, Bing), sessions are often short and query intent is narrow. In short-video search (Instagram, TikTok, YouTube), sessions are longer and intent is more exploratory — users don't always know what they want until they see it. This makes the session MDP framing more valuable: the ranking policy needs to guide the user's exploration across multiple queries and swipes, not just answer a single lookup.
+
+### What RL Adds to Search
+
+Given these three challenges — confounded observations, position bias, and session dynamics — RL provides a coherent framework that addresses all three simultaneously:
+
+**Counterfactual reasoning.** Off-policy RL methods learn from data collected under the logging policy while correctly estimating the value of a different target policy. This is the principled answer to "I can only observe what I showed." Importance weighting and doubly-robust estimators give you an unbiased view of what *would have happened* under your new policy, without running a live experiment first.
+
+**Debiased credit assignment.** Counterfactual LTR (§2) — the foundational technique that RL search work builds on — explicitly models position examination probabilities and divides them out of the reward signal. The result is a reward that reflects genuine relevance, not position-inflated click rates. Every offline RL algorithm in this note is built on top of this debiasing layer.
+
+**Session-level optimization.** The Search Session MDP (§3) frames ranking as a multi-step decision process where actions in early queries affect outcomes in later ones. REINFORCE and actor-critic methods optimize a policy's expected return across the full session, not just the current query. This allows the ranking system to learn strategies like: show a diverse result set early in the session to help users narrow their intent, then show more focused results once intent is clearer.
+
+**Principled exploration.** Bandit algorithms (§5) give you a mathematically grounded way to explore new content — fresh videos, new creators, novel query-document combinations — without sacrificing user experience on the majority of traffic. The exploration budget is explicitly managed, and the information gained from each exploration is folded back into the value estimates for future decisions.
+
+None of these capabilities replaces your existing supervised ranking stack. They extend it. The typical search RL deployment keeps the supervised retrieval and feature models unchanged, and adds an RL policy on top that learns to combine features into a ranking score — or that periodically explores with a small traffic slice to gather unbiased signal for offline training. The entry point is almost always the same: fix your position bias first, measure what your ranker actually does without it, and then choose which RL lever to pull.
 
 ---
 
