@@ -26,7 +26,15 @@
   - [[#7.1 NeRF Positional Encodings|7.1 NeRF Positional Encodings]]
   - [[#7.2 SIREN: Sinusoidal Activation Networks|7.2 SIREN: Sinusoidal Activation Networks]]
   - [[#7.3 Occupancy Networks and Other Implicit Representations|7.3 Occupancy Networks and Other Implicit Representations]]
-- [[#8. References|8. References]]
+- [[#8. Cross-Attention as Adaptive Frequency Selection|8. Cross-Attention as Adaptive Frequency Selection]]
+  - [[#8.1 The Limitation of Fixed Fourier Features|8.1 The Limitation of Fixed Fourier Features]]
+  - [[#8.2 Multiscale Token Bank|8.2 Multiscale Token Bank]]
+  - [[#8.3 Cross-Attention over Frequency Tokens|8.3 Cross-Attention over Frequency Tokens]]
+  - [[#8.4 Adaptive Frequency Masking|8.4 Adaptive Frequency Masking]]
+  - [[#8.5 Adaptive Frequency Enhancement via DFT Injection|8.5 Adaptive Frequency Enhancement via DFT Injection]]
+  - [[#8.6 Dual-Network Architecture for PDEs|8.6 Dual-Network Architecture for PDEs]]
+  - [[#8.7 Experimental Results|8.7 Experimental Results]]
+- [[#9. References|9. References]]
 
 ---
 
@@ -522,7 +530,170 @@ Fourier feature maps (or learned embeddings) applied to the input coordinates of
 
 ---
 
-## 8. References
+## 8. Cross-Attention as Adaptive Frequency Selection 🎯
+
+> [!INFO] Paper
+> Feng, Tang, Wan & Zhou (2025), ["Overcoming Spectral Bias via Cross-Attention"](https://arxiv.org/abs/2512.18586). This section follows their architecture and analysis.
+
+### 8.1 The Limitation of Fixed Fourier Features
+
+The Tancik et al. approach (§4–§6) selects the frequency matrix $B$ once at initialization — the bandwidth $\sigma$ is a global hyperparameter fixed before training begins. This raises a fundamental question: *what if the target function has spatially non-uniform frequency content?* A texture with fine detail in one region and smooth gradients in another would ideally use high $\sigma$ locally and low $\sigma$ elsewhere, but a fixed $B$ cannot adapt.
+
+Moreover, even for globally high-frequency targets, random sampling of $B \sim \mathcal{N}(0, \sigma^2 I)$ may wastefully duplicate nearby frequency slots while missing informative frequency bands. The random feature bank is input-*independent* — every query to the network uses the same frequency dictionary regardless of where in the domain we are evaluating.
+
+**The proposal of Feng et al. (2025):** treat the Fourier feature bank as a *key–value memory* and use *cross-attention* to let the network query it adaptively at every layer. The attention weights become learned, input-dependent frequency selectors, dynamically routing gradient signal to the frequency components the current residual requires.
+
+### 8.2 Multiscale Token Bank 🏗️
+
+**Definition (Multiscale Random Fourier Feature Bank).** Sample base frequencies $\omega_m \sim \mathcal{N}(0, \sigma^{-2} I_{d_\text{in}})$ for $m = 1, \ldots, M_\text{base}$. Form dyadic dilations:
+
+$$\tilde{\omega}_{m,k} = 2^k \omega_m, \quad k = 0, 1, \ldots, K$$
+
+giving $M = M_\text{base}(K+1)$ total frequencies spanning $K+1$ octaves. Attach learnable amplitude envelopes:
+
+$$a_{m,k} = \exp(-\beta \|\tilde{\omega}_{m,k}\|_2), \quad \beta \geq 0 \text{ (trainable)}$$
+
+so the network can suppress or amplify each octave. The full feature vector is:
+
+$$\phi(x) = \sqrt{\frac{1}{M}} \bigl[a_{m,k} \cos(\tilde{\omega}_{m,k}^\top x + b_{m,k})\bigr]_{(m,k)} \in \mathbb{R}^M$$
+
+> [!NOTE] Connection to §4
+> This is exactly the Rahimi–Recht random Fourier feature map (§4.2), extended with two modifications: (1) dyadic scaling covers multiple octaves rather than sampling all from a single $\mathcal{N}(0, \sigma^2)$, and (2) the amplitude envelope $a_{m,k}$ is trainable, allowing the learned spectrum to deviate from the initialization prior.
+
+**Token bank.** Reshape $\phi(x)$ with token width $d_q$ to obtain the *frequency token bank*:
+
+$$H(x) \in \mathbb{R}^{N_\text{tok} \times d_q}, \quad N_\text{tok} = M / d_q$$
+
+Each row $H_j(x)$ is a $d_q$-dimensional token encoding a group of adjacent frequency channels evaluated at $x$. Crucially, $H(x)$ is *input-dependent* — the cosine evaluations change with $x$, so different inputs present different token activations to the attention mechanism.
+
+### 8.3 Cross-Attention over Frequency Tokens 🔑
+
+The main network is a stack of $L$ *query* layers $Q^{(0)}(x), \ldots, Q^{(L)}(x) \in \mathbb{R}^{d_q}$. At each layer $l$, the query attends over the token bank $H(x)$:
+
+$$Q_l = Q^{(l)}(x) W_Q^{(l)}, \quad K_l = H(x) W_K^{(l)}, \quad V_l = H(x) W_V^{(l)}$$
+
+with $W_Q^{(l)}, W_K^{(l)}, W_V^{(l)} \in \mathbb{R}^{d_q \times d_q}$. The cross-attention output is:
+
+$$\mathrm{CA}(Q^{(l)}(x),\, H(x)) = \mathrm{softmax}\!\left(\frac{Q_l K_l^\top}{\sqrt{d_q}}\right) V_l \in \mathbb{R}^{d_q}$$
+
+This is then added residually, followed by a feedforward update:
+
+$$\tilde{Q}^{(l)}(x) = Q^{(l)}(x) + \mathrm{CA}(Q^{(l)}(x),\, H(x))$$
+
+$$Q^{(l+1)}(x) = \tilde{Q}^{(l)}(x) + \sigma\!\left(W^{(l)} \tilde{Q}^{(l)}(x) + b^{(l)}\right)$$
+
+**Why does this help?** In the language of §3–§5, the fixed Fourier feature map $\gamma(x)$ flattens the NTK eigenspectrum uniformly (§5.3). The cross-attention weights $\mathrm{softmax}(Q_l K_l^\top / \sqrt{d_q})$ form a *learned, input-dependent reweighting* of the frequency tokens. At layer $l$, the network concentrates attention mass on the frequency tokens $H_j(x)$ that are most useful for reducing the *current* residual — effectively performing online eigenvalue reweighting beyond what the static feature map achieves.
+
+> [!TIP] Intuition: attention as frequency routing
+> Think of the softmax weights $\alpha_j^{(l)}(x) = \mathrm{softmax}(\cdots)_j$ as a *learned frequency mask* at position $x$. If the residual near $x$ is dominated by high-frequency error, gradient descent will increase $\alpha_j$ for the high-frequency tokens, routing more signal through those channels. This is dynamic kernel preconditioning: the effective kernel at each query adapts to the local spectral content of the residual.
+
+### 8.4 Adaptive Frequency Masking 🎭
+
+Early in training, the model has not yet learned which frequency tokens are informative; random attention over all $N_\text{tok}$ tokens adds noise. Feng et al. introduce *adaptive frequency masking*: augment the attention logits with a learnable mask $M^{(l)}$:
+
+$$A^{(l)} = \frac{Q_l K_l^\top}{\sqrt{d_q}} + M^{(l)}, \quad M^{(l)} = [0;\; \eta_l \cdot \mathbf{1}]$$
+
+where $\eta_l \leq 0$ is initialized to a large negative value (suppressing the "posterior" tokens — those encoding the finer-scale octaves) and is gradually relaxed toward $0$ during training.
+
+**Effect:** the model begins by attending only to the coarse-frequency tokens (spectral bias is still present but at the token level), then progressively unlocks finer-scale tokens as training proceeds. This implements a *curriculum* over frequency scales, preventing the optimizer from wasting early gradient steps on high-frequency tokens that the coarse network cannot yet exploit.
+
+> [!NOTE] Analogy to progressive training in NeRF
+> This mirrors the coarse-to-fine positional encoding schedule proposed in Nerfies (Park et al., 2021): start with only low-frequency encoding bands active and activate higher bands progressively. The masking mechanism makes this curriculum *learnable* rather than hand-scheduled.
+
+### 8.5 Adaptive Frequency Enhancement via DFT Injection 📡
+
+Fixed random features can miss sharp, localized frequency peaks in the target. The *Adaptive Frequency Enhancement* (AFE) module detects such peaks during training and injects them directly.
+
+**Procedure.** At a designated checkpoint, compute the Discrete Fourier Transform of the current network output (or residual) on a reference grid:
+
+$$\hat{u}_{\theta,k} = \mathrm{DFT}[u_\theta]_k$$
+
+Identify the dominant unresolved modes:
+
+$$\zeta = \max_{k \in \mathcal{B}} |\hat{u}_{\theta,k}|, \quad \mathcal{K}_\text{post} = \{k \in \mathcal{B} : |\hat{u}_{\theta,k}| > \lambda \zeta\}, \quad 0 < \lambda < 1$$
+
+Construct *posterior tokens* exactly tuned to these modes:
+
+$$\phi_\text{post}(x) = \sqrt{\frac{2}{M_\text{post}}} \cos(\Omega_\text{post} x + b_\text{post}), \quad \omega_k^\text{post} = 2k\pi$$
+
+and augment the token bank:
+
+$$H_\text{aug}(x) = [H_\text{base}(x);\; H_\text{post}(x)] \in \mathbb{R}^{(n_\text{base} + n_\text{post}) \times d_q}$$
+
+*No architectural modification is needed* — the augmented bank slots into the cross-attention mechanism directly, since the attention is over the row dimension of $H$. The newly injected tokens carry exact frequency information that random sampling may have missed.
+
+> [!WARNING] DFT injection is dataset-specific
+> *The posterior tokens are tuned to the DFT of the current estimate on a reference set. For PDEs, this is the collocation points; for image regression, it is the training pixels. Injecting domain-specific frequencies breaks the architecture's generality — it should only be applied when the target frequency structure is stable and well-identified.*
+
+### 8.6 Dual-Network Architecture for PDEs 📐
+
+For *physics-informed neural networks* (PINNs), the spectral bias manifests as slow convergence of the high-frequency PDE solution components. Feng et al. propose decomposing the solution as:
+
+$$u(x;\theta) = u_h(x;\theta_h) + \alpha\, u_l(x;\theta_l)$$
+
+where $u_h$ (with the full cross-attention architecture) captures high-frequency components and $u_l$ (a lightweight standard MLP) captures the smooth baseline. The scalar $\alpha$ is a trainable mixing factor.
+
+**Training loss.** For a PDE $\mathcal{N}[u] = f$ on $\Omega$ with boundary condition $u = g$ on $\partial\Omega$:
+
+$$\mathcal{L} = \int_\Omega \bigl(\mathcal{N}[u_h + \alpha u_l](x) - f(x)\bigr)^2 \rho_r(x)\,dx + \gamma \int_{\partial\Omega} \bigl((u_h - g)^2 + \alpha^2 u_l^2\bigr) \rho_b(x)\,dx$$
+
+with $u_l$ satisfying a homogeneous BC $u_l|_{\partial\Omega} = 0$ so boundary conditions are handled by $u_h$ alone.
+
+**Optimal scaling.** For linear operators $\mathcal{N}$, the optimal $\alpha$ admits a closed form:
+
+$$\alpha_\text{opt} = -\frac{\int_\Omega \bigl(\mathcal{N}[u_h] - f\bigr)\,\mathcal{N}[u_l]\,\rho_r\,dx}{\int_\Omega \bigl(\mathcal{N}[u_l]\bigr)^2 \rho_r\,dx + \gamma \int_{\partial\Omega} u_l^2\,\rho_b\,dx}$$
+
+This is a least-squares projection: $\alpha$ is chosen so that $u_l$ corrects whatever systematic low-frequency residual $u_h$ leaves behind.
+
+> [!EXAMPLE]- Example: 1D Poisson equation
+> Consider $-u''(x) = f(x)$ on $[0,1]$ with $f(x) = \mu^2 \sin(\mu x)$ (frequency $\mu = 100$). A plain MLP exhibits catastrophic spectral bias — the residual saturates at high error because $\mu = 100$ is far outside the MLP's effective frequency range. RFF-CA (Fourier feature + cross-attention) resolves $u$ accurately because the token bank includes octaves covering $\mu = 100$ and the attention mechanism routes gradient signal there. The dual-network variant separates the oscillatory component ($u_h$) from any smooth correction ($u_l$), with $\alpha_\text{opt}$ computed analytically.
+
+### 8.7 Experimental Results 📊
+
+| Task | Method | Metric | Result |
+|------|--------|--------|--------|
+| 1D high-freq regression | RFF-NN | Relative $L^2$ | High saturation error |
+| 1D high-freq regression | **RFF-CA** | Relative $L^2$ | **Substantially lower** |
+| 2D image regression (DIV2K) | RFF-NN | PSNR | Baseline |
+| 2D image regression (DIV2K) | **NN-CA** | PSNR | **Best across methods** |
+| 1D Poisson ($\mu=100$) | RFF-NN | $L^2$ error | Saturates far from ground truth |
+| 1D Poisson ($\mu=100$) | **RFF-CA** | $L^2$ error | **Reaches near-zero error** |
+| 3D Poisson-Boltzmann | RFF-NN | Deep Ritz loss | Slow, high-error convergence |
+| 3D Poisson-Boltzmann | **RFF-CA** | Deep Ritz loss | **Noticeably faster decrease** |
+
+The gradient scaling analysis clarifies the mechanism behind high-frequency amplification. For Fourier modes in the loss, gradient magnitudes scale as:
+
+$$G_m(k, c) \propto k^{2m} |c|$$
+
+where $m = 0$ for $L^2$ regression and $m = 2$ for PINN residual losses ($\mathcal{N}[u] - f$ involves second derivatives). The $k^4$ factor in PINN losses naturally *amplifies* high-frequency gradients — the cross-attention architecture is particularly compatible with this regime because the frequency tokens can be dynamically upweighted to exploit the amplification.
+
+> [!QUESTION] Exercise 6: Cross-Attention as Dynamic Eigenvalue Reweighting
+> *This exercise connects the cross-attention mechanism to the NTK eigenspectrum analysis from §3.*
+>
+> > **Prerequisites:** [[#3.2 Eigendecomposition and Frequency-Dependent Convergence|3.2 Eigendecomposition and Frequency-Dependent Convergence]], [[#8.3 Cross-Attention over Frequency Tokens|8.3 Cross-Attention over Frequency Tokens]]
+>
+> In §3.2 we showed that residual components decay as $[Q^\top r^{(t)}]_i = e^{-\eta \lambda_i t} [Q^\top r^{(0)}]_i$, where $\lambda_i$ are NTK eigenvalues.
+>
+> (a) Explain qualitatively how the cross-attention weights $\alpha_j^{(l)}(x) = \mathrm{softmax}(Q_l K_l^\top / \sqrt{d_q})_j$ can be interpreted as performing *dynamic reweighting* of the frequency token contributions, and how this relates to modifying the effective $\lambda_i$.
+>
+> (b) For fixed Fourier features (§5.3), the composed kernel $K_\gamma$ sets a static bandwidth. If the residual at iteration $t$ is dominated by frequency mode $\omega^*$ outside the initial bandwidth $\sigma$, what can a fixed Fourier feature network do, and what can the cross-attention network (with AFE) do?
+>
+> (c) The adaptive frequency masking (§8.4) initializes $\eta_l \ll 0$ and anneals it to $0$. Describe the effective NTK spectrum this produces at the start of training versus at the end, and explain why this curriculum is preferable to starting with all tokens active.
+
+> [!TIP]- Solution to Exercise 6
+> **Key insight:** Cross-attention implements input-dependent eigenvalue reweighting that adapts to the spectral content of the current residual; AFE can extend the effective bandwidth beyond the initialization prior; frequency masking imposes a coarse-to-fine eigenvalue curriculum.
+>
+> **Sketch:**
+>
+> (a) The attention weight $\alpha_j^{(l)}(x)$ determines how much the $j$-th frequency token (which encodes octave $k$, sample $m$) contributes to the layer update. Tokens corresponding to high-frequency channels have large $\tilde\omega_{m,k}$ — in the NTK picture, these tokens are "high-$\lambda$" after the Fourier feature lift. The attention weight $\alpha_j$ effectively scales the contribution of token $j$, modulating the rate at which that frequency channel enters the network's output. A network that concentrates $\alpha_j$ on high-frequency tokens is implicitly boosting the effective $\lambda$ of those modes beyond what the static kernel achieves.
+>
+> (b) A fixed Fourier feature network cannot learn $\omega^*$ — the kernel has effectively zero support at $\|\omega\| > \sigma$, so the residual component at $\omega^*$ cannot decay regardless of training time (§6.2, condition 3 of the informal theorem). The cross-attention network with AFE can: at checkpoint time, the DFT detects the anomalous peak at $\omega^*$, constructs a posterior token with $\omega_\text{post} = 2\pi\omega^*$, and injects it into the bank. Subsequent attention layers can then route gradient through this token, adding $\omega^*$ to the effective kernel support.
+>
+> (c) At initialization (large $|\eta_l|$): posterior tokens (fine-scale octaves) are masked out. The effective kernel is narrow-bandwidth — similar to a low-$\sigma$ Fourier feature network. Only low-frequency modes are learned, and the network captures the smooth backbone of the target. At the end of training ($\eta_l \to 0$): all tokens are active; the bandwidth expands. The curriculum is preferable because early gradient steps on high-frequency tokens are wasted when the network has not yet fit the low-frequency structure — the optimizer chases fine-scale noise rather than making progress on the coarse signal. By sequencing coarse-then-fine, the masking schedule mirrors the natural spectral bias order, but *controls* it rather than suffering from it.
+
+---
+
+## 9. References
 
 | Reference Name | Brief Summary | Link to Reference |
 |----------------|--------------|-------------------|
@@ -536,3 +707,4 @@ Fourier feature maps (or learned embeddings) applied to the input coordinates of
 | Mildenhall et al. (2020), "NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis" | Introduces Neural Radiance Fields with positional encoding; the applied context motivating the Tancik et al. theory | [arXiv:2003.08934](https://arxiv.org/abs/2003.08934) |
 | Xu et al. (2019), "Frequency Principle: Fourier Analysis Sheds Light on Implicit Regularization of Gradient Descent" | Provides empirical and theoretical evidence for the frequency principle from a physics-inspired perspective; introduces the linear F-principle model | [arXiv:1901.06523](https://arxiv.org/abs/1901.06523) |
 | Zhang et al. (2021), "Overview Frequency Principle/Spectral Bias in Deep Learning" | Comprehensive survey of theoretical and empirical results on the frequency principle; includes the general residual evolution equation $\partial_t \hat{u} = -\gamma(\xi)^2 \hat{u}$ | [arXiv:2201.07395](https://arxiv.org/abs/2201.07395) |
+| Feng, Tang, Wan & Zhou (2025), "Overcoming Spectral Bias via Cross-Attention" | Proposes treating multiscale random Fourier features as a key–value token bank and using cross-attention to dynamically reweight frequency contributions; introduces adaptive frequency masking, DFT-based token injection (AFE), and a dual-network PDE architecture | [arXiv:2512.18586](https://arxiv.org/abs/2512.18586) |
