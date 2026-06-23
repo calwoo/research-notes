@@ -34,6 +34,7 @@ This file is the index for the `concepts/deep-learning-engineering/` folder. It 
 | `vocab-optimization.md` | BPE engineering, bigram hashing, and small-vocabulary strategies |
 | `knowledge-distillation/knowledge-distillation.md` | ✅ Teacher-student distillation — soft targets, dark knowledge, feature-based methods |
 | `sparsity-pruning/` | ✅ **Subfolder** — classical (OBD/OBS/IMP), compression pipelines (Deep Compression/EIE), structured pruning, sparse training (LTH/RigL), LLM pruning (SparseGPT/Wanda) |
+| `spectral-bias/spectral-bias-fourier-kernels.md` | ✅ **Subfolder** — spectral bias via NTK eigenspectrum, Fourier feature maps (Bochner/Rahimi–Recht), cross-attention as adaptive frequency routing (Feng et al. 2025) |
 
 ---
 
@@ -81,6 +82,15 @@ This file is the index for the `concepts/deep-learning-engineering/` folder. It 
 | Vocabulary optimization | Tune BPE vocab size; bigram hashing for ultra-small vocabularies | Sennrich et al. (2016) |
 | Knowledge distillation | Train student on teacher's output distribution via reverse KL; on-policy variants | Gu et al. (2023) |
 
+### 🌊 Signal Representation and Spectral Methods (subfolder: `spectral-bias/`)
+
+| Subtopic | Key Idea | Primary Source |
+|----------|----------|----------------|
+| Spectral bias | MLPs fit low-frequency modes first; NTK eigenvalues decay as $l^{-(d+1)}$ | Rahaman et al. (2019) |
+| Fourier feature maps | Lift inputs via $\gamma(v)=[\cos(Bv),\sin(Bv)]$ to equalize NTK eigenspectrum | Tancik et al. (2020); Rahimi & Recht (2007) |
+| Cross-attention frequency routing | Treat Fourier feature bank as key–value tokens; attention reweights frequency contributions adaptively | Feng et al. (2025) |
+| NeRF positional encoding | Log-spaced deterministic Fourier features for 3D coordinate MLPs | Mildenhall et al. (2020) |
+
 ### ✂️ Model Compression (subfolder: `sparsity-pruning/`, `knowledge-distillation/`)
 
 | Subtopic | Key Idea | Primary Source |
@@ -118,12 +128,14 @@ flowchart TD
     VO["Vocab Optimization<br/>vocab-optimization.md"]
     KD["Knowledge Distillation<br/>knowledge-distillation/knowledge-distillation.md"]
     SP["Sparsity and Pruning<br/>sparsity-pruning/overview.md"]
+    SB["Spectral Bias and Fourier Kernels<br/>spectral-bias/spectral-bias-fourier-kernels.md"]
 
     MB --> LA
     MB --> TTT
     TTT --> DR
     MoE --> MoD
     KD -.->|"competing paradigm"| SP
+    RO -.->|"NTK frequency analysis"| SB
 ```
 
 *Most notes are self-contained. Notable chains: `mamba-ssm` motivates both `linear-attention` (shared recurrent framing) and `ttt-layers` (generalizing fixed state to a learned model); `ttt-layers` pairs naturally with `depth-recurrence` for Parameter Golf. `sparse-moe` is prerequisite context for `mixture-of-depths`.*
@@ -159,3 +171,7 @@ flowchart TD
 | Mixture-of-Depths | Raposo et al. | 2024 | Token routing to skip entire transformer blocks; 50% FLOP reduction | [arXiv:2404.02258](https://arxiv.org/abs/2404.02258) |
 | Neural Machine Translation of Rare Words with Subword Units | Sennrich et al. | 2016 | BPE tokenization — foundational algorithm for vocabulary construction | [arXiv:1508.07909](https://arxiv.org/abs/1508.07909) |
 | MiniLLM: Knowledge Distillation of Large Language Models | Gu et al. | 2023 | On-policy distillation via reverse KL — avoids mode-covering pathologies | [arXiv:2306.08543](https://arxiv.org/abs/2306.08543) |
+| On the Spectral Bias of Neural Networks | Rahaman et al. | 2019 | Empirical and Fourier-analytic characterization of spectral bias; $O(\|\xi\|^{-(d+1)})$ convergence rate | [arXiv:1806.08734](https://arxiv.org/abs/1806.08734) |
+| Fourier Features Let Networks Learn High Frequency Functions | Tancik et al. | 2020 | Lifting inputs via $\gamma(v)=[\cos(Bv),\sin(Bv)]$ flattens NTK eigenspectrum; NTK convergence analysis | [arXiv:2006.10739](https://arxiv.org/abs/2006.10739) |
+| Random Features for Large-Scale Kernel Machines | Rahimi & Recht | 2007 | Monte Carlo approximation of shift-invariant kernels via Bochner's theorem | [NIPS 2007](https://proceedings.neurips.cc/paper/2007/hash/013a006f03dbc5392effeb8f18fda755-Abstract.html) |
+| Overcoming Spectral Bias via Cross-Attention | Feng et al. | 2025 | Cross-attention over multiscale Fourier token banks for adaptive frequency routing; AFE and dual-network PDE architecture | [arXiv:2512.18586](https://arxiv.org/abs/2512.18586) |
