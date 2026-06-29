@@ -19,6 +19,9 @@
 - [[#6. Query Bias (Search Only)|6. Query Bias (Search Only)]]
 - [[#7. Residual: True Relevance Signal|7. Residual: True Relevance Signal]]
 - [[#8. Mitigation Strategies|8. Mitigation Strategies]]
+  - [[#8.1 Proposal 1: Causal / Debiased Ranking|8.1 Proposal 1: Causal / Debiased Ranking]]
+  - [[#8.2 Proposal 2: Anchored Causal Ranking|8.2 Proposal 2: Anchored Causal Ranking]]
+  - [[#8.3 Broader Landscape|8.3 Broader Landscape]]
 - [[#References|References]]
 
 ---
@@ -174,21 +177,56 @@ After factoring out position, user, item, and (in search) query effects, the res
 
 ## 8. Mitigation Strategies ⚙️
 
-The bias literature has produced two main families of approaches, which map onto the factorization framework:
+The two concrete proposals from Zhuang et al. are both built on a *mixture-of-logits* backbone — each addresses the factorization framework differently.
+
+### 8.1 Proposal 1: Causal / Debiased Ranking
+
+Four logit streams are computed in parallel from disjoint feature sets:
+
+| Stream | Input features | What it absorbs |
+|---|---|---|
+| $f_{\text{pos}}(k)$ | Position / rank features only | Presentation effect |
+| $f_{\text{user}}(u)$ | User features only | Power-user tendency, selection bias |
+| $f_{\text{item}}(i)$ | Item features only | Popularity / exposure bias |
+| $f_{\text{cross}}(u, i)$ | User + item + cross features | Residual: genuine affinity |
+
+These are combined via a **gating neural network** $g_\phi$ that produces a per-example softmax weight over the four streams:
+
+$$\hat{y} = \sum_{j \in \{\text{pos, user, item, cross}\}} g_\phi^{(j)}(u, i, k) \cdot f_j$$
+
+The gating network sees all features and learns to route credit appropriately. For a heavy user engaging with a popular item, the gate should weight $f_{\text{user}}$ and $f_{\text{item}}$ heavily; for a light user clicking something niche, the gate should lean on $f_{\text{cross}}$.
+
+> [!WARNING] Gradient leakage without anchoring
+> With a single combined loss, the gating network can route most gradient into $f_{\text{cross}}$ if it is more expressive than the marginal heads — effectively collapsing back to a monolithic model. The marginal streams only receive indirect signal through the gate weights, which is too weak to force clean factorization. Proposal 2 fixes this.
+
+### 8.2 Proposal 2: Anchored Causal Ranking
+
+Anchored causal ranking adds **independent auxiliary loss terms** to each marginal logit stream, trained directly against the interaction label:
+
+$$\mathcal{L} = \mathcal{L}_{\text{combined}}(\hat{y}, y) + \lambda_{\text{pos}}\,\mathcal{L}(f_{\text{pos}}, y) + \lambda_{\text{user}}\,\mathcal{L}(f_{\text{user}}, y) + \lambda_{\text{item}}\,\mathcal{L}(f_{\text{item}}, y)$$
+
+Each marginal head now receives a *direct* gradient signal almost independent of the other streams. The key consequence for the cross-term:
+
+$$f_{\text{cross}} \text{ is trained on the residual signal after } f_{\text{pos}}, f_{\text{user}}, f_{\text{item}} \text{ have already explained their respective variance.}$$
+
+This forces $f_{\text{cross}}$ to be a genuine residual rather than absorbing marginal effects opportunistically.
+
+> [!EXAMPLE] Why anchoring matters
+> Without anchoring, suppose $f_{\text{item}}(i)$ is a shallow head that fits popularity slowly. During early training, $f_{\text{cross}}$ will absorb the popularity signal (it's more expressive), and $f_{\text{item}}$ never gets a strong enough gradient to catch up. With anchoring, $f_{\text{item}}$ has its own loss pulling it toward popularity directly — $f_{\text{cross}}$ must then model only what $f_{\text{item}}$ cannot explain.
+
+> [!NOTE] No quantitative results
+> The Zhuang et al. post provides no ablation studies, offline metrics, or A/B test numbers. The proposals are conceptually motivated and have accompanying code (`src/factorized_estimator.py`, `src/anchored_factorized_estimator.py`) but no empirical validation is published.
+
+### 8.3 Broader Landscape
 
 **Propensity-based methods** estimate the bias (typically position propensity $\theta_k$) and reweight training losses by $1/\theta_k$. This is the *inverse propensity scoring (IPS)* family. See [[concepts/search-ranking/position-debiasing|Position Debiasing]] for full treatment.
-
-**Factorization / mixture-of-logits methods** (the approach in Zhuang et al.'s substack post) explicitly parameterize each logit term and combine them via a gating network:
-
-$$\hat{y} = g_\phi(u, i, q, k) \cdot [f_{\text{pos}}(k),\; f_{\text{user}}(u),\; f_{\text{item}}(i),\; f_{\text{query}}(q),\; f_{\text{cross}}(u, i, q)]$$
-
-where $g_\phi$ is a learned gating vector (softmax over components). The *anchored* variant adds auxiliary loss terms directly on each marginal logit, providing direct gradient signal to each component and preventing the cross-term from absorbing marginal effects.
 
 | Method family | Mechanism | Strength | Weakness |
 |---|---|---|---|
 | IPS / propensity weighting | Reweight by $1/\theta_k$ | Theoretically grounded (unbiased estimator) | High variance; propensity estimation is hard |
 | Doubly robust | Combine IPS + imputation model | Lower variance than pure IPS | More complex to train; two models can interact |
-| Mixture-of-logits | Explicitly decompose logits | Intuitive; targets all bias types simultaneously | Additive logit assumption; harder to isolate effects empirically |
+| Mixture-of-logits (Proposal 1) | Decompose logits + gating network | Targets all bias types simultaneously | Marginal heads may not learn without direct signal |
+| Anchored mixture-of-logits (Proposal 2) | Proposal 1 + auxiliary losses per marginal | Forces clean factorization; residual is genuine | Additive logit assumption; $\lambda$ hyperparameters to tune |
 | Logit adjustment | Shift item logits by $\log p(i)$ | Simple; effective for long-tail | Only corrects item popularity; ignores user/position |
 
 ---
