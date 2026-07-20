@@ -14,7 +14,7 @@ Jiaqi Zhai, Lucy Liao, Xing Liu, Yueming Wang, Rui Li, Xuan Cao, Leon Gao, Zhaoj
 ## Relations
 
 **Builds on:** [[papers/dhen-ranking|DHEN]]
-**Extended by:** [[papers/generative-recommenders/wukong|Wukong]]
+**Extended by:** [[papers/generative-recommenders/wukong|Wukong]], [[papers/generative-recommenders/slimper|SlimPer]]
 **Concepts used:** [[concepts/ab-testing/foundations|A/B Testing Foundations]], [[concepts/attention-mechanisms/standard-attention|Standard Attention]]
 
 ## Table of Contents

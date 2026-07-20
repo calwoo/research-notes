@@ -13,6 +13,7 @@ Buyun Zhang, Liang Luo, Yuxin Chen, Jade Nie, Xi Liu, Daifeng Guo, Yanli Zhao, S
 ## Relations
 
 **Builds on:** [[papers/dhen-ranking|DHEN]], [[papers/generative-recommenders/hstu|HSTU]]
+**Extended by:** [[papers/generative-recommenders/slimper|SlimPer]]
 **Concepts used:** [[concepts/ml-theory/power-law-scaling|Neural Scaling Laws]], [[concepts/ab-testing/foundations|A/B Testing Foundations]]
 
 ## Table of Contents
