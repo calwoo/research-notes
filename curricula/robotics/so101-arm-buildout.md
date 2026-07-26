@@ -59,17 +59,16 @@ Three viable paths, given no current 3D printer access:
 
 Decision made: going with **Path C, unassembled**, so the arm is built and wired by hand rather than pre-assembled. Comparison below is scoped to unassembled/DIY-tier listings only — pair pricing, US buyer. Sorted by all-in cost (kit + camera if not bundled; ~$25 for a basic USB webcam where needed).
 
-| Vendor | Product | Kit price | Printed parts | Camera | All-in est. | Notes |
-|---|---|---|:---:|:---:|---|---|
-| **WowRobo** | Package 2: Unassembled Kit | **$259** | ✅ | ✅ (1) | **$259** | Confirmed via store's live product JSON (variant id `46588630630617`) — corrects an earlier ($199) figure from this thread, which was stale/wrong. Currently shows sold out — verify live stock before counting on this. Ships from China (UPS/DHL); WowRobo states duties/taxes prepaid for US buyers |
-| **Seeed Studio (Standard)** | Motor Kit + 3D Printed Skeleton add-on | $220 + $35 | ✅ (add-on) | ❌ | ~$280 | 6× 7.4V servos/arm, 1:345 follower gearing. Base AliExpress/international pricing; the seeedstudio.com **US-warehouse** listing runs $288.99 for motors alone — check which warehouse you're ordering from, it changes the total by ~$70 |
-| **Seeed Studio (Pro)** | Motor Kit + 3D Printed Skeleton add-on | $240 + $35 | ✅ (add-on) | ❌ | ~$300 | Same as Standard but 12V/30kg·cm follower servos — more torque/payload headroom |
-| **Hiwonder (official manufacturer)** | DIY Kit / Unassembled | $269.99 | ✅ | ❌ | ~$295 | Official source for the design; camera-equipped tiers (Standard/Advanced) are pre-assembled only, so DIY buyers add their own webcam |
-| **OZ Robotics** (Hiwonder reseller) | DIY Kit/Unassembled | $306.99 | ✅ | ✅ (2: gripper + external) | **$306.99** | Priciest, but bundles a dual-camera rig (gripper-mounted + external) that you'd otherwise assemble yourself — meaningful if you want stereo/multi-view data collection from day one |
-| **PartaBot** (US-based) | Electronics-only / Full-kit toggle | List $329, seen on sale at $119 | Toggle-dependent | Unclear | Unclear | Listing showed sold out at research time; being US-based it may ship fastest if restocked — worth a direct check |
-| ThinkRobotics (India) | DIY Kit | ₹27,999.99 (≈$325) | ✅ | ❌ | ~$350 | India-focused storefront; not competitive for US shipping, included only as a price cross-check |
+| Vendor | Product | Kit price | Stock (verified) | Shipping (US) | Camera | All-in est. incl. shipping |
+|---|---|---|---|---|:---:|---|
+| **Hiwonder (official manufacturer)** | DIY Kit / Unassembled | $269.99 | ✅ in stock | FOB Shenzhen, DHL/UPS/FedEx, ~6 business days; order is under the $499 free-shipping threshold, so shipping is charged — est. ~$70 by comparison with OZ Robotics' confirmed rate | ❌ (+~$25 webcam) | **~$365** |
+| **Seeed Studio (Pro)** | Motor Kit + 3D Printed Skeleton add-on | $288.99 + $35 | ✅ in stock (Pro only — the $220/$240 Standard/Pro pricing reported by CNX Software appears to be AliExpress/international, **not** confirmed live on seeedstudio.com, which shows only the Pro tier at $288.99) | "US Warehouse" option shown at checkout; unconfirmed whether this means cheaper/faster domestic shipping or just faster dispatch of the same international price | ❌ (+~$25 webcam) | **~$349** (optimistic — depends on unconfirmed US-warehouse shipping) |
+| **OZ Robotics** (Hiwonder reseller) | DIY Kit/Unassembled | $306.99 | Stock status not confirmed on page | Confirmed $72.99 standard shipping, China, 4–7 business days | ✅ (2: gripper + external) | **$379.98** (only fully-confirmed shipping number of the three) |
+| WowRobo | Package 2: Unassembled Kit | $259 | ❌ sold out (variant id `46588630630617`, corrects an earlier — wrong — $199 figure from this thread) | Ships China via UPS/DHL; vendor states duties/taxes prepaid for US buyers; cost unconfirmed | ✅ (1) | N/A — not currently orderable |
+| PartaBot (US-based) | Electronics-only / Full-kit toggle | List $329, seen on sale at $119 | ❌ sold out at research time | Unknown | Unclear | Unclear |
+| ThinkRobotics (India) | DIY Kit | ₹27,999.99 (≈$325) | Unconfirmed | Not competitive for US shipping | ❌ | ~$350+ |
 
-**Read:** at the corrected $259 price, WowRobo, Seeed Standard (~$280), and Hiwonder (~$295) are all within ~$40 of each other — no longer a clear cost leader, so the choice comes down to what's actually in stock plus secondary factors. WowRobo bundles one camera and is the single cheapest all-in price if available. **Seeed Studio Standard** is the best-documented option (CNX Software independently verified the $220 pair price) and is the kit the SO-ARM101 open-source project itself is built around, but requires buying your own webcam and picking the correct (non-US) warehouse to avoid the markup. **OZ Robotics** ($306.99) is worth the premium specifically if the dual-camera setup (gripper + external view) is appealing over a single webcam, since assembling a second camera mount yourself later is extra work none of these kits save you from.
+**Read:** once shipping is factored in, Hiwonder and Seeed Pro converge to roughly the same ~$350–365 total, with OZ Robotics clearly the most expensive at ~$380 (its shipping cost is the only one directly confirmed, which also makes it the most trustworthy number in this table). WowRobo remains structurally the cheapest kit but is not currently purchasable.
 
 ## Synthesis
 
@@ -77,13 +76,16 @@ Given the stated priority (hands-on learning over pure speed or pure cost) and n
 
 **Decision: Path C, unassembled.** Buy a complete unassembled kit (pre-printed parts + motors, ideally camera bundled) and do 100% of the assembly, wiring, motor configuration, and calibration by hand. This captures ~90% of the hands-on value of Path A at lower logistics overhead and comparable-or-lower cost, and defers the 3D-printer purchase decision to later — once it's clear whether more hardware projects are coming, that's a better-informed $200–250 call than making it upfront.
 
-**Vendor recommendation:** WowRobo ($259, camera included), Seeed Studio Standard (~$280 all-in incl. webcam), and Hiwonder (~$295 all-in) are close enough to be decided by stock availability rather than price. Check WowRobo first since it's confirmed cheapest and bundles a camera; Seeed Standard is the best-supported fallback as the reference kit the open-source project is built around. OZ Robotics ($306.99) is the pick if the bundled dual-camera rig is worth the premium over sourcing a webcam separately.
+**Final vendor recommendation: Hiwonder DIY Kit ($269.99).** Once shipping is included, the field converges to within ~$30 of each other, so the deciding factors are practical rather than price: Hiwonder is the only option that is simultaneously (a) confirmed in stock right now, (b) sold by the actual manufacturer of the design — best assurance on part fit and servo QC, (c) a single consolidated order, with no separate printed-parts line item or warehouse selector to coordinate, and (d) shipped via trackable major carriers (DHL/UPS/FedEx) in ~6 business days. All-in with an estimated shipping cost and a separately-sourced webcam, it lands around $365 — no worse than the alternatives, and simpler to execute.
+
+**Backup:** Seeed Studio Pro (~$349 all-in, optimistic) if the US-warehouse shipping turns out to be cheap/fast and the extra step of a two-part order (motor kit + $35 print add-on) isn't a hassle. Revisit WowRobo if it restocks — it's structurally the cheapest kit and bundles a camera.
 
 > [!QUESTION] Open question: printer purchase timing
 > Path B (buy a printer now) was deprioritized on hands-on-learning grounds, but if the broader robotics track ends up involving custom end-effectors, sensor mounts, or other iterative hardware, owning a printer becomes valuable sooner rather than later. Revisit after the first arm is built.
 
 ## Open Questions
 
+- Get an exact Hiwonder shipping quote (checkout is address-dependent; ~$70 used above is an estimate by comparison to OZ Robotics' confirmed rate, not a confirmed Hiwonder number).
+- Confirm whether Seeed Studio's "US Warehouse" checkout option changes shipping cost/time or just dispatch location, and whether the $220/$240 Standard/Pro pricing (CNX Software, presumably AliExpress) is actually purchasable anywhere reachable from the US at that price.
 - Live stock check needed on WowRobo's Package 2 ($259, variant id `46588630630617`) and PartaBot before ordering — both showed "sold out" at research time.
-- Confirm which Seeed Studio warehouse (US vs. international) is selected at checkout — the same "Pro" kit runs $240 (international) vs. $288.99+ (US warehouse) for motors alone.
 - Once the arm is built: what's the first task/project to target for imitation learning (informs camera setup, gripper choice, workspace design)?
