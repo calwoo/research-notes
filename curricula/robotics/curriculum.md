@@ -105,6 +105,9 @@ flowchart TD
 
 **Milestone:** implement forward and inverse kinematics for the SO-101 in code (Python), validate against the physical arm by commanding a target end-effector pose and checking the achieved pose; derive the Jacobian and identify the arm's singular configurations.
 
+> [!NOTE] Forward pointer to Module 5
+> §2 of the ["Robot Learning: A Tutorial"](https://arxiv.org/abs/2510.12403) paper used in Module 5 recaps classical robotics — explicit/implicit models, feedback loops, limitations of dynamics-based control — as a bridge into why learning-based methods (RL, imitation learning) emerged. Short enough to be worth reading now as a preview, immediately after this module's kinematics work, rather than waiting until Module 5.
+
 ## Module 4: Computer Vision
 
 *(≈ 6–8 weeks — maps to CMU 16-385, the heaviest module)*
@@ -130,15 +133,19 @@ flowchart TD
 
 **Concept goals:** everything from Modules 0–4 integrated into one working pipeline: hardware, control, kinematics, and perception feeding a learned policy.
 
-**Materials:** [LeRobot documentation](https://huggingface.co/docs/lerobot/en/index) is the primary source here, not a university course.
-- [ ] [Getting started with real-world robots](https://huggingface.co/docs/lerobot/il_robots) tutorial — teleoperation, dataset recording
-- [ ] LeRobot's ACT and diffusion-policy implementations — read the source alongside the original papers before training
+**Materials:** primary anchor is **[Capuano, Pascal, Zouitine, Wolf & Aractingi — "Robot Learning: A Tutorial"](https://arxiv.org/abs/2510.12403)** (Oxford/Hugging Face, Oct 2025) — this replaces a vaguer earlier pointer to "LeRobot docs + source code." It's written by the LeRobot core team specifically as a guide from classical robotics through RL/behavioral cloning to generalist VLA policies, with runnable code examples in `lerobot` throughout, and several code snippets load actual public SO-101 datasets (e.g. `lerobot/svla_so101_pickplace`) directly — this is about as close to purpose-built for this curriculum as an external source gets. Work through it in this order:
+- [ ] §1 — `LeRobotDataset` format and the streaming/batching API (code examples included) — do this first regardless of RL vs. BC focus, since every later section depends on it
+- [ ] §2 — Classical Robotics (explicit/implicit models, planar manipulation, feedback loops, limitations of dynamics-based robotics) — a compact bridge chapter connecting back to Modules 1 and 3; worth reading even though it covers ground already built there
+- [ ] §3 — Robot Reinforcement Learning (RL primer, real-world RL for robotics with code, limitations: simulators and reward design)
+- [ ] §4 — Robot Imitation Learning: generative models primer (VAEs, diffusion models, flow matching) → **Action Chunking Transformers (ACT)** with training code → **Diffusion Policy** with training code → optimized/async inference
+- [ ] §5 — Generalist Robot Policies: VLAs, VLMs-for-VLAs, **π0** with code, **SmolVLA** with code
+- [ ] [Getting started with real-world robots](https://huggingface.co/docs/lerobot/il_robots) tutorial (LeRobot docs) — teleoperation and dataset-recording mechanics not covered by the tutorial's conceptual focus
 
 **Milestones (the actual capstone):**
-- [ ] Collect a demonstration dataset via leader-follower teleoperation for one manipulation task
-- [ ] Train a policy (ACT or diffusion policy) on the collected dataset using LeRobot
+- [ ] Collect a demonstration dataset via leader-follower teleoperation for one manipulation task, using `LeRobotDataset`
+- [ ] Train a policy (ACT or Diffusion Policy, §4) on the collected dataset using LeRobot
 - [ ] Evaluate the trained policy on the physical follower arm and characterize failure modes
-- [ ] *(Stretch)* Fine-tune or evaluate a vision-language-action model (e.g. SmolVLA) on the same task/dataset for comparison
+- [ ] *(Stretch)* Fine-tune or evaluate SmolVLA (§5) on the same task/dataset for comparison — or, before collecting your own data at all, load the public `lerobot/svla_so101_pickplace` dataset referenced in the tutorial's own code examples as a first no-hardware-risk trial run of the training pipeline
 
 ## Deferred
 
@@ -157,5 +164,6 @@ flowchart TD
 | Feedback Systems (Åström & Murray) | Free textbook for Module 2 | [Free PDF](https://fbswiki.org/wiki/index.php/Feedback_Systems:_An_Introduction_for_Scientists_and_Engineers) |
 | 16-385 Computer Vision (CMU) | Full public course site with 27 lectures and 7 assignments, anchor for Module 4 | [16385.courses.cs.cmu.edu](http://16385.courses.cs.cmu.edu/spring2026/) |
 | Computer Vision: Algorithms and Applications (Szeliski) | Free textbook for Module 4 | [szeliski.org/Book](https://szeliski.org/Book/download.php) |
-| LeRobot documentation (Hugging Face) | Primary source for Module 5 — teleoperation, dataset collection, policy training | [huggingface.co/docs/lerobot](https://huggingface.co/docs/lerobot/en/index) |
+| Robot Learning: A Tutorial (Capuano, Pascal, Zouitine, Wolf, Aractingi — Oxford/Hugging Face, 2025) | Primary anchor for Module 5 — classical robotics bridge, RL, imitation learning (ACT, Diffusion Policy), generalist VLA policies (π0, SmolVLA), all with runnable `lerobot` code examples using real SO-101 datasets | [arXiv:2510.12403](https://arxiv.org/abs/2510.12403) |
+| LeRobot documentation (Hugging Face) | Secondary source for Module 5 — teleoperation and dataset-recording mechanics | [huggingface.co/docs/lerobot](https://huggingface.co/docs/lerobot/en/index) |
 | 2.017J Design of Electromechanical Robotic Systems (MIT OCW) | Investigated as a 16-220 substitute; deferred, see [[#Deferred]] | [ocw.mit.edu](https://ocw.mit.edu/courses/2-017j-design-of-electromechanical-robotic-systems-fall-2009/) |
