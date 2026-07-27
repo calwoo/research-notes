@@ -161,12 +161,12 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    S1["Stage 1<br/>SO-101 Manipulator<br/>curricula/robotics"]
-    S2["Stage 2<br/>Mobile Robotics<br/>curricula/mobile-robotics"]
-    S3["Stage 3<br/>Balancing Robots<br/>curricula/balancing-robots"]
-    S4["Stage 4<br/>Quadcopter Simulation<br/>curricula/quadcopter-autonomy"]
-    S5["Stage 5<br/>Manual-Flight Quad Build<br/>curricula/quadcopter-autonomy"]
-    S6["Stage 6<br/>Autonomous Flight<br/>curricula/quadcopter-autonomy"]
+    S1["Stage 1<br/>SO-101 Manipulator<br/>curricula/robotics/curriculum.md"]
+    S2["Stage 2<br/>Mobile Robotics<br/>curricula/robotics/mobile-robotics.md"]
+    S3["Stage 3<br/>Balancing Robots<br/>curricula/robotics/balancing-robots.md"]
+    S4["Stage 4<br/>Quadcopter Simulation<br/>curricula/robotics/quadcopter-autonomy.md"]
+    S5["Stage 5<br/>Manual-Flight Quad Build<br/>curricula/robotics/quadcopter-autonomy.md"]
+    S6["Stage 6<br/>Autonomous Flight<br/>curricula/robotics/quadcopter-autonomy.md"]
     S1 --> S2
     S2 --> S3
     S3 --> S4
@@ -177,9 +177,9 @@ flowchart TD
 | Stage | Doc | New skill vs. previous stage | Status |
 |---|---|---|---|
 | 1 | [[curricula/robotics/curriculum\|SO-101 Robotics Curriculum]] (this doc) | Kinematics, feedback control, vision, imitation learning | 🔲 In progress |
-| 2 | [[curricula/mobile-robotics/curriculum\|Mobile Robotics Curriculum]] | Odometry, SLAM, path planning, sensor fusion, ROS2 | 🔲 Scaffolded, not yet researched |
-| 3 | [[curricula/balancing-robots/curriculum\|Balancing Robots Curriculum]] | Real-time IMU sensor fusion, stabilizing an inherently unstable plant | 🔲 Scaffolded, not yet researched |
-| 4–6 | [[curricula/quadcopter-autonomy/curriculum\|Quadcopter Autonomy Curriculum]] | Flight-controller firmware, hardware build, autonomous mission execution | 🔲 Scaffolded, not yet researched |
+| 2 | [[curricula/robotics/mobile-robotics\|Mobile Robotics Curriculum]] | Odometry, SLAM, path planning, sensor fusion, ROS2 | 🔲 Scaffolded, not yet researched |
+| 3 | [[curricula/robotics/balancing-robots\|Balancing Robots Curriculum]] | Real-time IMU sensor fusion, stabilizing an inherently unstable plant | 🔲 Scaffolded, not yet researched |
+| 4–6 | [[curricula/robotics/quadcopter-autonomy\|Quadcopter Autonomy Curriculum]] | Flight-controller firmware, hardware build, autonomous mission execution | 🔲 Scaffolded, not yet researched |
 
 ## References
 

@@ -11,7 +11,7 @@
 
 ## Overview
 
-🚁 Stages 4–6 of a staged progression toward autonomous quadcopter flight, following [[curricula/robotics/curriculum|SO-101]] (Stage 1), [[curricula/mobile-robotics/curriculum|mobile robotics]] (Stage 2), and [[curricula/balancing-robots/curriculum|balancing robots]] (Stage 3). Combined into one document rather than three, since — unlike the earlier stages, which are genuinely different platforms — these three phases are a single continuous build-up on one platform (quadcopters), the same way [[curricula/robotics/curriculum|the SO-101 curriculum]] contains multiple modules in one doc.
+🚁 Stages 4–6 of a staged progression toward autonomous quadcopter flight, following [[curricula/robotics/curriculum|SO-101]] (Stage 1), [[curricula/robotics/mobile-robotics|mobile robotics]] (Stage 2), and [[curricula/robotics/balancing-robots|balancing robots]] (Stage 3). Combined into one document rather than three, since — unlike the earlier stages, which are genuinely different platforms — these three phases are a single continuous build-up on one platform (quadcopters), the same way [[curricula/robotics/curriculum|the SO-101 curriculum]] contains multiple modules in one doc.
 
 This document is a **scaffold, not a fully-researched curriculum** — same caveat as the other new stage docs.
 
