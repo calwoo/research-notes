@@ -10,11 +10,14 @@
 - [[#Module 4: Computer Vision|Module 4: Computer Vision]]
 - [[#Module 5: Systems Integration and Capstone|Module 5: Systems Integration and Capstone]]
 - [[#Deferred|Deferred]]
+- [[#Beyond This Curriculum|Beyond This Curriculum]]
 - [[#References|References]]
 
 ## Overview
 
-🤖 This curriculum uses the physical [SO-101](https://huggingface.co/docs/lerobot/en/so101) arm as the hands-on companion for a self-study robotics track, modeled on [Carnegie Mellon's Bachelor of Science in Robotics](https://www.ri.cmu.edu/education/academic-programs/bachelor-of-science-in-robotics/) curriculum. General undergraduate math (calculus, linear algebra, discrete math, probability) and general CS (imperative programming, systems, algorithms) are assumed already known and are **not** re-taught here — see [[curricula/robotics/so101-arm-buildout|SO-101 Build & Vendor Comparison]] for the hardware acquisition decision (Hiwonder DIY kit) that this curriculum assumes is complete before Module 0 begins.
+🤖 This curriculum uses the physical [SO-101](https://huggingface.co/docs/lerobot/en/so101) arm as the hands-on companion for a self-study robotics track, modeled on [Carnegie Mellon's Bachelor of Science in Robotics](https://www.ri.cmu.edu/education/academic-programs/bachelor-of-science-in-robotics/) curriculum. General undergraduate math (calculus, linear algebra, discrete math, probability) and general CS (imperative programming, systems, algorithms) are assumed already known and are **not** re-taught here — see [[curricula/robotics/so101-arm-buildout|SO-101 Build & Vendor Comparison]] for the hardware acquisition decision (currently Seeed Studio Pro, after the Hiwonder DIY kit was found to be missing printed parts) that this curriculum assumes is complete before Module 0 begins.
+
+This is Stage 1 of a longer staged progression toward autonomous quadcopter flight — see [[#Beyond This Curriculum|Beyond This Curriculum]] below for Stages 2–6.
 
 Each module maps to one or more CMU BSR courses, substituting the best freely-available public course materials found for each (CMU's own course sites are largely login-walled). Pacing below assumes roughly 5–8 hrs/week; treat it as a default scaffold, not a fixed calendar — compress or stretch modules freely.
 
@@ -151,6 +154,32 @@ flowchart TD
 
 > [!WARNING] 16-220 Robot Building Practices — deferred
 > CMU's hands-on hardware course (CAD, 3D printing, laser cutting, circuit design, PCB layout, soldering, motor controllers) is intentionally left out of this curriculum for now. No public CMU course site was found, and the two MIT OCW substitutes investigated (2.017J Design of Electromechanical Robotic Systems, 2.737 Mechatronics) only partially cover the material — mainly the electronics/motor-control side, not CAD/fabrication. Since the SO-101 is being built from a pre-printed unassembled kit rather than designed and printed from scratch, the CAD/fabrication gap isn't exercised by the build either. Revisit if a future project calls for designing custom parts (e.g. a custom end-effector).
+
+## Beyond This Curriculum
+
+🗺️ This SO-101 track is Stage 1 of a longer staged progression toward autonomous quadcopter flight. Each later stage is the cheapest, lowest-risk platform that forces the one new subsystem the previous stages don't cover, reusing everything learned so far.
+
+```mermaid
+flowchart TD
+    S1["Stage 1<br/>SO-101 Manipulator<br/>curricula/robotics"]
+    S2["Stage 2<br/>Mobile Robotics<br/>curricula/mobile-robotics"]
+    S3["Stage 3<br/>Balancing Robots<br/>curricula/balancing-robots"]
+    S4["Stage 4<br/>Quadcopter Simulation<br/>curricula/quadcopter-autonomy"]
+    S5["Stage 5<br/>Manual-Flight Quad Build<br/>curricula/quadcopter-autonomy"]
+    S6["Stage 6<br/>Autonomous Flight<br/>curricula/quadcopter-autonomy"]
+    S1 --> S2
+    S2 --> S3
+    S3 --> S4
+    S4 --> S5
+    S5 --> S6
+```
+
+| Stage | Doc | New skill vs. previous stage | Status |
+|---|---|---|---|
+| 1 | [[curricula/robotics/curriculum\|SO-101 Robotics Curriculum]] (this doc) | Kinematics, feedback control, vision, imitation learning | 🔲 In progress |
+| 2 | [[curricula/mobile-robotics/curriculum\|Mobile Robotics Curriculum]] | Odometry, SLAM, path planning, sensor fusion, ROS2 | 🔲 Scaffolded, not yet researched |
+| 3 | [[curricula/balancing-robots/curriculum\|Balancing Robots Curriculum]] | Real-time IMU sensor fusion, stabilizing an inherently unstable plant | 🔲 Scaffolded, not yet researched |
+| 4–6 | [[curricula/quadcopter-autonomy/curriculum\|Quadcopter Autonomy Curriculum]] | Flight-controller firmware, hardware build, autonomous mission execution | 🔲 Scaffolded, not yet researched |
 
 ## References
 
