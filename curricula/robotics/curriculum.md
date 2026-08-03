@@ -177,7 +177,7 @@ flowchart TD
 | Stage | Doc | New skill vs. previous stage | Status |
 |---|---|---|---|
 | 1 | [[curricula/robotics/curriculum\|SO-101 Robotics Curriculum]] (this doc) | Kinematics, feedback control, vision, imitation learning | 🔲 In progress |
-| 2 | [[curricula/robotics/mobile-robotics\|Mobile Robotics Curriculum]] | Odometry, SLAM, path planning, sensor fusion, ROS2 | 🔲 Scaffolded, not yet researched |
+| 2 | [[curricula/robotics/mobile-robotics\|Mobile Robotics Curriculum]] | Odometry, SLAM, path planning, sensor fusion, ROS2 | 🟡 Hardware decided (DIY ROS2 rover, [[curricula/robotics/mobile-robotics-buildout\|buildout doc]]), module reading materials pending |
 | 3 | [[curricula/robotics/balancing-robots\|Balancing Robots Curriculum]] | Real-time IMU sensor fusion, stabilizing an inherently unstable plant | 🔲 Scaffolded, not yet researched |
 | 4–6 | [[curricula/robotics/quadcopter-autonomy\|Quadcopter Autonomy Curriculum]] | Flight-controller firmware, hardware build, autonomous mission execution | 🔲 Scaffolded, not yet researched |
 
