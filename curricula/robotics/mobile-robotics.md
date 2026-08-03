@@ -18,7 +18,7 @@
 
 ## Pre-Stage-2 Warm-up: XRP
 
-🛞 Before committing to Stage 2's own hardware decision (below), warm up on odometry, encoders, and proportional control — the cheapest, lowest-risk fundamentals in this stage's [[#Scope|Scope]] — using WPI's **XRP** (Experiential Robotics Platform).
+✅ **In hand** — ordered and received. Before committing to Stage 2's own hardware decision (below), warm up on odometry, encoders, and proportional control — the cheapest, lowest-risk fundamentals in this stage's [[#Scope|Scope]] — using WPI's **XRP** (Experiential Robotics Platform).
 
 **Hardware:** [XRP Kit](https://www.sparkfun.com/experiential-robotics-platform-xrp-kit.html) — **$119.95** from SparkFun. Controller is a Raspberry Pi **RP2350B** (dual Cortex-M33, 16MB flash, 8MB PSRAM) with an onboard 6-DoF IMU (LSM6DSOX), two Qwiic connectors, and dual-channel motor drivers for up to four motors. The kit itself ships with 2 encoded drive motors + 2 casters (differential drive, not a balancing platform — relevant only to this stage, not [[curricula/robotics/balancing-robots|Stage 3]]), an ultrasonic rangefinder, a line-following sensor, a servo, and a 3D-printed chassis. Batteries and USB-C cable are not included. Programmed with **WPILib** — the same toolchain used for full-size FIRST Robotics Competition (FRC) robots — via Blockly or Python.
 
